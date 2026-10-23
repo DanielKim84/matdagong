@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { NewPlace, Place, Taster } from "../models/place";
 import { getPlaces, getPlace } from "../services/places";
 import { useActivity } from "../services/activity";
 import { go, useRoute } from "./navigation";
 import { BottomTabs, ScreenHeader } from "../components/AppChrome";
-import Icon from "../components/Icon";
 import HomeScreen from "../screens/HomeScreen";
 import MapScreen from "../screens/MapScreen";
 import RegisterScreen from "../screens/RegisterScreen";
@@ -18,8 +17,10 @@ import {
 } from "../screens/CollectionScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import IntroScreen from "../screens/IntroScreen";
+import NoticeToast, { type NoticeKind } from "../components/NoticeToast";
 
 type Props = { onLogout: () => void };
+type Notice = { kind: NoticeKind; title: string; message: string };
 
 function registeredPlace(item: NewPlace): Place {
   return {
@@ -56,7 +57,8 @@ export default function App({ onLogout }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
-  const [toast, setToast] = useState("");
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const dismissNotice = useCallback(() => setNotice(null), []);
 
   useEffect(() => {
     // 지도 검색 입력은 짧게 모아서 보내고, 화면 이동이나 새 검색이 오면 이전 요청을 취소합니다.
@@ -87,11 +89,6 @@ export default function App({ onLogout }: Props) {
   useEffect(() => {
     if (route.screen !== "map") setQuery("");
   }, [route.screen]);
-  useEffect(() => {
-    if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(""), 2600);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
   useEffect(() => {
     let active = true;
     if (
@@ -139,17 +136,24 @@ export default function App({ onLogout }: Props) {
   }, [route.screen, route.id, !!activePlace]);
 
   function toggleSave(id: string) {
+    const wasSaved = activity.saved.includes(id);
     activity.toggle("saved", id);
-    setToast(
-      activity.saved.includes(id)
-        ? "스크랩을 취소했어요."
-        : "내 맛집에 스크랩했어요.",
-    );
+    setNotice({
+      kind: "success",
+      title: wasSaved ? "스크랩을 해제했어요" : "내 맛집에 저장했어요",
+      message: wasSaved
+        ? "저장한 맛집 목록에서 제외했어요."
+        : "마이 탭의 내 스크랩에서 다시 볼 수 있어요.",
+    });
   }
   function register(place: NewPlace) {
     activity.register(place);
     go("place", place.id);
-    setToast("맛집을 등록했어요.");
+    setNotice({
+      kind: "success",
+      title: "맛집을 등록했어요",
+      message: "새로 등록한 맛집을 바로 확인해 보세요.",
+    });
   }
   function photoFor(id: string) {
     return activity.registered.find((place) => place.id === id)?.photos[0];
@@ -199,7 +203,9 @@ export default function App({ onLogout }: Props) {
         liked={activity.liked.includes(activePlace.id)}
         onSave={() => toggleSave(activePlace.id)}
         onLike={() => activity.toggle("liked", activePlace.id)}
-        onMessage={setToast}
+        onMessage={(message) =>
+          setNotice({ kind: "info", title: "맛다공에서 알려드려요", message })
+        }
       />
     ) : (
       <>
@@ -305,11 +311,13 @@ export default function App({ onLogout }: Props) {
           }
         />
       )}
-      {toast && (
-        <div className="toast" role="status">
-          <Icon name="check" />
-          {toast}
-        </div>
+      {notice && (
+        <NoticeToast
+          kind={notice.kind}
+          title={notice.title}
+          message={notice.message}
+          onDismiss={dismissNotice}
+        />
       )}
       {activity.storageError && (
         <div className="storage-error" role="alert">

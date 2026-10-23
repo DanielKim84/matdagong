@@ -4,6 +4,7 @@ import App from "./app/App";
 import SignupScreen from "./screens/SignupScreen";
 import "./styles/app.css";
 import "./styles/screens.css";
+import "./styles/notice.css";
 import "./styles/auth-start.css";
 
 const AUTHORIZATION_SERVER =
