@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { go } from "../app/navigation";
 import { BrandArt } from "../components/BrandAssets";
-import Icon from "../components/Icon";
 
 const steps = [
   {
@@ -144,62 +143,12 @@ export default function IntroScreen() {
             step === steps.length - 1 ? "primary-button" : "outline-button"
           }
           onClick={() =>
-            step === steps.length - 1 ? go("login") : setStep(step + 1)
+            step === steps.length - 1 ? go("home") : setStep(step + 1)
           }
         >
           {step === steps.length - 1 ? "시작하기" : "다음"}
         </button>
       </div>
-    </main>
-  );
-}
-
-export function LoginScreen({
-  onMessage,
-}: {
-  onMessage: (message: string) => void;
-}) {
-  return (
-    <main className="intro-screen login-screen">
-      <BrandArt name="logo" className="login-logo" label="맛다공" />
-      <BrandArt name="welcome" className="login-chef" />
-      <p>맛있는 걸 함께하는 공간</p>
-      <div className="login-options">
-        <button
-          className="naver-login"
-          onClick={() =>
-            onMessage("네이버 로그인은 계정 서비스 연결 후 제공돼요.")
-          }
-        >
-          <b>N</b>네이버로 시작하기
-        </button>
-        <button
-          className="kakao-login"
-          onClick={() =>
-            onMessage("카카오 로그인은 계정 서비스 연결 후 제공돼요.")
-          }
-        >
-          <Icon name="message" filled />
-          카카오로 시작하기
-        </button>
-        <button
-          className="email-login"
-          onClick={() =>
-            onMessage("이메일 로그인은 계정 서비스 연결 후 제공돼요.")
-          }
-        >
-          이메일로 시작하기
-        </button>
-      </div>
-      <p className="login-caption">
-        이미 계정이 있으신가요?{" "}
-        <button onClick={() => onMessage("로그인 기능을 준비하고 있어요.")}>
-          로그인하기
-        </button>
-      </p>
-      <button className="browse-first" onClick={() => go("home")}>
-        먼저 둘러보기
-      </button>
     </main>
   );
 }

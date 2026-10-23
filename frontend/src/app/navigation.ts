@@ -14,7 +14,6 @@ const screens: Screen[] = [
   "subscriptions",
   "settings",
   "intro",
-  "login",
   "reviews",
   "liked",
   "recent",

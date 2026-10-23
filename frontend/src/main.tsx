@@ -23,6 +23,23 @@ type MembershipStatus = {
   email: string | null;
 };
 
+/** 맛다공 인증 정보를 지우고 공통 인증을 다시 시작해 로그인 뒤 앱으로 돌아오게 합니다. */
+async function logout(): Promise<void> {
+  try {
+    // 공통 서버 세션도 끊어 다음 방문에서 이전 SSO 세션이 재사용되지 않게 합니다.
+    await fetch("/auth-api/auth/session/clear", { method: "POST" });
+  } catch {
+    // 서버에 닿지 못해도 현재 탭의 인증 정보를 지우고 로그인을 다시 시작합니다.
+  } finally {
+    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
+    sessionStorage.removeItem(STATE_KEY);
+    sessionStorage.removeItem(VERIFIER_KEY);
+    // 로그인 페이지만 열면 인증 완료 후 돌아올 앱이 없어지므로 OAuth 흐름을 다시 시작합니다.
+    await beginSignIn();
+  }
+}
+
 function base64Url(bytes: Uint8Array): string {
   let binary = "";
   bytes.forEach((byte) => {
@@ -165,6 +182,11 @@ async function startMatdagong(): Promise<void> {
   const root = document.getElementById("root");
   if (!root) return;
 
+  // 과거에 사용하던 맛다공 /login 주소는 앱 진입 주소로 정리합니다.
+  if (window.location.pathname === "/login") {
+    window.history.replaceState(null, "", "/");
+  }
+
   try {
     showStartupStatus(
       window.location.pathname === "/auth/callback"
@@ -196,7 +218,7 @@ async function startMatdagong(): Promise<void> {
     if (membership.registered) {
       reactRoot.render(
         <StrictMode>
-          <App />
+          <App onLogout={() => void logout()} />
         </StrictMode>,
       );
     } else {
@@ -209,7 +231,7 @@ async function startMatdagong(): Promise<void> {
             onComplete={() =>
               reactRoot.render(
                 <StrictMode>
-                  <App />
+                  <App onLogout={() => void logout()} />
                 </StrictMode>,
               )
             }

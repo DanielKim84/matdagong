@@ -17,7 +17,9 @@ import {
   SubscriptionsScreen,
 } from "../screens/CollectionScreen";
 import SettingsScreen from "../screens/SettingsScreen";
-import IntroScreen, { LoginScreen } from "../screens/IntroScreen";
+import IntroScreen from "../screens/IntroScreen";
+
+type Props = { onLogout: () => void };
 
 function registeredPlace(item: NewPlace): Place {
   return {
@@ -45,7 +47,7 @@ function registeredPlace(item: NewPlace): Place {
   };
 }
 
-export default function App() {
+export default function App({ onLogout }: Props) {
   const route = useRoute();
   const activity = useActivity();
   const [places, setPlaces] = useState<Place[]>([]);
@@ -157,7 +159,6 @@ export default function App() {
     "profile",
     "register",
     "intro",
-    "login",
   ].includes(route.screen);
   let screen;
 
@@ -257,10 +258,9 @@ export default function App() {
         onSubscribe={(id) => activity.toggle("subscriptions", id)}
       />
     );
-  else if (route.screen === "settings") screen = <SettingsScreen />;
+  else if (route.screen === "settings")
+    screen = <SettingsScreen onLogout={onLogout} />;
   else if (route.screen === "intro") screen = <IntroScreen />;
-  else if (route.screen === "login")
-    screen = <LoginScreen onMessage={setToast} />;
   else {
     const titles = {
       saved: "내 스크랩",

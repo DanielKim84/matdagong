@@ -50,7 +50,6 @@ export type Screen =
   | "subscriptions"
   | "settings"
   | "intro"
-  | "login"
   | "reviews"
   | "liked"
   | "recent";

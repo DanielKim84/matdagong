@@ -45,8 +45,8 @@ export function ScreenHeader({
     <header className="screen-header">
       <button
         className="icon-button"
-        onClick={() => go("home")}
-        aria-label="홈으로 돌아가기"
+        onClick={() => window.history.back()}
+        aria-label="이전 화면으로 돌아가기"
       >
         <Icon name="back" />
       </button>
