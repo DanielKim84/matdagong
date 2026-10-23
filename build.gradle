@@ -1,0 +1,28 @@
+plugins {
+    id 'org.springframework.boot' version '3.5.15' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
+}
+
+ext {
+    springCloudVersion = '2025.0.3'
+}
+
+allprojects {
+    group = 'kr.matdagong'
+    version = '0.1.0-SNAPSHOT'
+    repositories { mavenCentral() }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    }
+
+    dependencyManagement {
+        imports { mavenBom "org.springframework.cloud:spring-cloud-dependencies:${rootProject.ext.springCloudVersion}" }
+    }
+}

@@ -1,0 +1,60 @@
+.auth-start-screen {
+  display: grid;
+  min-height: 100dvh;
+  place-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: #fffaf2;
+  color: #49302a;
+  text-align: center;
+}
+
+.auth-start-screen p {
+  margin: 0;
+  color: #71625d;
+  font-size: 14px;
+}
+
+.auth-start-error h1 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.auth-start-error button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 24px;
+  background: #ff5836;
+  color: #fff;
+  font: inherit;
+  font-weight: 650;
+}
+.matdagong-signup {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #fffaf6;
+  color: #28231f;
+}
+
+.matdagong-signup__card {
+  width: min(100%, 420px);
+  display: grid;
+  gap: 12px;
+  padding: 32px;
+  border: 1px solid #f0e5dc;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 18px 55px rgb(79 49 29 / 8%);
+}
+
+.matdagong-signup__eyebrow { margin: 0; color: #e97843; font-size: 12px; font-weight: 800; letter-spacing: .14em; }
+.matdagong-signup__card h1 { margin: 0; font-size: 25px; }
+.matdagong-signup__description { margin: 0 0 10px; color: #766d66; line-height: 1.6; }
+.matdagong-signup__card label { margin-top: 7px; font-size: 14px; font-weight: 700; }
+.matdagong-signup__card label span { color: #928982; font-size: 12px; font-weight: 500; }
+.matdagong-signup__card input { width: 100%; min-height: 48px; padding: 0 14px; border: 1px solid #ddd3cb; border-radius: 12px; background: #fff; font: inherit; }
+.matdagong-signup__card button { min-height: 50px; margin-top: 10px; border: 0; border-radius: 13px; background: #e97843; color: white; font: inherit; font-weight: 750; cursor: pointer; }
+.matdagong-signup__card button:disabled { opacity: .65; cursor: wait; }
+.matdagong-signup__error { margin: 0; color: #bd3d32; font-size: 13px; }

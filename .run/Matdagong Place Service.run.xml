@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Matdagong Place Service" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="dagong-matdagong.matdagong-place-service.main" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="kr.matdagong.place.PlaceServiceApplication" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

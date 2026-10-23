@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: matdagong-postgres
+    environment:
+      POSTGRES_USER: mdg
+      POSTGRES_PASSWORD: mdg_local
+      POSTGRES_DB: postgres
+    ports:
+      - "54329:5432"
+    volumes:
+      - matdagong-postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mdg -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  matdagong-postgres-data:

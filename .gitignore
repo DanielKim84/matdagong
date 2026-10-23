@@ -1,0 +1,15 @@
+.gradle/
+build/
+**/build/
+.idea/
+*.iml
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+tmp/
+.env
+**/.env.local
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example

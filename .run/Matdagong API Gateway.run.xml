@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Matdagong API Gateway" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="dagong-matdagong.matdagong-api-gateway.main" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="kr.matdagong.gateway.ApiGatewayApplication" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

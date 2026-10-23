@@ -1,0 +1,30 @@
+server:
+  # 화면이 호출하는 API 진입 포트이며 각 기능 서비스 포트는 아래 route에서 지정합니다.
+  port: ${SERVER_PORT:5843}
+
+spring:
+  application:
+    name: matdagong-api-gateway
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # 사용자 프로필과 커뮤니티 활동은 한 서비스에서 함께 처리합니다.
+            - id: matdagong-community-service
+              uri: ${COMMUNITY_SERVICE_URL:http://localhost:5844}
+              predicates:
+                - Path=/api/v1/users/**,/api/v1/tasters/**,/api/v1/diary/**,/api/v1/subscriptions/**,/api/v1/notifications/**
+            # 장소 API를 별도 서버로 보내 장애가 다른 API 경로에 번지지 않게 합니다.
+            - id: matdagong-place-service
+              uri: ${PLACE_SERVICE_URL:http://localhost:5845}
+              predicates:
+                - Path=/api/v1/places,/api/v1/places/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
