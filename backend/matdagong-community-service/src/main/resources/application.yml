@@ -2,17 +2,25 @@ server:
   port: ${SERVER_PORT:5844}
 
 spring:
+  config:
+    # 루트에서 실행하거나 모듈 폴더에서 실행해도 저장소 루트의 비밀 설정을 읽습니다.
+    import:
+      - optional:file:./.env[.properties]
+      - optional:file:../../.env[.properties]
   application:
     name: matdagong-community-service
-  # 커뮤니티 데이터베이스 연결 설정입니다. 스키마와 저장소가 추가되면 이 서비스가 직접 사용합니다.
+  # 사용자 프로필과 커뮤니티 데이터는 공통 인증 DB와 분리해 보관합니다.
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:54329/matdagong_community}
-    username: ${DB_USERNAME:mdg}
-    password: ${DB_PASSWORD:mdg_local}
+    url: ${COMMUNITY_DB_URL:jdbc:postgresql://localhost:54329/matdagong_community}
+    username: ${COMMUNITY_DB_USERNAME:mdg}
+    password: ${COMMUNITY_DB_PASSWORD:mdg_local}
   jpa:
     hibernate:
-      ddl-auto: none
+      # Flyway가 DDL을 적용하고 Hibernate는 매핑된 엔티티만 검증합니다.
+      ddl-auto: validate
     open-in-view: false
+  flyway:
+    enabled: true
 
 management:
   endpoints.web.exposure.include: health,info
