@@ -11,7 +11,7 @@ matdagong-api-gateway       :5843
 
 각 도메인 서비스는 자체 데이터베이스를 소유하며 다른 서비스의 테이블을 직접 조회하지 않습니다. 사용자의 공통 로그인 ID와 계정 상태는 `dagong-auth`가 소유하고, 커뮤니티 서비스는 맛다공 안에서 필요한 프로필·활동 정보를 소유합니다.
 
-커뮤니티 서비스 스키마는 `backend/matdagong-community-service/src/main/resources/db/migration`의 Flyway SQL이 관리합니다. 현재 V1은 맛객 프로필과 사용자 간 구독 관계를 생성하며, `account_id`는 공통 인증 DB의 사용자 UUID를 값으로만 참조합니다. DB 간 외래 키는 두지 않습니다.
+커뮤니티 서비스 스키마는 `backend/matdagong-community-service/src/main/resources/db/migration`의 Flyway SQL이 관리합니다. 현재 스키마에는 사용자 프로필(`user_profiles`)과 사용자 간 구독 관계가 있으며, `account_id`는 공통 인증 DB의 사용자 UUID를 값으로만 참조합니다. DB 간 외래 키는 두지 않습니다.
 
 서비스 내부 코드는 다음 경계를 따릅니다.
 
