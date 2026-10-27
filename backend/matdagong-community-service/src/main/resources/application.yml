@@ -2,6 +2,10 @@ server:
   port: ${SERVER_PORT:5844}
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   config:
     # 루트에서 실행하거나 모듈 폴더에서 실행해도 저장소 루트의 비밀 설정을 읽습니다.
     import:
@@ -14,13 +18,13 @@ spring:
     url: ${COMMUNITY_DB_URL:jdbc:postgresql://localhost:54329/matdagong_community}
     username: ${COMMUNITY_DB_USERNAME:mdg}
     password: ${COMMUNITY_DB_PASSWORD:mdg_local}
-  jpa:
-    hibernate:
-      # Flyway가 DDL을 적용하고 Hibernate는 매핑된 엔티티만 검증합니다.
-      ddl-auto: validate
-    open-in-view: false
   flyway:
     enabled: true
+
+dagong:
+  auth:
+    issuer: ${AUTH_ISSUER:http://localhost:5840}
+    client-id: ${AUTH_CLIENT_ID:matdagong-web-dev}
 
 management:
   endpoints.web.exposure.include: health,info

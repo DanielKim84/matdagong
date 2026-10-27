@@ -3,18 +3,5 @@ server:
 spring:
   application:
     name: matdagong-place-service
-  # 현재 장소 목록은 메모리 샘플이므로 실제 DB 연동 전까지 JDBC와 JPA 자동 구성을 끕니다.
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:54329/matdagong_places}
-    username: ${DB_USERNAME:mdg}
-    password: ${DB_PASSWORD:mdg_local}
-  jpa:
-    hibernate:
-      ddl-auto: none
-    open-in-view: false
 management:
   endpoints.web.exposure.include: health,info

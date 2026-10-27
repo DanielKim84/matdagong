@@ -20,6 +20,7 @@ export type IconName =
   | "camera"
   | "check"
   | "fork"
+  | "coffee"
   | "book"
   | "message"
   | "image"
@@ -48,6 +49,7 @@ const shapes: Record<IconName, string> = {
   camera: "M8 5 10 2h4l2 3h5v16H3V5h5ZM16 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
   check: "m5 12 4 4L20 5",
   fork: "M4 2v6a3 3 0 0 0 6 0V2M7 2v20M20 22V2c-5 3-5 10 0 10",
+  coffee: "M4 8h12v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Zm12 1h2a3 3 0 0 1 0 6h-2M8 2v3M12 2v3M2 23h18",
   book: "M3 4h6a3 3 0 0 1 3 3v14a4 4 0 0 0-4-2H3V4ZM21 4h-6a3 3 0 0 0-3 3v14a4 4 0 0 1 4-2h5V4Z",
   message: "M3 3h18v14H9l-6 5V3Z",
   image: "M3 3h18v18H3V3Zm0 13 6-7 6 8 3-4 3 3M17 6h.01",

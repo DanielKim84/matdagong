@@ -58,42 +58,42 @@ export function CollectionScreen({
 
 export function SubscriptionsScreen({
   tasters,
-  subscriptions,
-  onSubscribe,
 }: {
   tasters: Taster[];
-  subscriptions: string[];
-  onSubscribe: (id: string) => void;
 }) {
   return (
     <>
       <ScreenHeader title="내 구독 맛객" />
       <main className="subscription-list">
-        <p>마음에 드는 맛객을 구독해 보세요.</p>
-        {tasters.map((taster) => (
-          <article key={taster.tasterId}>
-            <button
-              className="subscription-profile"
-              onClick={() => go("profile", taster.tasterId)}
-            >
-              <Avatar />
-              <span>
-                <b>{taster.tasterName}</b>
-                <small>{taster.tag}</small>
-              </span>
+        {tasters.length ? (
+          <>
+            <p>현재 구독 중인 맛객이에요.</p>
+            {tasters.map((taster) => (
+              <article key={taster.tasterId}>
+                <button
+                  className="subscription-profile"
+                  onClick={() => go("profile", taster.tasterId)}
+                >
+                  <Avatar src={taster.avatar} name={taster.tasterName} variant={taster.avatarVariant} />
+                  <span>
+                    <b>{taster.tasterName}</b>
+                    <small>{taster.tag}</small>
+                  </span>
+                </button>
+                <span className="subscribed-chip">구독 중</span>
+              </article>
+            ))}
+          </>
+        ) : (
+          <div className="empty-state collection-empty">
+            <Icon name="pin" />
+            <h2>아직 구독한 맛객이 없어요</h2>
+            <p>추천 맛집에서 취향이 맞는 맛객을 찾아보세요.</p>
+            <button className="primary-button" onClick={() => go("home")}>
+              맛집 둘러보기
             </button>
-            <button
-              className={
-                subscriptions.includes(taster.tasterId)
-                  ? "subscribed-chip"
-                  : "subscribe-chip"
-              }
-              onClick={() => onSubscribe(taster.tasterId)}
-            >
-              {subscriptions.includes(taster.tasterId) ? "구독 중" : "구독하기"}
-            </button>
-          </article>
-        ))}
+          </div>
+        )}
       </main>
     </>
   );
@@ -124,7 +124,7 @@ export function NotificationsScreen({
           </button>
         ))}
         <button onClick={() => go("subscriptions")}>
-          <Avatar />
+          <Avatar name="맛다공" />
           <span>
             <b>맛다공에 오신 걸 환영해요!</b>
             <p>취향이 닮은 맛객을 구독하고 맛집을 발견해 보세요.</p>

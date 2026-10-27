@@ -3,7 +3,6 @@ import type { NewPlace } from "../models/place";
 
 type Activity = {
   saved: string[];
-  subscriptions: string[];
   registered: NewPlace[];
   liked: string[];
   recent: string[];
@@ -11,7 +10,6 @@ type Activity = {
 };
 const initial: Activity = {
   saved: [],
-  subscriptions: ["u-01", "u-03"],
   registered: [],
   liked: [],
   recent: [],
@@ -43,7 +41,7 @@ export function useActivity() {
       );
     }
   }
-  function toggle(field: "saved" | "subscriptions" | "liked", id: string) {
+  function toggle(field: "saved" | "liked", id: string) {
     save({
       ...activity,
       [field]: activity[field].includes(id)

@@ -11,6 +11,9 @@ type Props = {
   registeredCount: number;
   subscribedCount: number;
   recentCount: number;
+  nickname: string;
+  profileImgUrl: string | null;
+  avatarVariant: number;
 };
 export default function MyScreen({
   savedCount,
@@ -18,6 +21,9 @@ export default function MyScreen({
   registeredCount,
   subscribedCount,
   recentCount,
+  nickname,
+  profileImgUrl,
+  avatarVariant,
 }: Props) {
   const [pointsOpen, setPointsOpen] = useState(false);
   const menus: {
@@ -38,7 +44,6 @@ export default function MyScreen({
       screen: "diary",
       count: registeredCount,
     },
-    { label: "내 리뷰", icon: "book", screen: "reviews", count: 0 },
     {
       label: "최근 본 맛집",
       icon: "clock",
@@ -50,10 +55,18 @@ export default function MyScreen({
   return (
     <main className="my-screen">
       <section className="my-identity">
-        <Avatar />
+        <button
+          className="my-avatar-upload"
+          type="button"
+          onClick={() => go("profile-edit")}
+          aria-label="프로필 사진 변경"
+        >
+          <Avatar src={profileImgUrl} name={nickname} variant={avatarVariant} />
+          <span><Icon name="camera" /></span>
+        </button>
         <div>
-          <h1>맛다공이</h1>
-          <small>@matdagong</small>
+          <h1>{nickname}</h1>
+          <small>@{nickname.replaceAll(" ", "")}_matguest</small>
         </div>
         <button
           className="icon-button"
@@ -87,10 +100,6 @@ export default function MyScreen({
         <button onClick={() => go("saved")}>
           <b>{savedCount}</b>
           <span>스크랩</span>
-        </button>
-        <button onClick={() => go("reviews")}>
-          <b>0</b>
-          <span>리뷰</span>
         </button>
       </div>
       <div className="my-menu-list">

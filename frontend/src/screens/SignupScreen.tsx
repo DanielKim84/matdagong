@@ -1,5 +1,14 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import TasteTagPicker from "../components/TasteTagPicker";
+import FoodFocusPicker from "../components/FoodFocusPicker";
+import { isVisitCondition } from "../models/place";
+import {
+  ensureMyProfile,
+  getTasteTags,
+  updateMyProfile,
+  type FoodFocus,
+  type TasteTag,
+} from "../services/community";
 
 type SignupScreenProps = {
   accessToken: string;
@@ -19,28 +28,51 @@ export default function SignupScreen({
   const [email, setEmail] = useState(initialEmail ?? "");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [tasteTags, setTasteTags] = useState<TasteTag[]>([]);
+  const [preferenceTags, setPreferenceTags] = useState<string[]>([]);
+  const [preferenceFocus, setPreferenceFocus] = useState<FoodFocus>("BOTH");
+  const [membershipComplete, setMembershipComplete] = useState(false);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  useEffect(() => {
+    getTasteTags(accessToken)
+      .then(setTasteTags)
+      .catch(() => setTasteTags([]));
+  }, [accessToken]);
+
+  async function finishSignup(selectedPreferences: string[], skipPreferences = false) {
     setSubmitting(true);
     setError("");
     try {
-      const response = await fetch("/auth-api/api/v1/matdagong/membership", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ displayName, email: email.trim() || null }),
-      });
-      if (!response.ok) {
-        const result = (await response.json().catch(() => null)) as {
-          message?: string;
-        } | null;
-        throw new Error(
-          result?.message ?? "가입을 완료하지 못했어요. 다시 시도해 주세요.",
-        );
+      if (!membershipComplete) {
+        const response = await fetch("/auth-api/api/v1/matdagong/membership", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ displayName, email: email.trim() || null }),
+        });
+        if (!response.ok) {
+          const result = (await response.json().catch(() => null)) as {
+            message?: string;
+          } | null;
+          throw new Error(
+            result?.message ?? "가입을 완료하지 못했어요. 다시 시도해 주세요.",
+          );
+        }
+        setMembershipComplete(true);
       }
+      // 취향 선택은 가입 조건이 아니며, 건너뛰면 빈 목록으로 저장해 추천에 반영하지 않습니다.
+      const profile = await ensureMyProfile(accessToken, displayName.trim());
+      await updateMyProfile(accessToken, {
+        nickname: profile.nickname,
+        intro: profile.intro ?? "",
+        profileTags: profile.profileTags ?? [],
+        tasterFocus: profile.tasterFocus ?? "BOTH",
+        preferenceFocus: skipPreferences ? "BOTH" : preferenceFocus,
+        preferenceTags: selectedPreferences,
+        excludedTags: [],
+      });
       onComplete();
     } catch (cause) {
       setError(
@@ -49,6 +81,11 @@ export default function SignupScreen({
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void finishSignup(preferenceTags);
   }
 
   return (
@@ -63,9 +100,9 @@ export default function SignupScreen({
         <input
           id="signup-display-name"
           required
-          maxLength={80}
+          maxLength={30}
           value={displayName}
-          onChange={(event) => setDisplayName(event.target.value)}
+          onChange={(event) => setDisplayName(event.target.value.slice(0, 30))}
         />
         <label htmlFor="signup-email">
           이메일 <span>선택</span>
@@ -78,6 +115,22 @@ export default function SignupScreen({
           onChange={(event) => setEmail(event.target.value)}
           placeholder="연락용 이메일"
         />
+        <section className="signup-taste-preferences">
+          <div>
+            <b>취향 설정 <span>선택</span></b>
+            <small>선택한 분야와 취향은 맛객 추천에 활용돼요. 건너뛰어도 설정에서 언제든 추가할 수 있어요.</small>
+          </div>
+          <FoodFocusPicker
+            label="추천 받고 싶은 분야"
+            value={preferenceFocus}
+            onChange={setPreferenceFocus}
+          />
+          <TasteTagPicker
+            options={tasteTags.filter((tag) => !isVisitCondition(tag.name))}
+            value={preferenceTags}
+            onChange={setPreferenceTags}
+          />
+        </section>
         {error && (
           <p className="matdagong-signup__error" role="alert">
             {error}
@@ -85,6 +138,14 @@ export default function SignupScreen({
         )}
         <button type="submit" disabled={submitting}>
           {submitting ? "가입하는 중…" : "맛다공 시작하기"}
+        </button>
+        <button
+          type="button"
+          className="matdagong-signup__skip"
+          disabled={submitting}
+          onClick={() => void finishSignup([], true)}
+        >
+          {submitting ? "처리하는 중…" : "취향 설정 건너뛰기"}
         </button>
       </form>
     </main>

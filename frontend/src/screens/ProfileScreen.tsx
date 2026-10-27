@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Place, Taster } from "../models/place";
 import { go } from "../app/navigation";
-import { BrandArt, FoodPhoto } from "../components/BrandAssets";
+import { Avatar, FoodPhoto } from "../components/BrandAssets";
 import Icon from "../components/Icon";
 
 export default function ProfileScreen({
@@ -22,7 +22,10 @@ export default function ProfileScreen({
   return (
     <main className="profile-screen">
       <div className="profile-cover">
-        <img src="/assets/profile-cover.png" alt="맛객 프로필 커버" />
+        <img
+          src={taster.profileCoverUrl || "/assets/profile-cover.png"}
+          alt="맛객 프로필 커버"
+        />
         <button
           className="photo-back icon-button"
           onClick={() => go("home")}
@@ -37,33 +40,41 @@ export default function ProfileScreen({
         </div>
       </div>
       <section className="profile-body">
-        <BrandArt
-          className="profile-pin"
-          name={subscribed ? "purplePin" : "redPin"}
+        <Avatar
+          className="profile-avatar"
+          src={taster.avatar}
+          name={taster.tasterName}
+          variant={taster.avatarVariant}
         />
         <h1>{taster.tasterName}</h1>
         <span className="profile-handle">
           @{taster.tasterId.replace("-", "")}_matguest
         </span>
         <p className="profile-bio">
-          맛있는 하루를 기록하며 맛집 탐방합니다.
+          {taster.intro ?? "맛있는 하루를 기록하며 맛집을 탐방합니다."}
           <br />
           좋은 맛집이 있으면 언제든 추천해 주세요! <b>♥</b>
         </p>
+        {!!taster.profileTags?.length && (
+          <div className="profile-taste-tags" aria-label="맛객 취향 태그">
+            {taster.profileTags.map((tag) => <span key={tag}>#{tag}</span>)}
+          </div>
+        )}
         <div className="profile-statistics">
           <span>
-            <b>{own.length}</b>게시물
+            <b>{taster.postCount ?? own.length}</b>게시물
           </span>
           <span>
-            <b>{subscribed ? "3,453" : "3,452"}</b>팔로워
+            <b>{taster.followerCount ?? 0}</b>팔로워
           </span>
           <span>
-            <b>280</b>팔로잉
+            <b>{taster.followingCount ?? 0}</b>팔로잉
           </span>
         </div>
         <button
           className={`primary-button ${subscribed ? "is-subscribed" : ""}`}
           onClick={onSubscribe}
+          disabled={subscribed}
         >
           {subscribed ? (
             <>
@@ -100,12 +111,13 @@ export default function ProfileScreen({
           </div>
         ) : tab === "태그" ? (
           <div className="suggested-tags profile-tag-list">
-            <span>#{taster.tag.replaceAll(" ", "")}</span>
+            {(taster.profileTags ?? []).map((tag) => <span key={tag}>#{tag}</span>)}
             {[
               ...new Set(own.map((place) => place.category.split(" · ")[0])),
             ].map((category) => (
-              <span key={category}>#{category}</span>
+              <span key={`place-${category}`}>#{category}</span>
             ))}
+            {!taster.profileTags?.length && !own.length && <p>아직 등록된 취향 태그가 없어요.</p>}
           </div>
         ) : (
           <div className="empty-state">

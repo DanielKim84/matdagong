@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Place } from "../models/place";
 
 const regions = {
@@ -80,10 +81,39 @@ export function FoodPhoto({
   );
 }
 
-export function Avatar({ className = "" }: { className?: string }) {
+export function Avatar({
+  className = "",
+  src,
+  name = "맛객",
+  variant = 1,
+}: {
+  className?: string;
+  src?: string | null;
+  name?: string;
+  variant?: number;
+}) {
+  const [failedImage, setFailedImage] = useState<string | null>(null);
+  const selectedVariant = Math.min(10, Math.max(1, Math.trunc(variant || 1)));
+  const column = (selectedVariant - 1) % 5;
+  const row = Math.floor((selectedVariant - 1) / 5);
   return (
-    <span className={`avatar ${className}`}>
-      <BrandArt name="avatar" label="맛다공 기본 프로필" />
+    <span className={`avatar ${className}`} role="img" aria-label={`${name} 프로필`}>
+      {src && failedImage !== src ? (
+        <img src={src} alt="" onError={() => setFailedImage(src)} />
+      ) : (
+        <svg
+          className="brand-art avatar-character"
+          viewBox={`${column * 396.6} ${row * 396.5} 396.6 396.5`}
+          preserveAspectRatio="xMidYMid slice"
+          aria-hidden="true"
+        >
+          <image
+            href="/assets/avatars/matdagong-characters-v1.png"
+            width="1983"
+            height="793"
+          />
+        </svg>
+      )}
     </span>
   );
 }

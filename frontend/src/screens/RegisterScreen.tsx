@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import type { NewPlace, Place } from "../models/place";
+import type { NewPlace, Place, VisitCondition } from "../models/place";
+import { VISIT_CONDITIONS } from "../models/place";
 import { ScreenHeader } from "../components/AppChrome";
 import { loadPhoto } from "../services/photos";
 import Sheet from "../components/Sheet";
@@ -24,6 +25,7 @@ export default function RegisterScreen({
   const [menus, setMenus] = useState<string[]>([]);
   const [menu, setMenu] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [visitConditions, setVisitConditions] = useState<VisitCondition[]>([]);
   const [tag, setTag] = useState("");
   const [visibility, setVisibility] =
     useState<NewPlace["visibility"]>("public");
@@ -93,6 +95,7 @@ export default function RegisterScreen({
       reason: reason.trim(),
       menus,
       tags,
+      visitConditions,
       photos,
       visibility,
       createdAt: new Date().toISOString(),
@@ -302,6 +305,26 @@ export default function RegisterScreen({
               </button>
             </div>
           )}
+        </section>
+        <section className="form-section visit-condition-section">
+          <h2>방문 조건 <small>(확인한 항목만 선택)</small></h2>
+          <p>직접 방문해 확인한 정보예요. 불친절은 등록자의 경험으로 표시돼요.</p>
+          <div className="visit-condition-options">
+            {VISIT_CONDITIONS.map((condition) => (
+              <label key={condition}>
+                <input
+                  type="checkbox"
+                  checked={visitConditions.includes(condition)}
+                  onChange={(event) => setVisitConditions((current) =>
+                    event.target.checked
+                      ? [...current, condition]
+                      : current.filter((item) => item !== condition),
+                  )}
+                />
+                <span>{condition}</span>
+              </label>
+            ))}
+          </div>
         </section>
         <fieldset className="visibility-field">
           <legend>공유 설정</legend>

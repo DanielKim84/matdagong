@@ -8,14 +8,16 @@
 | --- | --- | --- | --- |
 | 공통 계정·소셜 로그인 | `dagong-auth` | OIDC 표준 엔드포인트 | 공통 사용자 ID, 소셜 연결, 계정 차단·탈퇴 상태 |
 | 맛집·지도 | `matdagong-place-service` | `/api/v1/places` | 장소 이름, 주소, 좌표, 카테고리 |
-| 맛객·커뮤니티 활동 | `matdagong-community-service` | `/api/v1/users`, `/api/v1/tasters`, `/api/v1/diary`, `/api/v1/subscriptions`, `/api/v1/notifications` | 맛다공 프로필, 방문 기록, 리뷰, 구독, 좋아요·스크랩, 알림 |
+| 맛객·커뮤니티 활동 | `matdagong-community-service` | `/api/v1/users`, `/api/v1/tasters`, `/api/v1/taste-tags`, `/api/v1/diary`, `/api/v1/subscriptions`, `/api/v1/notifications` | 맛다공 프로필과 취향 태그, 맛객 추천, 방문 기록, 리뷰, 구독, 좋아요·스크랩, 알림 |
 | API 진입점 | `matdagong-api-gateway` | `/api/v1/**` | 도메인 데이터를 저장하지 않고 요청을 해당 서비스로 전달 |
 
 포인트 원장과 관리자 화면은 현재 실행 구조에 포함하지 않습니다. 기능 범위와 운영 규칙이 정리된 다음 별도 경계를 결정합니다.
 
 ## 현재 구현 상태
 
-지도 화면은 장소 서비스의 `GET /api/v1/places?q={검색어}`와 `GET /api/v1/places/{id}` 샘플 API를 사용합니다. 샘플 목록은 서비스 코드에서 반환하며 장소 데이터베이스 연결은 아직 없습니다. 커뮤니티 경로는 Gateway에 연결되어 있지만 해당 API 기능은 아직 구현되지 않았습니다.
+지도 화면은 장소 서비스의 `GET /api/v1/places?q={검색어}`와 `GET /api/v1/places/{id}` 샘플 API를 사용합니다. 샘플 목록은 서비스 코드에서 반환하며 장소 데이터베이스 연결은 아직 없습니다. 커뮤니티 서비스는 공통 계정 토큰을 검증한 뒤 `GET /api/v1/tasters`, `GET /api/v1/subscriptions`, `GET /api/v1/subscriptions/plans`, `POST /api/v1/subscriptions`를 제공합니다. 무료 구독은 사용자당 활성 한 건으로 교체되며, 유료 구독 기간은 1·3·6·12개월입니다. 현재 유료 구독은 개발용 금액으로 즉시 완료 처리하고 실제 결제는 하지 않습니다.
+
+맛객 추천은 사용자의 분야 설정, 비공개 선호 태그와 맛객의 분야·공개 태그를 비교합니다. 태그 분류는 `MENU`(메뉴·맛)와 `VISIT`(방문 조건)이며, 사용자가 제외로 고른 방문 조건은 `user_preference_tags.preference_type = 'AVOID'`로 따로 저장합니다. 가입 중 취향 선택은 건너뛸 수 있고 나중에 프로필 설정에서 바꿀 수 있습니다.
 
 ## 경계 원칙
 

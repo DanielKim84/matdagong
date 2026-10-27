@@ -13,8 +13,8 @@ const screens: Screen[] = [
   "saved",
   "subscriptions",
   "settings",
+  "profile-edit",
   "intro",
-  "reviews",
   "liked",
   "recent",
 ];

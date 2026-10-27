@@ -95,6 +95,11 @@ export default function PlaceScreen({
             <span key={tag}>{tag}</span>
           ))}
         </div>
+        {!!place.visitConditions?.length && (
+          <div className="place-visit-conditions" aria-label="방문 조건">
+            {place.visitConditions.map((condition) => <span key={condition}>{condition}</span>)}
+          </div>
+        )}
         <p className="place-line">
           <Icon name="pin" />
           {place.address}
@@ -146,7 +151,7 @@ export default function PlaceScreen({
                     key={taster.tasterId}
                     onClick={() => go("profile", taster.tasterId)}
                   >
-                    <Avatar />
+                    <Avatar src={taster.avatar} name={taster.tasterName} variant={taster.avatarVariant} />
                     <span>
                       <b>{taster.tasterName}</b>
                       <small>{taster.tag}</small>

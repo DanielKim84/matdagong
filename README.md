@@ -15,11 +15,13 @@ C:\workspace\
       └─ matdagong-place-service/     # 맛집·지도 조회
 ```
 
-Gradle 멀티프로젝트 모노레포 안에서 각 백엔드 모듈은 별도의 Spring Boot 서버로 실행할 수 있습니다. 모듈별 책임은 업무 기능으로 나누고, 각 서비스 안에서는 `api → application → domain → infrastructure` 경계를 사용합니다.
+Gradle 멀티프로젝트 모노레포 안에서 각 백엔드 모듈은 별도의 Spring Boot 서버로 실행합니다. 커뮤니티는 `profile`, `subscription` 같은 기능별 패키지로 나누고 컨트롤러가 HTTP 요청을, 서비스가 처리 규칙과 DB 작업을 맡습니다.
 
 ## 로컬 실행
 
 IntelliJ에서 저장소 루트를 Gradle 프로젝트로 열고 다음 세 백엔드를 각각 실행합니다.
+
+Java 21과 Node.js 24.22.1 이상(24 LTS 계열)을 사용합니다. 프런트 패키지는 최초 실행 전에 `frontend` 폴더에서 `npm ci`로 설치합니다.
 
 ```powershell
 .\gradlew.bat :matdagong-api-gateway:bootRun
@@ -27,7 +29,7 @@ IntelliJ에서 저장소 루트를 Gradle 프로젝트로 열고 다음 세 백�
 .\gradlew.bat :matdagong-place-service:bootRun
 ```
 
-저장소 루트에서 PostgreSQL을 사용할 때는 `docker compose up -d postgres`로 개발 데이터베이스를 시작합니다. 커뮤니티 서비스는 Flyway로 `matdagong_community`에 사용자 프로필·구독 테이블을 적용합니다. 공통 로그인 화면 개발 서버(4840)와 인증 API(5840)를 실행한 뒤, 맛다공 저장소 루트에서 `npm run dev`를 실행하고 `http://localhost:4845/`에 접속합니다. 로그인 테스트에는 `localhost`를 사용해야 PKCE 상태와 callback 주소가 같은 브라우저 origin으로 유지됩니다.
+커뮤니티 서비스는 루트 `.env`의 `COMMUNITY_DB_*` 설정으로 공유 개발 DB에 연결합니다. 로컬 PostgreSQL을 별도로 사용할 때는 `docker compose up -d postgres`로 시작하고 접속 설정을 로컬 DB로 맞춥니다. 스키마는 Flyway가 적용합니다. 공통 로그인 화면 개발 서버(4840)와 인증 API(5840)를 실행한 뒤, 맛다공 저장소 루트에서 `npm run dev`를 실행하고 `http://localhost:4845/`에 접속합니다. 로그인 테스트에는 `localhost`를 사용해야 PKCE 상태와 callback 주소가 같은 브라우저 origin으로 유지됩니다.
 
 | 서버 | 기본 포트 | 책임 |
 | --- | ---: | --- |
@@ -45,7 +47,7 @@ Gateway는 `/api/v1/users`, `/api/v1/tasters`, `/api/v1/diary`, `/api/v1/subscri
 ## 기능 상태
 
 - 지도 화면은 장소 서비스의 `GET /api/v1/places?q={검색어}`와 `GET /api/v1/places/{id}` 샘플 API를 사용합니다. 현재 카탈로그는 코드에 있는 샘플 데이터이며 PostgreSQL 조회는 아직 연결되지 않았습니다.
-- 맛객 프로필과 사용자 간 구독은 커뮤니티 DB의 Flyway 스키마를 준비했습니다. API와 화면의 서버 저장 연동은 아직 구현되지 않았습니다. 스크랩·좋아요·최근 본 장소·맛집 등록은 브라우저 `localStorage`에 저장됩니다.
+- 프로필·배경 이미지, 소개, 공개 태그·비공개 취향, 무료·유료 구독은 커뮤니티 API와 DB에 저장합니다. 유료 구독은 1·3·6·12개월 개발 요금을 표시하고 실제 결제 없이 즉시 완료합니다. 스크랩·좋아요·최근 본 장소·맛집 등록은 아직 브라우저 `localStorage`에 저장됩니다.
 - 맛다공 첫 진입은 공통 인증 서버에 Authorization Code + PKCE 로그인을 요청합니다. 로그인하지 않았다면 공통 로그인 화면으로 이동하고, 인증·동의가 끝나면 `/auth/callback`에서 코드를 교환한 뒤 맛다공 홈으로 돌아옵니다. 새 카카오 계정은 첫 인증 때 공통 계정으로 생성됩니다.
 - 포인트 서버와 관리자 화면은 현재 실행 모듈에 포함하지 않습니다. 포인트 원장·거래 규칙과 관리자 업무가 구체화되면 별도 서비스 또는 화면으로 추가합니다.
 

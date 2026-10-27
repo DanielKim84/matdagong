@@ -11,6 +11,8 @@
 - 맛집 등록: 사진 최대 10장, 이름, 주소·지도 좌표, 추천 이유 500자, 대표 메뉴 5개, 태그 5개, 공개 범위.
 - 상세: 큰 음식 사진, 이름과 평가, 주소·영업 정보, 지도/길찾기, 소개/메뉴/사진/태그/위치정보.
 - 프로필: 커버, 원본 마커 프로필, 소개·활동 수·구독, 세 열 사진 목록.
+- 프로필 관리: 프로필 사진과 커버 사진 미리보기·변경·기본 이미지 복원, 고유 닉네임(최대 30자), 자기소개(최대 300자).
+- 가입·홈 추천: 분야 설정과 공개·선호·제외 태그를 각각 최대 5개 선택합니다. 가입 때 취향 선택은 건너뛸 수 있으며 프로필 관리에서 나중에 수정합니다. 홈 추천은 분야와 공개·선호 태그의 일치도를 반영합니다.
 - 마이: 원본 기본 프로필, 크림색 포인트 카드, 네 칸 통계, 붉은 원형 메뉴 아이콘.
 - 시작·온보딩·로그인: 원본의 요리사·음식·지도·구독·포인트·광고 일러스트와 같은 순서.
 
@@ -41,13 +43,11 @@ Create a restaurant food photography asset atlas, 2 columns by 2 rows of exactly
 Create a clean high resolution landscape cover background for a Korean food sharing app user profile. The input is the app design reference, use ONLY the colorful travel village landscape that appears behind the mascot avatar in screen 06 맛객 프로필 화면 as visual style reference. Generate a wide panoramic beautiful small alpine village with red and orange rooftops, green terraced fields, bright spring flowers in foreground, turquoise blue sky, distant snowy mountains, rich cheerful colors, slightly dreamy miniature tilt shift photography, premium 3D scenic illustration matching the small profile cover reference. Edge to edge image. NO user interface, NO text, NO logos, NO mascot, NO person, NO map marker, NO status bar, NO phone frame, NO search icon, NO battery or signal icons. Landscape 3:1 composition, keep distant mountains top half and vibrant village and flowers lower half. This image is only the decorative cover behind the functional app UI, not an app screenshot.
 ```
 
-- `http://www.localhost:4845/`: 실제 앱. 임시 화면 비교 HTML과 확인용 스크린샷은 정리했습니다.
-- `/#home`, `/#map`, `/#register`, `/#my`, `/#intro`, `/#login`: 개별 화면.
-- Kakao Developers Web 플랫폼 허용 도메인에 www.localhost:4845를 등록해야 합니다.
+- `http://localhost:4845/`: 맛다공 화면.
+- `/#home`, `/#map`, `/#register`, `/#my`, `/#intro`: 개별 화면. 공통 로그인 화면은 `http://localhost:4840/login`입니다.
+- Kakao Developers Web 플랫폼 허용 도메인에 `http://localhost:4845`를 등록합니다.
 
 기본 지도 동작은 [카카오 지도 공식 문서](https://apis.map.kakao.com/web/documentation/)의 SDK를 사용합니다.
-
-## 연결 범위
 
 ## 로고 소재
 
@@ -57,6 +57,10 @@ Create a clean high resolution landscape cover background for a Korean food shar
 Use case: background-extraction, identity-preserve. Extract ONLY the exact Korean brand wordmark '맛다공' shown near the top of the first welcome phone (second column) in this provided design reference. Preserve the lettering faithfully: very thick rounded friendly dark chocolate brown Korean '맛' and '공', vivid red-orange '다', orange-red sweeping lower stroke of '맛', little white chef hat with dark brown outline above the final '공', and tiny orange accent next to hat. Output the isolated original brand logo as a clean high resolution transparent PNG, horizontal ratio about 2:1, centered with 6% transparent padding. No background whatsoever, no cream rectangle, no kitchen, no mascot, no tagline, no phone, no other words. Do not invent a new logo, don't change spelling or type shapes. Text must be exactly 맛다공, same visual identity as the attached reference. This is a clean cutout/export of the supplied wordmark for use in the app header.
 ```
 
-최종 확인: TypeScript 및 Vite 빌드 성공. www.localhost에서 지도 드래그, 마커 상세 이동, 필터 8→2곳 변경을 확인했습니다. 별도 127.0.0.1 브라우저 저장소에서 등록 후 새로고침 유지와 메뉴 표시를 확인했습니다. 로그인과 포인트 서버 처리는 연결 전입니다.
+## 연결 범위
 
-기존 장소 API 계약은 유지합니다. 등록·좋아요·스크랩·구독은 이 브라우저의 체험 데이터입니다. 광고 데이터가 없으면 빈 목록을 보여줍니다. 로그인·리뷰 저장·서버 공유·포인트 거래는 연결 전이며 포인트 잔액은 0입니다. 화면의 평점·팔로워 수와 음식 사진은 예시입니다.
+카카오 공통 로그인, 프로필·이미지·취향 저장과 구독은 서버에 연결돼 있습니다. 유료 구독은 개발 요금으로 즉시 완료하는 결제 모형입니다. 맛집 등록·좋아요·스크랩은 브라우저에 저장하고, 리뷰 저장과 포인트 거래는 서버 연결 전입니다. 광고 데이터가 없으면 빈 목록을 보여줍니다. 장소 평점·음식 사진은 예시이며 맛객 구독 수는 서버에서 집계합니다.
+
+프로필은 `user_profiles`에 저장합니다. 사진 데이터만 DB에 두고 이미지 URL은 계정 UUID로 만들어 중복 저장하지 않습니다. 맛객 분야와 사용자가 추천받을 분야는 각각 음식점·카페/디저트·둘 다 중 하나로 설정합니다.
+
+가이드 태그는 `taste_tags`에서 관리하며 `MENU`(메뉴·맛)와 `VISIT`(방문 조건) 두 분류만 사용합니다. 맛객 태그는 공개하고, 사용자가 고른 선호·제외 태그는 비공개로 저장합니다. 가입 중 취향 선택은 선택 사항이며 건너뛸 수 있습니다. 태그는 자유 입력 대신 목록에서 고릅니다. 장소 등록 시 확인한 웨이팅·주차·노키즈존·서비스 경험을 기록하고, 개인 설정의 제외 조건은 홈과 지도에서 해당 장소를 숨깁니다.

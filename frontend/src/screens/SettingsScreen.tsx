@@ -9,6 +9,10 @@ export default function SettingsScreen({ onLogout }: Props) {
     <>
       <ScreenHeader title="설정" />
       <main className="settings-content">
+        <button onClick={() => go("profile-edit")}>
+          <span>내 프로필 관리</span>
+          <Icon name="chevron" />
+        </button>
         <button onClick={() => go("intro")}>
           <span>맛다공 앱 소개</span>
           <Icon name="chevron" />

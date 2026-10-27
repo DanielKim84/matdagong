@@ -15,6 +15,7 @@ public record PlaceView(
         String visitedOn,
         String recentNote,
         int recordCount,
+        List<String> visitConditions,
         List<TasterRecordView> tasters
 ) {
     public record TasterRecordView(

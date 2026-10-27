@@ -6,6 +6,8 @@ import "./styles/app.css";
 import "./styles/screens.css";
 import "./styles/notice.css";
 import "./styles/auth-start.css";
+import "./styles/subscription.css";
+import "./styles/profile-settings.css";
 
 const AUTHORIZATION_SERVER =
   import.meta.env.VITE_AUTH_SERVER_URL ?? "http://localhost:5840";
@@ -219,7 +221,7 @@ async function startMatdagong(): Promise<void> {
     if (membership.registered) {
       reactRoot.render(
         <StrictMode>
-          <App onLogout={() => void logout()} />
+          <App accessToken={accessToken} displayName={membership.displayName} onLogout={() => void logout()} />
         </StrictMode>,
       );
     } else {
@@ -232,7 +234,7 @@ async function startMatdagong(): Promise<void> {
             onComplete={() =>
               reactRoot.render(
                 <StrictMode>
-                  <App onLogout={() => void logout()} />
+                  <App accessToken={accessToken} displayName={membership.displayName} onLogout={() => void logout()} />
                 </StrictMode>,
               )
             }
