@@ -38,6 +38,11 @@ public class SubscriptionController {
         return service.subscriptions(accountId(jwt));
     }
 
+    @GetMapping("/subscriptions/subscribers")
+    public List<IncomingSubscriptionView> subscribers(@AuthenticationPrincipal Jwt jwt) {
+        return service.subscribers(accountId(jwt));
+    }
+
     @PostMapping("/subscriptions")
     public SubscribeResult subscribe(
             @AuthenticationPrincipal Jwt jwt,

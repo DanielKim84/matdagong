@@ -54,21 +54,22 @@ export function FoodPhoto({
   index = 0,
   className = "",
 }: {
-  place?: Pick<Place, "id">;
+  place?: Pick<Place, "id" | "category">;
   index?: number;
   className?: string;
 }) {
-  const photoIndex = place
-    ? (Number(place.id.replace(/\D/g, "")) || 1) - 1
+  // 등록 사진이 없는 더미 장소도 화면이 비지 않도록 네 장의 음식 시안 중 하나를 보여줍니다.
+  const stableIndex = place
+    ? [...place.id].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 0)
     : index;
-  const cell = ((photoIndex % 4) + 4) % 4;
+  const cell = ((stableIndex % 4) + 4) % 4;
   return (
     <svg
       className={`food-photo ${className}`}
       viewBox="0 0 512 512"
       preserveAspectRatio="xMidYMid slice"
       role="img"
-      aria-label="음식 예시 사진"
+      aria-label="맛집 음식 예시 사진"
     >
       <image
         href="/assets/food-photos.png"
@@ -96,9 +97,15 @@ export function Avatar({
   const selectedVariant = Math.min(10, Math.max(1, Math.trunc(variant || 1)));
   const column = (selectedVariant - 1) % 5;
   const row = Math.floor((selectedVariant - 1) / 5);
+  const demoPhoto = src?.match(/^demo-avatar:(\d)$/);
+  const demoCell = demoPhoto ? Number(demoPhoto[1]) - 1 : -1;
   return (
     <span className={`avatar ${className}`} role="img" aria-label={`${name} 프로필`}>
-      {src && failedImage !== src ? (
+      {demoCell >= 0 ? (
+        <svg className="brand-art avatar-character" viewBox={`${(demoCell % 2) * 627} ${Math.floor(demoCell / 2) * 627} 627 627`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <image href="/assets/demo-taster-portraits.png" width="1254" height="1254" />
+        </svg>
+      ) : src && failedImage !== src ? (
         <img src={src} alt="" onError={() => setFailedImage(src)} />
       ) : (
         <svg
@@ -114,6 +121,47 @@ export function Avatar({
           />
         </svg>
       )}
+    </span>
+  );
+}
+
+/** 기본 배경은 한 장의 이미지 묶음에서 ID별 장면을 골라 표시합니다. */
+export function ProfileCover({ src, className = "" }: { src: string; className?: string }) {
+  const demoCover = src.match(/^demo-cover:(\d)$/);
+  const cell = demoCover ? Number(demoCover[1]) - 1 : -1;
+  if (cell === 4) {
+    return <img className={className} src="/assets/demo-taster-cover-5.png" alt="" />;
+  }
+  if (cell >= 0) {
+    return (
+      <svg className={className} viewBox="0 0 768 512" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <image href="/assets/demo-taster-covers.png" width="1536" height="1024" x={-(cell % 2) * 768} y={-Math.floor(cell / 2) * 512} />
+      </svg>
+    );
+  }
+  return <img className={className} src={src} alt="" />;
+}
+
+/** 구독 마커 두 종류가 같은 코랄 핀을 쓰도록 지도 안내에도 재사용합니다. */
+export function TasterMapMarker({
+  src,
+  name = "맛객",
+  variant,
+  kind = "subscribed",
+}: {
+  src?: string | null;
+  name?: string;
+  variant?: number;
+  kind?: "subscribed" | "other" | "matched";
+}) {
+  const fallbackVariant = kind === "subscribed" ? 4 : kind === "matched" ? 7 : 1;
+  return (
+    <span className={`taster-map-marker-preview taster-map-marker--${kind}`} aria-label={name}>
+      <svg className="taster-map-marker-shell" viewBox="0 0 43 53" aria-hidden="true"><path d="M21.5 52S2 32.7 2 19.4a19.5 19.5 0 1 1 39 0C41 32.7 21.5 52 21.5 52Z" /></svg>
+      <span className="taster-map-marker-face">
+        <Avatar src={src} name={name} variant={variant ?? fallbackVariant} />
+      </span>
+      {kind !== "other" && <i className={`taster-map-marker-badge taster-map-marker-badge--${kind}`} aria-hidden="true">{kind === "subscribed" ? "♥" : "✦"}</i>}
     </span>
   );
 }

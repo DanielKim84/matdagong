@@ -5,7 +5,7 @@ import type { FoodFocus } from "../services/community";
 const options: { value: FoodFocus; label: string; icon: IconName }[] = [
   { value: "RESTAURANT", label: "음식점", icon: "fork" },
   { value: "CAFE_DESSERT", label: "카페·디저트", icon: "coffee" },
-  { value: "BOTH", label: "둘 다", icon: "heart" },
+  { value: "BOTH", label: "둘 다", icon: "sparkle" },
 ];
 
 /** 세 분야를 한눈에 비교하고 키보드로도 고를 수 있는 라디오 카드입니다. */

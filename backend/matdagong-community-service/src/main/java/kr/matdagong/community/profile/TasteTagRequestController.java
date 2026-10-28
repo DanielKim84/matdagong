@@ -33,7 +33,7 @@ public class TasteTagRequestController {
     public ResponseEntity<TasteTagRequestService.RequestView> create(
             @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody TagRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(
-                UUID.fromString(jwt.getSubject()), request.name(), request.category(), request.reason()));
+                UUID.fromString(jwt.getSubject()), request.name(), request.tagGroup(), request.reason()));
     }
 
     @GetMapping("/mine")
@@ -48,6 +48,6 @@ public class TasteTagRequestController {
 
     public record TagRequest(
             @NotBlank @Size(max = 30) String name,
-            @NotBlank @Pattern(regexp = "MENU|VISIT") String category,
+            @NotBlank @Pattern(regexp = "CUISINE|TASTE|CAFE|OCCASION|VISIT") String tagGroup,
             @Size(max = 300) String reason) {}
 }

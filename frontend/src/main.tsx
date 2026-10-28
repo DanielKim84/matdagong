@@ -2,12 +2,14 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./app/App";
 import SignupScreen from "./screens/SignupScreen";
+import IntroScreen from "./screens/IntroScreen";
 import "./styles/app.css";
 import "./styles/screens.css";
 import "./styles/notice.css";
 import "./styles/auth-start.css";
 import "./styles/subscription.css";
 import "./styles/profile-settings.css";
+import "./styles/design-system.css";
 
 const AUTHORIZATION_SERVER =
   import.meta.env.VITE_AUTH_SERVER_URL ?? "http://localhost:5840";
@@ -19,6 +21,7 @@ const ACCESS_TOKEN_KEY = "matdagong.auth.access-token";
 const TOKEN_EXPIRY_KEY = "matdagong.auth.expires-at";
 const STATE_KEY = "matdagong.auth.oauth-state";
 const VERIFIER_KEY = "matdagong.auth.pkce-verifier";
+const ONBOARDING_KEY = "matdagong.onboarding.completed";
 
 type MembershipStatus = {
   registered: boolean;
@@ -52,6 +55,16 @@ function base64Url(bytes: Uint8Array): string {
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
+}
+
+function onboardingKey(accessToken: string): string {
+  try {
+    const payload = accessToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const claims = JSON.parse(atob(payload)) as { sub?: string };
+    return claims.sub ? `${ONBOARDING_KEY}:${claims.sub}` : ONBOARDING_KEY;
+  } catch {
+    return ONBOARDING_KEY;
+  }
 }
 
 function randomBase64Url(byteLength: number): string {
@@ -225,22 +238,29 @@ async function startMatdagong(): Promise<void> {
         </StrictMode>,
       );
     } else {
-      reactRoot.render(
+      const renderSignup = () => reactRoot.render(
         <StrictMode>
           <SignupScreen
             accessToken={accessToken}
             displayName={membership.displayName}
             email={membership.email ?? ""}
-            onComplete={() =>
-              reactRoot.render(
-                <StrictMode>
-                  <App accessToken={accessToken} displayName={membership.displayName} onLogout={() => void logout()} />
-                </StrictMode>,
-              )
-            }
+            onComplete={() => reactRoot.render(
+              <StrictMode>
+                <App accessToken={accessToken} displayName={membership.displayName} onLogout={() => void logout()} />
+              </StrictMode>,
+            )}
           />
         </StrictMode>,
       );
+      const accountOnboardingKey = onboardingKey(accessToken);
+      if (localStorage.getItem(accountOnboardingKey) === "true") {
+        renderSignup();
+      } else {
+        reactRoot.render(<StrictMode><IntroScreen onComplete={() => {
+          localStorage.setItem(accountOnboardingKey, "true");
+          renderSignup();
+        }} /></StrictMode>);
+      }
     }
   } catch (error) {
     sessionStorage.removeItem(STATE_KEY);

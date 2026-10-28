@@ -4,6 +4,9 @@ import Sheet from "../components/Sheet";
 import type { TagRequest, TagRequestInput } from "../services/community";
 
 const statusLabels = { PENDING: "검토 대기", APPROVED: "반영 완료", REJECTED: "미반영" };
+const groupLabels: Record<TagRequestInput["tagGroup"], string> = {
+  CUISINE: "음식 종류", TASTE: "맛·메뉴", CAFE: "카페·디저트", OCCASION: "방문 스타일", VISIT: "제외 조건",
+};
 
 export default function TasteTagRequestSheet({ onClose, onRequest, onLoad }: {
   onClose: () => void;
@@ -11,7 +14,7 @@ export default function TasteTagRequestSheet({ onClose, onRequest, onLoad }: {
   onLoad: () => Promise<TagRequest[]>;
 }) {
   const [name, setName] = useState("");
-  const [category, setCategory] = useState<TagRequestInput["category"]>("MENU");
+  const [tagGroup, setTagGroup] = useState<TagRequestInput["tagGroup"]>("TASTE");
   const [reason, setReason] = useState("");
   const [requests, setRequests] = useState<TagRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +38,7 @@ export default function TasteTagRequestSheet({ onClose, onRequest, onLoad }: {
     setSending(true);
     setError("");
     try {
-      const saved = await onRequest({ name: name.trim(), category, reason: reason.trim() });
+      const saved = await onRequest({ name: name.trim(), tagGroup, reason: reason.trim() });
       setRequests((current) => [saved, ...current]);
       setSent(saved);
     } catch (cause) {
@@ -61,9 +64,12 @@ export default function TasteTagRequestSheet({ onClose, onRequest, onLoad }: {
           </label>
           <fieldset className="tag-request-category" disabled={sending}>
             <legend>태그 분류</legend>
-            {([ ["MENU", "메뉴·맛"], ["VISIT", "방문 조건"] ] as const).map(([value, label]) => (
+            {([
+              ["CUISINE", "음식 종류"], ["TASTE", "맛·메뉴"], ["CAFE", "카페·디저트"],
+              ["OCCASION", "방문 스타일"], ["VISIT", "제외 조건"],
+            ] as const).map(([value, label]) => (
               <label key={value}><input className="visually-hidden" type="radio" name="request-category"
-                checked={category === value} onChange={() => setCategory(value)} /><span>{label}</span></label>
+                checked={tagGroup === value} onChange={() => setTagGroup(value)} /><span>{label}</span></label>
             ))}
           </fieldset>
           <label className="profile-edit-field"><span>어떤 때 필요한가요? <small>선택</small></span>
@@ -83,7 +89,7 @@ export default function TasteTagRequestSheet({ onClose, onRequest, onLoad }: {
         {!loading && !historyError && !requests.length && <p>아직 제안한 태그가 없어요.</p>}
         {requests.slice(0, 5).map((item) => (
           <article key={item.requestId}>
-            <div><b>#{item.tagName}</b><small>{new Date(item.createdAt).toLocaleDateString("ko-KR")}</small></div>
+            <div><b>#{item.tagName}</b><small>{groupLabels[item.tagGroup]} · {new Date(item.createdAt).toLocaleDateString("ko-KR")}</small></div>
             <span className={`tag-request-status ${item.status.toLowerCase()}`}>{statusLabels[item.status]}</span>
             {item.reviewNote && <p>{item.reviewNote}</p>}
           </article>

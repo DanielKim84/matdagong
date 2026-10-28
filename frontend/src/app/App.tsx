@@ -18,14 +18,19 @@ import {
 import SettingsScreen from "../screens/SettingsScreen";
 import ProfileSettingsScreen from "../screens/ProfileSettingsScreen";
 import IntroScreen from "../screens/IntroScreen";
+import RecommendedTastersScreen from "../screens/RecommendedTastersScreen";
 import NoticeToast, { type NoticeKind } from "../components/NoticeToast";
 import SubscriptionOfferSheet from "../screens/SubscriptionOfferSheet";
 import {
   ensureMyProfile,
   getSubscriptions,
+  getIncomingSubscriptions,
+  getPoints,
   getTasteTags,
   getTasters,
   type ActiveSubscription,
+  type IncomingSubscription,
+  type PointAccount,
   type MyProfile,
   type TasteTag,
   uploadProfileImage,
@@ -43,14 +48,15 @@ type Notice = { kind: NoticeKind; title: string; message: string };
 function registeredPlace(item: NewPlace): Place {
   return {
     id: item.id,
+    providerPlaceId: item.providerPlaceId,
+    providerPhone: item.providerPhone,
+    providerUrl: item.providerUrl,
+    visibility: item.visibility,
     name: item.name,
-    category: item.tags[0] ?? "맛객 추천",
+    category: item.category ?? item.tags[0] ?? "맛객 추천",
     address: item.address,
     latitude: item.latitude,
     longitude: item.longitude,
-    emoji: "",
-    accentColor: "#FFE5D5",
-    visitedOn: item.createdAt.slice(0, 10),
     recentNote: item.reason,
     recordCount: 1,
     visitConditions: item.visitConditions,
@@ -61,8 +67,11 @@ function registeredPlace(item: NewPlace): Place {
         tag: "내가 발견한 맛집",
         avatar: "",
         avatarVariant: 1,
-        avatarColor: "",
         note: item.reason,
+        menus: item.menus,
+        photos: item.photos,
+        tags: item.tags,
+        visitConditions: item.visitConditions,
       },
     ],
   };
@@ -77,6 +86,8 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
   const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
   const [tasteTags, setTasteTags] = useState<TasteTag[]>([]);
   const [subscriptions, setSubscriptions] = useState<ActiveSubscription[]>([]);
+  const [incomingSubscriptions, setIncomingSubscriptions] = useState<IncomingSubscription[]>([]);
+  const [points, setPoints] = useState<PointAccount>({ balance: 0, history: [] });
   const [subscriptionTarget, setSubscriptionTarget] = useState<Taster | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
   const [detail, setDetail] = useState<Place | null>(null);
@@ -89,22 +100,33 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
 
   const refreshCommunity = useCallback(async () => {
     const profile = await ensureMyProfile(accessToken, displayName);
-    const [nextTasters, nextSubscriptions, nextTasteTags] = await Promise.all([
+    // 부가 API 하나가 새 버전으로 아직 배포되지 않았어도 맛객과 태그 로드는 계속합니다.
+    const results = await Promise.allSettled([
       getTasters(accessToken),
       getSubscriptions(accessToken),
       getTasteTags(accessToken),
+      getIncomingSubscriptions(accessToken),
+      getPoints(accessToken),
     ]);
+    const [tastersResult, subscriptionsResult, tasteTagsResult, incomingResult, pointsResult] = results;
+    if (tastersResult.status === "rejected") throw tastersResult.reason;
     setMyProfile(profile);
-    setCommunityTasters(nextTasters);
-    setSubscriptions(nextSubscriptions);
-    setTasteTags(nextTasteTags);
+    setCommunityTasters(tastersResult.value);
+    setSubscriptions(subscriptionsResult.status === "fulfilled" ? subscriptionsResult.value : []);
+    setTasteTags(tasteTagsResult.status === "fulfilled" ? tasteTagsResult.value : []);
+    setIncomingSubscriptions(incomingResult.status === "fulfilled" ? incomingResult.value : []);
+    setPoints(pointsResult.status === "fulfilled" ? pointsResult.value : { balance: 0, history: [] });
+    const unavailable = results.find((result) => result.status === "rejected");
+    if (unavailable?.status === "rejected") {
+      setNotice({ kind: "error", title: "일부 정보를 불러오지 못했어요", message: unavailable.reason instanceof Error ? unavailable.reason.message : "잠시 후 다시 시도해 주세요." });
+    }
   }, [accessToken, displayName]);
 
   useEffect(() => {
     refreshCommunity().catch((cause: Error) =>
       setNotice({
         kind: "error",
-        title: "맛객 정보를 불러오지 못했어요",
+        title: "서비스 정보를 불러오지 못했어요",
         message: cause.message,
       }),
     );
@@ -158,12 +180,20 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
   }, [route.screen, route.id]);
 
   const registered = activity.registered
+    // 비공개 기록은 내 기록함에만 두고 홈 추천과 지도 공유 목록에서는 제외합니다.
+    .filter((place) => place.visibility !== "private")
     .map(registeredPlace)
     .filter(
       (place) =>
         !query ||
         `${place.name} ${place.address} ${place.category}`.includes(query),
     );
+  const privateRecords = activity.registered
+    .filter((place) => place.visibility === "private")
+    .filter((place) =>
+      !query || `${place.name} ${place.address}`.includes(query),
+    )
+    .map(registeredPlace);
   // Place records may contain older sample names, so use the community profile
   // as the single source for the displayed avatar and profile cover.
   const excludedConditions = new Set(myProfile?.excludedTags ?? []);
@@ -184,9 +214,22 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
       const profile = communityTasters.find(
         (taster) => taster.tasterId === author.tasterId,
       );
-      return profile ? { ...author, ...profile } : author;
+      // 계정 프로필은 최신 이름과 사진을 공급하고, 추천 이유와 메뉴는 장소 기록 값을 보존합니다.
+      return profile
+        ? {
+            ...author,
+            ...profile,
+            tag: author.tag,
+            note: author.note,
+            menus: author.menus,
+            photos: author.photos,
+            tags: author.tags,
+            visitConditions: author.visitConditions,
+          }
+        : author;
     }),
     }));
+  const own = activity.registered.find((place) => place.id === route.id);
   const activePlace = detail?.id === route.id
     ? {
         ...detail,
@@ -194,33 +237,37 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
           const profile = communityTasters.find(
             (taster) => taster.tasterId === author.tasterId,
           );
-          return profile ? { ...author, ...profile } : author;
+          return profile
+            ? {
+                ...author,
+                ...profile,
+                tag: author.tag,
+                note: author.note,
+                menus: author.menus,
+                photos: author.photos,
+                tags: author.tags,
+                visitConditions: author.visitConditions,
+              }
+            : author;
         }),
       }
-    : allPlaces.find((place) => place.id === route.id);
+    : allPlaces.find((place) => place.id === route.id) ?? (own ? registeredPlace(own) : undefined);
   const tasterById = new Map(
     allPlaces.flatMap((place) => place.tasters).map((taster) => [taster.tasterId, taster]),
   );
   // DB 프로필을 마지막에 덮어써 샘플 작성자보다 최신 프로필 사진을 우선합니다.
   communityTasters.forEach((taster) => tasterById.set(taster.tasterId, taster));
-  const tasters: Taster[] = [...tasterById.values()].map((taster) => ({
-    ...taster,
-    postCount: allPlaces.filter((place) =>
-      place.tasters.some((author) => author.tasterId === taster.tasterId),
-    ).length,
-  }));
+  const tasters: Taster[] = [...tasterById.values()];
   const activeTaster = tasters.find((taster) => taster.tasterId === route.id);
   const subscriptionIds = subscriptions.map((subscription) => subscription.targetAccountId);
   const recommendedTasters = communityTasters
     .filter((taster) =>
       (taster.matchScore ?? 0) > 0 && !subscriptionIds.includes(taster.tasterId),
     )
-    .sort((left, right) => (right.matchScore ?? 0) - (left.matchScore ?? 0))
-    .slice(0, 6);
+    .sort((left, right) => (right.matchScore ?? 0) - (left.matchScore ?? 0));
   const currentFreeSubscription = subscriptions.find(
     (subscription) => subscription.subscriptionType === "FREE",
   );
-  const own = activity.registered.find((place) => place.id === route.id);
 
   useEffect(() => {
     if (route.screen === "place" && activePlace) activity.remember(route.id);
@@ -228,15 +275,13 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
     // 방문 기록은 화면 진입 시 한 번만 갱신합니다.
   }, [route.screen, route.id, !!activePlace]);
 
-  function toggleSave(id: string) {
-    const wasSaved = activity.saved.includes(id);
-    activity.toggle("saved", id);
+  function toggleLike(id: string) {
+    const wasLiked = activity.liked.includes(id);
+    activity.toggleLiked(id);
     setNotice({
       kind: "success",
-      title: wasSaved ? "스크랩을 해제했어요" : "내 맛집에 저장했어요",
-      message: wasSaved
-        ? "저장한 맛집 목록에서 제외했어요."
-        : "마이 탭의 내 스크랩에서 다시 볼 수 있어요.",
+      title: wasLiked ? "내 맛집에서 삭제했어요" : "내 맛집에 추가했어요",
+      message: wasLiked ? "저장해 둔 맛집에서 제외했어요." : "내 맛집에서 다시 볼 수 있어요.",
     });
   }
   function register(place: NewPlace) {
@@ -258,8 +303,8 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
     if (!target) {
       setNotice({
         kind: "info",
-        title: "구독 준비 중이에요",
-        message: "이 맛객의 구독 정보를 아직 준비하고 있어요.",
+        title: "맛객 정보를 확인할 수 없어요",
+        message: "잠시 후 다시 시도해 주세요.",
       });
       return;
     }
@@ -281,22 +326,24 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
         places={allPlaces}
         loading={loading}
         error={error}
-        subscriptions={subscriptionIds}
-        saved={activity.saved}
+        liked={activity.liked}
         unread={!activity.readAlerts}
+        onLike={toggleLike}
+        onRetry={() => setRetry(retry + 1)}
+        photoFor={photoFor}
         recommendedTasters={recommendedTasters}
         preferenceCount={myProfile?.preferenceTags?.length ?? 0}
         onManagePreferences={() => go("profile-edit")}
-        onSave={toggleSave}
-        onRetry={() => setRetry(retry + 1)}
-        photoFor={photoFor}
       />
     );
   else if (route.screen === "map")
     screen = (
       <MapScreen
         places={allPlaces}
+        privatePlaces={privateRecords}
         subscriptions={subscriptionIds}
+        liked={activity.liked}
+        recommendedTasterIds={recommendedTasters.map((taster) => taster.tasterId)}
         query={query}
         onQuery={setQuery}
         loading={loading}
@@ -304,24 +351,29 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
       />
     );
   else if (route.screen === "register")
-    screen = <RegisterScreen places={allPlaces} onRegister={register} />;
+    screen = (
+      <RegisterScreen
+        places={allPlaces}
+        tasteTags={tasteTags}
+        defaultFocus={myProfile?.tasterFocus ?? "BOTH"}
+        onRegister={register}
+      />
+    );
   else if (route.screen === "place")
     screen = activePlace ? (
       <PlaceScreen
         key={activePlace.id}
         place={activePlace}
         own={own}
-        saved={activity.saved.includes(activePlace.id)}
         liked={activity.liked.includes(activePlace.id)}
-        onSave={() => toggleSave(activePlace.id)}
-        onLike={() => activity.toggle("liked", activePlace.id)}
+        onLike={() => toggleLike(activePlace.id)}
         onMessage={(message) =>
           setNotice({ kind: "info", title: "맛다공에서 알려드려요", message })
         }
       />
     ) : (
       <>
-        <ScreenHeader title="맛집 상세" />
+        <ScreenHeader title="맛집 상세" fallback="map" />
         <div className="empty-state">
           <p>
             {loading
@@ -340,12 +392,13 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
         key={activeTaster.tasterId}
         taster={activeTaster}
         places={allPlaces}
+        tasteTags={tasteTags}
         subscribed={subscriptionIds.includes(activeTaster.tasterId)}
         onSubscribe={() => openSubscription(activeTaster.tasterId)}
       />
     ) : (
       <>
-        <ScreenHeader title="맛객 프로필" />
+        <ScreenHeader title="맛객 프로필" fallback="my" />
         <div className="empty-state">
           <p>맛객 정보를 찾을 수 없어요.</p>
           <button className="outline-button" onClick={() => go("home")}>
@@ -357,14 +410,16 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
   else if (route.screen === "my")
     screen = (
       <MyScreen
-        savedCount={activity.saved.length}
-        likedCount={activity.liked.length}
+        collectionCount={new Set([...activity.registered.map((place) => place.id), ...activity.liked]).size}
         registeredCount={activity.registered.length}
         recentCount={activity.recent.length}
         subscribedCount={subscriptionIds.length}
+        recommendedTasterCount={recommendedTasters.length}
         nickname={myProfile?.nickname ?? displayName}
         profileImgUrl={myProfile?.profileImgUrl ?? null}
         avatarVariant={myProfile?.avatarVariant ?? 1}
+        incomingSubscriptions={incomingSubscriptions}
+        points={points}
       />
     );
   else if (route.screen === "notifications")
@@ -381,12 +436,13 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
             tag: "맛객",
             avatar: "",
             avatarVariant: 1,
-            avatarColor: "#FFE5D5",
             note: "맛있는 장소를 찾아 기록하고 있어요.",
           },
         )}
       />
     );
+  else if (route.screen === "taster-recommendations")
+    screen = <RecommendedTastersScreen tasters={recommendedTasters} />;
   else if (route.screen === "settings")
     screen = <SettingsScreen onLogout={onLogout} />;
   else if (route.screen === "profile-edit")
@@ -410,17 +466,17 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
     ) : (
       <div className="empty-state"><p>프로필을 불러오고 있어요…</p></div>
     );
-  else if (route.screen === "intro") screen = <IntroScreen />;
+  else if (route.screen === "intro") screen = <IntroScreen onComplete={() => go("settings", "", true)} />;
   else {
     const titles = {
-      saved: "내 스크랩",
+      saved: "내 맛집",
       diary: "내가 등록한 맛집",
-      liked: "좋아요한 맛집",
+      liked: "내 맛집",
       recent: "최근 본 맛집",
     };
     const ids =
       route.screen === "saved"
-        ? activity.saved
+        ? [...new Set([...activity.liked, ...activity.registered.map((place) => place.id)])]
         : route.screen === "diary"
           ? activity.registered.map((place) => place.id)
           : route.screen === "liked"
@@ -432,10 +488,10 @@ export default function App({ accessToken, displayName, onLogout }: Props) {
       <CollectionScreen
         title={titles[route.screen as keyof typeof titles] ?? "나의 기록"}
         places={ids
-          .map((id) => allPlaces.find((place) => place.id === id))
+          .map((id) => [...allPlaces, ...privateRecords].find((place) => place.id === id))
           .filter((place): place is Place => !!place)}
-        saved={activity.saved}
-        onSave={toggleSave}
+        liked={activity.liked}
+        onLike={toggleLike}
         photoFor={photoFor}
       />
     );

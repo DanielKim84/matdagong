@@ -1,4 +1,4 @@
-import { go } from "../app/navigation";
+import { back, go } from "../app/navigation";
 import type { Screen } from "../models/place";
 import { BrandArt } from "./BrandAssets";
 import Icon from "./Icon";
@@ -37,15 +37,17 @@ export function HomeHeader({ unread }: { unread: boolean }) {
 export function ScreenHeader({
   title,
   right,
+  fallback = "home",
 }: {
   title: string;
   right?: React.ReactNode;
+  fallback?: Screen;
 }) {
   return (
     <header className="screen-header">
       <button
         className="icon-button"
-        onClick={() => window.history.back()}
+        onClick={() => back(fallback)}
         aria-label="이전 화면으로 돌아가기"
       >
         <Icon name="back" />
@@ -90,13 +92,15 @@ export function BottomTabs({ screen }: { screen: Screen }) {
 export function FeedTabs({
   value,
   onChange,
+  tabs = ["추천", "구독", "광고 맛집"],
 }: {
   value: string;
   onChange: (value: string) => void;
+  tabs?: string[];
 }) {
   return (
     <div className="feed-tabs" role="tablist" aria-label="맛집 종류">
-      {["추천", "구독", "광고 맛집"].map((tab) => (
+      {tabs.map((tab) => (
         <button
           key={tab}
           role="tab"

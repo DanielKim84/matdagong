@@ -1,4 +1,5 @@
 import type { Taster } from "../models/place";
+import { avatarVariantFor, demoTasterAvatar } from "../utils/profileMedia";
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
@@ -22,6 +23,26 @@ export type SubscribeResult = {
   subscription: ActiveSubscription;
   replacedFreeNickname: string | null;
 };
+export type IncomingSubscription = {
+  subscriptionId: string;
+  subscriberAccountId: string;
+  subscriberNickname: string;
+  avatar: string | null;
+  avatarVariant: number;
+  subscriptionType: "FREE" | "PAID";
+  termMonths: number | null;
+  startAt: string;
+  endAt: string | null;
+};
+export type PointEntry = {
+  historyId: string;
+  eventType: "EARN" | "SPEND" | "ADJUST";
+  title: string;
+  memo: string | null;
+  amount: number;
+  createdAt: string;
+};
+export type PointAccount = { balance: number; history: PointEntry[] };
 
 export type MyProfile = {
   accountId: string;
@@ -31,6 +52,8 @@ export type MyProfile = {
   profileCoverUrl: string | null;
   tasterFocus: FoodFocus;
   preferenceFocus: FoodFocus;
+  activityScope: ActivityScope;
+  activityRegion: string | null;
   intro: string | null;
   profileTags: string[];
   preferenceTags: string[];
@@ -38,13 +61,23 @@ export type MyProfile = {
 };
 
 export type FoodFocus = "RESTAURANT" | "CAFE_DESSERT" | "BOTH";
-export type TasteTag = { name: string; category: "MENU" | "VISIT" };
+export type ActivityScope = "LOCAL" | "TRAVEL" | "BOTH";
+export type TasteTag = {
+  name: string;
+  category: "MENU" | "VISIT";
+  tagGroup: "CUISINE" | "TASTE" | "CAFE" | "OCCASION" | "VISIT";
+};
 
-export type TagRequestInput = { name: string; category: TasteTag["category"]; reason: string };
+export type TagRequestInput = {
+  name: string;
+  tagGroup: TasteTag["tagGroup"];
+  reason: string;
+};
 export type TagRequest = {
   requestId: string;
   tagName: string;
   tagCategory: TasteTag["category"];
+  tagGroup: TasteTag["tagGroup"];
   reason: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED";
   reviewNote: string | null;
@@ -60,12 +93,11 @@ type TasterResponse = {
   avatarVariant: number;
   profileCoverUrl: string | null;
   tasterFocus: FoodFocus;
-  avatarColor: string;
+  activityScope: ActivityScope;
+  activityRegion: string | null;
   note: string;
   intro: string | null;
-  postCount: number;
-  followerCount: number;
-  followingCount: number;
+  subscriberCount: number;
   profileTags: string[];
   matchedTags: string[];
   matchScore: number;
@@ -103,16 +135,15 @@ export async function getTasters(accessToken: string): Promise<Taster[]> {
     tasterId: taster.tasterId,
     tasterName: taster.tasterName,
     tag: taster.profileTags.length ? taster.profileTags.join(" · ") : taster.tag,
-    avatar: taster.avatar ?? "",
-    avatarVariant: taster.avatarVariant,
+    avatar: taster.avatar ?? demoTasterAvatar(taster.tasterId) ?? "",
+    avatarVariant: avatarVariantFor(taster.tasterId, taster.avatarVariant),
     profileCoverUrl: taster.profileCoverUrl,
     tasterFocus: taster.tasterFocus,
-    avatarColor: taster.avatarColor,
+    activityScope: taster.activityScope,
+    activityRegion: taster.activityRegion,
     note: taster.note,
     intro: taster.intro ?? "맛있는 장소를 찾아 기록하고 있어요.",
-    postCount: taster.postCount,
-    followerCount: taster.followerCount,
-    followingCount: taster.followingCount,
+    subscriberCount: taster.subscriberCount,
     profileTags: taster.profileTags,
     matchedTags: taster.matchedTags,
     matchScore: taster.matchScore,
@@ -154,6 +185,8 @@ export function updateMyProfile(
     excludedTags: string[];
     tasterFocus: FoodFocus;
     preferenceFocus: FoodFocus;
+    activityScope: ActivityScope;
+    activityRegion: string;
   },
 ): Promise<MyProfile> {
   return request("/users/me/profile", accessToken, {
@@ -209,6 +242,14 @@ export function getSubscriptions(
   accessToken: string,
 ): Promise<ActiveSubscription[]> {
   return request("/subscriptions", accessToken);
+}
+
+export function getIncomingSubscriptions(accessToken: string): Promise<IncomingSubscription[]> {
+  return request("/subscriptions/subscribers", accessToken);
+}
+
+export function getPoints(accessToken: string): Promise<PointAccount> {
+  return request("/points", accessToken);
 }
 
 export function createSubscription(

@@ -23,12 +23,11 @@ public final class SubscriptionModels {
             int avatarVariant,
             String profileCoverUrl,
             String tasterFocus,
-            String avatarColor,
+            String activityScope,
+            String activityRegion,
             String note,
             String intro,
-            int postCount,
-            int followerCount,
-            int followingCount,
+            int subscriberCount,
             List<String> profileTags,
             List<String> matchedTags,
             int matchScore) {}
@@ -46,6 +45,17 @@ public final class SubscriptionModels {
             UUID subscriptionId,
             UUID targetAccountId,
             String targetNickname,
+            SubscriptionType subscriptionType,
+            Integer termMonths,
+            Instant startAt,
+            Instant endAt) {}
+
+    public record IncomingSubscriptionView(
+            UUID subscriptionId,
+            UUID subscriberAccountId,
+            String subscriberNickname,
+            String avatar,
+            int avatarVariant,
             SubscriptionType subscriptionType,
             Integer termMonths,
             Instant startAt,

@@ -11,7 +11,7 @@ export function loadMapSdk() {
       return;
     }
     const script = document.createElement("script");
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(key)}&autoload=false`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(key)}&autoload=false&libraries=services`;
     script.async = true;
     script.onload = () => window.kakao?.maps.load(resolve);
     script.onerror = () => {
@@ -26,4 +26,18 @@ export function loadMapSdk() {
     document.head.appendChild(script);
   });
   return sdkPromise;
+}
+
+/** 등록 폼에서 카카오 장소 검색 결과를 고르고 동일 장소 식별자를 보존합니다. */
+export async function searchKakaoPlaces(keyword: string): Promise<KakaoPlaceResult[]> {
+  await loadMapSdk();
+  const services = window.kakao?.maps.services;
+  if (!services) throw new Error("카카오 장소 검색을 불러오지 못했어요.");
+  return new Promise((resolve, reject) => {
+    new services.Places().keywordSearch(keyword, (results, status) => {
+      if (status === services.Status.OK) resolve(results);
+      else if (status === services.Status.ZERO_RESULT) resolve([]);
+      else reject(new Error("장소 검색에 실패했어요. 잠시 후 다시 시도해 주세요."));
+    }, { size: 8 });
+  });
 }

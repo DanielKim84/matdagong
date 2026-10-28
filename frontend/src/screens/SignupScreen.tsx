@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import TasteTagPicker from "../components/TasteTagPicker";
 import FoodFocusPicker from "../components/FoodFocusPicker";
-import { isVisitCondition } from "../models/place";
+import { filterTagsForFocus } from "../models/tasteTags";
 import {
   ensureMyProfile,
   getTasteTags,
@@ -30,6 +30,7 @@ export default function SignupScreen({
   const [submitting, setSubmitting] = useState(false);
   const [tasteTags, setTasteTags] = useState<TasteTag[]>([]);
   const [preferenceTags, setPreferenceTags] = useState<string[]>([]);
+  const [excludedTags, setExcludedTags] = useState<string[]>([]);
   const [preferenceFocus, setPreferenceFocus] = useState<FoodFocus>("BOTH");
   const [membershipComplete, setMembershipComplete] = useState(false);
 
@@ -39,7 +40,7 @@ export default function SignupScreen({
       .catch(() => setTasteTags([]));
   }, [accessToken]);
 
-  async function finishSignup(selectedPreferences: string[], skipPreferences = false) {
+  async function finishSignup() {
     setSubmitting(true);
     setError("");
     try {
@@ -62,16 +63,18 @@ export default function SignupScreen({
         }
         setMembershipComplete(true);
       }
-      // 취향 선택은 가입 조건이 아니며, 건너뛰면 빈 목록으로 저장해 추천에 반영하지 않습니다.
+      // 취향은 선택 사항입니다. 고르지 않아도 같은 가입 절차로 진행합니다.
       const profile = await ensureMyProfile(accessToken, displayName.trim());
       await updateMyProfile(accessToken, {
         nickname: profile.nickname,
         intro: profile.intro ?? "",
         profileTags: profile.profileTags ?? [],
         tasterFocus: profile.tasterFocus ?? "BOTH",
-        preferenceFocus: skipPreferences ? "BOTH" : preferenceFocus,
-        preferenceTags: selectedPreferences,
-        excludedTags: [],
+        activityScope: profile.activityScope ?? "LOCAL",
+        activityRegion: profile.activityRegion ?? "",
+        preferenceFocus,
+        preferenceTags: filterTagsForFocus(preferenceTags, preferenceFocus, tasteTags),
+        excludedTags,
       });
       onComplete();
     } catch (cause) {
@@ -85,7 +88,7 @@ export default function SignupScreen({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void finishSignup(preferenceTags);
+    void finishSignup();
   }
 
   return (
@@ -118,18 +121,35 @@ export default function SignupScreen({
         <section className="signup-taste-preferences">
           <div>
             <b>취향 설정 <span>선택</span></b>
-            <small>선택한 분야와 취향은 맛객 추천에 활용돼요. 건너뛰어도 설정에서 언제든 추가할 수 있어요.</small>
+            <small>선택한 분야와 취향은 맛객 추천에 활용돼요. 선택하지 않아도 가입할 수 있고, 설정에서 언제든 바꿀 수 있어요.</small>
           </div>
           <FoodFocusPicker
             label="추천 받고 싶은 분야"
             value={preferenceFocus}
-            onChange={setPreferenceFocus}
+            onChange={(focus) => {
+              setPreferenceFocus(focus);
+              setPreferenceTags((current) => filterTagsForFocus(current, focus, tasteTags));
+            }}
           />
           <TasteTagPicker
-            options={tasteTags.filter((tag) => !isVisitCondition(tag.name))}
+            options={tasteTags.filter((tag) => tag.tagGroup !== "VISIT")}
             value={preferenceTags}
             onChange={setPreferenceTags}
+            focus={preferenceFocus}
           />
+          <section className="signup-taste-avoid">
+            <div>
+              <b>피하고 싶은 조건 <span>선택</span></b>
+              <small>선택한 조건이 등록된 맛집은 홈과 지도 추천에서 제외돼요.</small>
+            </div>
+            <TasteTagPicker
+              options={tasteTags.filter((tag) => tag.tagGroup === "VISIT")}
+              value={excludedTags}
+              onChange={setExcludedTags}
+              groupsToShow={["VISIT"]}
+              showCategoryLabels={false}
+            />
+          </section>
         </section>
         {error && (
           <p className="matdagong-signup__error" role="alert">
@@ -137,15 +157,7 @@ export default function SignupScreen({
           </p>
         )}
         <button type="submit" disabled={submitting}>
-          {submitting ? "가입하는 중…" : "맛다공 시작하기"}
-        </button>
-        <button
-          type="button"
-          className="matdagong-signup__skip"
-          disabled={submitting}
-          onClick={() => void finishSignup([], true)}
-        >
-          {submitting ? "처리하는 중…" : "취향 설정 건너뛰기"}
+          {submitting ? "가입하는 중…" : "가입하기"}
         </button>
       </form>
     </main>

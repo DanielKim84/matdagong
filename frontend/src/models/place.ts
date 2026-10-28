@@ -1,15 +1,20 @@
 export interface Place {
   id: string;
+  /** 카카오 장소 ID. 같은 가게의 맛객 기록을 하나의 장소로 묶는 기준입니다. */
+  providerPlaceId?: string;
+  providerPhone?: string;
+  providerUrl?: string;
+  visibility?: "private" | "public";
   name: string;
   category: string;
   address: string;
   latitude: number;
   longitude: number;
-  emoji: string;
-  accentColor: string;
-  visitedOn: string;
   recentNote: string;
   recordCount: number;
+  advertisement?: boolean;
+  /** 지도 화면에서 샘플 계정 관계별 핀을 확인하기 위한 개발용 분류입니다. */
+  sampleMarkerKind?: MapKind | "own";
   visitConditions?: VisitCondition[];
   tasters: Taster[];
 }
@@ -31,35 +36,45 @@ export interface Taster {
   tag: string;
   avatar: string;
   avatarVariant: number;
-  avatarColor: string;
   note: string;
+  menus?: (string | RecommendedMenu)[];
+  photos?: string[];
+  tags?: string[];
+  visitConditions?: VisitCondition[];
   profileCoverUrl?: string | null;
   tasterFocus?: "RESTAURANT" | "CAFE_DESSERT" | "BOTH";
+  activityScope?: "LOCAL" | "TRAVEL" | "BOTH";
+  activityRegion?: string | null;
   intro?: string;
-  postCount?: number;
-  followerCount?: number;
-  followingCount?: number;
+  subscriberCount?: number;
   profileTags?: string[];
   matchedTags?: string[];
   matchScore?: number;
 }
 
+/** 맛객이 직접 추천한 메뉴명과 가격입니다. 가격을 모르면 비워 둘 수 있습니다. */
+export type RecommendedMenu = { name: string; price?: number };
+
 export type NewPlace = {
   id: string;
+  providerPlaceId?: string;
+  providerPhone?: string;
+  providerUrl?: string;
   name: string;
+  category?: string;
   address: string;
   latitude: number;
   longitude: number;
   reason: string;
-  menus: string[];
+  menus: RecommendedMenu[];
   tags: string[];
   visitConditions: VisitCondition[];
   photos: string[];
-  visibility: "public" | "subscribers";
+  visibility: "private" | "public";
   createdAt: string;
 };
 
-export type MapKind = "other" | "subscribed" | "ad";
+export type MapKind = "other" | "subscribed" | "subscribedPhoto" | "ad" | "liked" | "matched";
 export type Screen =
   | "home"
   | "map"
@@ -71,6 +86,7 @@ export type Screen =
   | "diary"
   | "saved"
   | "subscriptions"
+  | "taster-recommendations"
   | "settings"
   | "profile-edit"
   | "intro"

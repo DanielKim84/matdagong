@@ -1,0 +1,804 @@
+/* 밝은 아이보리 바탕에 산뜻한 코랄과 허니 색을 더한 공통 팔레트입니다. */
+:root {
+  --color-ink: #392b27;
+  --color-muted: #786760;
+  --color-subtle: #9b8980;
+  --color-line: #f0e2d9;
+  --color-canvas: #fffaf5;
+  --color-surface: #ffffff;
+  --color-surface-soft: #fff4eb;
+  --color-primary: #e36b4d;
+  --color-primary-strong: #c6533c;
+  --color-primary-soft: #fff0e9;
+  --color-accent: #e6aa43;
+  --color-accent-soft: #fff6df;
+  --color-danger: #c34f49;
+  --color-success: #bd8741;
+  --red: var(--color-primary);
+  --orange: var(--color-accent);
+  --navy: var(--color-ink);
+  --gray: var(--color-muted);
+  --line: var(--color-line);
+  --cream: var(--color-canvas);
+  --peach: var(--color-primary-soft);
+  color: var(--color-ink);
+  background: var(--color-canvas);
+}
+
+body { color: var(--color-ink); background: var(--color-canvas); }
+button, input, select, textarea { font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif; }
+.app-view { background: var(--color-surface); box-shadow: 0 0 40px rgb(112 70 48 / 6%); }
+.avatar { border-color: #e8c7b9; background: var(--color-primary-soft); }
+.screen-header { border-color: var(--color-line); background: var(--color-surface); }
+.screen-header h1, .recommendations > h2 { color: var(--color-ink); }
+.empty-state p, .muted-caption, .local-caption, .rating small { color: var(--color-muted); }
+.bottom-tabs { border-color: var(--color-line); background: var(--color-surface); }
+.bottom-tabs button { color: var(--color-muted); }
+.bottom-tabs button.active { color: var(--color-primary-strong); }
+.bottom-tabs .register-tab > span { background: var(--color-primary); box-shadow: 0 4px 10px rgb(169 75 55 / 24%); }
+.primary-button { background: var(--color-primary); color: #fff; }
+.primary-button:hover { background: var(--color-primary-strong); filter: none; }
+.outline-button { border-color: #e5c9ba; background: var(--color-surface); color: var(--color-primary-strong); }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible { outline-color: var(--color-primary); }
+
+/* 탭과 취향 태그는 선택 상태와 터치 크기를 공유합니다. */
+.feed-tabs > button { border-color: var(--color-line); background: var(--color-surface); color: var(--color-muted); }
+.feed-tabs > button.selected { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
+.taste-tag-picker { --tag-accent: var(--color-primary); --tag-tint: var(--color-primary-soft); }
+.taste-tag-group--cuisine { --tag-accent: #b95740; --tag-tint: #f9e9e1; }
+.taste-tag-group--taste { --tag-accent: #bd8433; --tag-tint: #fbf1dd; }
+.taste-tag-group--cafe { --tag-accent: #8d6655; --tag-tint: #f4ece5; }
+.taste-tag-group--occasion { --tag-accent: #a7646d; --tag-tint: #f7eaeb; }
+.taste-tag-group--visit { --tag-accent: #9a7544; --tag-tint: #f8f0e3; }
+.taste-tag-picker > section { border-color: var(--color-line); background: var(--color-surface); box-shadow: 0 4px 14px rgb(73 45 32 / 5%); }
+.taste-tag-group__icon { background: var(--tag-tint); color: var(--tag-accent); }
+.taste-tag-group__count { background: var(--color-surface-soft); color: var(--color-primary-strong); }
+.taste-tag-options button { min-height: 42px; border-color: var(--color-line); border-radius: 13px; background: var(--color-surface-soft); padding: 9px 12px; color: var(--color-muted); }
+.taste-tag-options button:hover:not(:disabled) { border-color: #e7cbbd; background: #fff8f2; }
+.taste-tag-options button.selected { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary-strong); }
+.taste-tag-options button.selected .icon { color: var(--color-primary); }
+
+/* 설정·프로필·요청 화면은 크림 표면에 토마토색 동작을 함께 씁니다. */
+.settings-view-switch { background: var(--color-surface-soft); }
+.settings-view-switch button { color: var(--color-muted); }
+.settings-view-switch button[aria-pressed="true"] { background: var(--color-surface); color: var(--color-primary-strong); }
+.settings-view-switch button[aria-pressed="true"] .icon { color: var(--color-primary); }
+.profile-edit-avatar-section, .taste-settings-block, .settings-save-bar { border-color: var(--color-line); }
+.profile-edit-field > span, .profile-edit-avatar-section b, .public-style-settings summary b,
+.taste-settings-intro h2, .taste-section-heading h2, .tag-request-sheet > header h2 { color: var(--color-ink); }
+.profile-edit-field > input, .profile-edit-field > textarea { border-color: var(--color-line); background: var(--color-surface); color: var(--color-ink); }
+.profile-edit-avatar-button > span:last-child { background: var(--color-primary); color: #fff; }
+.activity-scope-picker label > span, .food-focus-picker label > span,
+.tag-request-category label > span { border-color: var(--color-line); background: var(--color-surface); }
+.activity-scope-picker label > input:checked + span,
+.food-focus-picker input:checked + span,
+.tag-request-category input:checked + span { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary-strong); box-shadow: inset 0 0 0 1px var(--color-primary); }
+.activity-scope-picker label .icon { color: var(--color-primary); }
+.copy-taste-button { border-color: #e8d3c5; background: var(--color-primary-soft); color: var(--color-primary-strong); }
+.public-style-settings, .tag-request-history { border-color: var(--color-line); background: var(--color-surface); }
+.public-style-settings summary em { background: var(--color-accent-soft); color: #8c6129; }
+.tag-request-entry { border-color: #e8d3c5; background: var(--color-surface-soft); }
+.tag-request-entry-icon { background: var(--color-accent-soft); color: #a9782e; }
+.settings-save-bar { background: #fff; }
+.tag-request-error, .subscription-error { background: #f8eae6; color: var(--color-danger); }
+.tag-request-status.approved { background: var(--color-accent-soft); color: #8c6129; }
+.tag-request-success > span { background: var(--color-accent-soft); color: #a9782e; }
+.tag-request-success h3, .tag-request-success p b { color: var(--color-primary-strong); }
+
+.subscription-sheet { border-color: var(--color-line); background: var(--color-surface); }
+.subscription-sheet-header small { color: var(--color-primary); }
+.subscription-sheet-header .icon-button { background: var(--color-surface-soft); }
+.subscription-choice { border-color: var(--color-line); background: var(--color-surface); }
+.subscription-choice.selected, .subscription-terms > button.selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.subscription-radio { border-color: #cdbfb6; }
+.subscription-choice.selected .subscription-radio { border-color: var(--color-primary); }
+.subscription-choice > strong { color: var(--color-primary-strong); }
+.subscription-replace-note { background: var(--color-accent-soft); color: #805c4c; }
+.subscription-terms > button { border-color: var(--color-line); background: var(--color-surface); }
+.subscription-terms > button.selected { box-shadow: inset 0 0 0 1px var(--color-primary); }
+.subscription-summary { border-color: var(--color-line); }
+.subscription-summary b { color: var(--color-ink); }
+.subscription-test-note { background: var(--color-surface-soft); }
+
+.profile-activity { border-color: var(--color-line); background: var(--color-surface-soft); color: var(--color-primary-strong); }
+.profile-activity small, .profile-place-copy > span { color: var(--color-muted); }
+.profile-activity b, .profile-screen .profile-place-card, .profile-screen .profile-place-copy { color: var(--color-ink); }
+.profile-screen .profile-place-card, .profile-screen .profile-tag-group { border-color: var(--color-line); background: var(--color-surface); box-shadow: 0 4px 14px rgb(73 45 32 / 5%); }
+.profile-screen .profile-tag-group h2 { color: var(--color-ink); }
+.profile-screen .profile-tag-group h2 > span { background: var(--tag-tint, var(--color-primary-soft)); color: var(--tag-accent, var(--color-primary)); }
+.profile-screen .profile-tag-group--cuisine h2 > span { --tag-accent: #b95740; --tag-tint: #f9e9e1; }
+.profile-screen .profile-tag-group--taste h2 > span { --tag-accent: #bd8433; --tag-tint: #fbf1dd; }
+.profile-screen .profile-tag-group--cafe h2 > span { --tag-accent: #8d6655; --tag-tint: #f4ece5; }
+.profile-screen .profile-tag-group--occasion h2 > span { --tag-accent: #a7646d; --tag-tint: #f7eaeb; }
+.profile-screen .profile-tag-group > div > span { border-color: var(--color-line); background: var(--color-surface-soft); color: var(--color-primary-strong); }
+.profile-empty { border-color: var(--color-line); background: var(--color-surface-soft); }
+.profile-empty > .icon { color: var(--color-primary); }
+
+/* 홈의 분야·맛객 추천을 선택 가능한 카드로 구분해 읽기 쉽게 합니다. */
+.home-header, .home-content, .registration-form, .settings-content { color: var(--color-ink); }
+.food-categories { gap: 7px; padding-top: 10px; }
+.food-categories > button { min-height: 69px; align-content: center; gap: 5px; border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-surface); color: var(--color-muted); font-size: 9px; box-shadow: 0 3px 9px rgb(73 45 32 / 4%); }
+.food-categories > button.active { border-color: #e7b6a6; background: var(--color-primary-soft); color: var(--color-primary-strong); font-weight: 700; }
+.food-categories > button.active .category-art { filter: drop-shadow(0 3px 3px rgb(169 75 55 / 18%)); }
+.taste-recommendations { border-color: #ead8cb; border-radius: 18px; background: linear-gradient(145deg, #fffdfa, #fbf1e7); padding: 15px; box-shadow: 0 7px 20px rgb(73 45 32 / 6%); }
+.taste-recommendations-heading { align-items: center; }
+.taste-recommendations-title { display: flex; min-width: 0; align-items: center; gap: 10px; }
+.taste-recommendations-mark { display: grid; width: 38px; height: 38px; flex: none; place-items: center; border: 1px solid #f0d6c8; border-radius: 13px; background: var(--color-primary-soft); color: var(--color-primary); }
+.taste-recommendations-mark .icon { width: 18px; height: 18px; }
+.taste-recommendations-heading-copy { display: grid; min-width: 0; gap: 4px; }
+.taste-recommendations-heading h2 { color: var(--color-ink); }
+.taste-recommendations-heading p { color: var(--color-muted); }
+.taste-recommendations-heading > button { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #e8d3c5; border-radius: 18px; background: var(--color-surface); padding: 7px 10px; color: var(--color-primary-strong); font-weight: 650; }
+.taste-recommendations-heading > button .icon { width: 13px; height: 13px; }
+.taste-recommendation-card { border-color: var(--color-line); border-radius: 13px; box-shadow: 0 2px 7px rgb(73 45 32 / 4%); }
+.taste-recommendation-copy > small { color: var(--color-primary-strong); }
+.taste-recommendation-copy > span, .taste-recommendation-card > .icon { color: var(--color-muted); }
+.taste-recommendation-empty { border: 1px solid #eedcc7; background: var(--color-accent-soft); color: #725d4e; }
+.taste-recommendation-empty > button { border-color: #e6c795; color: #8c6129; }
+.empty-state > .icon { color: var(--color-accent); }
+.rating { color: var(--color-primary); }
+.search-input, .map-location > button, .map-error { border-color: var(--color-line); }
+.search-input, .search-input input { color: var(--color-ink); }
+.map-list-button { background: #1c2d33; color: #fff; }
+.map-result-label em { color: var(--color-primary); }
+.map-place-row { border-color: var(--color-line); }
+.map-place-meta > small, .map-result-label > span { color: var(--color-muted); }
+.small-tags > i, .editable-chip, .suggested-tags > button, .suggested-tags > span { border-color: var(--color-line); background: var(--color-surface-soft); color: var(--color-muted); }
+.registration-photos .add-photos { border-color: #e8d3c5; background: var(--color-primary-soft); color: var(--color-primary-strong); }
+.registration-photos .add-photos > .icon { color: var(--color-primary); }
+.inline-field input, .reason-field textarea, .small-input-row { border-color: var(--color-line); background: var(--color-surface); color: var(--color-ink); }
+.place-visit-conditions span { background: var(--color-accent-soft); color: #8c6129; }
+.visit-condition-options > label { border-color: var(--color-line); color: var(--color-ink); }
+.detail-tabs > button.active { border-bottom-color: var(--color-primary); color: var(--color-primary-strong); }
+.photo-heart.is-saved { color: #f1b49e; }
+.settings-logout { border-color: var(--color-line); color: var(--color-primary-strong); }
+.auth-start-screen { background: var(--color-canvas); color: var(--color-ink); }
+.auth-start-screen p { color: var(--color-muted); }
+.auth-start-error button { background: var(--color-primary); }
+
+.global-notice { border-color: var(--color-line); background: var(--color-surface); color: var(--color-ink); box-shadow: 0 12px 34px rgb(73 45 32 / 14%); }
+.global-notice__icon, .global-notice--success .global-notice__icon { background: var(--color-accent); box-shadow: none; }
+.global-notice--error .global-notice__icon { background: var(--color-danger); box-shadow: none; }
+.global-notice__copy span { color: var(--color-muted); }
+.global-notice__close { background: var(--color-surface-soft); color: var(--color-muted); }
+
+.matdagong-signup { background: var(--color-canvas); color: var(--color-ink); }
+.matdagong-signup__card { border-color: var(--color-line); background: var(--color-surface); box-shadow: 0 18px 55px rgb(73 45 32 / 8%); }
+.matdagong-signup__eyebrow { color: var(--color-primary); }
+.matdagong-signup__card input { border-color: var(--color-line); }
+.matdagong-signup__card > button[type="submit"] { background: var(--color-primary); }
+.matdagong-signup__card .taste-tag-picker button { min-height: 42px; }
+.matdagong-signup__card .taste-tag-picker button.selected { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary-strong); }
+
+/* 마이 탭은 남아 있던 회녹색을 걷고 가벼운 카드와 코랄 아이콘으로 맞춥니다. */
+.my-screen { color: var(--color-ink); }
+.my-identity { margin-bottom: 15px; border: 1px solid var(--color-line); border-radius: 20px; background: #fff; padding: 12px; box-shadow: 0 4px 14px rgb(112 70 48 / 4%); }
+.my-identity small, .my-statistics span, .my-menu-list small { color: var(--color-muted); }
+.points-summary { border-color: #f5ddca; background: linear-gradient(115deg, #fff7e9, #fff0e9); box-shadow: 0 4px 12px rgb(205 126 78 / 5%); }
+.points-summary > span, .points-empty > span { background: var(--color-accent); color: #fff; }
+.points-summary small { color: #a9782e; }
+.points-summary > button { border-color: #f0d4bd; color: var(--color-primary-strong); }
+.my-statistics { gap: 8px; margin: 15px 0; }
+.my-statistics > button { min-height: 68px; align-content: center; border: 1px solid var(--color-line); border-radius: 15px; background: #fff; box-shadow: 0 3px 10px rgb(112 70 48 / 3%); }
+.my-menu-list { gap: 3px; border: 1px solid var(--color-line); border-radius: 18px; background: #fff; padding: 4px 12px; }
+.my-menu-list > button { border-color: #f5ebe5; }
+.red-menu-icon { border-radius: 11px; background: var(--color-primary-soft); color: var(--color-primary); }
+.my-menu-list b { color: var(--color-ink); }
+.my-menu-list > button > .icon { color: var(--color-subtle); }
+.my-avatar-upload > span:last-child { border-color: #fff; background: var(--color-primary); }
+.taste-settings-intro > span { background: var(--color-primary-soft); color: var(--color-primary); }
+.taste-settings-intro p, .taste-settings-intro > small, .taste-section-heading > span,
+.avoid-settings-block > p, .profile-edit-field > small, .profile-edit-avatar-section small,
+.public-style-settings summary small, .public-style-settings p, .copy-taste-help,
+.activity-scope-picker small, .activity-region-picker label > span, .activity-region-field > small { color: var(--color-muted); }
+.taste-settings-intro > small { border: 1px solid #f5d9c9; background: var(--color-primary-soft); color: var(--color-primary-strong); }
+.profile-settings { color: var(--color-ink); font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif; }
+.profile-settings :is(h1, h2, h3, b, legend) { color: var(--color-ink); }
+.profile-settings :is(p, small) { color: var(--color-muted); }
+.profile-settings .taste-settings-intro > small { border-color: #f5d9c9; background: var(--color-primary-soft); color: var(--color-primary-strong); }
+.activity-region-picker .region-picker-trigger { border-color: var(--color-line); color: var(--color-ink); font-family: inherit; }
+.activity-region-picker .region-picker-trigger:disabled { background: #fff9f5; color: var(--color-subtle); }
+.taste-tag-group--cuisine { --tag-accent: #d86649; --tag-tint: #fff0e9; }
+.taste-tag-group--taste { --tag-accent: #bf872e; --tag-tint: #fff6df; }
+.taste-tag-group--cafe { --tag-accent: #a76c50; --tag-tint: #fff1e7; }
+.taste-tag-group--occasion { --tag-accent: #c05f78; --tag-tint: #fff0f3; }
+.taste-tag-group--visit { --tag-accent: #c47a45; --tag-tint: #fff3e7; }
+.taste-tag-picker > section { box-shadow: 0 4px 14px rgb(112 70 48 / 4%); }
+.taste-tag-group__titles b { color: var(--color-ink); }
+.taste-tag-group__titles small, .taste-tag-group__count i, .taste-tag-group__compact-count { color: var(--color-muted); }
+.taste-tag-group__count { background: var(--color-surface-soft); color: var(--color-primary-strong); }
+.taste-tag-group__count { display: flex; min-width: 46px; align-items: center; justify-content: center; gap: 0; white-space: nowrap; }
+.taste-tag-options button { border-color: var(--color-line); background: #fffaf6; color: var(--color-muted); }
+.taste-tag-options button:hover:not(:disabled) { border-color: #f0cbb8; background: #fff3eb; }
+
+@media (max-width: 360px) { .food-categories > button { font-size: 8px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+
+/* 설정 탭은 두 선택지를 같은 무게의 카드로 보여줍니다. */
+.settings-view-switch { gap: 8px; margin: 16px 20px; background: transparent; padding: 0; }
+.settings-view-switch button { min-height: 54px; border: 1px solid var(--color-line); border-radius: 15px; background: var(--color-surface); color: var(--color-ink); box-shadow: 0 3px 10px rgb(73 45 32 / 5%); transition: border-color .15s, background .15s, box-shadow .15s; }
+.settings-view-switch button[aria-pressed="true"] { border-color: #edaa91; background: linear-gradient(145deg, #fff7f1, #fff); color: var(--color-primary-strong); box-shadow: 0 5px 14px rgb(201 94 66 / 12%); }
+.settings-view-switch button .icon { color: var(--color-subtle); }
+.settings-view-switch button[aria-pressed="true"] .icon { color: var(--color-primary); }
+
+/* 선택 시 체크 아이콘 자리와 글꼴 굵기를 유지해 태그 줄바꿈을 막습니다. */
+.taste-tag-options button { gap: 5px; font-weight: 550; transition: background .15s, border-color .15s, color .15s; }
+.taste-tag-options button.selected { font-weight: 550; }
+.taste-tag-options button:hover:not(:disabled) { transform: none; }
+.taste-tag-check { display: inline-grid; width: 13px; height: 13px; flex: none; place-items: center; visibility: hidden; }
+.taste-tag-check.is-selected { visibility: visible; }
+.taste-tag-check .icon { width: 13px; height: 13px; }
+
+.map-bottom-card.expanded { max-height: min(65dvh, 560px); }
+.pin-guide > div > img { width: 52px; height: 62px; margin: 7px 0 14px; object-fit: contain; }
+
+/* 태그는 누르는 즉시 한 가지 선택 색으로 고정하고, hover가 상태를 덮지 않습니다. */
+.taste-tag-options button { gap: 7px; border: 1px solid #e8d8cc; border-radius: 999px; background: #fffdfb; padding: 8px 12px; color: #66584f; font-size: 11px; font-weight: 550; box-shadow: 0 1px 2px rgb(72 45 32 / 4%); transition: border-color .12s, background-color .12s, color .12s, box-shadow .12s; }
+.taste-tag-options button:hover:not(:disabled) { transform: none; border-color: #e8d8cc; background: #fffdfb; color: #66584f; }
+.taste-tag-options button.selected,
+.taste-tag-options button.selected:hover:not(:disabled) { border-color: #d35e43; background: #fff0e8; color: #a94230; font-weight: 550; box-shadow: inset 0 0 0 1px #d35e43, 0 2px 6px rgb(191 83 56 / 12%); }
+.taste-tag-options button:focus-visible { outline: 2px solid #dc8065; outline-offset: 2px; }
+.taste-tag-group__count { display: grid; min-width: 48px; height: 36px; grid-template-columns:auto auto; align-content: center; justify-content: center; column-gap: 2px; border: 1px solid #e8e5df; border-radius: 11px; background: #f5f4f0; color: #5f6c68; font-size: 12px; font-weight: 750; }
+.taste-tag-group__count::before { content: "선택"; grid-column: 1 / -1; margin-bottom: 1px; color: #96978e; font-size: 8px; font-weight: 550; line-height: 1; }
+.taste-tag-group__count i { color: #92958e; font-size: 10px; font-style: normal; font-weight: 550; }
+.taste-settings-intro > .taste-settings-mascot { display: grid; width: 62px; height: 62px; place-items: center; margin: 0 auto 4px; border: 1px solid #f0dac9; border-radius: 20px; background: radial-gradient(circle at 35% 25%, #fff8e8, #ffe9d9); box-shadow: 0 5px 14px rgb(169 99 65 / 10%); }
+.taste-settings-mascot .brand-art { width: 54px; height: 56px; }
+
+/* 마이 메뉴의 마지막 행은 패널 바닥선과 겹치지 않도록 안쪽 선을 생략합니다. */
+.my-menu-list { overflow: hidden; border: 1px solid var(--color-line); border-radius: 15px; background: #fff; padding: 0 12px; }
+.my-menu-list > button:last-child { border-bottom: 0; }
+
+.map-screen > .feed-tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; padding-right: 10px; padding-left: 10px; }
+.map-screen > .feed-tabs > button { min-width: 0; padding-right: 3px; padding-left: 3px; font-size: 10px; white-space: nowrap; }
+
+.home-taste-recommendations { margin: 24px 0 10px; border: 1px solid #f0dfd2; border-radius: 18px; background: linear-gradient(145deg, #fffaf5, #fff); padding: 13px; box-shadow: 0 5px 14px rgb(105 67 42 / 5%); }
+.home-taste-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+.home-taste-heading > .brand-art { width: 45px; height: 48px; flex: none; }
+.home-taste-heading-copy { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.home-taste-heading h2 { margin: 0; color: var(--color-ink); font-size: 15px; letter-spacing: -.3px; }
+.home-taste-heading p { margin: 0; color: var(--color-muted); font-size: 10px; line-height: 1.5; }
+.home-taste-heading > button { flex: none; border: 1px solid #ead4c6; border-radius: 18px; background: white; padding: 7px 9px; color: #a4513b; font-size: 10px; }
+.home-taste-list { display: flex; gap: 8px; overflow-x: auto; padding: 1px 1px 5px; scrollbar-width: thin; }
+.home-taste-card { display: grid; min-width: 132px; flex: 1; justify-items: center; gap: 6px; border: 1px solid #efe5dd; border-radius: 14px; background: #fff; padding: 10px 8px; text-align: center; }
+.home-taste-card > .avatar { width: 45px; height: 45px; }
+.home-taste-card > b { max-width: 100%; overflow: hidden; color: var(--color-ink); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.home-taste-card > small { color: #b05b43; font-size: 9px; }
+.home-taste-card > .home-taste-tags { max-width: 100%; overflow: hidden; color: var(--color-muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.home-taste-empty { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 12px; background: #fff; padding: 10px; color: var(--color-muted); font-size: 10px; line-height: 1.55; }
+.home-taste-empty > button { flex: none; border: 1px solid #ead4c6; border-radius: 18px; background: white; padding: 7px 9px; color: #a4513b; font-size: 10px; }
+
+@media (max-width: 360px) { .map-screen > .feed-tabs > button { font-size: 9px; } }
+
+.registration-form { display: grid; gap: 13px; padding: 16px 16px 28px; }
+.registration-photos { grid-template-columns: 86px repeat(3, minmax(0, 1fr)); grid-auto-rows: 68px; gap: 8px; margin: 0 0 4px; }
+.add-photos { grid-row: span 1; border: 1px dashed #e4bca8; border-radius: 15px; background: #fff5ec; color: #9a5c43; }
+.add-photos > .icon { color: #c16a4d; }
+.photo-slot { border: 1px solid #eee4dc; border-radius: 12px; background: #f7f1eb; }
+.photo-slot > button { width: 21px; height: 21px; top: 4px; right: 4px; }
+.photo-slot > button .icon { width: 12px; height: 12px; }
+.register-place-picker { border: 1px solid #f0dfd3; border-radius: 17px; background: linear-gradient(145deg, #fffaf5, #fff); padding: 13px; }
+.register-place-picker > header { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+.register-place-picker > header > span { display: grid; width: 43px; height: 43px; flex: none; place-items: center; border-radius: 14px; background: #fff0e4; }
+.register-place-picker > header .brand-art { width: 39px; height: 39px; }
+.register-place-picker > header > div { display: grid; gap: 3px; }
+.register-place-picker > header b { color: var(--color-ink); font-size: 13px; }
+.register-place-picker > header small,.register-place-help { color: var(--color-muted); font-size: 10px; line-height: 1.5; }
+.register-place-search { display: flex; height: 43px; align-items: center; gap: 7px; border: 1px solid #eaded4; border-radius: 13px; background: white; padding: 0 7px 0 11px; color: #a16c53; }
+.register-place-search > .icon { width: 17px; height: 17px; }
+.register-place-search > input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--color-ink); font-size: 12px; }
+.register-place-search > button,.register-place-selected > button { border: 0; border-radius: 10px; background: #e87855; padding: 8px 11px; color: white; font-size: 10px; font-weight: 650; }
+.register-place-results { display: grid; gap: 5px; max-height: 260px; overflow: auto; margin-top: 8px; }
+.register-place-results > button { display: flex; align-items: center; gap: 8px; border: 1px solid #f0e9e3; border-radius: 11px; background: white; padding: 9px; text-align: left; }
+.register-place-results > button > span { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.register-place-results b { overflow: hidden; color: var(--color-ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.register-place-results small { overflow: hidden; color: var(--color-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.register-place-results .icon { width: 13px; height: 13px; color: #aa9688; }
+.register-place-selected { display: flex; align-items: center; gap: 9px; margin-top: 9px; border: 1px solid #d6ebe2; border-radius: 12px; background: #f3fbf7; padding: 9px; }
+.register-place-selected > span { display: grid; width: 30px; height: 30px; flex: none; place-items: center; border-radius: 10px; background: #dff2e8; color: #368466; }
+.register-place-selected > span .icon { width: 17px; height: 17px; }
+.register-place-selected > div { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.register-place-selected b { overflow: hidden; color: #294b3f; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.register-place-selected small { overflow: hidden; color: #6c897e; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.register-place-selected > button { border: 1px solid #d3e8dd; background: white; color: #49836c; }
+.register-place-help { display: block; margin: 8px 2px 0; }
+.address-selected { margin: 8px 1px 0; color: #568a75; }
+.register-food-kind { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; border: 0; padding: 0; }
+.register-food-kind legend { grid-column: 1/-1; margin-bottom: 2px; color: var(--color-ink); font-size: 13px; font-weight: 700; }
+.register-food-kind > button { display: flex; min-width: 0; align-items: center; gap: 9px; border: 1px solid var(--color-line); border-radius: 14px; background: #fff; padding: 10px; text-align: left; }
+.register-food-kind > button[aria-pressed="true"] { border-color: #e5a58c; background: #fff5ef; box-shadow: inset 0 0 0 1px #e5a58c; }
+.register-food-kind > button > .icon { width: 23px; height: 23px; color: #ba6549; }
+.register-food-kind > button > span { display: grid; gap: 3px; }
+.register-food-kind b { color: var(--color-ink); font-size: 11px; }
+.register-food-kind small { color: var(--color-muted); font-size: 9px; }
+.registration-taste-tags { margin: 0; border: 1px solid #eee0d5; border-radius: 16px; background: #fffdfa; padding: 12px; }
+.registration-taste-tags > header { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.registration-taste-tags > header > .brand-art { width: 43px; height: 43px; flex: none; }
+.registration-taste-tags > header > div { display: grid; gap: 3px; }
+.registration-taste-tags h2 { margin: 0; color: var(--color-ink); font-size: 13px; }
+.registration-taste-tags header small { color: var(--color-muted); font-size: 9px; line-height: 1.5; }
+.registration-taste-tags .taste-tag-picker > section { padding: 11px; }
+.registration-form > .reason-field,.registration-form > .form-section,.registration-form > .visit-condition-section { border: 1px solid #eee2d9; border-radius: 15px; background: white; padding: 12px; }
+.registration-form > .reason-field { margin: 0; }
+.registration-form .reason-field > b,.registration-form .form-section h2 { color: var(--color-ink); font-size: 13px; }
+.registration-form .reason-field textarea { border-color: #e9dfd6; border-radius: 11px; background: #fffdfa; font: inherit; font-size: 12px; }
+.registration-form .small-input-row { height: 39px; border-color: #e9dfd6; border-radius: 11px; }
+.registration-form .editable-chip { border-radius: 999px; background: #fff4eb; color: #9d624b; }
+.recommended-menu-rows { display:grid; gap:8px; }
+.recommended-menu-row { display:grid; grid-template-columns:minmax(0,1fr) 112px 28px; align-items:end; gap:7px; }
+.recommended-menu-row > label { display:grid; min-width:0; gap:4px; color:#7b7068; font-size:10px; }
+.recommended-menu-row > label > input { width:100%; min-width:0; height:39px; border:1px solid #e9dfd6; border-radius:10px; outline:none; background:#fffdfa; padding:0 10px; color:var(--color-ink); font:inherit; font-size:12px; }
+.recommended-menu-row > label > input:focus { border-color:#e7a28b; box-shadow:0 0 0 3px #f9e9e2; }
+.recommended-menu-row > .recommended-menu-price { position:relative; }
+.recommended-menu-price > input { padding-right:22px !important; }
+.recommended-menu-price > i { position:absolute; right:9px; bottom:11px; color:#92877f; font-size:11px; font-style:normal; }
+.recommended-menu-remove { display:grid; width:28px; height:39px; place-items:center; border:1px solid #eee2d9; border-radius:9px; background:#fff; color:#a09288; }
+.recommended-menu-remove .icon { width:14px; height:14px; }
+.recommended-menu-add { display:flex; min-height:37px; align-items:center; justify-content:center; gap:5px; margin-top:8px; border:1px dashed #e5c8b6; border-radius:10px; background:#fff9f4; color:#a35e43; font-size:11px; font-weight:650; }
+.recommended-menu-add .icon { width:14px; height:14px; }
+.menu-list { display:grid; gap:6px; margin:0; padding:0; list-style:none; }
+.menu-list > li { display:flex; min-height:38px; align-items:center; justify-content:space-between; gap:12px; border:1px solid #f0e5dc; border-radius:10px; background:#fffdfa; padding:8px 11px; color:var(--color-ink); font-size:12px; }
+.menu-list > li > b { color:#a65d3e; font-size:11px; font-weight:650; white-space:nowrap; }
+.registration-form .visit-condition-section { margin: 0; }
+.register-place-picker + .register-food-kind { margin-top: -2px; }
+.registration-form > .primary-button { margin-top: 0; }
+.place-tasters > article { display: flex; min-width: 0; align-items: stretch; gap: 6px; border: 1px solid #eee7e1; border-radius: 12px; background: #fff; padding: 5px; }
+.place-tasters > article.selected { border-color: #e8b39d; background: #fff9f4; }
+.place-taster-record { display: flex; min-width: 0; flex: 1; align-items: center; gap: 8px; border: 0; border-radius: 8px; background: transparent; padding: 5px; text-align: left; }
+.place-taster-record > .avatar { width: 34px; height: 34px; flex: none; }
+.place-taster-record > span { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.place-taster-record b { overflow: hidden; color: var(--color-ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.place-taster-record small { overflow: hidden; color: var(--color-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.place-taster-record > .icon { width: 15px; height: 15px; color: #ca6348; }
+.place-taster-profile { display: grid; width: 30px; flex: none; place-items: center; border: 0; border-left: 1px solid #eee4dc; background: transparent; color: #91877f; }
+.place-taster-profile > .icon { width: 14px; height: 14px; }
+.selected-taster-note { border: 1px solid #f0e3d8; border-radius: 14px; background: #fffaf6; padding: 13px; }
+.selected-taster-note > h2 { font-size: 14px; }
+.selected-taster-note > p { margin-bottom: 0; color: #5e625e; }
+
+/* 홈 추천과 설정의 캐릭터는 별도 그림 카드 대신 프로필처럼 둥글게 배치합니다. */
+.mascot-buddy, .registration-mascot { position: relative; display: inline-grid; width: 46px; height: 46px; flex: none; place-items: center; }
+.mascot-buddy > .avatar, .registration-mascot > .avatar { width: 42px; height: 42px; border: 2px solid #fff; background: #fff1e6; box-shadow: 0 3px 9px rgb(97 58 38 / 12%); }
+.mascot-buddy > i, .registration-mascot > i { position: absolute; right: -2px; bottom: -1px; display: grid; width: 19px; height: 19px; place-items: center; border: 2px solid #fff; border-radius: 50%; background: #f1bd59; color: white; }
+.mascot-buddy > i .icon, .registration-mascot > i .icon { width: 11px; height: 11px; }
+.home-taste-heading > .mascot-buddy { width: 48px; height: 48px; }
+.registration-taste-tags > header > .registration-mascot { width: 46px; height: 46px; }
+.taste-settings-intro > .taste-settings-mascot { position: relative; display: inline-grid; width: 48px; height: 48px; place-items: center; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.taste-settings-mascot > .avatar { width: 44px; height: 44px; border: 2px solid #fff; box-shadow: 0 3px 9px rgb(97 58 38 / 12%); }
+.taste-settings-mascot > i { position: absolute; right: -2px; bottom: -1px; display: grid; width: 18px; height: 18px; place-items: center; border: 2px solid #fff; border-radius: 50%; background: #f1bd59; color: white; }
+.taste-settings-mascot > i .icon { width: 10px; height: 10px; }
+
+/* 홈 인기 기준과 지역 범위를 제목 옆에 밝혀 추천 맥락을 분명히 합니다. */
+.recommendations-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0 11px; }
+.recommendations-heading > div { display: grid; min-width: 0; gap: 3px; }
+.recommendations-heading h2 { margin: 0; color: var(--color-ink); font-size: 18px; letter-spacing: -.5px; }
+.recommendations-heading small { color: var(--color-muted); font-size: 9px; }
+.home-scope-button { display: inline-flex; min-height: 32px; flex: none; align-items: center; gap: 4px; border: 1px solid var(--color-line); border-radius: 18px; background: #fff; padding: 0 9px; color: var(--color-muted); font-size: 10px; }
+.home-scope-button .icon { width: 13px; height: 13px; }
+.home-scope-button.active { border-color: #e8b29b; background: #fff2e9; color: #a84e38; }
+.home-location-message { display: block; margin: -5px 0 9px; color: var(--color-muted); font-size: 10px; }
+.tile-description { display: grid; gap: 4px; padding: 8px 2px 0; }
+.tile-description h3 { margin: 0; color: var(--color-ink); }
+.tile-description .rating { color: var(--color-primary); font-size: 10px; }
+.tile-description .rating .icon { width: 12px; height: 12px; }
+.tile-description .rating small { color: var(--color-muted); font-size: 9px; }
+.tile-place-category, .tile-place-note { display: -webkit-box; overflow: hidden; color: var(--color-muted); font-size: 9px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+.tile-place-note { color: #6f5b50; -webkit-line-clamp: 2; }
+
+/* 지도의 탭이 곧 마커 필터이므로 별도 표시 설정 버튼은 두지 않습니다. */
+.map-toolbar { padding-right: 14px; padding-left: 14px; }
+.map-toolbar > .search-input { min-height: 42px; }
+.map-result-label > span { max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.map-place-meta > small { max-width: 135px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 사진은 대표 컷과 작은 미리보기로 정돈하고, 추가 동작을 같은 갤러리에 둡니다. */
+.registration-photo-gallery { display: grid; gap: 9px; margin-bottom: 2px; }
+.registration-photo-empty { position: relative; display: grid; min-height: 172px; align-content: center; justify-items: center; gap: 8px; overflow: hidden; border: 1px dashed #e8c9b8; border-radius: 19px; background: radial-gradient(circle at 50% 25%, #fffaf2, #fff1e8); padding: 20px; color: var(--color-ink); text-align: center; }
+.registration-photo-empty > span { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 50%; background: #fff; color: #c46c4d; box-shadow: 0 4px 12px rgb(123 75 49 / 9%); }
+.registration-photo-empty > span .icon { width: 22px; height: 22px; }
+.registration-photo-empty > b { font-size: 12px; }
+.registration-photo-empty > small { color: var(--color-muted); font-size: 9px; }
+.registration-photo-empty > input, .add-photos > input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.registration-photo-cover { position: relative; height: 190px; overflow: hidden; margin: 0; border-radius: 18px; background: #f4e9df; }
+.registration-photo-cover > img { width: 100%; height: 100%; object-fit: cover; }
+.registration-photo-cover::after { position: absolute; inset: 55% 0 0; background: linear-gradient(transparent, rgb(35 25 19 / 42%)); content: ""; pointer-events: none; }
+.registration-photo-cover > span { position: absolute; z-index: 1; bottom: 10px; left: 12px; border-radius: 12px; background: rgb(41 31 25 / 60%); padding: 5px 8px; color: white; font-size: 9px; }
+.registration-photo-cover > button { position: absolute; z-index: 2; top: 9px; right: 9px; display: grid; width: 27px; height: 27px; place-items: center; border: 1px solid rgb(255 255 255 / 70%); border-radius: 50%; background: rgb(41 31 25 / 55%); color: white; }
+.registration-photo-cover > button .icon { width: 14px; height: 14px; }
+.registration-photo-strip { display: flex; gap: 7px; overflow-x: auto; padding: 1px 1px 4px; }
+.registration-photo-strip .photo-slot, .add-photos-compact { width: 62px; height: 62px; flex: none; border-radius: 13px; }
+.registration-photo-strip .photo-slot > button { width: 19px; height: 19px; }
+.add-photos.add-photos-compact { position: relative; display: flex; flex-direction: column; gap: 3px; border: 1px dashed #e4bca8; background: #fff7f0; padding: 7px 3px; }
+.add-photos-compact > .icon { width: 19px; height: 19px; }
+.add-photos-compact > b { font-size: 8px; }
+
+/* 체크박스와 공개 범위를 단독 기본 컨트롤 대신 선택 가능한 카드로 정돈합니다. */
+.visit-condition-options > label { position: relative; min-height: 42px; border-color: #eee1d7; border-radius: 12px; background: #fffdfa; padding: 8px 10px; color: var(--color-muted); font-size: 10px; transition: border-color .15s, background .15s, box-shadow .15s; }
+.visit-condition-options > label.selected { border-color: #e5ae92; background: #fff5ed; box-shadow: inset 0 0 0 1px #e5ae92; color: #8f4b36; }
+.visit-condition-options input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.visit-condition-options input:focus-visible + span { outline: 2px solid #dc8065; outline-offset: 3px; }
+.visit-condition-options > label > span { display: flex; align-items: center; gap: 7px; }
+.visit-condition-options > label > span > i { display: grid; width: 17px; height: 17px; flex: none; place-items: center; border: 1px solid #dacbc0; border-radius: 6px; background: white; color: transparent; }
+.visit-condition-options > label.selected > span > i { border-color: #d46b4e; background: #d46b4e; color: white; }
+.visit-condition-options > label > span > i .icon { width: 12px; height: 12px; }
+.visibility-field { display: grid; gap: 8px; margin: 0; padding: 12px; border: 1px solid #eee2d9; border-radius: 15px; background: #fff; }
+.visibility-field legend { float: none; margin: 0 0 2px; color: var(--color-ink); font-size: 13px; }
+.visibility-field > label { position: relative; display: flex; min-height: 56px; align-items: center; gap: 9px; border: 1px solid var(--color-line); border-radius: 12px; background: white; padding: 9px 10px; color: var(--color-ink); font-size: 11px; }
+.visibility-field > label.selected { border-color: #e5ae92; background: #fff7f1; box-shadow: inset 0 0 0 1px #e5ae92; }
+.visibility-field > label > input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.visibility-field > label > input:focus-visible + span { outline: 2px solid #dc8065; outline-offset: 3px; }
+.visibility-field > label > span { display: grid; flex: 1; gap: 3px; }
+.visibility-field > label > span > b { font-size: 11px; }
+.visibility-field > label > span > small { color: var(--color-muted); font-size: 9px; }
+.visibility-field > label > i { display: grid; width: 19px; height: 19px; place-items: center; border: 1px solid #ddd1c8; border-radius: 50%; color: transparent; }
+.visibility-field > label.selected > i { border-color: #d46b4e; background: #d46b4e; color: white; }
+.visibility-field > label > i .icon { width: 12px; height: 12px; }
+.visibility-like-note { color: var(--color-muted); font-size: 9px; line-height: 1.6; }
+
+@media (max-width: 360px) {
+  .recommendations-heading h2 { font-size: 16px; }
+  .recommendations-heading small { font-size: 8px; }
+  .home-scope-button { padding: 0 7px; font-size: 9px; }
+  .registration-photo-cover { height: 168px; }
+}
+
+/* 태그는 음식 취향을 빠르게 훑도록 해시태그와 색을 절제해 표현합니다. */
+.taste-tag-group__count { display:flex; align-items:center; gap:4px; border:1px solid #f1ddce; border-radius:999px; background:#fff9f2; padding:4px 8px; color:#aa6248; white-space:nowrap; }
+.taste-tag-group__count b { font-size:11px; font-weight:800; }
+.taste-tag-group__count i { color:#9b8b7e; font-size:9px; font-style:normal; }
+.taste-tag-options > button { min-height:36px; border:1px solid #eadfd5; border-radius:999px; background:#fffdfa; padding:7px 11px; color:#66584d; transition:background .15s,border-color .15s,color .15s; }
+.taste-tag-options > button[aria-pressed="true"] { border-color:#d87454; background:#fff0e7; color:#a94e35; box-shadow:inset 0 0 0 1px #d87454; }
+.taste-tag-label { display:inline-flex; align-items:center; gap:2px; }
+.taste-tag-label > i { color:#cf7052; font-size:10px; font-style:normal; font-weight:800; }
+.taste-tag-check { display:none; }
+
+/* 지도 안에서 취향 맞는 맛객을 별도 목록으로 열어 지도 결과와 구분합니다. */
+
+/* 상세의 사진, 위치, 맛객별 기록에 없는 정보는 샘플로 채우지 않습니다. */
+.place-cover-empty { display:flex; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center; gap:9px; background:radial-gradient(ellipse at 50% 35%,#fff9f1,#f2e2d4 78%); color:#7c5440; }
+.place-cover-empty > span { display:grid; width:54px; height:54px; place-items:center; border:1px solid #e9c7ae; border-radius:50%; background:#fff9f3; }
+.place-cover-empty > span .icon { width:25px; height:25px; }
+.place-cover-empty > b { font-size:17px; }
+.place-cover-empty > small { color:#9b8678; font-size:11px; }
+.place-category-line { margin:5px 0 0; color:var(--color-muted); font-size:11px; }
+.place-line a { color:inherit; }
+.place-hashtags { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+.place-hashtags > span { border-radius:999px; background:#fff1e8; padding:5px 9px; color:#a8563c; font-size:10px; }
+.detail-section-heading { display:flex; align-items:center; justify-content:space-between; }
+.detail-section-heading h2 { margin-bottom:9px; font-size:17px; }
+.detail-section-heading button { display:flex; align-items:center; border:0; background:transparent; color:#ad5b40; font-size:10px; }
+.detail-section-heading .icon { width:13px; }
+.place-photo-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.place-photo-gallery img { width:100%; aspect-ratio:1; border-radius:13px; object-fit:cover; }
+.place-no-photos { display:grid; min-height:150px; place-content:center; justify-items:center; border:1px dashed #e9d9cb; border-radius:15px; background:#fffaf4; color:#a78f7f; }
+.place-no-photos > .icon { width:27px; height:27px; }
+.place-no-photos p { margin:8px 0 0; font-size:11px; }
+.place-location-actions { display:flex; gap:8px; margin-top:16px; }
+.place-location-actions > * { display:flex; flex:1; align-items:center; gap:6px; }
+.place-location-actions .icon { width:15px; }
+.point-history-balance { display:flex; align-items:center; justify-content:space-between; border-radius:14px; background:#fff3e8; padding:13px 15px; }
+.point-history-balance small { color:#8b6b57; font-size:11px; }
+.point-history-balance b { color:#9d4e34; font-size:19px; }
+.point-history-list { margin-top:9px; }
+.point-history-list article { display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--color-line); padding:12px 2px; }
+.point-history-list article > span { display:grid; gap:5px; }
+.point-history-list article b { font-size:12px; }
+.point-history-list article small { color:var(--color-muted); font-size:9px; }
+.point-history-list article strong { flex:none; font-size:12px; }
+.point-history-list .earned { color:#bd5d3d; }
+.point-history-list .spent { color:#5e7189; }
+@media (max-width:380px) { .detail-tabs>button { font-size:10px; } .place-photo-grid>.food-photo,.place-photo-grid>img { height:78px; } }
+
+/* 홈의 브랜드와 지역 안내는 첫 화면에서 바로 읽히도록 여백과 크기를 확보합니다. */
+.home-header { height:66px; }
+.logo-button { width:112px; height:52px; }
+.recommendations-heading h2 { font-size:20px; }
+.recommendations-heading small { font-size:12px; }
+@media (max-width:380px) {
+  .home-header { height:62px; }
+  .logo-button { width:100px; height:48px; }
+  .recommendations-heading h2 { font-size:18px; }
+  .recommendations-heading small { font-size:11px; }
+}
+
+/* 지도 위 조작 버튼은 마커를 가리지 않도록 서로 다른 모서리에 둡니다. */
+.map-marker-guide-button { position:absolute; z-index:3; top:12px; right:12px; display:flex; align-items:center; gap:5px; border:1px solid #e6e9ef; border-radius:18px; background:#fffffff2; padding:7px 10px; color:#42516a; font-size:11px; font-weight:650; box-shadow:0 2px 8px #14223a12; }
+.map-marker-guide-button .icon { width:14px; height:14px; color:#c46a4e; }
+.map-screen>.feed-tabs { gap:5px; padding-right:10px; padding-left:10px; }
+.map-screen>.feed-tabs>button { min-width:0; padding-right:3px; padding-left:3px; font-size:11px; white-space:nowrap; }
+.marker-guide-intro { margin:0 0 12px; color:var(--color-muted); font-size:12px; line-height:1.6; }
+.marker-guide-list { display:grid; gap:4px; }
+.marker-guide-row { display:flex; min-height:58px; align-items:center; gap:10px; border-bottom:1px solid var(--color-line); padding:5px 2px; }
+.marker-guide-row img { width:34px; height:42px; object-fit:contain; }
+.marker-guide-row > span { display:grid; gap:3px; }
+.marker-guide-row b { color:var(--color-ink); font-size:13px; }
+.marker-guide-row small { color:var(--color-muted); font-size:11px; }
+
+/* 상세 사진 위의 뒤로 가기 버튼은 어떤 사진에서도 식별되게 대비를 줍니다. */
+.place-screen .photo-back { display:grid; width:38px; height:38px; place-items:center; border:1px solid #ffffffa8; border-radius:50%; background:#fffdf4ed; color:#3d342f; filter:none; box-shadow:0 2px 8px #20150e35; }
+.place-screen .photo-back .icon { width:20px; height:20px; }
+.place-heading button[aria-label="내 맛집에 추가"], .place-heading button[aria-label="내 맛집에서 삭제"] { display:grid; width:36px; height:36px; place-items:center; border:1px solid #f0d9d0; border-radius:50%; background:#fff7f2; }
+.place-heading button[aria-label="내 맛집에 추가"].red, .place-heading button[aria-label="내 맛집에서 삭제"].red { border-color:#f2b7a9; background:#ffebe5; }
+.my-statistics { grid-template-columns:repeat(2,1fr); }
+.tag-load-error { margin:10px 0 0; color:#a76b4e; font-size:11px; line-height:1.6; }
+.photo-heart.is-liked { color:#ff4b45; }
+.map-loading { right:auto; left:50%; transform:translateX(-50%); }
+
+/* 홈 배너는 실제 음식 더미 사진을 살리고, 지도 이동 목적을 분명하게 보여줍니다. */
+.food-banner { height:190px; border-radius:22px; background:#9f5535; box-shadow:0 9px 24px rgb(86 49 31 / 15%); }
+.food-banner > .food-photo { width:100%; height:100%; object-fit:cover; transform:scale(1.02); }
+.banner-shade { background:linear-gradient(90deg,rgb(42 25 16 / 82%),rgb(42 25 16 / 8%) 92%),linear-gradient(0deg,rgb(35 22 16 / 49%),transparent 72%); }
+.banner-eyebrow { position:absolute; top:13px; left:14px; display:inline-flex; align-items:center; gap:5px; border:1px solid rgb(255 255 255 / 34%); border-radius:20px; background:rgb(46 35 28 / 28%); padding:6px 9px; color:#fff9ed; font-size:10px; font-weight:650; backdrop-filter:blur(8px); }
+.banner-eyebrow .icon { width:13px; height:13px; color:#ffd27d; }
+.banner-copy { right:44px; bottom:15px; left:15px; gap:5px; }
+.banner-copy > b { font-size:25px; }
+.banner-copy > strong { font-size:13px; font-weight:550; }
+.banner-copy > small { gap:5px; font-size:10px; }
+.banner-copy > small .icon { width:12px; height:12px; }
+.banner-end { right:13px; bottom:17px; width:28px; height:28px; background:#ffffff30; }
+.home-taste-recommendations { margin-top:22px; }
+.home-taster-list { display:flex; gap:9px; overflow-x:auto; padding:2px 1px 6px; scrollbar-width:none; }
+.home-taster-list::-webkit-scrollbar { display:none; }
+.home-taster-card { display:grid; width:112px; min-height:122px; flex:none; justify-items:center; align-content:start; gap:6px; border:1px solid #f0e4da; border-radius:15px; background:#fff; padding:11px 7px; text-align:center; }
+.home-taster-card > .avatar { width:48px; height:48px; }
+.home-taster-card > b { max-width:100%; overflow:hidden; color:var(--color-ink); font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
+.home-taster-card > small { max-width:100%; overflow:hidden; color:var(--color-muted); font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+.home-taster-empty { margin:0; border-radius:13px; background:#fff; padding:12px; color:var(--color-muted); font-size:10px; line-height:1.6; }
+
+/* 지도는 원래 캐릭터 핀을 유지하고 사진·취향·내 맛집 상태만 작은 표식으로 구분합니다. */
+.map-photo-marker { position:relative; display:block; width:42px; height:50px; overflow:hidden; border:3px solid white; border-radius:50% 50% 50% 8px; background:#fff; padding:0; box-shadow:0 3px 9px rgb(43 37 30 / 33%); transform:rotate(-45deg); cursor:pointer; }
+.map-photo-marker::after { position:absolute; right:0; bottom:0; left:0; height:4px; background:#eb7a50; content:""; }
+.map-photo-marker > img { width:100%; height:100%; border-radius:inherit; object-fit:cover; transform:rotate(45deg) scale(1.28); }
+.map-status-badge { display:grid; width:19px; height:19px; place-items:center; border:2px solid white; border-radius:50%; background:#fff4e5; color:#bb563e; box-shadow:0 2px 5px rgb(43 37 30 / 24%); pointer-events:none; }
+.map-status-badge--matched { width:27px; height:27px; border:2px solid #fff; background:linear-gradient(145deg,#ffdf75,#ffc13e); color:#7240a8; box-shadow:0 0 0 3px rgb(122 77 183 / 28%),0 4px 10px rgb(53 39 68 / 28%); animation:matched-pin-pop 1.8s ease-in-out infinite; }
+.map-status-badge--matched > svg { width:17px; height:17px; stroke-width:2.4; }
+@keyframes matched-pin-pop { 50% { box-shadow:0 0 0 6px rgb(122 77 183 / 14%),0 4px 10px rgb(53 39 68 / 28%); } }
+.map-status-badge > svg { width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.marker-guide-row { min-height:62px; }
+.marker-guide-art { position:relative; display:grid; width:46px; height:48px; flex:none; place-items:center; }
+.marker-guide-art > img { width:37px; height:44px; object-fit:contain; }
+.marker-guide-art > .brand-art { position:absolute; inset:0; width:46px; height:48px; object-fit:contain; }
+.marker-guide-art > i { position:absolute; right:-2px; bottom:2px; display:grid; width:18px; height:18px; place-items:center; border:2px solid white; border-radius:50%; background:#fff1df; color:#d06c45; font-style:normal; }
+.marker-guide-art > i .icon { width:11px; height:11px; }
+
+/* 내 맛집과 내가 등록한 맛집은 같은 카드 그리드와 요약 레이아웃을 사용합니다. */
+.collection-overview { display:flex; align-items:center; gap:11px; margin-bottom:14px; border:1px solid #f0e2d7; border-radius:16px; background:linear-gradient(120deg,#fff8f0,#fff); padding:13px; }
+.collection-overview > span { display:grid; width:38px; height:38px; flex:none; place-items:center; border-radius:13px; background:#ffede2; color:#c45d42; }
+.collection-overview > span .icon { width:19px; height:19px; }
+.collection-overview > div { display:grid; min-width:0; flex:1; gap:4px; }
+.collection-overview > div b { color:var(--color-ink); font-size:13px; }
+.collection-overview > div small { color:var(--color-muted); font-size:9px; }
+.collection-overview > strong { color:#a95139; font-size:17px; }
+.collection-overview > strong small { margin-left:2px; font-size:9px; font-weight:500; }
+
+/* 구독자 목록은 요약 카드에서 열어 본 뒤 구독 유형을 확인합니다. */
+.my-incoming-summary { display:flex; width:100%; align-items:center; gap:10px; margin-top:13px; border:1px solid #f0e2d7; border-radius:16px; background:#fff; padding:12px; text-align:left; }
+.my-incoming-icon { display:grid; width:38px; height:38px; flex:none; place-items:center; border-radius:13px; background:#fff0e4; color:#bb6042; }
+.my-incoming-icon .icon { width:19px; height:19px; }
+.my-incoming-copy { display:grid; min-width:0; flex:1; gap:4px; }
+.my-incoming-copy b { color:var(--color-ink); font-size:12px; }
+.my-incoming-copy small { color:var(--color-muted); font-size:9px; }
+.my-incoming-summary > strong { color:#aa573d; font-size:15px; }
+.my-incoming-summary > .icon { width:15px; height:15px; color:#a79b91; }
+.incoming-subscribers-intro { margin:0 0 10px; color:var(--color-muted); font-size:11px; }
+.incoming-subscriber-row { display:flex; width:100%; align-items:center; gap:11px; border:0; border-top:1px solid var(--color-line); background:#fff; padding:12px 2px; text-align:left; }
+.incoming-subscriber-row > .avatar { width:44px; height:44px; flex:none; }
+.incoming-subscriber-row > span:nth-child(2) { display:grid; flex:1; gap:5px; }
+.incoming-subscriber-row b { color:var(--color-ink); font-size:13px; }
+.incoming-subscriber-row small { width:max-content; border-radius:20px; background:#fff1e6; padding:4px 8px; color:#ad573d; font-size:9px; }
+.incoming-subscriber-row > .icon { width:15px; color:#a79b91; }
+.incoming-empty { margin-top:24px; }
+
+/* 등록 흐름에서는 장소 종류와 태그, 추천 이유와 메뉴를 각각 한 묶음으로 읽게 합니다. */
+.register-related-fields,.register-recommendation-fields { display:grid; gap:15px; border:1px solid #f0e4db; border-radius:18px; background:#fffdfa; padding:13px; }
+.register-related-fields > .register-food-kind { margin:0; }
+.register-related-fields > .registration-taste-tags { margin:0; border:0; border-top:1px solid #f0e4db; border-radius:0; background:transparent; padding:14px 0 0; }
+.register-recommendation-fields > .reason-field,.register-recommendation-fields > .form-section { margin:0; }
+.register-recommendation-fields > .form-section { border-top:1px solid #f0e4db; padding-top:13px; }
+
+/* 태그 선택 수는 등록과 공개 프로필, 추천 취향에서 같은 색과 형태로 표시합니다. */
+.taste-tag-picker .taste-tag-group__count,.profile-settings .taste-tag-picker .taste-tag-group__count { display:flex; min-width:58px; height:34px; align-items:center; justify-content:center; gap:3px; border:1px solid #f0cba9; border-radius:999px; background:#fff2df; padding:0 9px; color:#a85532; white-space:nowrap; }
+.taste-tag-picker .taste-tag-group__count::before,.profile-settings .taste-tag-picker .taste-tag-group__count::before { content:none; }
+.taste-tag-picker .taste-tag-group__count b,.profile-settings .taste-tag-picker .taste-tag-group__count b { color:#a85532; font-size:12px; }
+.taste-tag-picker .taste-tag-group__count i,.profile-settings .taste-tag-picker .taste-tag-group__count i { color:#9b765e; font-size:9px; }
+
+/* 홈의 맛객 카드는 대표 장소 사진을 배경으로 써서 아바타 스프라이트만 나열된 느낌을 줄입니다. */
+.home-taster-card { position:relative; display:flex; width:148px; min-height:174px; flex:none; flex-direction:column; align-items:stretch; gap:0; overflow:hidden; border:1px solid #eee2d7; border-radius:19px; background:#fff; padding:0; text-align:left; box-shadow:0 5px 15px rgb(75 49 31 / 7%); }
+.home-taster-cover { position:relative; display:block; height:100px; flex:none; overflow:visible; background:#f4e9dd; }
+.home-taster-cover > .home-taster-cover-photo { display:block; width:100%; height:100%; border-radius:0; object-fit:cover; }
+.home-taster-cover::after { position:absolute; inset:30% 0 0; background:linear-gradient(transparent,rgb(50 32 20 / 18%)); content:""; }
+.home-taster-cover > i { position:absolute; z-index:1; bottom:-20px; left:11px; display:grid; width:47px; height:47px; place-items:center; border:3px solid white; border-radius:50%; background:#fff; box-shadow:0 3px 10px rgb(47 36 29 / 15%); }
+.home-taster-cover > i .avatar { width:100%; height:100%; border:0; }
+.home-taster-card-copy { display:grid; min-width:0; gap:8px; padding:25px 25px 12px 12px; }
+.home-taster-card-copy > b { overflow:hidden; color:var(--color-ink); font-size:13px; text-overflow:ellipsis; white-space:nowrap; }
+.home-taster-card-copy > small { display:flex; width:max-content; max-width:100%; min-width:0; align-items:center; gap:4px; overflow:hidden; border-radius:999px; background:#fff5e9; padding:5px 7px; color:#a25d3b; font-size:9px; white-space:nowrap; }
+.home-taster-card-copy > small > span { min-width:0; max-width:52px; flex:0 1 auto; overflow:hidden; text-overflow:ellipsis; }
+.home-taster-card-copy > small em { border-left:1px solid #e8d4c1; padding-left:5px; color:#9d8c7d; font-size:8px; font-style:normal; }
+.home-taster-card > .icon { position:absolute; right:10px; bottom:16px; width:13px; height:13px; color:#b7a99a; }
+
+/* 목록 펼치기는 지도 영역 위로 확장하고, 지도 보기로 닫을 때 원래 자리로 돌아갑니다. */
+.map-screen { position:relative; display:flex; height:calc(100dvh - 64px); min-height:0; flex-direction:column; overflow:hidden; }
+.map-screen > .feed-tabs { gap:4px; padding-right:8px; padding-left:8px; }
+.map-screen > .feed-tabs > button { min-width:0; padding-right:4px; padding-left:4px; font-size:9px; white-space:nowrap; }
+.map-feed-hint { height:14px; flex:none; box-sizing:content-box; overflow:hidden; margin:-3px 13px 7px; color:#887965; font-size:10px; line-height:14px; text-overflow:ellipsis; white-space:nowrap; visibility:hidden; }
+.map-feed-hint.is-visible { visibility:visible; }
+.map-surface { height:auto; min-height:240px; flex:1; }
+.map-panel-anchor { position:relative; z-index:5; flex:none; height:124px; }
+.map-panel-anchor.expanded { position:absolute; right:10px; bottom:8px; left:10px; height:min(68dvh,580px); }
+.map-bottom-card { height:100%; margin-top:0; overflow:hidden; padding-bottom:14px; transition:box-shadow .2s ease, border-radius .2s ease; }
+.map-bottom-card.expanded { position:static; height:100%; max-height:none; overflow-y:auto; overscroll-behavior:contain; border:1px solid #f0e8de; border-radius:22px; padding:9px 16px calc(14px + env(safe-area-inset-bottom)); box-shadow:0 12px 35px rgb(37 33 28 / 22%); }
+.map-bottom-card.expanded .map-place-row { min-height:87px; padding:10px 0; }
+.map-bottom-card:not(.expanded) > .map-list-message { display:grid; min-height:76px; place-items:center; margin:0; text-align:center; }
+.map-result-label { gap:10px; }
+.map-result-label > b { flex:1; }
+.map-result-label > span { text-align:right; }
+.map-panel-anchor > .map-list-button { position:absolute; top:-43px; right:14px; bottom:auto; z-index:7; width:110px; height:36px; justify-content:center; }
+.map-screen.is-list-open::after { display:block; height:124px; flex:none; content:""; pointer-events:none; }
+.map-category-marker { display:grid; width:43px; height:53px; place-items:center; border:0; background:transparent; padding:0; cursor:pointer; }
+.map-category-marker-shell { position:absolute; inset:0; width:43px; height:53px; filter:drop-shadow(0 2px 3px rgb(43 37 30 / 28%)); }
+.map-category-marker-shell path { stroke:#fff; stroke-width:2; }
+.map-category-marker--other .map-category-marker-shell path { fill:#765ac4; }
+.map-category-marker--matched .map-category-marker-shell path { fill:#e9a76d; }
+.map-category-marker--liked .map-category-marker-shell path { fill:#62b9a6; }
+.map-category-marker--ad .map-category-marker-shell path { fill:#60748c; }
+.map-category-marker-glyph { position:absolute; top:7px; left:8px; display:grid; width:27px; height:27px; place-items:center; border:2px solid #fff; border-radius:50%; background:#fff; }
+.map-category-marker-glyph > svg { display:block; width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.map-category-marker--other .map-category-marker-glyph { color:#6048a8; }
+.map-category-marker--matched .map-category-marker-glyph { background:#fff4e8; color:#a96839; }
+.map-category-marker--liked .map-category-marker-glyph { background:#eff8f3; color:#438f75; }
+.map-category-marker--ad .map-category-marker-glyph { background:#f1f4f8; color:#536a82; }
+.map-category-marker--liked .map-category-marker-glyph > svg { fill:currentColor; stroke:none; }
+.map-category-marker--ad .map-category-marker-glyph > svg { stroke-width:1.7; }
+.marker-guide-art .map-category-marker { pointer-events:none; }
+.subscription-list > .collection-overview { margin-bottom:16px; }
+.taster-recommendations { padding:15px; }
+.taster-recommendations-intro { display:flex; align-items:center; gap:11px; margin-bottom:14px; border:1px solid #f0e2d7; border-radius:18px; background:linear-gradient(120deg,#fff8ee,#fff); padding:14px; }
+.taster-recommendations-intro > span { display:grid; width:40px; height:40px; flex:none; place-items:center; border-radius:14px; background:#ffedda; color:#bd7040; }
+.taster-recommendations-intro > span .icon { width:20px; height:20px; }
+.taster-recommendations-intro > div { min-width:0; flex:1; }
+.taster-recommendations-intro > div b { color:var(--color-ink); font-size:13px; }
+.taster-recommendations-intro > div p { margin:5px 0 0; color:var(--color-muted); font-size:10px; line-height:1.5; }
+.taster-recommendations-intro > strong { color:#a95139; font-size:17px; white-space:nowrap; }
+.taster-recommendations-intro > strong small { margin-left:2px; font-size:9px; font-weight:500; }
+.taster-recommendation-list { display:grid; gap:11px; }
+.taster-recommendation-card { display:flex; min-height:112px; align-items:center; gap:12px; overflow:hidden; border:1px solid #eee4db; border-radius:18px; background:#fff; padding:0 12px 0 0; text-align:left; box-shadow:0 5px 14px rgb(75 49 31 / 5%); }
+.taster-recommendation-cover { position:relative; display:block; width:102px; height:112px; flex:none; background:#f4e9dd; }
+.taster-recommendation-cover-image { display:block; width:100%; height:100%; object-fit:cover; }
+.taster-recommendation-cover > i { position:absolute; right:7px; bottom:8px; display:grid; width:39px; height:39px; place-items:center; border:3px solid white; border-radius:50%; background:#fff; box-shadow:0 3px 9px rgb(47 36 29 / 18%); }
+.taster-recommendation-cover > i .avatar { width:100%; height:100%; border:0; }
+.taster-recommendation-copy { display:grid; min-width:0; flex:1; gap:5px; padding:10px 0; }
+.taster-recommendation-copy > b { overflow:hidden; color:var(--color-ink); font-size:13px; text-overflow:ellipsis; white-space:nowrap; }
+.taster-recommendation-copy > small { overflow:hidden; color:var(--color-muted); font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
+.taster-recommendation-tags { display:flex; align-items:center; gap:5px; overflow:hidden; }
+.taster-recommendation-tags i,.taster-recommendation-tags em { border-radius:999px; background:#fff4e8; padding:4px 7px; color:#a25d3b; font-size:9px; font-style:normal; white-space:nowrap; }
+.taster-recommendation-tags em { background:#f5f1ec; color:#80766d; }
+.taster-recommendation-meta { display:flex; align-items:center; gap:10px; color:#85796f; font-size:9px; }
+.taster-recommendation-meta > span,.taster-recommendation-meta > strong { display:inline-flex; align-items:center; gap:3px; }
+.taster-recommendation-meta .icon { width:12px; height:12px; }
+.taster-recommendation-meta > strong { color:#a25d3b; font-weight:600; }
+.taster-recommendation-card > .icon { width:14px; height:14px; flex:none; color:#b7a99a; }
+.taster-recommendations-empty { display:grid; justify-items:center; gap:9px; padding:55px 18px; text-align:center; }
+.taster-recommendations-empty > span { display:grid; width:52px; height:52px; place-items:center; border-radius:18px; background:#fff0df; color:#bd7040; }
+.taster-recommendations-empty > span .icon { width:24px; height:24px; }
+.taster-recommendations-empty > b { color:var(--color-ink); font-size:14px; }
+.taster-recommendations-empty > p { margin:0 0 6px; color:var(--color-muted); font-size:11px; }
+.marker-guide-intro { color:#83786d; font-size:11px; line-height:1.65; }
+.marker-guide-art--subscribed,.marker-guide-art--photo { width:46px; height:54px; flex-basis:46px; }
+.taster-map-marker-preview,.taster-map-marker { position:relative; display:block; width:43px; height:53px; border:0; background:transparent; padding:0; filter:drop-shadow(0 2px 3px rgb(43 37 30 / 28%)); }
+.taster-map-marker { cursor:pointer; }
+.taster-map-marker-shell { position:absolute; inset:0; width:43px; height:53px; }
+.taster-map-marker--subscribed .taster-map-marker-shell path { fill:#ed493f; stroke:#fff7e7; stroke-width:2; }
+.taster-map-marker--other .taster-map-marker-shell path { fill:#e9a76d; stroke:#fff; stroke-width:2; }
+.taster-map-marker--matched .taster-map-marker-shell path { fill:#765ac4; stroke:#fff; stroke-width:2; }
+.taster-map-marker-face { position:absolute; top:7px; left:8px; display:grid; width:27px; height:27px; overflow:hidden; place-items:center; border:2px solid #fff; border-radius:50%; background:#fff8ea; }
+.taster-map-marker-face > .avatar,.taster-map-marker-face > img,.taster-map-marker-face > svg { display:block; width:100%; height:100%; border:0; border-radius:50%; object-fit:cover; object-position:50% 50%; }
+.taster-map-marker-face > .avatar > img { width:100%; height:100%; object-fit:cover; object-position:50% 50%; }
+.profile-cover > svg { display:block; width:100%; height:100%; }
+.taster-map-marker-badge,.taster-map-marker-preview > i { position:absolute; top:0; right:0; display:grid; width:16px; height:16px; place-items:center; border:1.5px solid #fff; border-radius:50%; background:#fff4d6; color:#b67a1e; font-size:10px; font-style:normal; font-weight:800; line-height:1; }
+.taster-map-marker-badge--subscribed { background:#fff; color:#ed493f; }
+.taster-map-marker-badge--matched { background:#fff; color:#d58a48; }
+.taster-map-marker-preview > .taster-map-marker-face { top:7px; left:8px; }
+
+/* 마이 화면은 네 가지 활동을 같은 카드 체계로 보여주고, 구독자는 수익 지표로 강조합니다. */
+.my-incoming-summary { position:relative; gap:12px; margin:0 0 15px; border:1px solid #e9c98f; border-radius:20px; background:linear-gradient(120deg,#fff5dc,#fffaf0 68%,#fff); padding:15px; box-shadow:0 7px 20px rgb(152 105 35 / 10%); }
+.my-incoming-icon { width:44px; height:44px; border-radius:15px; background:#f2d58f; color:#80531c; }
+.my-incoming-copy { gap:5px; }
+.my-incoming-copy b { font-size:13px; }
+.my-incoming-copy small { font-size:10px; }
+.my-incoming-copy em { display:flex; align-items:center; gap:7px; color:#896638; font-size:9px; font-style:normal; }
+.my-incoming-copy em span { color:#a76534; font-weight:700; }
+.my-incoming-copy em i { width:3px; height:3px; border-radius:50%; background:#c9b18a; }
+.my-incoming-summary > strong { color:#8d5c20; font-size:22px; }
+.my-incoming-summary > strong small { margin-left:2px; font-size:9px; font-weight:600; }
+.my-activity-section { margin-top:20px; }
+.my-activity-heading { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; }
+.my-activity-heading h2 { margin:0; color:var(--color-ink); font-size:16px; }
+.my-activity-heading small { color:var(--color-muted); font-size:9px; }
+.my-activity-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.my-activity-grid > button { position:relative; display:grid; min-height:112px; grid-template-columns:37px 1fr 14px; grid-template-rows:40px 1fr; align-items:center; gap:6px 9px; border:1px solid #eee5dc; border-radius:17px; background:linear-gradient(145deg,#fff,#fffaf4); padding:12px; text-align:left; box-shadow:0 3px 12px rgb(76 50 30 / 4%); }
+.my-activity-grid > button > span { display:grid; width:37px; height:37px; grid-column:1; grid-row:1; place-items:center; border-radius:13px; background:#fff0df; color:#b7623e; }
+.my-activity-grid > button > span .icon { width:18px; height:18px; }
+.my-activity-grid > button > b { grid-column:2; grid-row:1; color:var(--color-ink); font-size:10px; }
+.my-activity-grid > button > strong { grid-column:1 / 3; grid-row:2; color:#493a31; font-size:21px; }
+.my-activity-grid > button > strong small { margin-left:3px; color:#95887d; font-size:9px; font-weight:500; }
+.my-activity-grid > button > .icon { grid-column:3; grid-row:1; width:12px; height:12px; color:#b1a497; }
+.my-recommendation-link { display:flex; width:100%; align-items:center; gap:11px; margin-top:10px; border:1px solid #efdfd1; border-radius:17px; background:linear-gradient(105deg,#fff5e9,#fff); padding:12px; text-align:left; }
+.my-recommendation-link > span:first-child { display:grid; width:38px; height:38px; flex:none; place-items:center; border-radius:13px; background:#ffecd8; color:#b7623e; }
+.my-recommendation-link > span:first-child .icon { width:19px; height:19px; }
+.my-recommendation-link > span:nth-child(2) { display:grid; min-width:0; flex:1; gap:4px; }
+.my-recommendation-link b { color:var(--color-ink); font-size:12px; }
+.my-recommendation-link small { color:var(--color-muted); font-size:9px; }
+.my-recommendation-link > strong { color:#a95139; font-size:15px; }
+.my-recommendation-link > strong small { margin-left:2px; font-size:9px; }
+.my-recommendation-link > .icon { width:14px; height:14px; color:#aa9c8e; }
+
+/* 소개 페이지는 앱스토어 미리보기처럼 서비스 흐름과 가치를 그림으로 이어 보여줍니다. */
+.intro-story { display:block; height:100dvh; min-height:0; overflow-y:auto; overscroll-behavior:contain; background:#fffdfa; text-align:left; }
+.intro-story-header { position:sticky; z-index:4; top:0; display:flex; min-height:58px; align-items:center; gap:8px; border-bottom:1px solid #f4e6dd; background:rgb(255 253 250 / 94%); padding:8px 17px; backdrop-filter:blur(12px); }
+.intro-story-header > .brand-art { width:39px; height:39px; object-fit:contain; }
+.intro-story-header > span { flex:1; color:#65524b; font-size:11px; font-weight:650; }
+.intro-story-header > button { border:0; border-radius:18px; background:#fff0e9; padding:8px 10px; color:#a95945; font-size:10px; font-weight:650; }
+.intro-story-hero { overflow:hidden; background:linear-gradient(155deg,#fff8ee,#ffe7dc 60%,#fff4e8); }
+.intro-story-copy { padding:27px 22px 10px; }
+.intro-story-kicker { display:inline-flex; align-items:center; gap:5px; border:1px solid #f1c2af; border-radius:20px; background:#fffdfa; padding:6px 9px; color:#b84f3d; font-size:10px; font-weight:750; letter-spacing:.2px; }
+.intro-story-kicker .icon { width:12px; height:12px; }
+.intro-story-copy h1 { margin:14px 0 9px; color:#342b2a; font-size:28px; line-height:1.35; letter-spacing:-1.3px; }
+.intro-story-copy h1 em { color:#cf5943; font-style:normal; }
+.intro-story-copy p { margin:0; color:#6f625d; font-size:13px; line-height:1.8; }
+.intro-story-collage { position:relative; height:270px; margin-top:5px; }
+.intro-story-food { position:absolute; top:23px; left:7%; width:67%; height:188px; overflow:hidden; border:5px solid #fff; border-radius:24px; background:#fff; box-shadow:0 14px 28px rgb(86 54 33 / 18%); transform:rotate(-4deg); }
+.intro-story-food > .food-photo { width:100%; height:100%; object-fit:cover; }
+.intro-story-food > span { position:absolute; right:8px; bottom:8px; display:flex; align-items:center; gap:4px; border-radius:18px; background:#fffdf2; padding:6px 8px; color:#805636; font-size:9px; box-shadow:0 2px 7px #47321c26; }
+.intro-story-food > span .icon { width:12px; height:12px; color:#e5a33f; }
+.intro-story-mascot { position:absolute; z-index:2; right:7%; bottom:19px; display:grid; width:105px; height:105px; place-items:center; border:5px solid #fffaf2; border-radius:50%; background:#ffefcf; box-shadow:0 7px 20px rgb(83 59 36 / 16%); }
+.intro-story-mascot .avatar { width:100%; height:100%; border:0; }
+.intro-story-pin { position:absolute; top:12px; right:8%; width:45px; height:53px; filter:drop-shadow(0 4px 4px #68421e30); transform:rotate(8deg); }
+.intro-story-pin .brand-art { width:100%; height:100%; }
+.intro-story-sticker { position:absolute; z-index:3; right:35%; bottom:28px; display:grid; width:58px; height:58px; place-content:center; border:2px solid white; border-radius:50%; background:#cf7049; color:#fffaf2; font-size:12px; font-weight:750; line-height:1.25; text-align:center; transform:rotate(-9deg); box-shadow:0 4px 12px #68421e30; }
+.intro-story-chapter { display:grid; grid-template-columns:122px 1fr; align-items:center; gap:13px; padding:29px 20px; border-bottom:1px solid #f1e9df; background:#fffdf9; }
+.intro-story-chapter-art,.intro-story-map-art { position:relative; display:grid; width:122px; height:132px; place-items:center; border-radius:26px; background:linear-gradient(145deg,#fff0df,#ffdfcf); }
+.intro-story-chapter-art > .brand-art,.intro-story-map-art > .brand-art { width:95px; height:102px; object-fit:contain; }
+.intro-story-art-orbit { position:absolute; right:-3px; bottom:3px; display:grid; width:38px; height:38px; place-items:center; border:3px solid white; border-radius:50%; background:#e89a4f; color:white; box-shadow:0 4px 10px #7e4e2922; }
+.intro-story-art-orbit .icon { width:17px; height:17px; }
+.intro-story-chapter > div > small,.intro-story-reward > div > small,.intro-story-trust > div > small { color:#bd6549; font-size:9px; font-weight:800; letter-spacing:.1px; }
+.intro-story-chapter h2,.intro-story-reward h2,.intro-story-trust h2 { margin:7px 0; color:#392f2c; font-size:17px; line-height:1.4; letter-spacing:-.7px; }
+.intro-story-chapter p,.intro-story-reward p,.intro-story-trust p { margin:0; color:#71645e; font-size:11px; line-height:1.7; }
+.intro-story-map-chapter { grid-template-columns:1fr 122px; background:#fff8ee; }
+.intro-story-map-art { overflow:hidden; background:linear-gradient(145deg,#eaf5ff,#dcecff); }
+.intro-story-map-art > i { position:absolute; display:grid; width:25px; height:25px; place-items:center; border:2px solid white; border-radius:50% 50% 50% 5px; background:#dc724f; color:white; box-shadow:0 3px 8px #33462c30; transform:rotate(-45deg); }
+.intro-story-map-art > i:nth-of-type(1) { top:20px; left:23px; }
+.intro-story-map-art > i:nth-of-type(2) { right:20px; bottom:23px; background:#dba446; }
+.intro-story-map-art > i:nth-of-type(3) { top:41px; right:16px; background:#b86e75; }
+.intro-story-map-art > i .icon { width:13px; height:13px; transform:rotate(45deg); }
+.intro-story-reward { display:grid; grid-template-columns:115px 1fr; align-items:center; gap:16px; margin:17px 15px; border:1px solid #eed8ae; border-radius:23px; background:linear-gradient(115deg,#fff1c9,#fffaf0); padding:17px; }
+.intro-story-reward-art { position:relative; display:grid; height:112px; place-items:center; border-radius:20px; background:#f8df9e; }
+.intro-story-reward-art .brand-art { width:94px; height:94px; object-fit:contain; }
+.intro-story-reward-art > span { position:absolute; right:-5px; bottom:0; border:2px solid white; border-radius:20px; background:#ba6b3f; padding:5px 7px; color:white; font-size:8px; font-weight:800; }
+.intro-story-trust { display:flex; align-items:center; gap:17px; margin:0 15px 18px; border:1px solid #eee1d4; border-radius:22px; background:#fff; padding:14px 17px; }
+.intro-story-trust > .brand-art { width:74px; height:78px; flex:none; object-fit:contain; }
+.intro-story-flow { display:flex; align-items:center; justify-content:center; gap:8px; margin:18px 16px; border-radius:20px; background:#f7eee3; padding:13px 8px; }
+.intro-story-flow > span { display:grid; justify-items:center; gap:5px; color:#65534d; font-size:9px; }
+.intro-story-flow .avatar,.intro-story-flow .brand-art { width:31px; height:31px; object-fit:contain; }
+.intro-story-flow > i { color:#c68c53; }
+.intro-story-flow > i .icon { width:13px; height:13px; }
+.intro-story-footer { padding:10px 20px calc(22px + env(safe-area-inset-bottom)); background:#fffdfa; text-align:center; }
+.intro-story-footer p { margin:0 0 9px; color:#76635b; font-size:11px; }
+.intro-story-footer > button { display:flex; width:100%; min-height:50px; align-items:center; justify-content:center; gap:8px; border-radius:16px; font-size:14px; }
+.intro-story-footer > button .icon { width:16px; height:16px; }
+.place-hero > .place-hero-fallback { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:cover; }
+.place-hero.no-cover::after { position:absolute; inset:0; background:linear-gradient(0deg,rgb(30 22 17 / 58%),transparent 62%); content:""; pointer-events:none; }
+.place-cover-empty { position:absolute; z-index:1; right:14px; bottom:16px; left:16px; width:auto; height:auto; align-items:flex-start; justify-content:flex-end; gap:4px; background:transparent; color:white; }
+.place-cover-empty > span { display:none; }
+.place-cover-empty > b { font-size:18px; text-shadow:0 1px 4px #20150db3; }
+.place-cover-empty > small { color:#fff5e4; text-shadow:0 1px 4px #20150db3; }
+
+@media(max-width:370px) {
+  .home-taster-card { width:136px; }
+  .intro-story-copy h1 { font-size:25px; }
+  .intro-story-chapter { grid-template-columns:103px 1fr; gap:11px; padding-right:15px; padding-left:15px; }
+  .intro-story-chapter-art,.intro-story-map-art { width:103px; height:118px; }
+  .intro-story-map-chapter { grid-template-columns:1fr 103px; }
+  .intro-story-chapter h2,.intro-story-reward h2,.intro-story-trust h2 { font-size:15px; }
+  .intro-story-chapter p,.intro-story-reward p,.intro-story-trust p { font-size:10px; }
+}
+
+/* 서비스 소개는 실제 홈 카드와 지도 경험을 축약한 시각으로 보여줍니다. */

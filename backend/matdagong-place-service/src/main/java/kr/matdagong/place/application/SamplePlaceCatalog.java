@@ -39,7 +39,15 @@ public class SamplePlaceCatalog {
                     taster(DESSERT_TASTER_ID, "달콤한 디저트 지도", "카페와 디저트 가게를 모아요", "달", "#f2dce8", "면 요리 뒤에 디저트 코스까지 즐겨요.")),
             place("p-008", "정미소 밥상", "한식 · 백반", "서울 마포구 성미산로 53", 37.5677, 126.9204, "🍚", "#d9e1c9", "2026.09.02", "매일 달라지는 반찬과 정갈한 밥.",
                     taster(ALLEY_TASTER_ID, "골목맛객 민지", "동네 골목의 오래된 맛집", "민", "#ead5c7", "따뜻한 집밥이 생각날 때 다시 오고 싶어요."),
-                    taster(MEAL_TASTER_ID, "든든한 한끼 연구소", "정갈하고 든든한 한 끼", "한", "#e4ebd7", "매일 달라지는 반찬과 정갈한 밥이 좋아요."))
+                    taster(MEAL_TASTER_ID, "든든한 한끼 연구소", "정갈하고 든든한 한 끼", "한", "#e4ebd7", "매일 달라지는 반찬과 정갈한 밥이 좋아요.")),
+            place("p-009", "연희동 작은 카레집", "일식 · 카레", "서울 서대문구 연희로 87", 37.5685, 126.9309, "🍛", "#e9d8b4", "2026.08.29", "향신료가 과하지 않아 자주 찾게 돼요.",
+                    taster(NOODLE_TASTER_ID, "면요리 탐험가", "국수와 면 요리라면 어디든 찾아갑니다", "면", "#dce7ce", "밥과 함께 먹기 좋은 부드러운 카레.")),
+            place("p-010", "망원 소바정", "일식 · 소바", "서울 마포구 포은로 72", 37.5554, 126.9058, "🍜", "#e5d9c8", "2026.08.25", "더운 날 가볍게 먹기 좋은 메밀 소바.",
+                    taster(WEEKEND_TASTER_ID, "주말 미식 산책", "주말마다 새로운 동네를 걸어요", "주", "#e4dff0", "산책하다 들르기 좋은 작은 소바집.")),
+            adPlace("p-011", "망원 온기식탁", "한식 · 가정식", "서울 마포구 망원로 18", 37.5568, 126.9094, "🍚", "#ead9c1", "2026.08.18", "따뜻한 반찬과 편안한 분위기가 좋아요.",
+                    taster(MEAL_TASTER_ID, "든든한 한끼 연구소", "정갈하고 든든한 밥집을 소개합니다", "한", "#e4ebd7", "오늘의 반찬 구성이 알차요.")),
+            adPlace("p-012", "연남 오후의 빵", "카페 · 베이커리", "서울 마포구 동교로 267", 37.5630, 126.9273, "🥐", "#e6d3bf", "2026.08.12", "갓 구운 빵과 커피를 즐기기 좋아요.",
+                    taster(DESSERT_TASTER_ID, "달콤한 디저트 지도", "카페와 디저트 가게를 모아요", "달", "#f2dce8", "오후에 들러 빵과 커피를 즐겼어요."))
     );
 
     public List<PlaceView> findAll(String query) {
@@ -61,7 +69,15 @@ public class SamplePlaceCatalog {
                                    double latitude, double longitude, String emoji, String color,
                                    String visitedOn, String recentNote, TasterRecordView... tasters) {
         return new PlaceView(id, name, category, address, latitude, longitude, emoji, color,
-                visitedOn, recentNote, tasters.length, visitConditions(id), List.of(tasters));
+                visitedOn, recentNote, tasters.length, visitConditions(id), false, List.of(tasters));
+    }
+
+    /** 광고 탭과 광고 마커를 확인할 수 있도록 개발 목록에만 노출하는 샘플입니다. */
+    private static PlaceView adPlace(String id, String name, String category, String address,
+                                     double latitude, double longitude, String emoji, String color,
+                                     String visitedOn, String recentNote, TasterRecordView... tasters) {
+        return new PlaceView(id, name, category, address, latitude, longitude, emoji, color,
+                visitedOn, recentNote, tasters.length, visitConditions(id), true, List.of(tasters));
     }
 
     // 개발 샘플에서 제외 조건 기능을 확인할 수 있도록 일부 장소에 방문 조건을 둡니다.

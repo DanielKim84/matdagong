@@ -1,0 +1,67 @@
+.profile-activity {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 14px;
+  border: 1px solid #f2e6d8;
+  border-radius: 13px;
+  background: #fffaf2;
+  padding: 8px 12px;
+  color: #a36d45;
+  text-align: left;
+}
+
+.profile-activity > .icon { width: 17px; height: 17px; }
+.profile-activity > span { display: grid; gap: 2px; }
+.profile-activity small { color: #a3988b; font-size: 9px; }
+.profile-activity b { color: #665343; font-size: 11px; font-weight: 650; }
+
+.profile-screen .profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px 0 4px;
+  text-align: left;
+}
+
+.profile-screen .profile-place-card {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #f0e9e0;
+  border-radius: 15px;
+  background: #fff;
+  padding: 0;
+  color: #493e35;
+  text-align: left;
+  box-shadow: 0 3px 12px #583b1a0a;
+}
+
+.profile-screen .profile-place-card > .food-photo { width: 100%; height: 128px; }
+.profile-screen .profile-place-copy { position: static; display: grid; min-width: 0; gap: 6px; background: none; padding: 10px 10px 12px; color: #493e35; white-space: normal; }
+.profile-place-copy > small { overflow: hidden; color: #d27a54; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.profile-place-copy > b { overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.profile-place-copy > span { display: flex; min-width: 0; align-items: center; gap: 3px; overflow: hidden; color: #999187; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.profile-place-copy .icon { width: 11px; height: 11px; }
+
+.profile-screen .profile-tag-groups { display: grid; gap: 11px; padding: 14px 0 4px; text-align: left; }
+.profile-screen .profile-tag-group { display: grid; gap: 12px; border: 1px solid #f0e9e0; border-radius: 15px; background: #fff; padding: 14px; }
+.profile-screen .profile-tag-group h2 { display: flex; align-items: center; gap: 8px; margin: 0; color: #55483b; font-size: 12px; font-weight: 700; }
+.profile-screen .profile-tag-group h2 > span { display: grid; width: 27px; height: 27px; place-items: center; border-radius: 9px; background: #fff2e5; color: #dc8054; }
+.profile-screen .profile-tag-group--cuisine h2 > span { background: #f0f5eb; color: #66885b; }
+.profile-screen .profile-tag-group--taste h2 > span { background: #fbf1e9; color: #c77851; }
+.profile-screen .profile-tag-group--cafe h2 > span { background: #f7f1e8; color: #9b7955; }
+.profile-screen .profile-tag-group--occasion h2 > span { background: #edf4f7; color: #65869b; }
+.profile-screen .profile-tag-group h2 .icon { width: 14px; height: 14px; }
+.profile-screen .profile-tag-group h2 > small { margin-left: auto; color: #a69b8e; font-size: 9px; font-weight: 500; }
+.profile-screen .profile-tag-group > div { display: flex; flex-wrap: wrap; gap: 7px; }
+.profile-screen .profile-tag-group > div > span { border: 1px solid #f1e7da; border-radius: 18px; background: #fffaf3; padding: 7px 10px; color: #73604d; font-size: 10px; }
+.profile-empty { grid-column: 1 / -1; display: grid; justify-items: center; gap: 8px; border: 1px dashed #eadfce; border-radius: 15px; background: #fffaf3; padding: 28px 15px; color: #928475; text-align: center; }
+.profile-empty > .icon { width: 25px; height: 25px; margin-bottom: 3px; color: #d99467; }
+.profile-empty > b { color: #655444; font-size: 12px; }
+.profile-empty > span { font-size: 10px; line-height: 1.6; }
+
+@media (max-width: 360px) {
+  .profile-screen .profile-grid { gap: 8px; }
+  .profile-screen .profile-place-card > .food-photo { height: 112px; }
+}

@@ -78,17 +78,20 @@ public class UserProfileController {
                 : request.intro().trim();
         String tasterFocus = focusName(request.tasterFocus());
         String preferenceFocus = focusName(request.preferenceFocus());
+        String activityScope = activityScopeName(request.activityScope());
+        String activityRegion = regionName(request.activityRegion(), activityScope);
         int updated = jdbc.update("""
                 UPDATE user_profiles
-                SET nickname = ?, intro = ?, taster_focus = ?, preference_focus = ?, upd_dt = now()
+                SET nickname = ?, intro = ?, taster_focus = ?, preference_focus = ?,
+                    activity_scope = ?, activity_region = ?, upd_dt = now()
                 WHERE account_id = ?
-                """, nickname, intro, tasterFocus, preferenceFocus, accountId);
+                """, nickname, intro, tasterFocus, preferenceFocus, activityScope, activityRegion, accountId);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로필을 먼저 등록해 주세요.");
         }
         // 프로필 태그는 공개용, 선호 태그는 추천 전용이므로 각 관계를 독립적으로 교체합니다.
-        replaceProfileTags(accountId, request.profileTags());
-        replacePreferences(accountId, request.preferenceTags(), request.excludedTags());
+        replaceProfileTags(accountId, request.profileTags(), tasterFocus);
+        replacePreferences(accountId, request.preferenceTags(), request.excludedTags(), preferenceFocus);
         return findProfile(accountId);
     }
 
@@ -96,7 +99,7 @@ public class UserProfileController {
         ProfileBase profile = jdbc.queryForObject("""
                 SELECT account_id, nickname, profile_img_data IS NOT NULL AS has_avatar,
                        avatar_variant, profile_cover_data IS NOT NULL AS has_cover,
-                       taster_focus, preference_focus, intro
+                       taster_focus, preference_focus, activity_scope, activity_region, intro
                 FROM user_profiles
                 WHERE account_id = ?
                 """, (rs, row) -> new ProfileBase(
@@ -107,13 +110,16 @@ public class UserProfileController {
                 rs.getBoolean("has_cover"),
                 rs.getString("taster_focus"),
                 rs.getString("preference_focus"),
+                rs.getString("activity_scope"),
+                rs.getString("activity_region"),
                 rs.getString("intro")), accountId);
         return new ProfileView(
                 profile.accountId(), profile.nickname(),
                 profile.hasAvatar() ? mediaUrl(profile.accountId(), "avatar") : null,
                 profile.avatarVariant(),
                 profile.hasCover() ? mediaUrl(profile.accountId(), "cover") : null,
-                profile.tasterFocus(), profile.preferenceFocus(), profile.intro(),
+                profile.tasterFocus(), profile.preferenceFocus(),
+                profile.activityScope(), profile.activityRegion(), profile.intro(),
                 tagNames(accountId, "user_profile_tags"),
                 tagNames(accountId, "user_preference_tags", "LIKE"),
                 tagNames(accountId, "user_preference_tags", "AVOID"));
@@ -139,9 +145,9 @@ public class UserProfileController {
                         (rs, row) -> rs.getString("tag_name"), accountId, preferenceType);
     }
 
-    private void replaceProfileTags(UUID accountId, List<String> requestedTags) {
+    private void replaceProfileTags(UUID accountId, List<String> requestedTags, String focus) {
         List<String> tagNames = cleanTagNames(requestedTags);
-        validateTagNames(tagNames, false);
+        validateTagNames(tagNames, false, focus);
 
         jdbc.update("DELETE FROM user_profile_tags WHERE account_id = ?", accountId);
         for (String name : tagNames) {
@@ -152,13 +158,13 @@ public class UserProfileController {
         }
     }
 
-    private void replacePreferences(UUID accountId, List<String> liked, List<String> excluded) {
+    private void replacePreferences(UUID accountId, List<String> liked, List<String> excluded, String focus) {
         List<String> likedTags = cleanTagNames(liked);
         List<String> excludedTags = cleanTagNames(excluded);
         if (likedTags.stream().anyMatch(excludedTags::contains)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "같은 태그를 선호와 제외에 함께 등록할 수 없어요.");
         }
-        validateTagNames(likedTags, false);
+        validateTagNames(likedTags, false, focus);
         validateTagNames(excludedTags, true);
 
         jdbc.update("DELETE FROM user_preference_tags WHERE account_id = ?", accountId);
@@ -176,20 +182,38 @@ public class UserProfileController {
     }
 
     private void validateTagNames(List<String> tagNames, boolean visitOnly) {
-        if (tagNames.size() > 5) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "태그는 최대 5개까지 선택할 수 있어요.");
-        }
+        validateTagNames(tagNames, visitOnly, null);
+    }
+
+    private void validateTagNames(List<String> tagNames, boolean visitOnly, String focus) {
         if (!tagNames.isEmpty()) {
             String placeholders = String.join(",", java.util.Collections.nCopies(tagNames.size(), "?"));
-            Integer knownCount = jdbc.queryForObject(
-                    "SELECT count(*) FROM taste_tags WHERE tag_name IN (" + placeholders + ")"
-                            + (visitOnly ? " AND tag_category = 'VISIT'" : ""),
-                    Integer.class,
+            List<String> groups = jdbc.query(
+                    "SELECT tag_group FROM taste_tags WHERE tag_name IN (" + placeholders + ")",
+                    (rs, row) -> rs.getString("tag_group"),
                     tagNames.toArray());
-            if (knownCount == null || knownCount != tagNames.size()) {
+            Set<String> allowedGroups = visitOnly ? Set.of("VISIT") : groupsForFocus(focus);
+            if (groups.size() != tagNames.size() || groups.stream().anyMatch(group -> !allowedGroups.contains(group))) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "목록에 있는 취향 태그만 선택해 주세요.");
             }
+            long cuisineCount = groups.stream().filter("CUISINE"::equals).count();
+            long tasteCount = groups.stream().filter("TASTE"::equals).count();
+            long cafeCount = groups.stream().filter("CAFE"::equals).count();
+            long occasionCount = groups.stream().filter("OCCASION"::equals).count();
+            long visitCount = groups.stream().filter("VISIT"::equals).count();
+            if (cuisineCount > 5 || tasteCount > 5 || cafeCount > 5 || occasionCount > 5 || visitCount > 5) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "태그 분류별로 최대 5개까지 선택할 수 있어요.");
+            }
         }
+    }
+
+    private Set<String> groupsForFocus(String focus) {
+        return switch (focus == null ? "BOTH" : focus) {
+            case "RESTAURANT" -> Set.of("CUISINE", "TASTE", "OCCASION");
+            case "CAFE_DESSERT" -> Set.of("CAFE", "OCCASION");
+            default -> Set.of("CUISINE", "TASTE", "CAFE", "OCCASION");
+        };
     }
 
     private void insertPreferenceTags(UUID accountId, List<String> tagNames, String preferenceType) {
@@ -259,6 +283,20 @@ public class UserProfileController {
         return value;
     }
 
+    private String activityScopeName(String scope) {
+        String value = scope == null ? "LOCAL" : scope;
+        if (!Set.of("LOCAL", "TRAVEL", "BOTH").contains(value)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "주 활동 방식을 확인해 주세요.");
+        }
+        return value;
+    }
+
+    private String regionName(String region, String activityScope) {
+        if ("TRAVEL".equals(activityScope) || region == null || region.isBlank()) return null;
+        String value = region.trim();
+        return value.length() > 50 ? value.substring(0, 50) : value;
+    }
+
     public record EnsureProfileRequest(@NotBlank @Size(max = 30) String nickname) {}
 
     public record UpdateProfileRequest(
@@ -266,8 +304,10 @@ public class UserProfileController {
             @Size(max = 300) String intro,
             String tasterFocus,
             String preferenceFocus,
-            @Size(max = 5) List<@NotBlank @Size(max = 30) String> profileTags,
-            @Size(max = 5) List<@NotBlank @Size(max = 30) String> preferenceTags,
+            String activityScope,
+            @Size(max = 50) String activityRegion,
+            @Size(max = 20) List<@NotBlank @Size(max = 30) String> profileTags,
+            @Size(max = 20) List<@NotBlank @Size(max = 30) String> preferenceTags,
             @Size(max = 5) List<@NotBlank @Size(max = 30) String> excludedTags) {}
 
     public record ProfileView(
@@ -278,6 +318,8 @@ public class UserProfileController {
             String profileCoverUrl,
             String tasterFocus,
             String preferenceFocus,
+            String activityScope,
+            String activityRegion,
             String intro,
             List<String> profileTags,
             List<String> preferenceTags,
@@ -291,5 +333,7 @@ public class UserProfileController {
             boolean hasCover,
             String tasterFocus,
             String preferenceFocus,
+            String activityScope,
+            String activityRegion,
             String intro) {}
 }

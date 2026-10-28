@@ -1,66 +1,41 @@
-# 프런트엔드 파일 안내
+# 프런트엔드 구조
 
-React 화면, 서비스 API 호출과 브라우저 저장소를 다음과 같이 나눕니다.
+React 화면, 서버 API, 브라우저에 남기는 기록을 분리합니다.
 
 ```text
-index.html → src/main.tsx → src/app/App.tsx → src/screens/화면.tsx
-                                          ├→ src/services/places.ts → API Gateway → matdagong-place-service
-                                          ├→ src/services/community.ts → API Gateway → matdagong-community-service
-                                          ├→ src/services/activity.ts → localStorage
-                                          ├→ src/components/공통화면.tsx
-                                          └→ src/models/place.ts
+index.html → src/main.tsx → src/app/App.tsx → src/screens/*
+                                      ├→ services/places.ts → API Gateway → 장소 서비스
+                                      ├→ services/community.ts → API Gateway → 커뮤니티 서비스
+                                      ├→ services/activity.ts → 브라우저 저장소
+                                      └→ components/*, models/*
 ```
 
-## 먼저 읽을 파일
+## 주요 파일
 
-1. `src/main.tsx`: React를 HTML의 root에 연결하고 CSS를 읽습니다.
-2. `src/app/App.tsx`: API 결과·선택한 화면·상세·사용자 활동을 화면에 연결합니다.
-3. `src/app/navigation.ts`: `#home`, `#map`, `#place/장소ID`처럼 주소로 화면을 구분합니다. 브라우저 뒤로가기도 동작합니다.
-4. `src/screens/HomeScreen.tsx`: 공통 컴포넌트를 사용해 홈의 실제 배치를 구성합니다.
-5. `src/services/places.ts`: 백엔드 호출과 화면 코드를 분리합니다.
-
-## 화면 파일
-
-| 파일 | 역할 |
+| 경로 | 책임 |
 | --- | --- |
-| HomeScreen | 음식 배너, 추천·구독·광고 탭, 음식 종류, 맛집 카드 |
-| MapScreen | 검색, 지도 필터, 지도, 하단 목록 |
-| RegisterScreen | 사진 10장, 이름, 주소·좌표, 추천 이유, 메뉴·태그 5개, 방문 조건, 공유 설정 |
-| PlaceScreen | 사진, 평가·스크랩, 지도·길찾기, 소개·메뉴·사진·태그·위치 |
-| ProfileScreen | 맛객 커버·마커, 프로필, 구독, 사진 피드 |
-| MyScreen | 기본 프로필, 포인트, 4개 활동 수, 메뉴 목록 |
-| CollectionScreen | 스크랩·좋아요·최근 본 장소·내 등록, 구독 목록과 알림 |
-| IntroScreen | 시작과 서비스 소개 |
-| SignupScreen | 서비스 가입 정보와 선택 취향 설정 |
-| SettingsScreen | 프로필 설정 진입과 공통 계정 로그아웃 |
-| ProfileSettingsScreen | 사진·배경·닉네임·소개·공개 태그와 추천 취향 수정 |
-| SubscriptionOfferSheet | 무료 구독 교체와 유료 구독 요금·기간 선택 |
-| TasteTagRequestSheet | 태그 추가 제안과 본인의 최근 검토 내역 |
+| `src/main.tsx` | React 시작점과 전역 스타일 연결 |
+| `src/app/App.tsx` | 화면 전환과 API 결과를 화면에 연결 |
+| `src/app/navigation.ts` | 화면 주소와 브라우저 뒤로 가기 처리 |
+| `src/screens/` | 홈, 지도, 장소 상세, 프로필, 설정, 소개 등 화면 |
+| `src/services/places.ts` | 장소 API 호출 |
+| `src/services/community.ts` | 프로필·취향·맛객·구독·포인트 API 호출 |
+| `src/services/activity.ts` | 등록·좋아요·최근 본 장소의 브라우저 저장 |
+| `src/components/` | 지도, 마커, 사진, 아이콘, 공통 팝업 등 재사용 UI |
+| `src/models/` | 장소와 태그 API 자료형 |
+| `src/styles/` | 전역 색상·공통 UI와 화면별 배치 |
 
-## 공통과 연결
+## 데이터와 화면 경계
 
-- `components/BrandAssets.tsx`: 로고·일러스트·마커와 10종 기본 프로필 캐릭터를 표시합니다.
-- `components/Icon.tsx`: 크기·선 굵기를 통일한 아이콘.
-- `components/AppChrome.tsx`: 상단, 하단 5개 탭과 추천·구독·광고 탭.
-- `components/PlaceTile.tsx`: 맛집 카드와 평점 예시.
-- `components/MapCanvas.tsx`: 실제 카카오 지도와 마커, 현재 위치, 등록할 좌표 선택.
-- `components/Sheet.tsx`: Esc, 포커스 이동, 배경 스크롤 잠금을 처리하는 공통 팝업.
-- `components/FoodFocusPicker.tsx`: 음식점·카페/디저트·둘 다를 고르는 카드형 라디오 버튼.
-- `services/activity.ts`: 스크랩·좋아요·등록·최근 본 장소를 브라우저에 저장합니다.
-- `services/community.ts`: 프로필·이미지·취향·맛객 추천과 구독을 서버 API에 연결합니다.
-- `services/photos.ts`: 선택한 사진을 브라우저에서 압축해 저장 공간을 줄입니다.
-- `services/kakao.ts`: 카카오 SDK를 중복 로드하지 않습니다.
-- `models/place.ts`: 서버 장소와 로컬 등록 데이터의 모양.
-- `models/kakao.d.ts`: 이 앱이 사용하는 지도 SDK의 타입.
+로그인은 `dagong-auth`를 사용합니다. 화면에서 호출하는 API는 API Gateway를 거쳐 장소 서비스 또는 커뮤니티 서비스로 전달됩니다.
 
-`styles/app.css`는 공통 색상·탭·버튼·팝업, `styles/screens.css`는 화면별 배치를 담당합니다. PC도 시안과 같은 앱 폭을 유지하고 안쪽에서 스크롤합니다. 모바일에서는 화면 너비에 맞춰집니다.
+장소 목록과 상세는 현재 장소 서비스의 샘플 카탈로그에서 제공합니다. 장소 등록·좋아요·최근 본 장소는 브라우저별 저장 데이터여서 다른 기기와 공유되지 않습니다. 프로필·취향·구독·포인트와 태그 제안은 커뮤니티 API 및 DB에 저장됩니다. 실제 결제 처리는 연결되지 않았고 유료 구독은 개발용 완료 흐름입니다.
 
-## 샘플과 실제 연결
+맛객 프로필의 공개 분야·태그와 개인 추천 취향은 별도로 저장합니다. 추천 취향의 제외 조건은 다른 사용자에게 공개하지 않습니다. 가이드 태그는 `tag_group`으로 음식 종류, 맛·메뉴, 카페·디저트, 방문 스타일, 제외 조건을 구분합니다. API에서 필요한 `MENU`/`VISIT` 구분은 해당 그룹에서 계산합니다.
 
-장소 목록과 상세·검색은 장소 서버의 샘플 API에서 가져옵니다. 맛객 목록, 프로필·이미지·취향과 구독은 커뮤니티 API와 DB를 사용합니다. 로그인은 `dagong-auth`의 공통 로그인 화면으로 이동합니다.
+## 수정할 때 지킬 점
 
-맛집 등록·좋아요·스크랩·최근 본 장소는 브라우저 origin별로 저장되며 다른 기기와 동기화되지 않습니다. 장소 사진·평점은 샘플이고 맛객 구독 수는 서버 집계입니다. 리뷰 저장과 포인트 거래는 아직 서버에 연결하지 않았습니다.
-
-내 설정은 공개 프로필과 비공개 추천 취향을 탭으로 구분합니다. 공개 맛객 스타일은 프로필 탭의 선택 항목이며 추천 취향을 복사할 수 있습니다. 추천 취향 탭은 선호 태그와 피하고 싶은 방문 조건을 따로 선택합니다. 관련 스타일은 `styles/profile-settings.css`에 있습니다.
-
-태그 제안은 커뮤니티 API에 저장하며 즉시 선택 목록에 추가하지 않습니다. 제안 팝업에서 본인의 최근 요청과 검토 상태를 확인할 수 있습니다.
+- 화면은 API나 브라우저 저장소를 직접 다루지 않고 `services/` 함수를 사용합니다.
+- 서비스 데이터베이스를 다른 서비스가 직접 조회하지 않습니다.
+- 반복해서 쓰는 UI는 `components/`에 두고 화면 전용 배치는 해당 화면 스타일에 둡니다.
+- 파일이나 주요 흐름에 설명이 필요한 경우에만 주석을 두고, 코드에서 바로 알 수 있는 내용을 반복하지 않습니다.

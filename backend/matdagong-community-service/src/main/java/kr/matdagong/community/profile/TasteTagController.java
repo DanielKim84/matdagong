@@ -19,11 +19,17 @@ public class TasteTagController {
     @GetMapping
     public List<TasteTagView> list() {
         return jdbc.query("""
-                SELECT tag_name, tag_category
+                SELECT tag_name, tag_group
                 FROM taste_tags
                 ORDER BY sort_order
-                """, (rs, row) -> new TasteTagView(rs.getString("tag_name"), rs.getString("tag_category")));
+                """, (rs, row) -> new TasteTagView(
+                rs.getString("tag_name"), categoryFor(rs.getString("tag_group")), rs.getString("tag_group")));
     }
 
-    public record TasteTagView(String name, String category) {}
+    // 상위 분류는 세부 그룹에서 계산해 DB에 같은 의미를 두 번 저장하지 않습니다.
+    private String categoryFor(String tagGroup) {
+        return "VISIT".equals(tagGroup) ? "VISIT" : "MENU";
+    }
+
+    public record TasteTagView(String name, String category, String tagGroup) {}
 }

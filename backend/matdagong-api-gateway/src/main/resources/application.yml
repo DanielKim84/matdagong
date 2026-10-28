@@ -16,7 +16,7 @@ spring:
             - id: matdagong-community-service
               uri: ${COMMUNITY_SERVICE_URL:http://localhost:5844}
               predicates:
-                - Path=/api/v1/users/**,/api/v1/tasters,/api/v1/tasters/**,/api/v1/taste-tags,/api/v1/taste-tags/**,/api/v1/diary/**,/api/v1/subscriptions,/api/v1/subscriptions/**,/api/v1/notifications/**,/media/profiles/**
+                - Path=/api/v1/users/**,/api/v1/tasters,/api/v1/tasters/**,/api/v1/taste-tags,/api/v1/taste-tags/**,/api/v1/diary/**,/api/v1/subscriptions,/api/v1/subscriptions/**,/api/v1/notifications/**,/api/v1/points,/media/profiles/**
             # 장소 API를 별도 서버로 보내 장애가 다른 API 경로에 번지지 않게 합니다.
             - id: matdagong-place-service
               uri: ${PLACE_SERVICE_URL:http://localhost:5845}

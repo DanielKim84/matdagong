@@ -46,14 +46,14 @@ public class SubscriptionService {
         expireEndedSubscriptions();
         return jdbc.query("""
                 SELECT p.account_id, p.nickname, p.avatar_variant, p.taster_focus,
+                       p.activity_scope, p.activity_region,
                        p.profile_cover_data IS NOT NULL AS has_cover,
                        p.profile_img_data IS NOT NULL AS has_avatar, p.intro,
-                       COUNT(DISTINCT followers.subscription_id) AS follower_count,
-                       COUNT(DISTINCT following.subscription_id) AS following_count,
+                       COUNT(DISTINCT subscribers.subscription_id) AS subscriber_count,
                        COUNT(DISTINCT preference.tag_id) + CASE
-                           WHEN MAX(my_profile.preference_focus) = 'BOTH'
-                             OR p.taster_focus = 'BOTH'
-                             OR MAX(my_profile.preference_focus) = p.taster_focus THEN 1
+                           WHEN MAX(my_profile.preference_focus) <> 'BOTH'
+                             AND (p.taster_focus = 'BOTH'
+                               OR MAX(my_profile.preference_focus) = p.taster_focus) THEN 1
                            ELSE 0
                        END AS match_score,
                        string_agg(DISTINCT profile_tag.tag_name, ',' ORDER BY profile_tag.tag_name)
@@ -62,10 +62,8 @@ public class SubscriptionService {
                          FILTER (WHERE preference.tag_id IS NOT NULL) AS matched_tags
                 FROM user_profiles p
                 LEFT JOIN user_profiles my_profile ON my_profile.account_id = ?
-                LEFT JOIN user_subscriptions followers
-                  ON followers.target_account_id = p.account_id AND followers.subscription_st = 'ACTIVE'
-                LEFT JOIN user_subscriptions following
-                  ON following.subscriber_id = p.account_id AND following.subscription_st = 'ACTIVE'
+                LEFT JOIN user_subscriptions subscribers
+                  ON subscribers.target_account_id = p.account_id AND subscribers.subscription_st = 'ACTIVE'
                 LEFT JOIN user_profile_tags profile_tags
                   ON profile_tags.account_id = p.account_id
                 LEFT JOIN taste_tags profile_tag ON profile_tag.tag_id = profile_tags.tag_id
@@ -75,7 +73,7 @@ public class SubscriptionService {
                  AND preference.tag_id = profile_tags.tag_id
                 WHERE p.account_id <> ?
                 GROUP BY p.account_id, p.taster_focus
-                ORDER BY match_score DESC, follower_count DESC, p.nickname
+                ORDER BY match_score DESC, subscriber_count DESC, p.nickname
                 """, (rs, row) -> new TasterView(
                 rs.getString("account_id"),
                 rs.getString("nickname"),
@@ -86,12 +84,11 @@ public class SubscriptionService {
                 rs.getBoolean("has_cover")
                         ? "/media/profiles/%s/cover".formatted(rs.getString("account_id")) : null,
                 rs.getString("taster_focus"),
-                "#FFE5D5",
+                rs.getString("activity_scope"),
+                rs.getString("activity_region"),
                 "맛있는 장소를 찾아 기록하고 있어요.",
                 rs.getString("intro"),
-                0,
-                rs.getInt("follower_count"),
-                rs.getInt("following_count"),
+                rs.getInt("subscriber_count"),
                 splitTagNames(rs.getString("profile_tags")),
                 splitTagNames(rs.getString("matched_tags")),
                 rs.getInt("match_score")), currentAccountId, currentAccountId);
@@ -116,6 +113,34 @@ public class SubscriptionService {
                 WHERE s.subscriber_id = ? AND s.subscription_st = 'ACTIVE'
                 ORDER BY s.reg_dt DESC
                 """, subscriptionRowMapper(), subscriberId);
+    }
+
+    /** 내 맛객 프로필을 구독 중인 사용자와 현재 이용 중인 구독 회차를 반환합니다. */
+    @Transactional
+    public List<IncomingSubscriptionView> subscribers(UUID targetAccountId) {
+        expireEndedSubscriptions();
+        return jdbc.query("""
+                SELECT s.subscription_id, s.subscriber_id, p.nickname, p.avatar_variant,
+                       p.profile_img_data IS NOT NULL AS has_avatar,
+                       s.subscription_type, period.term_months, period.start_dt, period.end_dt
+                FROM user_subscriptions s
+                JOIN user_profiles p ON p.account_id = s.subscriber_id
+                JOIN user_subscription_history period
+                  ON period.subscription_id = s.subscription_id AND period.period_st = 'ACTIVE'
+                WHERE s.target_account_id = ? AND s.subscription_st = 'ACTIVE'
+                ORDER BY s.reg_dt DESC
+                """, (rs, row) -> new IncomingSubscriptionView(
+                rs.getObject("subscription_id", UUID.class),
+                rs.getObject("subscriber_id", UUID.class),
+                rs.getString("nickname"),
+                rs.getBoolean("has_avatar")
+                        ? "/media/profiles/%s/avatar".formatted(rs.getString("subscriber_id")) : null,
+                rs.getInt("avatar_variant"),
+                SubscriptionType.valueOf(rs.getString("subscription_type")),
+                (Integer) rs.getObject("term_months"),
+                rs.getTimestamp("start_dt").toInstant(),
+                rs.getTimestamp("end_dt") == null ? null : rs.getTimestamp("end_dt").toInstant()),
+                targetAccountId);
     }
 
     @Transactional

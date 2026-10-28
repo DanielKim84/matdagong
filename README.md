@@ -11,7 +11,7 @@ C:\workspace\
    ├─ frontend/                 # React 사용자 화면
    └─ backend/
       ├─ matdagong-api-gateway/ # 프런트 요청의 단일 진입점
-      ├─ matdagong-community-service/ # 맛객 프로필·다이어리·리뷰·구독
+      ├─ matdagong-community-service/ # 맛객 프로필·취향·구독·포인트
       └─ matdagong-place-service/     # 맛집·지도 조회
 ```
 
@@ -39,7 +39,7 @@ Java 21과 Node.js 24.22.1 이상(24 LTS 계열)을 사용합니다. 프런트 �
 | dagong-point API (추후) | 5841 | 공통 포인트 |
 | dagong-admin API (추후) | 5842 | 공통 관리자 |
 | matdagong-api-gateway | 5843 | API 요청 전달 |
-| matdagong-community-service | 5844 | 맛객 프로필과 사용자 활동 |
+| matdagong-community-service | 5844 | 맛객 프로필·취향·구독·포인트 |
 | matdagong-place-service | 5845 | 장소 검색과 상세 조회 |
 
 Gateway는 `/api/v1/users`, `/api/v1/tasters`, `/api/v1/diary`, `/api/v1/subscriptions`, `/api/v1/notifications`를 커뮤니티 서비스로 전달하고 `/api/v1/places`를 장소 서비스로 전달합니다.
@@ -47,9 +47,9 @@ Gateway는 `/api/v1/users`, `/api/v1/tasters`, `/api/v1/diary`, `/api/v1/subscri
 ## 기능 상태
 
 - 지도 화면은 장소 서비스의 `GET /api/v1/places?q={검색어}`와 `GET /api/v1/places/{id}` 샘플 API를 사용합니다. 현재 카탈로그는 코드에 있는 샘플 데이터이며 PostgreSQL 조회는 아직 연결되지 않았습니다.
-- 프로필·배경 이미지, 소개, 공개 태그·비공개 취향, 무료·유료 구독은 커뮤니티 API와 DB에 저장합니다. 유료 구독은 1·3·6·12개월 개발 요금을 표시하고 실제 결제 없이 즉시 완료합니다. 스크랩·좋아요·최근 본 장소·맛집 등록은 아직 브라우저 `localStorage`에 저장됩니다.
+- 프로필·배경 이미지, 소개, 공개 태그·비공개 취향, 무료·유료 구독과 포인트 내역은 커뮤니티 API와 DB에 저장합니다. 유료 구독은 1·3·6·12개월 개발 요금을 표시하고 실제 결제 없이 즉시 완료합니다. 포인트 화면은 원장 내역을 조회하며, 구독 리워드 지급 규칙은 아직 연결되지 않았습니다. 좋아요·최근 본 장소·맛집 등록은 브라우저 `localStorage`에 저장됩니다.
 - 맛다공 첫 진입은 공통 인증 서버에 Authorization Code + PKCE 로그인을 요청합니다. 로그인하지 않았다면 공통 로그인 화면으로 이동하고, 인증·동의가 끝나면 `/auth/callback`에서 코드를 교환한 뒤 맛다공 홈으로 돌아옵니다. 새 카카오 계정은 첫 인증 때 공통 계정으로 생성됩니다.
-- 포인트 서버와 관리자 화면은 현재 실행 모듈에 포함하지 않습니다. 포인트 원장·거래 규칙과 관리자 업무가 구체화되면 별도 서비스 또는 화면으로 추가합니다.
+- 포인트 원장과 조회 API는 커뮤니티 서비스에 있습니다. 포인트 정산·교환과 관리자 업무는 운영 정책이 확정된 뒤 별도로 설계합니다.
 
 ## 화면과 도메인 문서
 

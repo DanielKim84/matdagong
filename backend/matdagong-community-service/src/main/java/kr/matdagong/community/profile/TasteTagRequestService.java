@@ -21,7 +21,7 @@ public class TasteTagRequestService {
     }
 
     @Transactional
-    public RequestView create(UUID accountId, String requestedName, String category, String reason) {
+    public RequestView create(UUID accountId, String requestedName, String tagGroup, String reason) {
         String name = requestedName.strip().replaceAll("\\s+", " ");
         if (name.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "추가할 태그명을 입력해 주세요.");
@@ -39,11 +39,11 @@ public class TasteTagRequestService {
 
         try {
             return jdbc.queryForObject("""
-                    INSERT INTO taste_tag_requests (request_id, account_id, tag_name, tag_category, request_rsn)
+                    INSERT INTO taste_tag_requests (request_id, account_id, tag_name, tag_group, request_rsn)
                     VALUES (?, ?, ?, ?, ?)
-                    RETURNING request_id, tag_name, tag_category, request_rsn, request_st,
+                    RETURNING request_id, tag_name, tag_group, request_rsn, request_st,
                               review_note, reg_dt, review_dt
-                    """, requestMapper(), UUID.randomUUID(), accountId, name, category,
+                    """, requestMapper(), UUID.randomUUID(), accountId, name, tagGroup,
                     reason == null || reason.isBlank() ? null : reason.strip());
         } catch (DuplicateKeyException exception) {
             // 동시 제출도 DB의 대기 요청 유일 키로 막아 중복 접수를 방지합니다.
@@ -53,7 +53,7 @@ public class TasteTagRequestService {
 
     public List<RequestView> mine(UUID accountId) {
         return jdbc.query("""
-                SELECT request_id, tag_name, tag_category, request_rsn, request_st, review_note, reg_dt, review_dt
+                SELECT request_id, tag_name, tag_group, request_rsn, request_st, review_note, reg_dt, review_dt
                 FROM taste_tag_requests WHERE account_id = ?
                 ORDER BY reg_dt DESC LIMIT 20
                 """, requestMapper(), accountId);
@@ -62,12 +62,16 @@ public class TasteTagRequestService {
     private RowMapper<RequestView> requestMapper() {
         return (rs, row) -> new RequestView(
                 rs.getObject("request_id", UUID.class), rs.getString("tag_name"),
-                rs.getString("tag_category"), rs.getString("request_rsn"), rs.getString("request_st"),
+                categoryFor(rs.getString("tag_group")), rs.getString("tag_group"), rs.getString("request_rsn"), rs.getString("request_st"),
                 rs.getString("review_note"), rs.getObject("reg_dt", OffsetDateTime.class),
                 rs.getObject("review_dt", OffsetDateTime.class));
     }
 
+    private String categoryFor(String tagGroup) {
+        return "VISIT".equals(tagGroup) ? "VISIT" : "MENU";
+    }
+
     public record RequestView(
-            UUID requestId, String tagName, String tagCategory, String reason, String status,
+            UUID requestId, String tagName, String tagCategory, String tagGroup, String reason, String status,
             String reviewNote, OffsetDateTime createdAt, OffsetDateTime reviewedAt) {}
 }

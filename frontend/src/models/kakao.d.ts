@@ -4,17 +4,33 @@ declare global {
     getLat(): number;
     getLng(): number;
   }
+  interface MapBounds {
+    getSouthWest(): MapCoordinate;
+    getNorthEast(): MapCoordinate;
+  }
   interface MapInstance {
     setCenter(position: MapCoordinate): void;
     setDraggable(value: boolean): void;
     setZoomable(value: boolean): void;
     relayout(): void;
+    getBounds(): MapBounds;
   }
   interface MapMarker {
     setMap(map: MapInstance | null): void;
   }
   interface MapOverlay {
     setMap(map: MapInstance | null): void;
+  }
+  interface KakaoPlaceResult {
+    id: string;
+    place_name: string;
+    category_name: string;
+  phone: string;
+    address_name: string;
+    road_address_name: string;
+    x: string;
+    y: string;
+    place_url: string;
   }
   interface Kakao {
     maps: {
@@ -46,9 +62,19 @@ declare global {
       CustomOverlay: new (options: {
         map: MapInstance;
         position: MapCoordinate;
-        content: string;
+        content: string | HTMLElement;
         yAnchor?: number;
       }) => MapOverlay;
+      services: {
+        Status: { OK: string; ZERO_RESULT: string; ERROR: string };
+        Places: new () => {
+          keywordSearch(
+            keyword: string,
+            callback: (results: KakaoPlaceResult[], status: string) => void,
+            options?: { size?: number },
+          ): void;
+        };
+      };
       event: {
         addListener(
           target: MapInstance | MapMarker,
