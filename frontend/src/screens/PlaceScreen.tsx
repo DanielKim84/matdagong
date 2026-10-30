@@ -173,7 +173,7 @@ export default function PlaceScreen({ place, own, subscribedTasterIds, liked, ca
           }
         }} role="button" tabIndex={0} aria-label="맛집 사진 목록 보기" style={{ transform: `translateX(-${heroIndex * 100}%)` }}>
           {authorPhotos.map((photo, index) => <img src={photo} alt={`${selectedTaster?.tasterName ?? "맛객"}이 등록한 ${place.name} 사진 ${index + 1}`} loading={index === heroIndex ? "eager" : "lazy"} decoding="async" key={`${photo}-${index}`} />)}
-        </div> : <><FoodPhoto place={place} className="place-hero-fallback" /><div className="place-cover-empty"><span><Icon name="camera" /></span><b>{place.name}</b><small>맛객의 사진이 아직 없어요</small></div></>}
+        </div> : <FoodPhoto place={place} className="place-hero-fallback" />}
         <button className="photo-back icon-button" onClick={() => back("map")} aria-label="이전 화면으로 돌아가기"><Icon name="back" /></button>
         {authorPhotos.length > 0 && <>
           {authorPhotos.length > 1 && <PaginationDots activeIndex={heroIndex} total={authorPhotos.length} onSelect={setHeroIndex} className="photo-slide-indicators--hero-below" />}
@@ -190,7 +190,7 @@ export default function PlaceScreen({ place, own, subscribedTasterIds, liked, ca
                 aria-label={hasOwnRecord ? "내 맛집으로 변경" : liked ? "내 맛집에서 삭제" : "내 맛집에 추가"}
                 aria-pressed={liked}
               ><Icon name="heart" filled={liked} /></button>
-              <button onClick={share} aria-label="맛집 공유"><Icon name="share" /></button>
+              <button className="place-share-button" onClick={share} aria-label="맛집 공유"><Icon name="share" /></button>
             </div>
           </div>
           <Rating count={recommenderCount} />

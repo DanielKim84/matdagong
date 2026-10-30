@@ -620,7 +620,14 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
       if (refreshes[1].status === "fulfilled") setPlaces(refreshes[1].value);
       if (refreshes[2].status === "fulfilled") setLikedPlaceIds(refreshes[2].value);
       if (refreshes[3].status === "fulfilled") setDetail(refreshes[3].value);
-      if (refreshes[4].status === "fulfilled") setVisitedLikedPlaceIds(refreshes[4].value);
+      // The record-to-like conversion itself is proof of a prior visit. Keep that marker if
+      // a concurrent/stale refresh responds before the committed VISITED like is visible.
+      if (refreshes[4].status === "fulfilled") {
+        const refreshedVisitedPlaceIds = refreshes[4].value;
+        setVisitedLikedPlaceIds((current) =>
+          [...new Set([...current, ...refreshedVisitedPlaceIds, place.id])],
+        );
+      }
       setNotice({ kind: "success", title: "내 맛집으로 변경했어요", message: "직접 작성한 기록을 삭제하고 내 맛집에 저장했어요." });
     } catch (cause) {
       setNotice({ kind: "error", title: "내 맛집으로 변경하지 못했어요", message: cause instanceof Error ? cause.message : "잠시 후 다시 시도해 주세요." });

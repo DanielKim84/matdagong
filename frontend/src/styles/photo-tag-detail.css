@@ -210,8 +210,8 @@
 .place-info .detail-section-heading>small>i { color:#94847a;font-size:10px;font-style:normal;font-weight:500; }
 
 /* B안: 사진과 가게 요약 사이를 둥근 정보 카드로 분리합니다. */
-.place-info { margin-top:0;background:transparent;padding:0 15px 25px; }
-.place-summary-panel { position:relative;z-index:2;margin-top:-4px;border:1px solid #f0e3da;border-radius:20px;background:#fffdfa;padding:17px 16px 13px;box-shadow:0 -5px 18px #472d1c0c; }
+.place-info { margin-top:0;background:transparent;padding:10px 15px 25px; }
+.place-summary-panel { position:relative;z-index:2;margin-top:0;border:1px solid #f0e3da;border-radius:20px;background:#fffdfa;padding:17px 16px 13px;box-shadow:0 2px 12px #472d1c0c; }
 .place-summary-panel .rating { margin-bottom:11px; }
 .place-summary-panel .place-line:last-child { margin-bottom:0; }
 .place-info>.detail-tabs { margin-top:13px; }
@@ -219,6 +219,42 @@
 .place-heading .place-like-button .icon { width:16px;height:16px; }
 .place-heading .place-like-button.is-liked { border-color:#f4a99a;background:#ffe9e4;color:#f04442; }
 .place-heading .place-like-button:active { transform:scale(.94); }
+.place-heading .place-share-button { display:grid;width:34px;height:34px;place-items:center;border:1px solid #e5ddd5;border-radius:50%;background:#fffdfa;padding:0;color:#4d5568; }
+.place-heading .place-share-button .icon { width:16px;height:16px; }
+.place-heading .place-share-button:active { transform:scale(.94); }
+
+/* Keep the taster and restaurant detail back controls visually consistent. */
+.profile-screen .photo-back,
+.place-screen .photo-back { display:grid;width:38px;height:38px;place-items:center;border:1px solid #ffffffa8;border-radius:50%;background:#fffdf4ed;color:#3d342f;filter:none;box-shadow:0 2px 8px #20150e35; }
+.profile-screen .photo-back .icon,
+.place-screen .photo-back .icon { width:20px;height:20px; }
+
+/* 맛집 등록/수정 사진도 설정 화면처럼 큰 슬라이드와 삭제 가능한 썸네일로 보여줍니다. */
+.registration-photo-gallery { gap:0;margin-bottom:12px; }
+.registration-photo-cover { height:clamp(210px,54vw,250px);touch-action:pan-y; }
+.registration-photo-cover-track { position:absolute;inset:0;display:flex;width:100%;height:100%;transition:transform .35s cubic-bezier(.22,.7,.25,1);will-change:transform; }
+.registration-photo-cover-track>img { width:100%;height:100%;flex:0 0 100%;object-fit:cover; }
+.registration-photo-cover>.registration-photo-primary-badge { z-index:1;bottom:12px;left:12px;border:1px solid #ffffff70;border-radius:18px;background:#3f34296b;padding:8px 11px;font-size:11px;backdrop-filter:blur(8px); }
+.registration-photo-cover>.registration-photo-count { position:absolute;z-index:1;top:12px;left:12px;bottom:auto;border-radius:18px;background:#3f34296b;padding:6px 10px;color:#fff;font-size:10px;backdrop-filter:blur(8px); }
+.registration-photo-cover>.registration-photo-add { position:absolute;z-index:2;right:12px;bottom:12px;top:auto;display:flex;width:auto;height:auto;align-items:center;gap:5px;border:1px solid #ffffff66;border-radius:18px;background:#3f34296b;padding:8px 11px;color:#fff;font-size:11px;backdrop-filter:blur(8px); }
+.registration-photo-cover>.registration-photo-add .icon { width:14px;height:14px; }
+.registration-photo-indicators { margin:5px auto 2px; }
+.registration-photo-strip { display:flex;gap:9px;overflow-x:auto;margin:7px 0 0;padding:2px 1px 5px;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain; }
+.registration-photo-strip::-webkit-scrollbar { display:none; }
+.registration-photo-thumbnail { position:relative;width:88px;height:70px;flex:none; }
+.registration-photo-thumbnail-preview { display:block;width:100%;height:100%;overflow:hidden;border:1px solid #eadbd0;border-radius:9px;background:#f7eee7;padding:0; }
+.registration-photo-thumbnail-preview.active { border:2px solid #e76b4b;box-shadow:0 0 0 2px #fbe1d7; }
+.registration-photo-thumbnail-preview>img { display:block;width:100%;height:100%;object-fit:cover; }
+.registration-photo-thumbnail-delete { position:absolute;top:4px;right:4px;display:grid;width:24px;height:24px;place-items:center;border:1px solid #ffffff;border-radius:50%;background:#fffdfa;color:#a4513d;padding:0;box-shadow:0 1px 4px #36201555; }
+.registration-photo-thumbnail-delete .icon { width:14px;height:14px; }
+
+/* 프로필/맛집 편집 커버는 같은 크기와 좌우 여백을 쓰고, 상세 커버도 서로 맞춥니다. */
+.registration-photo-cover { height:210px;margin-right:5px;margin-left:5px;border-radius:16px; }
+.profile-edit-cover { height:210px;margin-right:20px;margin-left:20px;border-radius:16px; }
+.registration-photo-strip { margin-right:5px;margin-left:5px; }
+.place-hero.has-cover,.profile-screen>.profile-cover { height:264px; }
+.place-hero.has-cover .place-hero-slide-track { bottom:26px;height:calc(100% - 26px); }
+.place-hero.has-cover .photo-slide-indicators--hero-below { height:26px; }
 .profile-cover-gallery-list button>span { position:absolute;right:6px;bottom:6px;border-radius:12px;background:#24180f99;padding:3px 7px;color:#fff;font-size:9px; }
 .profile-cover-count { position:absolute;right:15px;bottom:12px;border:1px solid #ffffff80;border-radius:14px;background:#24180f70;padding:4px 8px;color:#fff;font-size:10px; }
 .profile-cover-thumbnails { position:absolute;right:15px;bottom:45px;left:15px;display:flex;gap:6px;overflow:auto;pointer-events:none; }

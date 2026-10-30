@@ -4,9 +4,11 @@ import type { FoodFocus, TasteTag } from "../services/community";
 import { VISIT_CONDITION_GROUPS, isVisitCondition } from "../models/place";
 import { ScreenHeader } from "../components/AppChrome";
 import { Avatar } from "../components/BrandAssets";
+import PaginationDots from "../components/PaginationDots";
 import { loadPhoto } from "../services/photos";
 import { searchKakaoPlaces } from "../services/kakao";
 import Icon from "../components/Icon";
+import { swipeHandlers, wrapIndex } from "../utils/swipe";
 import TasteTagPicker from "../components/TasteTagPicker";
 import { groupsForFocus } from "../models/tasteTags";
 import { getQuickPlaceDrafts, kakaoPlaceFromPlace, kakaoPlaceFromQuickDraft, saveQuickPlaceDraft as persistQuickPlaceDraft, type QuickPlaceDraft } from "../services/places";
@@ -86,6 +88,8 @@ export default function RegisterScreen({
   const [photos, setPhotos] = useState<string[]>(() => draft
     ? draft.photos.map((photo) => refreshMediaUrl(photo, currentRecordPhotos))
     : editRecord?.photos ?? []);
+  const [photoPreviewIndex, setPhotoPreviewIndex] = useState(0);
+  const photoInput = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(() => draft ? draft.name : editPlace?.name ?? "");
   const [address, setAddress] = useState(() => draft ? draft.address : editPlace?.address ?? "");
   const [coordinates, setCoordinates] = useState<Coordinates | null>(() => draft ? draft.coordinates : editPlace ? { latitude: editPlace.latitude, longitude: editPlace.longitude } : null);
@@ -271,6 +275,11 @@ export default function RegisterScreen({
       setBusy(false);
     }
   }
+  async function removePhotoAt(index: number) {
+    if (!await confirm({ title: "사진을 삭제할까요?", message: `사진 ${index + 1}가 등록할 사진 목록에서 제외됩니다.`, confirmLabel: "삭제할게요", tone: "danger" })) return;
+    setPhotos((current) => current.filter((_, photoIndex) => photoIndex !== index));
+    setPhotoPreviewIndex((current) => index < current ? current - 1 : index === current ? Math.max(0, Math.min(index, photos.length - 2)) : current);
+  }
   function addMenu() {
     if (menus.length >= 5) {
       setError("대표 메뉴는 5개까지 추가할 수 있어요.");
@@ -455,39 +464,38 @@ export default function RegisterScreen({
         <section className={`registration-photo-gallery ${photos.length ? "has-photos" : ""}`} aria-label="맛집 사진">
           {photos.length ? (
             <>
-              <figure className="registration-photo-cover">
-                <img src={photos[0]} alt="대표 맛집 사진" />
-                <span>대표 사진</span>
-                <button type="button" aria-label="대표 사진 삭제" onClick={async () => {
-                  if (!await confirm({ title: "대표 사진을 삭제할까요?", message: "삭제한 사진은 등록 화면에서 제외됩니다.", confirmLabel: "삭제할게요", tone: "danger" })) return;
-                  setPhotos((current) => current.slice(1));
-                }}><Icon name="close" /></button>
-              </figure>
-              <div className="registration-photo-strip">
-                {photos.slice(1).map((photo, index) => (
-                  <div className="photo-slot" key={`${photo.slice(-24)}-${index}`}>
-                    <img src={photo} alt={`등록할 사진 ${index + 2}`} />
-                    <button type="button" aria-label={`사진 ${index + 2} 삭제`}
-                      onClick={async () => {
-                        if (!await confirm({ title: "사진을 삭제할까요?", message: `사진 ${index + 2}가 등록할 사진 목록에서 제외됩니다.`, confirmLabel: "삭제할게요", tone: "danger" })) return;
-                        setPhotos((current) => current.filter((_, i) => i !== index + 1));
-                      }}>
-                      <Icon name="close" />
+              <div className="registration-photo-cover" {...swipeHandlers(
+                (step) => setPhotoPreviewIndex((current) => wrapIndex(current, step, photos.length)),
+                { threshold: 40, enabled: photos.length > 1 },
+              )}>
+                <div className="registration-photo-cover-track" style={{ transform: `translateX(-${photoPreviewIndex * 100}%)` }}>
+                  {photos.map((photo, index) => <img key={`${photo.slice(-24)}-${index}`} src={photo} alt={`맛집 사진 ${index + 1} 미리보기`} />)}
+                </div>
+                {photoPreviewIndex === 0 && <span className="registration-photo-primary-badge">대표 사진</span>}
+                <span className="registration-photo-count">{photoPreviewIndex + 1}/{photos.length}</span>
+                {photos.length < 10 && <button type="button" className="registration-photo-add" onClick={() => photoInput.current?.click()} disabled={busy}>
+                  <Icon name="camera" /> 사진 추가
+                </button>}
+              </div>
+              {photos.length > 1 && <PaginationDots activeIndex={photoPreviewIndex} total={photos.length} onSelect={setPhotoPreviewIndex} className="registration-photo-indicators" label="맛집 사진 페이지" />}
+              <div className="registration-photo-strip" aria-label="등록할 맛집 사진">
+                {photos.map((photo, index) => (
+                  <div className="registration-photo-thumbnail" key={`${photo.slice(-24)}-${index}`}>
+                    <button type="button" className={`registration-photo-thumbnail-preview${photoPreviewIndex === index ? " active" : ""}`} aria-label={`맛집 사진 ${index + 1} 미리보기`} aria-pressed={photoPreviewIndex === index} onClick={() => setPhotoPreviewIndex(index)}>
+                      <img src={photo} alt="" loading="lazy" />
                     </button>
+                    <button type="button" className="registration-photo-thumbnail-delete" aria-label={`사진 ${index + 1} 삭제`} disabled={busy || saving} onClick={() => void removePhotoAt(index)}><Icon name="close" /></button>
                   </div>
                 ))}
-                {photos.length < 10 && <label className="add-photos add-photos-compact">
-                  <Icon name="plus" /><b>사진 추가</b>
-                  <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addPhotos} disabled={busy} />
-                </label>}
               </div>
+              <input ref={photoInput} className="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addPhotos} disabled={busy || saving} />
             </>
           ) : (
             <label className="registration-photo-empty">
               <span><Icon name="camera" /></span>
               <b>{busy ? "사진 준비 중…" : "맛집의 분위기를 사진으로 남겨보세요"}</b>
               <small>필수 입력 · 사진 1장 이상 · 최대 10장까지 등록할 수 있어요</small>
-              <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addPhotos} disabled={busy} />
+              <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addPhotos} disabled={busy} />
             </label>
           )}
         </section>

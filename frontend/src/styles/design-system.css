@@ -548,12 +548,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* 지도 안에서 취향 맞는 맛객을 별도 목록으로 열어 지도 결과와 구분합니다. */
 
-/* 상세의 사진, 위치, 맛객별 기록에 없는 정보는 샘플로 채우지 않습니다. */
-.place-cover-empty { display:flex; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center; gap:9px; background:radial-gradient(ellipse at 50% 35%,#fff9f1,#f2e2d4 78%); color:#7c5440; }
-.place-cover-empty > span { display:grid; width:54px; height:54px; place-items:center; border:1px solid #e9c7ae; border-radius:50%; background:#fff9f3; }
-.place-cover-empty > span .icon { width:25px; height:25px; }
-.place-cover-empty > b { font-size:17px; }
-.place-cover-empty > small { color:#9b8678; font-size:11px; }
 .place-category-line { margin:5px 0 0; color:var(--color-muted); font-size:11px; }
 .place-line a { color:inherit; }
 .place-hashtags { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
@@ -1043,11 +1037,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .intro-story-footer > button { display:flex; width:100%; min-height:50px; align-items:center; justify-content:center; gap:8px; border-radius:16px; font-size:14px; }
 .intro-story-footer > button .icon { width:16px; height:16px; }
 .place-hero > .place-hero-fallback { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:cover; }
-.place-hero.no-cover::after { position:absolute; inset:0; background:linear-gradient(0deg,rgb(30 22 17 / 58%),transparent 62%); content:""; pointer-events:none; }
-.place-cover-empty { position:absolute; z-index:1; right:14px; bottom:16px; left:16px; width:auto; height:auto; align-items:flex-start; justify-content:flex-end; gap:4px; background:transparent; color:white; }
-.place-cover-empty > span { display:none; }
-.place-cover-empty > b { font-size:18px; text-shadow:0 1px 4px #20150db3; }
-.place-cover-empty > small { color:#fff5e4; text-shadow:0 1px 4px #20150db3; }
 .subscription-coming-soon,.points-coming-soon { margin:10px 0 0; border:1px solid #f3dfbd; border-radius:12px; background:#fff8e9; padding:10px 12px; color:#8a6740; font-size:11px; line-height:1.6; }
 .points-coming-soon { position:relative; display:block; clear:both; margin:14px 0 20px; }
 .intro-story-reward > div > .intro-reward-coming-soon { display:inline-block; margin-top:8px; border-radius:20px; background:#fff2d7; padding:5px 8px; color:#986e39; font-size:9px; font-weight:700; line-height:1.5; }
