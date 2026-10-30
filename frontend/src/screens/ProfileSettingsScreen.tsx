@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ScreenHeader } from "../components/AppChrome";
+import { Segmented, TopBar } from "../components/ui";
 import { Avatar } from "../components/BrandAssets";
 import Icon from "../components/Icon";
 import TasteTagPicker from "../components/TasteTagPicker";
@@ -312,20 +312,20 @@ export default function ProfileSettingsScreen({
 
   return (
     <>
-      <ScreenHeader title="내 설정" fallback="my" />
-      <main className="profile-settings redesigned-settings">
-        <div className="settings-view-switch" role="group" aria-label="설정 구분">
-          <button type="button" aria-pressed={activeTab === "profile"} onClick={() => setActiveTab("profile")}>
-            <Icon name="user" /> 공개 프로필
-          </button>
-          <button type="button" aria-pressed={activeTab === "taste"} onClick={() => setActiveTab("taste")}>
-            <Icon name="heart" /> 추천 취향
-          </button>
+      <main className="r-screen r-me-edit profile-settings">
+        <TopBar title="프로필 편집" fallback="my" />
+        <div className="r-me-edit__tabs">
+          <Segmented<"profile" | "taste">
+            label="설정 구분"
+            value={activeTab}
+            onChange={setActiveTab}
+            options={[{ value: "profile", label: "공개 프로필" }, { value: "taste", label: "추천 취향" }]}
+          />
         </div>
         <form onSubmit={(event) => void submit(event)}>
           <section className="settings-panel" hidden={activeTab !== "profile"} aria-label="공개 프로필 설정">
             <div className="profile-edit-form">
-              <section className="profile-edit-avatar-section">
+              <section className="r-card profile-edit-avatar-section">
                 <button className="profile-edit-avatar-button" type="button" onClick={() => avatarInput.current?.click()} aria-label="프로필 사진 변경">
                   <Avatar src={avatarPreview ?? (removeAvatar ? null : profile.profileImgUrl)} name={nickname || profile.nickname} variant={profile.avatarVariant} />
                   <span><Icon name="camera" /></span>
@@ -366,19 +366,21 @@ export default function ProfileSettingsScreen({
             <input ref={coverInput} className="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" multiple
               onChange={(event) => { chooseCoverImages(event.target.files); event.target.value = ""; }} />
             <div className="profile-edit-form">
-              <label className="profile-edit-field">
-                <span>닉네임 <em>필수</em></span>
-                <input value={nickname} onChange={(event) => setNickname(event.target.value.slice(0, 12))}
-                  maxLength={12} required={activeTab === "profile"} placeholder="맛다공에서 사용할 이름" />
-                <small>{nickname.length}/12자 · 다른 맛객과 겹치지 않는 이름으로 정해 주세요.</small>
-              </label>
-              <label className="profile-edit-field">
-                <span>나를 소개해 주세요 <small>선택</small></span>
-                <textarea value={intro} onChange={(event) => setIntro(event.target.value.slice(0, 300))}
-                  maxLength={300} rows={3} placeholder="내가 좋아하는 한 끼, 자주 찾는 동네…" />
-                <small>{intro.length}/300자 · 다른 사람에게 공개돼요.</small>
-              </label>
-              <details className="public-style-settings">
+              <div className="r-card profile-edit-card">
+                <label className="profile-edit-field">
+                  <span>닉네임 <em>필수</em></span>
+                  <input value={nickname} onChange={(event) => setNickname(event.target.value.slice(0, 12))}
+                    maxLength={12} required={activeTab === "profile"} placeholder="맛다공에서 사용할 이름" />
+                  <small>{nickname.length}/12자 · 다른 맛객과 겹치지 않는 이름으로 정해 주세요.</small>
+                </label>
+                <label className="profile-edit-field">
+                  <span>나를 소개해 주세요 <small>선택</small></span>
+                  <textarea value={intro} onChange={(event) => setIntro(event.target.value.slice(0, 300))}
+                    maxLength={300} rows={3} placeholder="내가 좋아하는 한 끼, 자주 찾는 동네…" />
+                  <small>{intro.length}/300자 · 다른 사람에게 공개돼요.</small>
+                </label>
+              </div>
+              <details className="r-card public-style-settings">
                 <summary><span><b>내가 소개하는 맛집 스타일 <em>선택 · 공개</em></b><small>방문자에게 내가 올리는 맛집의 성향을 보여줘요.</small></span><Icon name="chevron" /></summary>
                 <div>
                   <p>이 항목은 방문자에게 공개되는 내 맛집 소개 스타일이에요.<br />비공개 추천 취향과는 별도로 관리돼요.</p>
@@ -479,13 +481,13 @@ export default function ProfileSettingsScreen({
             </section>
           </section>
           {activeTab === "taste" && (
-            <button className="tag-request-entry" type="button" onClick={() => setRequestOpen(true)}>
+            <button className="r-card tag-request-entry" type="button" onClick={() => setRequestOpen(true)}>
               <span className="tag-request-entry-icon"><Icon name="message" /></span>
               <span><b>찾는 태그가 없나요?</b><small>원하는 태그를 제안해 주세요</small></span><Icon name="chevron" />
             </button>
           )}
-          <footer className={`settings-save-bar settings-save-bar--${activeTab}`}>
-            <button className="primary-button" type="submit" disabled={saving}>{saving ? "저장하는 중…" : activeTab === "profile" ? "프로필 저장" : "취향 저장"}</button>
+          <footer className="settings-save-bar r-me-edit__save">
+            <button className="r-button r-button--primary r-button--block" type="submit" disabled={saving}>{saving ? "저장하는 중…" : activeTab === "profile" ? "프로필 저장" : "취향 저장"}</button>
           </footer>
         </form>
       </main>

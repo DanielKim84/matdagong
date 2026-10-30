@@ -63,6 +63,8 @@ export interface Taster {
   intro?: string;
   subscriberCount?: number;
   placeCount?: number;
+  /** 기록을 남긴 시각(ISO-8601). 샘플 기록과 브라우저에만 있는 이전 기록은 없습니다. */
+  recordedAt?: string | null;
   profileTags?: string[];
   matchedTags?: string[];
   matchScore?: number;
@@ -112,4 +114,7 @@ export type Screen =
   | "profile-edit"
   | "intro"
   | "liked"
-  | "recent";
+  | "recent"
+  | "feed"
+  | "tasters"
+  | "wallet";

@@ -1,74 +1,85 @@
+/*
+ * main.tsx 가 React 를 그리기 전에 띄우는 접속 중·로그인 오류 화면입니다.
+ * 시안의 로그인 화면처럼 로고 → 문구 → 캐릭터 → 버튼 순서로 둡니다. 소셜 버튼 선택은 공통 인증 서버 로그인 화면이 맡습니다.
+ */
 .auth-start-screen {
-  display: grid;
+  display: flex;
+  width: min(var(--app-width), 100%);
   min-height: 100dvh;
-  place-content: center;
-  gap: 12px;
-  padding: 24px;
-  background: #fffaf2;
-  color: #49302a;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 0 auto;
+  background: var(--color-canvas);
+  padding: calc(48px + env(safe-area-inset-top)) 24px calc(48px + env(safe-area-inset-bottom));
+  color: var(--color-ink);
+  font-family: var(--font-body);
   text-align: center;
 }
 
+/* 맛다공 로고 */
+.auth-start-screen::before {
+  display: block;
+  width: 220px;
+  height: 96px;
+  order: 0;
+  background: url("/assets/brand-logo.png") center / contain no-repeat;
+  content: "";
+}
+
+/* 프라이팬을 든 맛다공 캐릭터(캐릭터 시트 5×2 중 3번째 칸) */
+.auth-start-screen::after {
+  display: block;
+  width: 200px;
+  height: 200px;
+  order: 2;
+  margin: 12px 0;
+  background: url("/assets/avatars/matdagong-characters-v1.png") 50% 0 / 500% 200% no-repeat;
+  content: "";
+}
+
+.auth-start-screen > * {
+  order: 1;
+}
+
 .auth-start-screen p {
+  max-width: 320px;
   margin: 0;
-  color: #71625d;
-  font-size: 14px;
+  color: var(--color-muted);
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .auth-start-error h1 {
   margin: 0;
-  font-size: 21px;
+  color: var(--neutral-700);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
 }
 
 .auth-start-error button {
-  min-height: 44px;
+  width: 100%;
+  min-height: 54px;
+  order: 3;
   border: 0;
-  border-radius: 24px;
-  background: #ff5836;
-  color: #fff;
+  border-radius: var(--radius-control);
+  background: var(--color-primary);
+  color: var(--on-strong);
   font: inherit;
-  font-weight: 650;
-}
-.matdagong-signup {
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: #fffaf6;
-  color: #28231f;
+  font-size: 16px;
+  font-weight: 700;
 }
 
-.matdagong-signup__card {
-  width: min(100%, 420px);
-  display: grid;
-  gap: 12px;
-  padding: 32px;
-  border: 1px solid #f0e5dc;
-  border-radius: 24px;
-  background: #fff;
-  box-shadow: 0 18px 55px rgb(79 49 29 / 8%);
-  max-height: calc(100dvh - 30px);
-  overflow-y: auto;
+@media (prefers-reduced-motion: no-preference) {
+  .auth-start-screen:not(.auth-start-error)::after {
+    animation: auth-start-bob 1.4s ease-in-out infinite;
+  }
 }
 
-.matdagong-signup__eyebrow { margin: 0; color: #e97843; font-size: 12px; font-weight: 800; letter-spacing: .14em; }
-.matdagong-signup__card h1 { margin: 0; font-size: 25px; }
-.matdagong-signup__description { margin: 0 0 10px; color: #766d66; line-height: 1.6; }
-.matdagong-signup__card label { margin-top: 7px; font-size: 14px; font-weight: 700; }
-.matdagong-signup__card label span { color: #928982; font-size: 12px; font-weight: 500; }
-.matdagong-signup__card input { width: 100%; min-height: 48px; padding: 0 14px; border: 1px solid #ddd3cb; border-radius: 12px; background: #fff; font: inherit; }
-.matdagong-signup__card > button[type="submit"] { min-height: 50px; margin-top: 10px; border: 0; border-radius: 13px; background: #e97843; color: white; font: inherit; font-weight: 750; cursor: pointer; }
-.matdagong-signup__card > button[type="submit"]:disabled { opacity: .65; cursor: wait; }
-.matdagong-signup__error { margin: 0; color: #bd3d32; font-size: 13px; }
-.signup-taste-preferences { display: grid; gap: 16px; margin-top: 12px; border-top: 1px solid #f0e8e2; padding-top: 18px; }
-.signup-taste-preferences > div { display: grid; gap: 5px; }
-.signup-taste-preferences > div b { font-size: 14px; }
-.signup-taste-preferences > div small { color: #887d76; font-size: 11px; line-height: 1.6; }
-.signup-taste-preferences > div b span { color: #928982; font-size: 11px; font-weight: 500; }
-.signup-taste-avoid { display: grid; gap: 12px; border-top: 1px solid #f0e8e2; padding-top: 16px; }
-.signup-taste-avoid > div { display: grid; gap: 5px; }
-.signup-taste-avoid > div b { font-size: 13px; }
-.signup-taste-avoid > div b span { color: #928982; font-size: 11px; font-weight: 500; }
-.signup-taste-avoid > div small { color: #887d76; font-size: 11px; line-height: 1.6; }
-.matdagong-signup__card .taste-tag-picker button { min-height: 35px; margin: 0; border: 1px solid #e7e9ed; border-radius: 17px; background: #fff; padding: 8px 12px; color: #78849a; font-size: 12px; font-weight: 500; }
-.matdagong-signup__card .taste-tag-picker button.selected { border-color: #ff9b7e; background: #fff0e8; color: #ec6245; font-weight: 650; }
+@keyframes auth-start-bob {
+  50% {
+    transform: translateY(-6px);
+  }
+}

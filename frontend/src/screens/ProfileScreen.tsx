@@ -113,21 +113,20 @@ export default function ProfileScreen({
           variant={taster.avatarVariant}
         />
         <h1>{taster.tasterName}</h1>
-        <span className="profile-handle">
-          @{taster.tasterId.replace("-", "")}_matguest
-        </span>
-        {activity && <div className="profile-activity"><Icon name="pin" /><span><small>주 활동</small><b>{activity}</b></span></div>}
-        <p className="profile-bio">
-          {taster.intro ?? "맛있는 하루를 기록하며 맛집을 탐방합니다."}
-          <br />
-          좋은 맛집이 있으면 언제든 추천해 주세요! <b>♥</b>
-        </p>
+        {activity && <span className="profile-handle"><Icon name="pin" />{activity}</span>}
+        <p className="profile-bio">{taster.intro?.trim() || "맛있는 하루를 기록하며 맛집을 탐방합니다."}</p>
+        {publicTagNames.length > 0 && (
+          <div className="profile-tag-pills">{publicTagNames.slice(0, 4).map((tag) => <span key={tag}>{tag}</span>)}</div>
+        )}
         <div className="profile-statistics">
           <span>
-            <b>{own.length}</b>맛집
+            <b>{own.length}</b>맛집 기록
           </span>
           <span>
-            <b>{taster.subscriberCount ?? 0}</b>구독자
+            <b>{(taster.subscriberCount ?? 0).toLocaleString()}</b>구독자
+          </span>
+          <span>
+            <b>{publicTagNames.length}</b>취향 태그
           </span>
         </div>
         <button
@@ -172,9 +171,8 @@ export default function ProfileScreen({
               <button className="profile-place-card" key={place.id} onClick={() => go("place", place.id)}>
                 <FoodPhoto place={place} />
                 <span className="profile-place-copy">
-                  <small>{place.category}</small>
                   <b>{place.name}</b>
-                  <span><Icon name="pin" />{place.address}</span>
+                  <small>{place.category}</small>
                 </span>
               </button>
             )) : <div className="profile-empty"><Icon name="fork" /><b>아직 소개한 맛집이 없어요</b><span>새로운 맛집을 발견하면 여기에 모아둘게요.</span></div>}

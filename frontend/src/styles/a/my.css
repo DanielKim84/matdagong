@@ -1,0 +1,951 @@
+/* A 시안 화면 표현: my (마이, 내 구독 맛객, 포인트 내역, 알림, 설정) */
+
+/* ═════════════ 마이 ═════════════ */
+.my-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--color-canvas);
+  padding: 20px 16px 32px;
+  color: var(--color-ink);
+}
+
+/* 공통 카드: 테두리 없는 흰 카드 + 부드러운 그림자 */
+.my-screen .my-identity,
+.my-screen .my-incoming-summary,
+.my-screen .points-summary,
+.my-screen .my-activity-grid > button,
+.my-screen .my-recommendation-link,
+.my-screen .my-quick-drafts-entry {
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+
+/* 프로필 요약 */
+.my-screen .my-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 18px;
+}
+.my-screen .my-avatar-upload,
+.my-screen .my-avatar-upload > .avatar {
+  width: 68px;
+  height: 68px;
+}
+.my-screen .my-avatar-upload > .avatar {
+  border: 3px solid var(--brand-50);
+}
+.my-screen .my-avatar-upload > span:last-child {
+  right: -2px;
+  bottom: -2px;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--color-surface);
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.my-screen .my-avatar-upload > span:last-child .icon {
+  width: 14px;
+  height: 14px;
+}
+.my-screen .my-identity-name {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.my-screen .my-identity-name h1 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+.my-screen .my-identity-name .my-role-badge,
+.my-screen .my-identity-name .my-role-badge--user,
+.my-screen .my-identity-name .my-role-badge--taster,
+.my-screen .my-identity-name .my-role-badge--super_taster,
+.my-screen .my-identity-name .my-role-badge--admin {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  margin: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 10px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.my-screen .my-identity-name .my-role-badge--super_taster,
+.my-screen .my-identity-name .my-role-badge--admin {
+  background: var(--amber-50);
+  color: var(--neutral-700);
+}
+.my-screen .my-identity-copy > small {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.my-screen .my-identity > .my-settings-button {
+  width: 44px;
+  height: 44px;
+  align-self: flex-start;
+  margin: -6px -6px 0 auto;
+  border-radius: 50%;
+  background: transparent;
+  padding: 10px;
+  color: var(--neutral-700);
+}
+.my-screen .my-settings-button .icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* 아이콘 배지: 코랄 옅은 바탕 + 주색 아이콘 */
+.my-screen .my-incoming-icon,
+.my-screen .my-activity-grid > button > span,
+.my-screen .my-recommendation-link > span:first-child,
+.my-screen .my-quick-drafts-entry > span:first-child {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.my-screen .my-incoming-icon .icon,
+.my-screen .my-activity-grid > button > span .icon,
+.my-screen .my-recommendation-link > span:first-child .icon,
+.my-screen .my-quick-drafts-entry > span:first-child .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* 목록형 카드 행: 나를 구독하는 맛객, 취향 맛객 추천, 빠른 장소 기록 */
+.my-screen .my-incoming-summary,
+.my-screen .my-recommendation-link,
+.my-screen .my-quick-drafts-entry {
+  display: flex;
+  width: 100%;
+  min-height: 76px;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 16px 14px 16px 16px;
+  text-align: left;
+}
+.my-screen .my-incoming-copy,
+.my-screen .my-recommendation-link > span:nth-child(2),
+.my-screen .my-quick-drafts-entry > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+.my-screen .my-incoming-copy b,
+.my-screen .my-recommendation-link b,
+.my-screen .my-quick-drafts-entry b {
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+.my-screen .my-incoming-copy small,
+.my-screen .my-recommendation-link > span:nth-child(2) small,
+.my-screen .my-quick-drafts-entry > span:nth-child(2) small {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.my-screen .my-incoming-copy em {
+  gap: 8px;
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.my-screen .my-incoming-copy em span {
+  color: var(--color-primary-strong);
+}
+.my-screen .my-incoming-copy em i {
+  width: 4px;
+  height: 4px;
+  background: var(--color-line);
+}
+.my-screen .my-incoming-summary > strong,
+.my-screen .my-recommendation-link > strong,
+.my-screen .my-quick-drafts-entry > .my-quick-drafts-count {
+  flex: none;
+  color: var(--color-ink);
+  font-size: 20px;
+  font-weight: 800;
+}
+.my-screen .my-incoming-summary > strong small,
+.my-screen .my-recommendation-link > strong small,
+.my-screen .my-quick-drafts-entry > .my-quick-drafts-count > small {
+  margin-left: 2px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.my-screen .my-incoming-summary > .icon,
+.my-screen .my-recommendation-link > .icon,
+.my-screen .my-quick-drafts-entry > .icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--color-muted);
+}
+
+/* 보유 포인트 */
+.my-screen .points-summary {
+  display: flex;
+  height: auto;
+  min-height: 84px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+}
+.my-screen .points-summary > span {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--amber-50);
+  color: var(--amber-400);
+}
+.my-screen .points-summary > span .icon {
+  width: 20px;
+  height: 20px;
+}
+.my-screen .points-summary > div {
+  min-width: 0;
+  flex: 1;
+}
+.my-screen .points-summary small {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.my-screen .points-summary b {
+  color: var(--color-ink);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+.my-screen .points-summary em {
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 800;
+}
+.my-screen .points-summary > button {
+  height: 40px;
+  flex: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 16px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* 내 활동 */
+.my-screen .my-activity-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+.my-screen .my-activity-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 2px;
+}
+.my-screen .my-activity-heading h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 19px;
+}
+.my-screen .my-activity-heading small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.my-screen .my-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.my-screen .my-activity-grid > button {
+  display: grid;
+  min-height: 132px;
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: 44px 1fr auto;
+  align-items: start;
+  gap: 0 8px;
+  padding: 16px;
+  text-align: left;
+}
+.my-screen .my-activity-grid > button > span {
+  grid-column: 1;
+  grid-row: 1;
+}
+.my-screen .my-activity-grid > button > b {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  margin-top: 4px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  font-weight: 700;
+}
+.my-screen .my-activity-grid > button > strong {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  align-self: end;
+  margin-top: 14px;
+  color: var(--color-ink);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.my-screen .my-activity-grid > button > strong small {
+  margin-left: 2px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.my-screen .my-activity-grid > button > .icon {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+
+/* ═════════════ 마이 시트: 포인트 내역, 나를 구독하는 맛객, 빠른 장소 기록 ═════════════ */
+.my-screen .point-history-balance {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 16px 18px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.my-screen .point-history-balance small {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.my-screen .point-history-balance b {
+  color: var(--color-ink);
+  font-size: 22px;
+  font-weight: 800;
+}
+.my-screen .points-coming-soon {
+  margin: 12px 0 16px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--amber-50);
+  padding: 12px 14px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.my-screen .point-history-list {
+  margin-top: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 0 16px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.my-screen .point-history-list article {
+  min-height: 64px;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-line);
+  padding: 12px 0;
+}
+.my-screen .point-history-list article:last-child {
+  border-bottom: 0;
+}
+.my-screen .point-history-list article > span {
+  gap: 4px;
+}
+.my-screen .point-history-list article b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.my-screen .point-history-list article small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.my-screen .point-history-list article strong {
+  font-size: 16px;
+  font-weight: 800;
+}
+.my-screen .point-history-list .earned {
+  color: var(--color-primary);
+}
+.my-screen .point-history-list .spent {
+  color: var(--color-muted);
+}
+
+/* 시트 안 빈 화면 */
+.my-screen .points-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 12px;
+  text-align: center;
+}
+.my-screen .points-empty > span {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  margin: 0 0 8px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.my-screen .points-empty > span .icon {
+  width: 24px;
+  height: 24px;
+}
+.my-screen .points-empty h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+}
+.my-screen .points-empty p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* 나를 구독하는 맛객 */
+.my-screen .incoming-subscribers-intro,
+.my-screen .my-quick-drafts-sheet .quick-place-intro {
+  margin: 0 0 14px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.my-screen .incoming-subscriber-row {
+  min-height: 68px;
+  gap: 12px;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  background: transparent;
+  padding: 12px 2px;
+}
+.my-screen .incoming-subscriber-row:first-of-type {
+  border-top: 0;
+}
+.my-screen .incoming-subscriber-row > .avatar {
+  width: 48px;
+  height: 48px;
+}
+.my-screen .incoming-subscriber-row b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.my-screen .incoming-subscriber-copy small,
+.my-screen .incoming-subscriber-copy small.is-free,
+.my-screen .incoming-subscriber-copy small.is-paid {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 10px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.my-screen .incoming-subscriber-copy small.is-free {
+  background: var(--color-canvas);
+  color: var(--neutral-700);
+}
+.my-screen .incoming-trial-chip {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  border: 0;
+  background: var(--amber-50);
+  padding: 0 10px;
+  color: var(--neutral-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.my-screen .incoming-subscriber-row > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+
+/* 빠른 장소 기록 목록 */
+.my-screen .my-draft-list {
+  gap: 10px;
+}
+.my-screen .my-draft-card {
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 6px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--color-surface);
+  padding: 10px 10px 10px 12px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.my-screen .my-draft-open {
+  min-height: 56px;
+  grid-template-columns: 44px minmax(0, 1fr) 20px;
+  gap: 12px;
+}
+.my-screen .my-draft-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.my-screen .my-draft-icon .icon {
+  width: 20px;
+  height: 20px;
+}
+.my-screen .my-draft-copy b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.my-screen .my-draft-copy small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.my-screen .my-draft-copy em {
+  color: var(--color-subtle);
+  font-size: 12px;
+}
+.my-screen .my-draft-open-next {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+}
+.my-screen .my-draft-open-next .icon {
+  width: 18px;
+  height: 18px;
+}
+.my-screen .my-draft-card > .my-draft-delete {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: var(--color-canvas);
+  color: var(--color-muted);
+}
+.my-screen .my-drafts-loading,
+.my-screen .my-quick-drafts-sheet .quick-place-error {
+  font-size: 13px;
+}
+
+/* ═════════════ 내 구독 맛객 ═════════════ */
+.subscription-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--color-canvas);
+  padding: 16px 16px 32px;
+}
+.subscription-list > .collection-overview {
+  display: flex;
+  min-height: 80px;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 6px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 16px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.subscription-list > .collection-overview > span {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.subscription-list > .collection-overview > span .icon {
+  width: 20px;
+  height: 20px;
+}
+.subscription-list > .collection-overview > div b {
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+.subscription-list > .collection-overview > div small {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.subscription-list > .collection-overview > strong {
+  color: var(--color-ink);
+  font-size: 20px;
+  font-weight: 800;
+}
+.subscription-list > .collection-overview > strong small {
+  margin-left: 2px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 구독 맛객 행: 왼쪽 프로필, 오른쪽 위 유형 알약 + 아래 구독 취소 */
+.subscription-list > article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 8px 12px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 14px 14px 14px 16px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.subscription-list .subscription-profile {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  gap: 12px;
+  min-height: 64px;
+}
+.subscription-list .subscription-profile > .avatar {
+  width: 52px;
+  height: 52px;
+}
+.subscription-list .subscription-profile b {
+  display: block;
+  overflow: hidden;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.subscription-list .subscription-profile small {
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.subscription-list .subscription-profile .subscription-plan-label {
+  margin-top: 2px;
+  color: var(--color-primary-strong);
+  font-size: 12px;
+  font-weight: 600;
+}
+.subscription-list .subscription-type-chip,
+.subscription-list .subscription-type-chip.is-free,
+.subscription-list .subscription-type-chip.is-paid {
+  display: inline-flex;
+  min-width: 0;
+  height: 26px;
+  grid-column: 2;
+  grid-row: 1;
+  align-items: center;
+  justify-self: end;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 10px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.subscription-list .subscription-type-chip.is-free {
+  background: var(--color-canvas);
+  color: var(--neutral-700);
+}
+.subscription-list .subscription-cancel {
+  height: 36px;
+  grid-column: 2;
+  grid-row: 2;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 빈 화면: 아이콘 배지 + 제목 + 설명 + 작은 버튼 */
+.subscription-list > .empty-state,
+.notification-list > .empty-state {
+  min-height: 320px;
+  gap: 6px;
+  padding: 32px 16px;
+}
+.subscription-list > .empty-state > .icon,
+.notification-list > .empty-state > .icon {
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  margin: 0 0 8px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  padding: 16px;
+  color: var(--color-primary);
+}
+.subscription-list > .empty-state h2,
+.notification-list > .empty-state h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+}
+.subscription-list > .empty-state p,
+.notification-list > .empty-state p {
+  margin: 0 0 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.subscription-list > .empty-state > .primary-button {
+  width: auto;
+  min-height: 40px;
+  border-radius: var(--radius-pill);
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ═════════════ 알림 ═════════════ */
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--color-canvas);
+  padding: 12px 16px 32px;
+}
+.notification-list > .notification-toolbar {
+  min-height: 44px;
+  gap: 8px;
+}
+.notification-list .notification-mark-all,
+.notification-list .notification-delete-all {
+  min-height: 0;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.notification-list .notification-mark-all {
+  border: 0;
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+.notification-list .notification-mark-all:disabled {
+  background: var(--color-surface);
+  color: var(--color-subtle);
+}
+.notification-list .notification-delete-all {
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--neutral-700);
+}
+.notification-list .notification-entry {
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 4px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 14px 8px 14px 14px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+/* 읽은 알림은 그림자를 빼고 살짝 가라앉힙니다. */
+.notification-list .notification-entry.is-read {
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+  box-shadow: none;
+}
+.notification-list .notification-entry-open {
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0;
+}
+.notification-list .notification-entry-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.notification-list .notification-entry-icon .icon {
+  width: 20px;
+  height: 20px;
+}
+.notification-list .notification-entry.is-read .notification-entry-icon {
+  background: var(--color-canvas);
+  color: var(--color-muted);
+}
+.notification-list .notification-entry-copy {
+  gap: 4px;
+  padding-top: 1px;
+}
+.notification-list .notification-entry-copy b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.notification-list .notification-entry.is-read .notification-entry-copy b {
+  color: var(--neutral-700);
+  font-weight: 600;
+}
+.notification-list .notification-entry-copy p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.notification-list .notification-entry-copy time {
+  color: var(--color-subtle);
+  font-size: 12px;
+}
+.notification-list .notification-action-cue {
+  height: 28px;
+  margin-top: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 12px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.notification-list .notification-action-cue > span {
+  font-size: 16px;
+  line-height: 1;
+}
+.notification-list .notification-unread-dot {
+  width: 8px;
+  height: 8px;
+  margin: 6px 0 0;
+  background: var(--color-primary);
+}
+.notification-list .notification-entry-delete {
+  width: 40px;
+  height: 40px;
+  align-self: start;
+  border: 0;
+  background: transparent;
+  color: var(--color-subtle);
+}
+.notification-list .notification-entry-delete .icon {
+  width: 18px;
+  height: 18px;
+}
+.notification-list .notification-state {
+  padding: 40px 12px;
+  color: var(--color-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.notification-list .notification-state p {
+  margin: 0 0 12px;
+}
+.notification-list .notification-state button {
+  height: 40px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 16px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ═════════════ 설정 ═════════════ */
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--color-canvas);
+  padding: 16px 16px 32px;
+  color: var(--color-ink);
+}
+.settings-content > .settings-group {
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.settings-content > .settings-group > button {
+  display: flex;
+  width: 100%;
+  min-height: 68px;
+  align-items: center;
+  gap: 14px;
+  border: 0;
+  border-bottom: 1px solid var(--color-line);
+  background: transparent;
+  padding: 12px 16px;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: left;
+}
+.settings-content > .settings-group > button:last-child {
+  border-bottom: 0;
+}
+.settings-content > .settings-group > button > span:nth-child(2) {
+  flex: 1;
+}
+.settings-content .settings-row-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.settings-content .settings-row-icon .icon {
+  width: 20px;
+  height: 20px;
+}
+.settings-content > .settings-group > button > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+.settings-content > .settings-group > .settings-logout {
+  color: var(--color-primary-strong);
+}

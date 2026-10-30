@@ -17,11 +17,11 @@ function contentSecurityPolicy(authServerUrl: string): Plugin {
     "default-src 'self'",
     // Kakao 지도 SDK와 장소 검색(JSONP), SDK가 이어서 불러오는 daumcdn 스크립트를 허용합니다.
     "script-src 'self' https://dapi.kakao.com https://*.daumcdn.net",
-    // Kakao 지도는 인라인 style을 쓰고, Pretendard 글꼴 CSS는 jsDelivr에서 받습니다.
-    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-    // 등록 사진 미리보기(data:/blob:)와 지도 타일·마커 이미지를 허용합니다.
+    // Kakao 지도는 인라인 style을 쓰고, Pretendard 글꼴 CSS는 jsDelivr, 테마 제목 글꼴 CSS는 Google Fonts에서 받습니다.
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+    // 등록 사진 미리보기(data:/blob:), 지도 타일·마커 이미지, 테마 장식(data: SVG)을 허용합니다.
     "img-src 'self' data: blob: https://*.daumcdn.net https://*.kakao.com https://*.kakaocdn.net",
-    "font-src 'self' https://cdn.jsdelivr.net data:",
+    "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:",
     `connect-src 'self' ${authOrigin}`,
     "object-src 'none'",
     "base-uri 'self'",

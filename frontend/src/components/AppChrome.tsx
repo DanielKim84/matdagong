@@ -17,6 +17,13 @@ export function HomeHeader({ unread }: { unread: boolean }) {
       </button>
       <div>
         <button
+          className="icon-button"
+          onClick={() => go("map")}
+          aria-label="맛집 찾기"
+        >
+          <Icon name="search" />
+        </button>
+        <button
           className="icon-button bell-button"
           onClick={() => go("notifications")}
           aria-label="알림"
@@ -58,7 +65,7 @@ export function BottomTabs({ screen, accessToken, unread = false }: { screen: Sc
   const [quickOpen, setQuickOpen] = useState(false);
   const tabs = [
     { screen: "home", label: "홈", icon: "home" },
-    { screen: "map", label: "내 주변", icon: "search" },
+    { screen: "map", label: "내 주변", icon: "pin" },
     { screen: "register", label: "맛집 등록", icon: "plus" },
     { screen: "notifications", label: "알림", icon: "bell" },
     { screen: "my", label: "마이", icon: "user" },

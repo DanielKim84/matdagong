@@ -21,7 +21,14 @@ type Props = {
   recommendedTasters: Taster[];
   preferenceCount: number;
   onManagePreferences: () => void;
+  /** 인사말에 쓰는 내 맛객 이름 */
+  greetingName: string;
+  /** 구독 중인 맛객. 홈 상단 동그란 목록과 '구독한 맛객의 기록'에 씁니다. */
+  subscribedTasters: Taster[];
 };
+
+// 홈 상단에서 구독 맛객의 기록은 가로로 넘겨 볼 만큼만 보여 줍니다.
+const SUBSCRIBED_RECORD_LIMIT = 6;
 const categories = ["전체", "한식", "일식", "중식", "양식", "카페/디저트"];
 const bannerSlides = [
   {
@@ -73,6 +80,8 @@ export default function HomeScreen({
   recommendedTasters,
   preferenceCount,
   onManagePreferences,
+  greetingName,
+  subscribedTasters,
 }: Props) {
   const [category, setCategory] = useState("전체");
   const [bannerIndex, setBannerIndex] = useState(0);
@@ -99,6 +108,16 @@ export default function HomeScreen({
     setBannerIndex((current) => (current + (distance < 0 ? 1 : bannerSlides.length - 1)) % bannerSlides.length);
     window.setTimeout(() => { skipBannerClick.current = false; }, 0);
   }
+  // 구독한 맛객이 남긴 공개 기록을 장소별로 하나씩 모읍니다. 광고 장소는 제외합니다.
+  const subscribedIds = new Set(subscribedTasters.map((taster) => taster.tasterId));
+  const subscribedRecords = places
+    .filter((place) => !place.advertisement)
+    .flatMap((place) => {
+      const taster = place.tasters.find((candidate) => subscribedIds.has(candidate.tasterId));
+      return taster ? [{ place, taster }] : [];
+    })
+    .slice(0, SUBSCRIBED_RECORD_LIMIT);
+
   // 홈의 인기 목록에는 광고 상품을 섞지 않고 맛객이 남긴 공개 기록을 보여줍니다.
   let visible = places.filter((place) => !place.advertisement);
   if (category !== "전체")
@@ -145,6 +164,43 @@ export default function HomeScreen({
     <>
       <HomeHeader unread={unread} />
       <main className="home-content">
+        <h1 className="home-greeting">{greetingName}님, 오늘은<br />누구의 입맛을 따라가 볼까요?</h1>
+        {subscribedTasters.length > 0 && (
+          <nav className="home-subscribed-tasters" aria-label="구독 중인 맛객">
+            {subscribedTasters.map((taster) => (
+              <button type="button" key={taster.tasterId} onClick={() => go("profile", taster.tasterId)}>
+                <span className="home-subscribed-ring"><Avatar src={taster.avatar} name={taster.tasterName} variant={taster.avatarVariant} /></span>
+                <small>{taster.tasterName}</small>
+              </button>
+            ))}
+          </nav>
+        )}
+        {subscribedRecords.length > 0 && (
+          <section className="home-subscribed-records">
+            <div className="home-section-heading">
+              <h2>구독한 맛객의 기록</h2>
+              <button type="button" onClick={() => go("subscriptions")}>구독 관리</button>
+            </div>
+            <div className="home-subscribed-record-list">
+              {subscribedRecords.map(({ place, taster }) => {
+                const photo = taster.photos?.[0] ?? photoFor(place.id);
+                return (
+                  <button type="button" className="home-subscribed-record" key={`${place.id}-${taster.tasterId}`} onClick={() => go("place", place.id)}>
+                    <span className="home-subscribed-record-photo">
+                      {photo ? <img className="food-photo" src={photo} alt="" loading="lazy" decoding="async" /> : <FoodPhoto place={place} />}
+                      <span className="home-subscribed-record-author"><Avatar src={taster.avatar} name={taster.tasterName} variant={taster.avatarVariant} />{taster.tasterName}</span>
+                    </span>
+                    <span className="home-subscribed-record-copy">
+                      <span className="home-subscribed-record-title"><b>{place.name}</b><small>{place.category}</small></span>
+                      {taster.note && <q>{taster.note}</q>}
+                      {taster.tags?.length ? <span className="home-subscribed-record-tags">{taster.tags.slice(0, 2).map((tag) => <i key={tag}>{tag}</i>)}</span> : null}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
         <div className="home-banner-carousel"
           onPointerDown={(event) => { bannerPointerStart.current = { x: event.clientX, y: event.clientY }; }}
           onPointerUp={handleBannerPointerUp}

@@ -31,6 +31,7 @@ public final class SubscriptionModels {
             int subscriberCount,
             List<String> profileTags,
             List<String> matchedTags,
+            /** 나와의 취향 일치율(0~100). 내 취향 태그 중 이 맛객의 프로필 태그와 겹치는 비율입니다. */
             int matchScore) {}
 
     public record PaidPlan(int termMonths, BigDecimal priceAmount) {}

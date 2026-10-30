@@ -1,0 +1,734 @@
+/* 리뉴얼 discover 화면 전용 규칙입니다. 공통 부품은 ui.css 를 씁니다. */
+
+/* ── 화면 틀: 지도가 화면 전체를 채웁니다. ── */
+.r-discover {
+  /* 접힘 시트 = 제목 줄 + 떠 있는 하단 탭 자리 (DiscoverScreen 의 PEEK_HEIGHT 와 같은 값) */
+  --r-discover-peek: calc(176px + env(safe-area-inset-bottom));
+  position: relative;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--neutral-100);
+}
+.app-view.has-tabbar .r-discover {
+  padding-bottom: 0;
+}
+@media (min-width: 700px) {
+  .r-discover {
+    height: 100%;
+  }
+}
+.r-discover__map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--neutral-100);
+}
+.r-discover .map-error {
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 12%, transparent);
+}
+
+/* 지도 SDK 부품(MapCanvas)의 내 위치 버튼을 카드 위 오른쪽 둥근 버튼으로 옮깁니다. */
+.r-discover .map-location {
+  top: auto;
+  right: 16px;
+  bottom: calc(var(--r-discover-peek) + 148px);
+  left: auto;
+  flex-direction: row-reverse;
+  transition: bottom 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s;
+}
+.r-discover[data-sheet="half"] .map-location {
+  bottom: calc(var(--r-discover-half, 50%) + 12px);
+}
+.r-discover[data-sheet="full"] .map-location {
+  visibility: hidden;
+  opacity: 0;
+}
+.r-discover .map-location > button {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-surface);
+  padding: 0;
+  color: var(--color-ink);
+  font-size: 0;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 12%, transparent);
+}
+.r-discover .map-location > button .icon {
+  width: 22px;
+  height: 22px;
+}
+.r-discover .map-location > small {
+  max-width: 200px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  padding: 8px 10px;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 12%, transparent);
+}
+
+/* 고른 카드의 지도 핀을 키워 앞으로 꺼냅니다. */
+.r-discover .taster-map-marker,
+.r-discover .map-category-marker {
+  transform-origin: 50% 100%;
+  transition: transform 0.18s ease-out;
+}
+.r-discover .taster-map-marker.is-focused,
+.r-discover .map-category-marker.is-focused {
+  position: relative;
+  z-index: 2;
+  transform: scale(1.32);
+  filter: drop-shadow(0 6px 8px color-mix(in srgb, var(--shadow-color) 30%, transparent));
+}
+
+/* ── 위에 떠 있는 검색창·알림·필터 칩 ── */
+.r-discover__top {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 12px);
+  right: 0;
+  left: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.r-discover__top > * {
+  pointer-events: auto;
+}
+.r-discover__search-row {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px;
+}
+.r-discover-search {
+  display: flex;
+  min-width: 0;
+  height: 48px;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 4px 0 16px;
+  color: var(--color-muted);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 12%, transparent);
+}
+.r-discover-search:focus-within {
+  outline: 2px solid var(--brand-300);
+  outline-offset: 1px;
+}
+.r-discover-search > .icon {
+  width: 18px;
+  height: 18px;
+}
+.r-discover-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--color-ink);
+  font-size: 16px;
+}
+.r-discover-search input::placeholder {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.r-discover-search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.r-discover-search__clear {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  padding: 0;
+  color: var(--color-muted);
+}
+.r-discover-search__clear .icon {
+  width: 16px;
+  height: 16px;
+}
+.r-discover .r-discover__search-row .r-icon-button--float {
+  width: 48px;
+  height: 48px;
+}
+
+.r-discover-chips {
+  padding: 3px 16px 6px;
+}
+.r-discover-chips .r-chip {
+  position: relative;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+/* 칩 높이는 38px이지만 누르는 영역은 44px로 넓힙니다. */
+.r-discover-chips .r-chip::after {
+  position: absolute;
+  inset: -3px 0;
+  content: "";
+}
+.r-discover-chips__filter i {
+  display: inline-grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  margin-left: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 0 5px;
+  color: var(--on-strong);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+.r-discover-chips__divider {
+  width: 1px;
+  height: 20px;
+  flex: none;
+  align-self: center;
+  background: var(--neutral-200);
+}
+.r-discover-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: center;
+  margin: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 8px 14px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 10%, transparent);
+}
+.r-discover-status > button {
+  min-height: 44px;
+  margin: -12px -6px -12px 0;
+  border: 0;
+  background: none;
+  padding: 0 8px;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* ── 지도 위에서 넘기는 장소 카드(접힘 상태에서만) ── */
+.r-discover__float {
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--r-discover-peek) + 6px);
+  left: 0;
+  z-index: 4;
+  transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+}
+.r-discover:not([data-sheet="peek"]) .r-discover__float {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(16px);
+}
+.r-discover__float-card {
+  margin: 0 16px 8px;
+}
+.r-discover-carousel {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin: 0;
+  padding: 4px 16px 14px;
+  list-style: none;
+  scroll-padding-left: 16px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.r-discover-carousel::-webkit-scrollbar {
+  display: none;
+}
+.r-discover-carousel > li {
+  display: flex;
+  flex: 0 0 min(300px, 82%);
+  scroll-snap-align: start;
+}
+.r-discover-card {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  border: 2px solid transparent;
+  border-radius: 22px;
+  background: var(--color-surface);
+  padding: 10px;
+  color: var(--color-ink);
+  text-align: left;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--shadow-color) 14%, transparent);
+  transition: border-color 0.18s;
+}
+.r-discover-card.is-focused {
+  border-color: var(--color-primary);
+}
+.r-discover-card .r-discover-thumb {
+  width: 96px;
+  height: 96px;
+  border-radius: 16px;
+}
+.r-discover-card__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 2px;
+}
+.r-discover-card__name {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-discover-card__copy > small {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-discover-card__note {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--neutral-700);
+  font-size: 12px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.r-discover-card--skeleton {
+  width: auto;
+  height: 120px;
+  margin: 0 16px 14px;
+  animation: r-discover-pulse 1.3s ease-in-out infinite;
+}
+
+/* 사진과 사진이 없을 때의 자리 */
+.r-discover-thumb {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--neutral-100);
+  object-fit: cover;
+}
+.r-discover-thumb--empty {
+  background: var(--brand-50);
+  color: var(--brand-400);
+}
+.r-discover-thumb--empty .icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* 대표 맛객 한 줄 */
+.r-discover-taster {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.r-discover-taster .avatar {
+  width: 22px;
+  height: 22px;
+  border-width: 2px;
+}
+.r-discover-taster .r-avatar-stack .avatar + .avatar {
+  margin-left: -7px;
+}
+.r-discover-taster > b {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-discover-taster__sub {
+  flex: none;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+.r-discover-taster .r-match {
+  height: 20px;
+  flex: none;
+  padding: 0 7px;
+  font-size: 11px;
+}
+
+/* ── 끌어 올리는 목록 시트 ── */
+.r-discover-sheet {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 6;
+  display: flex;
+  height: var(--r-discover-peek);
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 28px 28px 0 0;
+  background: var(--color-canvas);
+  box-shadow: 0 -8px 24px color-mix(in srgb, var(--shadow-color) 12%, transparent);
+  transition: height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.r-discover[data-sheet="half"] .r-discover-sheet {
+  height: var(--r-discover-half, 50%);
+}
+.r-discover[data-sheet="full"] .r-discover-sheet {
+  height: var(--r-discover-full, calc(100% - 150px));
+}
+.r-discover-sheet.is-dragging {
+  transition: none;
+}
+.r-discover-sheet__head {
+  flex: none;
+  padding: 0 20px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.r-discover-sheet__grab {
+  display: block;
+  width: 100%;
+  height: 44px;
+  border: 0;
+  background: none;
+  padding: 10px 0 0;
+}
+.r-discover-sheet__grab i {
+  display: block;
+  width: 40px;
+  height: 5px;
+  margin: 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-200);
+}
+.r-discover-sheet__title {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -16px;
+}
+.r-discover .r-discover-sheet__title h2 {
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-discover-sheet__sort {
+  display: inline-flex;
+  min-height: 44px;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: none;
+  padding: 0 0 0 8px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-discover-sheet__sort:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.r-discover-sheet__sort .icon {
+  width: 16px;
+  height: 16px;
+}
+.r-discover-sheet__body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px 20px calc(110px + env(safe-area-inset-bottom));
+  scrollbar-width: none;
+}
+.r-discover-sheet__body::-webkit-scrollbar {
+  display: none;
+}
+/* 접힘 상태에서는 제목 줄만 보이고, 아래 섹션이 하단 탭 사이로 비치지 않게 감춥니다. */
+.r-discover[data-sheet="peek"] .r-discover-sheet__body {
+  overflow: hidden;
+  visibility: hidden;
+  opacity: 0;
+}
+.r-discover-sheet__body {
+  transition: opacity 0.2s;
+}
+
+.r-discover-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-discover-section__hint {
+  margin: -6px 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.r-discover-section__list-head {
+  margin-bottom: -12px;
+}
+
+/* 가로로 넘기는 작은 카드 묶음 */
+.r-discover-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin: 0 -20px;
+  padding: 2px 20px 8px;
+  list-style: none;
+  scroll-padding-left: 20px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+.r-discover-strip::-webkit-scrollbar {
+  display: none;
+}
+.r-discover-strip > li {
+  display: flex;
+  flex: 0 0 168px;
+  scroll-snap-align: start;
+}
+.r-discover-mini {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--color-surface);
+  padding: 8px 8px 12px;
+  color: var(--color-ink);
+  text-align: left;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.r-discover-mini .r-discover-thumb {
+  width: 100%;
+  height: 104px;
+  border-radius: 12px;
+}
+.r-discover-mini > b {
+  overflow: hidden;
+  padding: 0 4px;
+  font-size: 14px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-discover-mini > small {
+  overflow: hidden;
+  padding: 0 4px;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-discover-mini > .r-discover-taster {
+  padding: 0 4px;
+}
+.r-discover-mini > q {
+  display: -webkit-box;
+  overflow: hidden;
+  padding: 0 4px;
+  color: var(--neutral-700);
+  font-size: 12px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.r-discover-mini__who {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 4px;
+}
+.r-discover-mini__who > small {
+  flex: none;
+  font-size: 11px;
+}
+
+/* 장소 목록 행 */
+.r-discover-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-discover-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 20px;
+  background: var(--color-surface);
+  padding: 10px 12px 10px 10px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 6%, transparent);
+}
+.r-discover-row__main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  text-align: left;
+}
+.r-discover-row__main .r-discover-thumb {
+  width: 76px;
+  height: 76px;
+}
+.r-discover-row__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-discover-row__copy > b {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-discover-row__copy > small {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-discover-row__save {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--neutral-100);
+  padding: 0;
+  color: var(--neutral-600);
+}
+.r-discover-row__save .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-discover-row__save.is-on {
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.r-discover-row__mine {
+  flex: none;
+}
+.r-discover-row--skeleton {
+  height: 96px;
+  animation: r-discover-pulse 1.3s ease-in-out infinite;
+}
+.r-discover-empty {
+  padding: 22px 20px;
+}
+
+@keyframes r-discover-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .r-discover-sheet,
+  .r-discover__float,
+  .r-discover .map-location,
+  .r-discover .taster-map-marker,
+  .r-discover .map-category-marker {
+    transition: none;
+  }
+}
+
+/* ── 필터 시트 ── */
+.r-discover-filter__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.r-discover-filter__group {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.r-discover-filter__group > legend {
+  margin-bottom: 10px;
+  padding: 0;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+.r-discover-filter__note {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-discover-filter__group > legend + .r-discover-filter__note {
+  margin-top: 0;
+}
+/* 조건이 많아 시트가 길어져도 적용 버튼은 아래에 붙어 있습니다. */
+.r-discover-filter__actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+  background: var(--color-canvas);
+  padding-top: 12px;
+}
+.r-discover-filter__actions > .r-button--secondary {
+  flex: none;
+  padding: 0 18px;
+}
+.r-discover-filter__actions > .r-button--primary {
+  flex: 1;
+}

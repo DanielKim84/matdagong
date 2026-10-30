@@ -6,22 +6,23 @@ import { isSessionExpiring } from "../services/http";
 import { LIKE_CONVERSION_HANDOFF_KEY } from "../services/registerDraft";
 import { accessTokenClaims, accountIdFromAccessToken } from "../utils/accessToken";
 import { go, useRoute } from "./navigation";
-import { BottomTabs, ScreenHeader } from "../components/AppChrome";
-import HomeScreen from "../screens/HomeScreen";
-import MapScreen from "../screens/MapScreen";
-import RegisterScreen from "../screens/RegisterScreen";
-import PlaceScreen from "../screens/PlaceScreen";
-import ProfileScreen from "../screens/ProfileScreen";
-import MyScreen from "../screens/MyScreen";
-import {
-  CollectionScreen,
-  NotificationsScreen,
-  SubscriptionsScreen,
-} from "../screens/CollectionScreen";
-import SettingsScreen from "../screens/SettingsScreen";
 import ProfileSettingsScreen from "../screens/ProfileSettingsScreen";
-import IntroScreen from "../screens/IntroScreen";
-import RecommendedTastersScreen from "../screens/RecommendedTastersScreen";
+import { AppDataContext, type AppData } from "./AppData";
+import TabBar, { tabForScreen } from "../components/TabBar";
+import DiscoverScreen from "../screens/discover/DiscoverScreen";
+import FeedScreen from "../screens/feed/FeedScreen";
+import NotificationsScreen from "../screens/feed/NotificationsScreen";
+import RecordScreen from "../screens/record/RecordScreen";
+import PlaceDetailScreen from "../screens/place/PlaceDetailScreen";
+import TastersScreen from "../screens/tasters/TastersScreen";
+import TasterProfileScreen from "../screens/tasters/TasterProfileScreen";
+import SubscriptionsManageScreen from "../screens/tasters/SubscriptionsManageScreen";
+import MeScreen from "../screens/me/MeScreen";
+import DiaryScreen from "../screens/me/DiaryScreen";
+import CollectionsScreen from "../screens/me/CollectionsScreen";
+import WalletScreen from "../screens/me/WalletScreen";
+import AccountSettingsScreen from "../screens/me/AccountSettingsScreen";
+import OnboardingScreen from "../screens/onboarding/OnboardingScreen";
 import NoticeToast, { type NoticeKind } from "../components/NoticeToast";
 import { NotificationDialogProvider, useNotificationDialog } from "../components/NotificationDialog";
 import SubscriptionOfferSheet from "../screens/SubscriptionOfferSheet";
@@ -251,7 +252,7 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
   }, [accessToken, refreshCommunity]);
 
   useEffect(() => {
-    if (route.screen === "my") void refreshMySummary().catch(() => {});
+    if (route.screen === "my" || route.screen === "recent" || route.screen === "saved" || route.screen === "liked") void refreshMySummary().catch(() => {});
     const refreshAfterActivityChange = () => void refreshMySummary().catch(() => {});
     window.addEventListener(MY_ACTIVITY_CHANGED_EVENT, refreshAfterActivityChange);
     return () => window.removeEventListener(MY_ACTIVITY_CHANGED_EVENT, refreshAfterActivityChange);
@@ -470,7 +471,6 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
     .filter((taster) => publicTasterIds.has(taster.tasterId) || profileAccountIds.has(taster.tasterId))
     .forEach((taster) => tasterById.set(taster.tasterId, taster));
   const tasters: Taster[] = [...tasterById.values()];
-  const activeTaster = tasters.find((taster) => taster.tasterId === route.id);
   const subscriptionIds = subscriptions.map((subscription) => subscription.targetAccountId);
   const recommendedTasters = publicCommunityTasters
     .filter((taster) =>
@@ -544,7 +544,8 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
       setNotice({ kind: "error", title: "내 맛집을 변경하지 못했어요", message: cause instanceof Error ? cause.message : "잠시 후 다시 시도해 주세요." });
     }
   }
-  async function register(place: NewPlace, convertFromPlaceId?: string, visitedConfirmed = false) {
+  /** 기록을 저장하고 저장된 장소를 돌려줍니다. stayOnScreen이면 새 기록 저장 뒤 상세로 옮기지 않고 호출한 화면이 완료 화면을 그립니다. */
+  async function register(place: NewPlace, convertFromPlaceId?: string, visitedConfirmed = false, stayOnScreen = false): Promise<Place> {
     // 등록 화면 주소에 기록 ID가 있으면(#register/<id>) 기존 기록 수정입니다.
     const editing = route.screen === "register" && !!route.id;
     try {
@@ -580,12 +581,16 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
       if (place.visibility === "public") setPlaces((current) => [created, ...current.filter((item) => item.id !== created.id)]);
       setDetail(created);
       if (editing) setRetry((current) => current + 1);
-      // 등록 완료 상세에서 뒤로 가면 등록 폼 대신 지도로 돌아가도록 경로를 정리합니다.
-      go("map", "", true);
-      go("place", created.id);
-      setNotice(notificationSaved
+      const stay = stayOnScreen && !editing;
+      if (!stay) {
+        // 등록 완료 상세에서 뒤로 가면 등록 폼 대신 지도로 돌아가도록 경로를 정리합니다.
+        go("map", "", true);
+        go("place", created.id);
+      }
+      if (!stay || !notificationSaved) setNotice(notificationSaved
         ? { kind: "success", title: editing ? "맛집 내용을 수정했어요" : "맛집을 등록했어요", message: editing ? "변경한 내용을 저장했어요." : "맛객 기록과 알림을 저장했어요." }
         : { kind: "error", title: "맛집은 등록했지만 알림 저장에 실패했어요", message: "맛집 기록은 저장됐어요. 알림함에는 다시 표시되지 않을 수 있어요." });
+      return created;
     } catch (cause) {
       setNotice({ kind: "error", title: editing ? "맛집 내용을 수정하지 못했어요" : "맛집을 등록하지 못했어요", message: cause instanceof Error ? cause.message : "잠시 후 다시 시도해 주세요." });
       throw cause;
@@ -669,207 +674,105 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
     const subscription = subscriptions.find((item) => item.targetAccountId === tasterId);
     if (subscription) await cancelSubscriptionById(subscription.subscriptionId);
   }
-  const bottomVisible = ![
-    "place",
-    "profile",
-    "register",
-    "intro",
-    "profile-edit",
-  ].includes(route.screen);
-  let screen;
-
-  if (route.screen === "home")
-    screen = (
-      <HomeScreen
-        places={allPlaces}
-        loading={loading}
-        error={error}
-        liked={likedPlaceIds}
-        unread={notificationFeed.unreadCount > 0}
-        onLike={toggleLike}
-        onRetry={() => setRetry(retry + 1)}
-        photoFor={photoFor}
-        recommendedTasters={recommendedTasters}
-        preferenceCount={myProfile?.preferenceTags?.length ?? 0}
-        onManagePreferences={() => go("profile-edit", "taste")}
-      />
-    );
-  else if (route.screen === "map")
-    screen = (
-      <MapScreen
-        places={allPlaces}
-        privatePlaces={privateRecords}
-        subscriptions={subscriptionIds}
-        liked={likedPlaceIds}
-        recommendedTasterIds={recommendedTasters.map((taster) => taster.tasterId)}
-        query={query}
-        onQuery={setQuery}
-        loading={loading}
-        error={error}
-      />
-    );
-  else if (route.screen === "register") {
-    // 수정할 기록을 늦게 불러오면 key가 바뀌어 그 내용으로 폼을 새로 열고, 새 등록과 수정 입력이 섞이지 않게 합니다.
-    const editRegisterPlace = route.id
-      ? [...allRegistered, ...legacyPrivate.map(enrichPlace)].find((place) => place.id === route.id)
-      : undefined;
-    screen = (
-      <RegisterScreen
-        key={route.id ? `edit:${route.id}:${editRegisterPlace ? "ready" : "loading"}` : "new"}
-        places={allPlaces}
-        likedPlaceIds={likedPlaceIds}
-        visitedLikedPlaceIds={visitedLikedPlaceIds}
-        editPlace={editRegisterPlace}
-        editPlaceId={route.id || undefined}
-        tasteTags={tasteTags}
-        defaultFocus={myProfile?.tasterFocus ?? "BOTH"}
-        accessToken={accessToken}
-        onRegister={register}
-        onRequest={requestTag}
-        onLoadRequests={loadTagRequests}
-      />
-    );
-  }
-  else if (route.screen === "place")
-    screen = activePlace ? (
-      <PlaceScreen
-        key={activePlace.id}
-        place={activePlace}
-        own={own}
-        subscribedTasterIds={subscriptionIds}
-        liked={likedPlaceIds.includes(activePlace.id)}
-        canConvertLikedToRecord={visitedLikedPlaceIds.includes(activePlace.id)}
-        onLike={() => toggleLike(activePlace.id)}
-        onConvertToRecord={() => startRecordConversion(activePlace)}
-        onConvertToLike={() => void convertRecordToLike(activePlace)}
-        onEditRecord={() => go("register", activePlace.id)}
-        onMessage={(message) =>
-          setNotice({ kind: "info", title: "맛다공에서 알려드려요", message })
+  /** 수정할 내 기록(#register/<id>)을 서버 기록과 아직 옮기지 못한 브라우저 기록에서 찾습니다. */
+  const editablePlace = (id: string) =>
+    [...allRegistered, ...legacyPrivate.map(enrichPlace)].find((place) => place.id === id);
+  const runNotificationUpdate = (request: Promise<unknown>, failureTitle: string) => {
+    void request
+      .then(() => refreshNotifications())
+      .catch((cause: Error) => setNotice({ kind: "error", title: failureTitle, message: cause.message }));
+  };
+  const appData: AppData = {
+    accessToken,
+    displayName,
+    myProfile,
+    nickname: myProfile?.nickname ?? displayName,
+    accountRole: accountRole(accessToken, registered.some((place) =>
+      place.tasters.some((taster) => taster.visibility === "PUBLIC"),
+    )),
+    places: allPlaces,
+    privatePlaces: privateRecords,
+    myRecords: allRegistered,
+    recentPlaces: recentPlaces.map(enrichPlace),
+    likedPlaceIds,
+    visitedLikedPlaceIds,
+    activePlace,
+    legacyOwnRecord: own,
+    editablePlace,
+    subscriptions,
+    subscriptionIds,
+    currentFreeSubscription,
+    incomingSubscriptions,
+    points,
+    tasters,
+    tasterById,
+    recommendedTasters,
+    tasteTags,
+    notificationFeed,
+    notificationLoading,
+    notificationError,
+    unread: notificationFeed.unreadCount > 0,
+    loading,
+    error,
+    query,
+    setQuery,
+    isMyTasterId,
+    photoFor,
+    actions: {
+      retry: () => setRetry((current) => current + 1),
+      notify: setNotice,
+      toggleLike,
+      openSubscription,
+      cancelSubscriptionById,
+      cancelTasterSubscription,
+      register,
+      startRecordConversion,
+      convertRecordToLike,
+      refreshCommunity,
+      refreshNotifications,
+      markNotificationRead: (item: UserNotification) => {
+        if (!item.readAt) runNotificationUpdate(markNotificationRead(accessToken, item.notificationId), "알림을 읽음 처리하지 못했어요");
+      },
+      markAllNotificationsRead: () => runNotificationUpdate(markAllNotificationsRead(accessToken), "알림을 읽음 처리하지 못했어요"),
+      deleteNotification: (id: string) => runNotificationUpdate(deleteNotification(accessToken, id), "알림을 삭제하지 못했어요"),
+      deleteAllNotifications: async () => {
+        const accepted = await confirm({
+          title: "알림을 모두 삭제할까요?",
+          message: "삭제한 알림은 다시 확인할 수 없어요.",
+          tone: "danger",
+          confirmLabel: "모두 삭제",
+        });
+        if (!accepted) return;
+        try {
+          await deleteAllNotifications(accessToken);
+          setNotificationFeed({ items: [], unreadCount: 0 });
+        } catch (cause) {
+          const message = cause instanceof Error ? cause.message : "알림을 삭제하지 못했어요.";
+          setNotice({ kind: "error", title: "알림을 모두 삭제하지 못했어요", message });
         }
-      />
-    ) : (
-      <>
-        <ScreenHeader title="맛집 상세" fallback="map" />
-        <div className="empty-state">
-          <p>
-            {loading
-              ? "맛집을 불러오고 있어요…"
-              : "맛집 정보를 찾을 수 없어요."}
-          </p>
-          <button className="outline-button" onClick={() => go("home")}>
-            홈으로 돌아가기
-          </button>
-        </div>
-      </>
-    );
-  else if (route.screen === "profile")
-    screen = activeTaster ? (
-      <ProfileScreen
-        key={activeTaster.tasterId}
-        taster={activeTaster}
-        places={allPlaces}
-        tasteTags={tasteTags}
-        subscribed={subscriptionIds.includes(activeTaster.tasterId)}
-        subscription={subscriptions.find((item) => item.targetAccountId === activeTaster.tasterId)}
-        onSubscribe={() => openSubscription(activeTaster.tasterId)}
-        onUnsubscribe={() => cancelTasterSubscription(activeTaster.tasterId)}
-      />
-    ) : (
-      <>
-        <ScreenHeader title="맛객 프로필" fallback="my" />
-        <div className="empty-state">
-          <p>맛객 정보를 찾을 수 없어요.</p>
-          <button className="outline-button" onClick={() => go("home")}>
-            홈으로 돌아가기
-          </button>
-        </div>
-      </>
-    );
-  else if (route.screen === "my")
-    screen = (
-      <MyScreen
-        collectionCount={new Set(likedPlaceIds).size}
-        registeredCount={allRegistered.length}
-        recentCount={recentPlaces.length}
-        subscribedCount={subscriptionIds.length}
-        recommendedTasterCount={recommendedTasters.length}
-        nickname={myProfile?.nickname ?? displayName}
-        accountRole={accountRole(accessToken, registered.some((place) =>
-          place.tasters.some((taster) => taster.visibility === "PUBLIC"),
-        ))}
-        profileImgUrl={myProfile?.profileImgUrl ?? null}
-        avatarVariant={myProfile?.avatarVariant ?? 1}
-        incomingSubscriptions={incomingSubscriptions}
-        points={points}
-        accessToken={accessToken}
-      />
-    );
-  else if (route.screen === "notifications")
-    screen = (
-      <NotificationsScreen
-        items={notificationFeed.items}
-        unreadCount={notificationFeed.unreadCount}
-        loading={notificationLoading}
-        error={notificationError}
-        onRetry={() => void refreshNotifications(true)}
-        onMarkAllRead={() => {
-          void markAllNotificationsRead(accessToken)
-            .then(() => refreshNotifications())
-            .catch((cause: Error) => setNotice({ kind: "error", title: "알림을 읽음 처리하지 못했어요", message: cause.message }));
-        }}
-        onRead={(item: UserNotification) => {
-          if (!item.readAt) {
-            void markNotificationRead(accessToken, item.notificationId)
-              .then(() => refreshNotifications())
-              .catch((cause: Error) => setNotice({ kind: "error", title: "알림을 읽음 처리하지 못했어요", message: cause.message }));
-          }
-        }}
-        onDelete={(id: string) => {
-          void deleteNotification(accessToken, id)
-            .then(() => refreshNotifications())
-            .catch((cause: Error) => setNotice({ kind: "error", title: "알림을 삭제하지 못했어요", message: cause.message }));
-        }}
-        onDeleteAll={async () => {
-          const accepted = await confirm({
-            title: "알림을 모두 삭제할까요?",
-            message: "삭제한 알림은 다시 확인할 수 없어요.",
-            tone: "danger",
-            confirmLabel: "모두 삭제",
-          });
-          if (!accepted) return;
-          try {
-            await deleteAllNotifications(accessToken);
-            setNotificationFeed({ items: [], unreadCount: 0 });
-          } catch (cause) {
-            const message = cause instanceof Error ? cause.message : "알림을 삭제하지 못했어요.";
-            setNotice({ kind: "error", title: "알림을 모두 삭제하지 못했어요", message });
-          }
-        }}
-      />
-    );
-  else if (route.screen === "subscriptions")
-    screen = (
-      <SubscriptionsScreen
-        subscriptions={subscriptions.map((subscription) => ({
-          ...subscription,
-          taster: communityTasters.find(
-            (taster) => taster.tasterId === subscription.targetAccountId,
-          ) ?? {
-            tasterId: subscription.targetAccountId,
-            tasterName: subscription.targetNickname,
-            tag: "맛객",
-            avatar: "",
-            avatarVariant: 1,
-            note: "맛있는 장소를 찾아 기록하고 있어요.",
-          },
-        }))}
-        onCancel={cancelSubscriptionById}
-      />
-    );
-  else if (route.screen === "taster-recommendations")
-    screen = <RecommendedTastersScreen tasters={recommendedTasters} />;
-  else if (route.screen === "settings")
-    screen = <SettingsScreen onLogout={onLogout} />;
+      },
+      requestTag,
+      loadTagRequests,
+      logout: onLogout,
+    },
+  };
+
+  // 하단 탭은 발견·피드·맛객·나 첫 화면에서만 보이고, 나머지 화면은 각자 상단 바의 뒤로 버튼을 씁니다.
+  const activeTab = tabForScreen(route.screen);
+  let screen;
+  if (route.screen === "home" || route.screen === "map") screen = <DiscoverScreen />;
+  else if (route.screen === "feed") screen = <FeedScreen />;
+  else if (route.screen === "register") screen = <RecordScreen />;
+  else if (route.screen === "place") screen = <PlaceDetailScreen />;
+  else if (route.screen === "profile") screen = <TasterProfileScreen />;
+  else if (route.screen === "tasters" || route.screen === "taster-recommendations") screen = <TastersScreen />;
+  else if (route.screen === "subscriptions") screen = <SubscriptionsManageScreen />;
+  else if (route.screen === "my") screen = <MeScreen />;
+  else if (route.screen === "diary") screen = <DiaryScreen />;
+  else if (route.screen === "wallet") screen = <WalletScreen />;
+  else if (route.screen === "notifications") screen = <NotificationsScreen />;
+  else if (route.screen === "settings") screen = <AccountSettingsScreen />;
+  else if (route.screen === "intro") screen = <OnboardingScreen />;
   else if (route.screen === "profile-edit")
     screen = myProfile ? (
       <ProfileSettingsScreen
@@ -920,84 +823,50 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
     ) : (
       <div className="empty-state"><p>프로필을 불러오고 있어요…</p></div>
     );
-  else if (route.screen === "intro") screen = <IntroScreen onComplete={() => go("home", "", true)} />;
-  else {
-    // "liked"는 예전 하트 목록 주소(#liked)로, "saved"와 같은 목록을 보여줍니다.
-    const titles = {
-      saved: "내 맛집",
-      diary: "내가 등록한 맛집",
-      liked: "내 맛집",
-      recent: "최근 본 맛집",
-    };
-    // 최근 본 맛집은 서버가 장소 정보까지 돌려주고, 나머지는 ID로 현재 목록에서 찾습니다.
-    const ids =
-      route.screen === "saved" || route.screen === "liked"
-        ? [...new Set(likedPlaceIds)]
-        : route.screen === "diary"
-          ? allRegistered.map((place) => place.id)
-          : [];
-    screen = (
-      <CollectionScreen
-        title={titles[route.screen as keyof typeof titles] ?? "나의 기록"}
-        places={route.screen === "recent" ? recentPlaces.map(enrichPlace) : ids
-          .map((id) => [...allPlaces, ...privateRecords].find((place) => place.id === id))
-          .filter((place): place is Place => !!place)}
-        liked={likedPlaceIds}
-        onLike={toggleLike}
-        photoFor={photoFor}
-      />
-    );
-  }
+  else screen = <CollectionsScreen />;
+
   return (
-    <div className={`app-view ${bottomVisible ? "with-tabs" : ""}`}>
-      <div className="screen-content" key={route.screen}>
-        {screen}
+    <AppDataContext.Provider value={appData}>
+      <div className={`app-view ${activeTab ? "has-tabbar" : ""}`}>
+        <div className="screen-content" key={route.screen}>
+          {screen}
+        </div>
+        {activeTab && <TabBar active={activeTab} accessToken={accessToken} />}
+        {notice && (
+          <NoticeToast
+            kind={notice.kind}
+            title={notice.title}
+            message={notice.message}
+            onDismiss={dismissNotice}
+          />
+        )}
+        {subscriptionTarget && (
+          <SubscriptionOfferSheet
+            taster={subscriptionTarget}
+            accessToken={accessToken}
+            currentFreeTasterId={currentFreeSubscription?.targetAccountId}
+            currentFreeName={currentFreeSubscription?.targetNickname}
+            currentFreeTaster={tasters.find((taster) => taster.tasterId === currentFreeSubscription?.targetAccountId)}
+            onClose={() => setSubscriptionTarget(null)}
+            onComplete={({ replacedFreeNickname, isFree, termMonths }) => {
+              const subscribedName = subscriptionTarget.tasterName;
+              setSubscriptionTarget(null);
+              void refreshCommunity().catch((cause: Error) =>
+                setNotice({ kind: "error", title: "구독 정보를 새로고침하지 못했어요", message: cause.message }),
+              );
+              setNotice({
+                kind: "success",
+                title: isFree ? "무료 구독을 시작했어요" : "구독이 시작됐어요",
+                message: isFree
+                  ? replacedFreeNickname
+                    ? `${replacedFreeNickname} 무료 구독이 종료되고 ${subscribedName} 구독으로 바뀌었어요.`
+                    : `${subscribedName}의 맛집 소식을 받아볼 수 있어요.`
+                  : `${subscribedName} 맛객의 기록을 ${termMonths}개월 동안 이용할 수 있어요.`,
+              });
+            }}
+          />
+        )}
       </div>
-      {bottomVisible && (
-        <BottomTabs
-          accessToken={accessToken}
-          unread={notificationFeed.unreadCount > 0}
-          screen={
-            ["home", "map", "notifications"].includes(route.screen)
-              ? route.screen
-              : "my"
-          }
-        />
-      )}
-      {notice && (
-        <NoticeToast
-          kind={notice.kind}
-          title={notice.title}
-          message={notice.message}
-          onDismiss={dismissNotice}
-        />
-      )}
-      {subscriptionTarget && (
-        <SubscriptionOfferSheet
-          taster={subscriptionTarget}
-          accessToken={accessToken}
-          currentFreeTasterId={currentFreeSubscription?.targetAccountId}
-          currentFreeName={currentFreeSubscription?.targetNickname}
-          currentFreeTaster={tasters.find((taster) => taster.tasterId === currentFreeSubscription?.targetAccountId)}
-          onClose={() => setSubscriptionTarget(null)}
-          onComplete={({ replacedFreeNickname, isFree, termMonths }) => {
-            const subscribedName = subscriptionTarget.tasterName;
-            setSubscriptionTarget(null);
-            void refreshCommunity().catch((cause: Error) =>
-              setNotice({ kind: "error", title: "구독 정보를 새로고침하지 못했어요", message: cause.message }),
-            );
-            setNotice({
-              kind: "success",
-              title: isFree ? "무료 구독을 시작했어요" : "구독이 시작됐어요",
-              message: isFree
-                ? replacedFreeNickname
-                  ? `${replacedFreeNickname} 무료 구독이 종료되고 ${subscribedName} 구독으로 바뀌었어요.`
-                  : `${subscribedName}의 맛집 소식을 받아볼 수 있어요.`
-                : `${subscribedName} 맛객의 기록을 ${termMonths}개월 동안 이용할 수 있어요.`,
-            });
-          }}
-        />
-      )}
-    </div>
+    </AppDataContext.Provider>
   );
 }

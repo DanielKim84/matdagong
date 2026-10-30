@@ -12,6 +12,9 @@ import {
 } from "./services/http";
 import { clearRegisterDraft } from "./services/registerDraft";
 import { accountIdFromAccessToken } from "./utils/accessToken";
+import { applyTheme } from "./theme/applyTheme";
+import { installMouseDragScroll } from "./utils/dragScroll";
+import "./theme/index.css";
 import "./styles/app.css";
 import "./styles/screens.css";
 import "./styles/notice.css";
@@ -20,6 +23,12 @@ import "./styles/subscription.css";
 import "./styles/profile-settings.css";
 import "./styles/design-system.css";
 import "./styles/photo-tag-detail.css";
+import "./styles/design-a.css";
+import "./styles/a/home-lists.css";
+import "./styles/a/my.css";
+import "./styles/a/forms.css";
+import "./styles/a/overlays.css";
+import "./styles/renewal/index.css";
 
 const AUTHORIZATION_SERVER =
   import.meta.env.VITE_AUTH_SERVER_URL ?? "http://localhost:5840";
@@ -330,6 +339,9 @@ function handleSessionExpired(): void {
   });
 }
 
+// 첫 화면을 그리기 전에 테마를 정해 기본 색이 잠깐 보였다가 바뀌지 않게 합니다.
+applyTheme();
+installMouseDragScroll();
 setSessionExpiredHandler(handleSessionExpired);
 
 // 맛다공은 먼저 홈 진입을 시도하고, 유효한 로그인 정보가 없으면 공통 인증을 시작합니다.

@@ -1,0 +1,121 @@
+/*
+ * 기본 테마 (A 시안 · 웜 다이어리)
+ * 크림 바탕, 접근성 대비를 맞춘 코랄, 허니 앰버를 쓰는 맛다공 기본 분위기입니다.
+ *
+ * 각 색 계열은 0(가장 밝음)~900(가장 어두움) 단계로 정의합니다. 화면 CSS는 이 단계 변수만 쓰므로,
+ * 시즌 테마는 같은 이름의 단계 값만 바꾸면 앱 전체 분위기가 바뀝니다. 새 테마도 단계별 밝기 순서를 지켜야
+ * 글자와 배경의 대비가 유지됩니다.
+ */
+:root,
+[data-theme="default"] {
+  /* 따뜻한 회색: 바탕, 선, 본문 글자 */
+  --neutral-0: #ffffff;
+  --neutral-25: #fffcf8;
+  --neutral-50: #fff8f1;
+  --neutral-100: #faf0e6;
+  --neutral-150: #f3e6db;
+  --neutral-200: #e9d9cc;
+  --neutral-300: #d3c1b4;
+  --neutral-400: #a99689;
+  --neutral-500: #7f6f66;
+  --neutral-600: #67574f;
+  --neutral-700: #4f403a;
+  --neutral-800: #3b2d27;
+  --neutral-900: #2a1e19;
+
+  /* 브랜드 코랄: 주요 버튼, 강조, 선택 상태. 600 위 흰 글자가 4.5:1 대비를 넘습니다. */
+  --brand-50: #fff4ef;
+  --brand-100: #fde6dc;
+  --brand-200: #f9cdbb;
+  --brand-300: #f3a88d;
+  --brand-400: #eb7d5e;
+  --brand-500: #e05d3c;
+  --brand-600: #cf3f25;
+  --brand-700: #a8301b;
+  --brand-800: #7c2415;
+  --brand-900: #52190f;
+
+  /* 클레이: 채도가 낮은 갈색·살구 계열 장식 */
+  --clay-50: #fbf5ef;
+  --clay-100: #f5e8dc;
+  --clay-200: #ead3c0;
+  --clay-300: #d9b79c;
+  --clay-400: #c3977a;
+  --clay-500: #a5775d;
+  --clay-600: #865d47;
+  --clay-700: #684737;
+  --clay-800: #4b3328;
+  --clay-900: #30211a;
+
+  /* 허니 앰버: 포인트, 구독·포인트 배지 */
+  --amber-50: #fff8e8;
+  --amber-100: #fdeec6;
+  --amber-200: #f9dc92;
+  --amber-300: #f5c860;
+  --amber-400: #f2b544;
+  --amber-500: #da9a26;
+  --amber-600: #b47a17;
+  --amber-700: #8a5c11;
+  --amber-800: #5e3f0c;
+  --amber-900: #3a2708;
+
+  /* 초록: 지도 공원, 완료·성공 */
+  --green-50: #f0f8f1;
+  --green-100: #dcefe0;
+  --green-200: #b9dec1;
+  --green-300: #8cc69a;
+  --green-400: #62ab74;
+  --green-500: #448f59;
+  --green-600: #337346;
+  --green-700: #275937;
+  --green-800: #1b3f27;
+  --green-900: #12291a;
+
+  /* 슬레이트: 지도·알림의 차가운 회색 */
+  --slate-50: #f4f6f9;
+  --slate-100: #e7ecf2;
+  --slate-200: #cfd8e3;
+  --slate-300: #abb8c9;
+  --slate-400: #8695ac;
+  --slate-500: #67778f;
+  --slate-600: #4f5d74;
+  --slate-700: #3b475a;
+  --slate-800: #283141;
+  --slate-900: #19202b;
+
+  /* 파랑: 현재 위치, 정보 */
+  --blue-50: #eef5ff;
+  --blue-100: #dceaff;
+  --blue-200: #b7d3ff;
+  --blue-300: #86b4fa;
+  --blue-400: #5a93f0;
+  --blue-500: #3a76e0;
+  --blue-600: #2b5ec0;
+  --blue-700: #224a97;
+  --blue-800: #19366d;
+  --blue-900: #102345;
+
+  /* 베리: 카테고리 마커와 태그 구분 */
+  --berry-50: #fbf1f7;
+  --berry-100: #f4deec;
+  --berry-200: #e8bed9;
+  --berry-300: #d594bf;
+  --berry-400: #bc6ba3;
+  --berry-500: #9c4f87;
+  --berry-600: #7e3d6e;
+  --berry-700: #612f55;
+  --berry-800: #44213c;
+  --berry-900: #2b1526;
+
+  /* 그림자와 사진 위 어두운 막. color-mix로 투명도를 더해 씁니다. */
+  --shadow-color: #3b2214;
+  /* 진한 색이나 사진 위에 올리는 글자색 */
+  --on-strong: #ffffff;
+
+  --font-body: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+  --font-display: "Jua", "Pretendard", "Noto Sans KR", sans-serif;
+
+  --radius-card: 22px;
+  --radius-control: 16px;
+  --radius-pill: 999px;
+}

@@ -1,0 +1,878 @@
+/* 리뉴얼 place 화면 전용 규칙입니다. 공통 부품은 ui.css 를 씁니다. */
+
+.r-place {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
+
+/* ── 떠 있는 뒤로·공유·저장 버튼 줄 (스크롤하면 바탕과 이름이 깔림) ── */
+.r-place-float {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 0;
+}
+.r-place-float__bar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.r-place-float.is-scrolled .r-place-float__bar {
+  background: var(--color-canvas);
+  box-shadow: 0 1px 0 var(--color-line);
+}
+.r-place-float__title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  opacity: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+.r-place-float.is-scrolled .r-place-float__title {
+  opacity: 1;
+}
+.r-place-glass {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-surface);
+  padding: 0;
+  color: var(--color-ink);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 14%, transparent);
+  transition: box-shadow 0.2s ease;
+}
+.r-place-glass .icon {
+  width: 22px;
+  height: 22px;
+}
+.r-place-glass.is-liked {
+  color: var(--color-primary);
+}
+.r-place-float.is-scrolled .r-place-glass {
+  box-shadow: none;
+}
+.r-place-glass--dark {
+  background: color-mix(in srgb, var(--on-strong) 14%, transparent);
+  color: var(--on-strong);
+  box-shadow: none;
+}
+
+/* ── 큰 사진 / 위치 지도 ── */
+.r-place-hero {
+  position: relative;
+  height: clamp(300px, 96vw, 400px);
+  overflow: hidden;
+  background: var(--neutral-100);
+}
+.r-place-hero__track {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.r-place-hero__track::-webkit-scrollbar {
+  display: none;
+}
+.r-place-hero__slide {
+  display: block;
+  height: 100%;
+  flex: 0 0 100%;
+  border: 0;
+  background: none;
+  padding: 0;
+  scroll-snap-align: start;
+}
+.r-place-hero__slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-place-hero__count {
+  position: absolute;
+  right: 16px;
+  bottom: 44px;
+  display: flex;
+  height: 28px;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--neutral-900) 62%, transparent);
+  padding: 0 10px;
+  color: var(--on-strong);
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: none;
+}
+.r-place-hero__map {
+  width: 100%;
+  height: 100%;
+}
+.r-place-hero__placeholder {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 32px 28px;
+  color: var(--color-muted);
+  font-size: 14px;
+  text-align: center;
+}
+.r-place-hero__placeholder .icon {
+  width: 34px;
+  height: 34px;
+  color: var(--color-primary);
+}
+.r-place-map-pin {
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin-bottom: 6px;
+  border: 3px solid var(--color-surface);
+  border-radius: 50% 50% 50% 0;
+  background: var(--color-primary);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--shadow-color) 30%, transparent);
+  transform: rotate(-45deg);
+}
+
+/* ── 본문 ── */
+.r-place-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: -28px;
+  border-radius: 28px 28px 0 0;
+  background: var(--color-canvas);
+  padding: 24px 20px 0;
+}
+.r-place-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-place-title h1 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 30px;
+  line-height: 1.25;
+  word-break: keep-all;
+}
+.r-place-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.r-place-pill {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border: 1px solid var(--neutral-150);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 12px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 600;
+}
+.r-place-pill.is-accent {
+  border-color: var(--brand-100);
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+.r-place-address {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.r-place-address .icon {
+  width: 16px;
+  height: 16px;
+}
+.r-place-address span {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-place-address a {
+  display: inline-flex;
+  min-height: 44px;
+  flex: none;
+  align-items: center;
+  padding: 0 2px;
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+
+/* 빠른 동작 줄 */
+.r-place-quick {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.r-place-quick__item {
+  display: flex;
+  min-height: 76px;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--neutral-700);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.r-place-quick__icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.r-place-quick__icon .icon {
+  width: 22px;
+  height: 22px;
+}
+.r-place-quick__icon.is-primary {
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-place-quick__item.is-on .r-place-quick__icon {
+  color: var(--color-primary);
+}
+.r-place-quick__item:disabled {
+  opacity: 0.45;
+}
+
+/* 다녀간 맛객 요약 */
+.r-place-visitors {
+  display: flex;
+  width: 100%;
+  min-height: 64px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  font-family: var(--font-body);
+}
+.r-place-visitors .avatar {
+  width: 34px;
+  height: 34px;
+}
+.r-place-visitors__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-place-visitors__copy b {
+  font-size: 15px;
+}
+.r-place-visitors__copy small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-place-visitors > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+
+.r-place-tabs {
+  scroll-margin-top: 72px;
+}
+.r-place-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.r-place-section--bleed {
+  margin: 0 -20px;
+}
+.r-place-section--bleed > .r-empty,
+.r-place-section--bleed > .r-place-summary,
+.r-place-section--bleed > .r-place-note {
+  margin: 0 20px;
+}
+.r-place-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-place-summary .r-tag em {
+  margin-left: 4px;
+  font-style: normal;
+  opacity: 0.7;
+}
+.r-place-note {
+  margin: 0;
+  border-radius: 14px;
+  background: var(--color-surface-soft);
+  padding: 12px 14px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ── 맛객 기록 카드 ── */
+.r-place-records {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-place-records__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+.r-place-records__head h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.r-place-records__head span {
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-place-records__track {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 20px 12px;
+  scroll-padding-inline: 20px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.r-place-records__track::-webkit-scrollbar {
+  display: none;
+}
+.r-place-record {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 calc(100% - 28px);
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  scroll-snap-align: start;
+}
+.r-place-record:only-child {
+  flex-basis: 100%;
+}
+.r-place-record__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.r-place-record__author {
+  display: flex;
+  min-width: 0;
+  min-height: 44px;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-place-record__author .avatar {
+  width: 44px;
+  height: 44px;
+}
+.r-place-record__who {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+.r-place-record__who b {
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-place-record__who small {
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-place-badge {
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 4px 10px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.r-place-record__note {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 20px;
+  line-height: 1.45;
+  white-space: pre-line;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.r-place-record__photos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.r-place-record__photos button {
+  position: relative;
+  height: 84px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 14px;
+  background: var(--neutral-100);
+  padding: 0;
+}
+.r-place-record__photos img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-place-record__photos span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--neutral-900) 50%, transparent);
+  color: var(--on-strong);
+  font-size: 15px;
+  font-weight: 800;
+}
+.r-place-record__menus {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-place-record__menus li > button,
+.r-place-record__menus li > div {
+  display: flex;
+  width: 100%;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+.r-place-record__menus li > button {
+  min-height: 44px;
+}
+.r-place-record__menus span {
+  min-width: 0;
+  flex: 1;
+  font-weight: 600;
+  text-align: left;
+}
+.r-place-record__menus b {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.r-place-record__menus .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-muted);
+}
+.r-place-record__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.r-place-record__actions .r-button {
+  min-height: 44px;
+  flex: 1 1 auto;
+  padding: 0 14px;
+}
+.r-place-dots {
+  display: flex;
+  justify-content: center;
+}
+.r-place-dots button {
+  display: grid;
+  min-width: 18px;
+  height: 44px;
+  place-items: center;
+  border: 0;
+  background: none;
+  padding: 0 3px;
+}
+.r-place-dots span {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--neutral-200);
+  transition: width 0.2s ease;
+}
+.r-place-dots button[aria-selected="true"] span {
+  width: 20px;
+  background: var(--color-primary);
+}
+
+/* ── 추천 메뉴 모아 보기 ── */
+.r-place-menus {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.r-place-menu {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  font-family: var(--font-body);
+}
+.r-place-menu__photo {
+  display: grid;
+  height: 110px;
+  place-items: center;
+  background: var(--neutral-100);
+  color: var(--color-subtle);
+}
+.r-place-menu__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-place-menu__photo .icon {
+  width: 28px;
+  height: 28px;
+}
+.r-place-menu__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 12px;
+}
+.r-place-menu__copy b {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-place-menu__copy strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-place-menu__copy small {
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+/* ── 매장 정보 ── */
+.r-place-info {
+  padding: 4px 16px;
+}
+.r-place-info__row {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--neutral-150);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.r-place-info__row:last-child {
+  border-bottom: 0;
+}
+.r-place-info__row > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+.r-place-info__text {
+  min-width: 0;
+  flex: 1;
+  padding: 10px 0;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.r-place-info__text.r-muted {
+  color: var(--color-muted);
+}
+.r-place-info__text small {
+  display: block;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-place-info__row button {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  padding: 0 4px;
+  color: var(--color-primary-strong);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-place-report {
+  min-height: 44px;
+  align-self: flex-start;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-primary-strong);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ── 하단 고정 동작 바 ── */
+.r-place-actionbar__save {
+  width: 58px;
+  flex: none;
+  padding: 0;
+}
+.r-place-actionbar__save .icon {
+  width: 22px;
+  height: 22px;
+}
+.r-place-actionbar__save.is-liked {
+  color: var(--color-primary);
+}
+.r-place-actionbar__main {
+  min-width: 0;
+  flex: 1;
+}
+
+/* 방문 기록 ↔ 내 맛집 전환 확인 */
+.r-place-sheet p {
+  margin: 0 0 18px;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.r-place-sheet__actions {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 10px;
+}
+.r-place-sheet__actions .r-button {
+  min-height: 48px;
+  padding: 0 12px;
+}
+
+/* ── 전체 화면 사진 보기 ── */
+.r-place-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  overflow: hidden;
+  background: var(--neutral-900);
+  color: var(--on-strong);
+  font-family: var(--font-body);
+  overscroll-behavior: contain;
+}
+.r-place-viewer__top {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  width: min(var(--app-width), 100%);
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 auto;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.r-place-viewer__spacer {
+  width: 44px;
+}
+.r-place-viewer__stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.r-place-viewer__track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.28s ease;
+}
+.r-place-viewer__slide {
+  display: grid;
+  height: 100%;
+  flex: 0 0 100%;
+  place-items: center;
+  padding: calc(72px + env(safe-area-inset-top)) 0 calc(150px + env(safe-area-inset-bottom));
+}
+.r-place-viewer__slide img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.r-place-viewer__nav {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--on-strong) 14%, transparent);
+  padding: 0;
+  color: var(--on-strong);
+  transform: translateY(-50%);
+}
+.r-place-viewer__nav--prev {
+  left: 12px;
+}
+.r-place-viewer__nav--next {
+  right: 12px;
+}
+@media (hover: none) {
+  .r-place-viewer__nav {
+    display: none;
+  }
+}
+.r-place-viewer__bottom {
+  position: absolute;
+  right: 0;
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  left: 0;
+  z-index: 2;
+  display: flex;
+  width: min(var(--app-width), 100%);
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.r-place-viewer__author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.r-place-viewer__author .avatar {
+  width: 36px;
+  height: 36px;
+}
+.r-place-viewer__author > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+.r-place-viewer__author b {
+  font-size: 14px;
+}
+.r-place-viewer__author span {
+  color: color-mix(in srgb, var(--on-strong) 78%, transparent);
+  font-size: 12px;
+}
+.r-place-viewer__thumbs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.r-place-viewer__thumbs::-webkit-scrollbar {
+  display: none;
+}
+.r-place-viewer__thumbs button {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--neutral-800);
+  padding: 0;
+  opacity: 0.6;
+}
+.r-place-viewer__thumbs button.is-on {
+  border-color: var(--on-strong);
+  opacity: 1;
+}
+.r-place-viewer__thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── 불러오는 중 ── */
+.r-place-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 20px;
+}
+.r-place-skeleton span {
+  display: block;
+  border-radius: 14px;
+  background: var(--neutral-100);
+  animation: r-place-pulse 1.3s ease-in-out infinite;
+}
+.r-place-skeleton__hero {
+  height: 240px;
+  border-radius: var(--radius-card);
+}
+.r-place-skeleton__line {
+  height: 22px;
+}
+.r-place-skeleton__line--short {
+  width: 55%;
+}
+@keyframes r-place-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .r-place-viewer__track,
+  .r-place-dots span,
+  .r-place-float__bar,
+  .r-place-float__title {
+    transition: none;
+  }
+  .r-place-skeleton span {
+    animation: none;
+  }
+}

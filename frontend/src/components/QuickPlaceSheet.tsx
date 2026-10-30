@@ -10,6 +10,14 @@ import { distanceMeters, kakaoPlaceCoordinates, type Coordinates } from "../util
 // 맛집 등록 화면과 같은 기준으로 현재 위치 1km 안의 장소만 저장합니다.
 const RADIUS_METERS = 1000;
 
+/** 검색어와 겹치는 부분을 강조합니다. */
+function highlight(text: string, query: string) {
+  const keyword = query.trim();
+  const at = keyword ? text.toLowerCase().indexOf(keyword.toLowerCase()) : -1;
+  if (at < 0) return text;
+  return <>{text.slice(0, at)}<mark>{text.slice(at, at + keyword.length)}</mark>{text.slice(at + keyword.length)}</>;
+}
+
 /** 장소 검색만 거쳐 임시 저장하며, 매장에 머무는 동안 빠르게 기록할 수 있습니다. */
 export default function QuickPlaceSheet({ onClose, accessToken }: {
   onClose: () => void;
@@ -19,6 +27,7 @@ export default function QuickPlaceSheet({ onClose, accessToken }: {
   const [location, setLocation] = useState<Coordinates | null>(null);
   const [locationState, setLocationState] = useState("현재 위치를 확인해야 주변 장소를 검색할 수 있어요.");
   const [query, setQuery] = useState("");
+  const [searchedQuery, setSearchedQuery] = useState("");
   const [results, setResults] = useState<KakaoPlaceResult[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -29,7 +38,7 @@ export default function QuickPlaceSheet({ onClose, accessToken }: {
     setLocationState("현재 위치를 확인하고 있어요.");
     navigator.geolocation.getCurrentPosition(({ coords }) => {
       setLocation({ latitude: coords.latitude, longitude: coords.longitude });
-      setLocationState("현재 위치에서 1km 안의 장소를 검색해요.");
+      setLocationState("현재 위치 1km 안의 장소만 저장할 수 있어요.");
     }, () => setLocationState("주변 장소를 찾으려면 위치 권한을 허용해 주세요."),
     { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
   }
@@ -49,6 +58,7 @@ export default function QuickPlaceSheet({ onClose, accessToken }: {
       const nearby = (await searchKakaoPlaces(query.trim(), location, RADIUS_METERS))
         .filter((place) => distanceMeters(location, kakaoPlaceCoordinates(place)) <= RADIUS_METERS);
       setResults(nearby);
+      setSearchedQuery(query.trim());
       if (!nearby.length) setError("1km 안에서 장소를 찾지 못했어요. 가게 근처에서 다시 검색해 주세요.");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "장소를 검색하지 못했어요."); }
     finally { setBusy(false); }
@@ -62,10 +72,10 @@ export default function QuickPlaceSheet({ onClose, accessToken }: {
       if (duplicate.alreadyRegistered || duplicate.alreadySaved) {
         const alreadyRegistered = duplicate.alreadyRegistered;
         await alert({
-          title: alreadyRegistered ? "이미 등록된 가게예요" : "이미 빠른 기록에 저장된 가게예요",
+          title: alreadyRegistered ? "이미 등록된 가게예요" : "이미 빠른 저장에 있는 가게예요",
           message: alreadyRegistered
             ? `${duplicate.placeName ?? place.place_name}은(는) 이미 맛집으로 등록되어 있어요.`
-            : `${duplicate.placeName ?? place.place_name}은(는) 빠른 장소 기록에 이미 저장되어 있어요.`,
+            : `${duplicate.placeName ?? place.place_name}은(는) 빠른 저장 목록에 이미 있어요.`,
           tone: "info",
           confirmLabel: "확인했어요",
         });
@@ -75,8 +85,8 @@ export default function QuickPlaceSheet({ onClose, accessToken }: {
       window.dispatchEvent(new Event(MY_ACTIVITY_CHANGED_EVENT));
       onClose();
       await alert({
-        title: "빠른 기록에 저장했어요",
-        message: `${place.place_name}을(를) 마이 탭의 빠른 장소 기록에 저장했어요. 나중에 맛집 기록을 이어서 작성할 수 있어요.`,
+        title: "장소를 먼저 저장했어요",
+        message: `${place.place_name}을(를) 저장했어요. 기록하기에서 ‘임시 저장한 장소 이어서 쓰기’를 누르면 기록을 이어서 완성할 수 있어요.`,
         tone: "success",
         confirmLabel: "확인했어요",
       });
@@ -84,7 +94,7 @@ export default function QuickPlaceSheet({ onClose, accessToken }: {
       const message = cause instanceof Error ? cause.message : "장소를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
       if (message.includes("이미 맛집으로 등록된") || message.includes("이미 빠른 기록에 저장된")) {
         await alert({
-          title: message.includes("이미 맛집으로 등록된") ? "이미 맛집으로 등록됐어요" : "이미 빠른 기록에 저장됐어요",
+          title: message.includes("이미 맛집으로 등록된") ? "이미 맛집으로 등록됐어요" : "이미 빠른 저장에 있어요",
           message,
           tone: "info",
           confirmLabel: "확인했어요",
@@ -97,35 +107,41 @@ export default function QuickPlaceSheet({ onClose, accessToken }: {
     }
   }
 
-  return <Sheet title="빠른 장소 기록" onClose={onClose} className="quick-place-sheet">
-    <>
-    <p className="quick-place-intro">가게에 도착했을 때 장소만 먼저 저장해 두세요. 자세한 추천 이유와 사진은 맛집 등록에서 나중에 이어 쓸 수 있어요.</p>
-    <div className={`quick-place-location ${location ? "is-ready" : ""}`}>
-      <span className="quick-place-location-art" aria-hidden="true">
-        <svg viewBox="0 0 72 56">
-          <rect x="1" y="1" width="70" height="54" rx="14" className="quick-map-paper" />
-          <path className="quick-map-park" d="M5 8h17v13H5zm42 28h19v13H47z" />
-          <path className="quick-map-water" d="M49 4h15v15H49zM8 39h11v11H8z" />
-          <path className="quick-map-road-edge" d="M5 30 19 18l13 9L49 12l17 11M8 51l14-14 13 6 12-11 17 5" />
-          <path className="quick-map-road" d="M5 30 19 18l13 9L49 12l17 11M8 51l14-14 13 6 12-11 17 5" />
-          <path className="quick-map-route" d="m12 39 7-21 13 9 17-15" />
-          <path className="quick-map-pin" d="M34 8c-5 0-9 4-9 9 0 7 9 16 9 16s9-9 9-16c0-5-4-9-9-9Z" />
-          <circle className="quick-map-pin-core" cx="34" cy="17" r="4" />
-          <circle className="quick-map-pin-eye" cx="32.5" cy="16.5" r=".7" />
-          <circle className="quick-map-pin-eye" cx="35.5" cy="16.5" r=".7" />
-        </svg>
-      </span>
+  return <Sheet title="빠른 저장" onClose={onClose} className="r-record-quick">
+    <p className="r-record-quick__lead">가게에 도착했을 때 장소만 먼저 남겨 두세요. 사진과 추천 이유는 나중에 이어서 쓸 수 있어요.</p>
+    <label className="r-record-search">
+      <Icon name="search" />
+      <span className="visually-hidden">가게 이름이나 주소 검색</span>
+      <input value={query} placeholder="가게 이름이나 주소 검색" enterKeyHint="search" autoComplete="off"
+        onChange={(event) => setQuery(event.target.value)}
+        onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void search(); } }} />
+      <button type="button" className="r-record-search__submit" disabled={busy} onClick={() => void search()}>{busy ? "찾는 중" : "검색"}</button>
+    </label>
+    {error && <p className="r-record-error" role="status">{error}</p>}
+    {results.length > 0 && (
+      <div className="r-record-results">
+        <span className="r-record-results__label">지금 있는 곳 근처 · 눌러서 저장</span>
+        {results.map((place, index) => {
+          const distance = location ? Math.round(distanceMeters(location, kakaoPlaceCoordinates(place))) : null;
+          const category = place.category_name.split(">").at(-1)?.trim() || "장소";
+          return (
+            <button className="r-row r-record-result" key={place.id} type="button" aria-label={`${place.place_name}, 빠른 저장`} disabled={busy}
+              onClick={() => void savePlace(place)}>
+              <span className={`r-badge-icon ${index === 0 ? "" : "is-quiet"}`}><Icon name="pin" /></span>
+              <span className="r-row__copy">
+                <b>{highlight(place.place_name, searchedQuery)}</b>
+                <small>{[category, place.road_address_name || place.address_name, distance !== null ? `${distance}m` : ""].filter(Boolean).join(" · ")}</small>
+              </span>
+              <span className="r-record-result__save">저장</span>
+            </button>
+          );
+        })}
+      </div>
+    )}
+    <div className={`r-record-location ${location ? "is-ready" : ""}`}>
+      <Icon name={location ? "check" : "locate"} />
       <span>{locationState}</span>
-      <button type="button" onClick={locate}>{location ? "위치 새로고침" : "다시 확인"}</button>
+      <button type="button" className="r-record-text-button" onClick={locate}>{location ? "새로고침" : "다시 확인"}</button>
     </div>
-    <div className="register-place-search quick-place-search"><Icon name="search" /><input value={query} placeholder="가게 이름이나 주소 검색" aria-label="가게 이름이나 주소 검색"
-      onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void search(); } }} />
-      <button type="button" disabled={busy} onClick={() => void search()}>{busy ? "찾는 중" : "검색"}</button></div>
-    {error && <p className="quick-place-error" role="status">{error}</p>}
-    <div className="quick-place-results">{results.map((place) => <button className="quick-place-result" key={place.id} type="button" aria-label={`${place.place_name}, 빠른 기록에 저장`} disabled={busy} onClick={() => void savePlace(place)}>
-      <span className="quick-place-result-pin"><Icon name="pin" /></span><span className="quick-place-result-copy"><b>{place.place_name}</b><small>{place.road_address_name || place.address_name}</small><em>{place.category_name.split(">").at(-1)?.trim() || "장소"}</em></span><span className="quick-place-result-next"><Icon name="chevron" /></span>
-    </button>)}</div>
-    <small className="quick-place-storage-note">장소를 저장하면 마이 탭의 빠른 장소 기록에서 확인할 수 있어요.</small>
-    </>
   </Sheet>;
 }

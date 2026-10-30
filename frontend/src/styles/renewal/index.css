@@ -1,0 +1,9 @@
+/* 리뉴얼 스타일 묶음입니다. 공통 부품 다음에 화면별 파일을 불러옵니다. */
+@import "./ui.css";
+@import "./discover.css";
+@import "./place.css";
+@import "./feed.css";
+@import "./record.css";
+@import "./tasters.css";
+@import "./me.css";
+@import "./onboarding.css";

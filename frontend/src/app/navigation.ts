@@ -18,6 +18,9 @@ const screens: Screen[] = [
   "intro",
   "liked",
   "recent",
+  "feed",
+  "tasters",
+  "wallet",
 ];
 
 function currentRoute(): { screen: Screen; id: string } {

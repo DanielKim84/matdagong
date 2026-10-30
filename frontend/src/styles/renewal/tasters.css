@@ -1,0 +1,794 @@
+/* 리뉴얼 tasters 화면 전용 규칙입니다. 공통 부품은 ui.css 를 씁니다. */
+
+/* ── 공통 ── */
+.r-tasters-body {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 4px 20px 24px;
+}
+.r-tasters-section {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+.r-tasters-note {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.r-tasters-avatar.avatar {
+  border: 0;
+  background: var(--neutral-100);
+}
+.r-tasters-avatar--sm.avatar {
+  width: 36px;
+  height: 36px;
+}
+.r-tasters-avatar--md.avatar {
+  width: 48px;
+  height: 48px;
+}
+.r-tasters-avatar--lg.avatar {
+  width: 58px;
+  height: 58px;
+}
+.r-tasters-avatar--ring.avatar {
+  width: 52px;
+  height: 52px;
+  border: 3px solid var(--color-surface);
+}
+.r-tasters-avatar--xl.avatar {
+  width: 88px;
+  height: 88px;
+  border: 4px solid var(--color-canvas);
+}
+
+/* 검색 */
+.r-tasters-search {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--neutral-150);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--color-muted);
+}
+.r-tasters-search .icon {
+  width: 18px;
+  height: 18px;
+}
+.r-tasters-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: 15px;
+}
+.r-tasters-search input::placeholder {
+  color: var(--color-subtle);
+}
+
+/* 내가 구독한 맛객 줄 */
+.r-tasters-strip {
+  display: flex;
+  gap: 14px;
+  margin: 0 -20px;
+  overflow-x: auto;
+  padding: 2px 20px;
+  scrollbar-width: none;
+}
+.r-tasters-strip::-webkit-scrollbar {
+  display: none;
+}
+.r-tasters-strip > button {
+  display: flex;
+  width: 64px;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+}
+.r-tasters-strip > button > span:last-child {
+  overflow: hidden;
+  width: 100%;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-tasters-strip .avatar {
+  box-shadow: 0 0 0 2px var(--color-canvas), 0 0 0 4px var(--brand-300);
+}
+
+/* 취향 일치 카드 묶음 */
+.r-tasters-carousel {
+  display: flex;
+  gap: 12px;
+  margin: 0 -20px;
+  overflow-x: auto;
+  padding: 2px 20px 10px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.r-tasters-carousel::-webkit-scrollbar {
+  display: none;
+}
+.r-tasters-rec {
+  display: flex;
+  width: 220px;
+  flex: none;
+  flex-direction: column;
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+.r-tasters-rec__open {
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+}
+.r-tasters-rec__cover {
+  position: relative;
+  display: block;
+  height: 92px;
+  overflow: hidden;
+  background: var(--neutral-100);
+}
+.r-tasters-rec__cover > svg,
+.r-tasters-rec__cover > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-tasters-rec__cover .r-match {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--color-ink);
+  color: var(--on-strong);
+}
+.r-tasters-rec__copy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: -26px;
+  padding: 0 14px;
+}
+.r-tasters-rec__copy > b {
+  font-size: 19px;
+}
+.r-tasters-rec__copy > small {
+  display: -webkit-box;
+  overflow: hidden;
+  min-height: 34px;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.r-tasters-rec__copy .r-tags {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.r-tasters-rec__cta.r-button {
+  min-height: 44px;
+  margin: 12px 14px 14px;
+}
+.r-tasters-empty-card {
+  padding: 28px 20px;
+}
+
+/* 지역·분야 칩 */
+.r-tasters-chips {
+  margin: 0 -20px;
+  padding: 0 20px;
+}
+.r-tasters-chips--small {
+  margin-top: -4px;
+}
+.r-tasters-chips--small .r-chip {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* 맛객 목록 */
+.r-tasters-list {
+  padding: 0 14px;
+}
+.r-tasters-list .r-row {
+  min-height: 72px;
+}
+.r-tasters-state {
+  flex: none;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+.r-tasters-since {
+  flex: none;
+  color: var(--color-muted);
+  font-size: 11px;
+}
+.r-tasters-more.r-button {
+  align-self: center;
+  min-height: 44px;
+}
+.r-tasters-bundle {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  gap: 12px;
+  border: 1px dashed var(--neutral-300);
+  border-radius: 18px;
+  background: none;
+  padding: 14px;
+  color: var(--color-ink);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+}
+.r-tasters-bundle__icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--amber-50);
+  color: var(--amber-600);
+}
+.r-tasters-bundle__icon .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── 구독 목록 ── */
+.r-tasters-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--neutral-150);
+}
+.r-tasters-sub-row:last-child {
+  border-bottom: 0;
+}
+.r-tasters-sub-row > .r-row {
+  min-width: 0;
+  flex: 1;
+  border-bottom: 0;
+}
+.r-tasters-plan {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.r-tasters-plan.is-free,
+.r-row__copy small.r-tasters-plan.is-free {
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+.r-tasters-manage {
+  min-width: 56px;
+  min-height: 44px;
+  flex: none;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.r-tasters-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+}
+.r-tasters-summary__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-tasters-summary__copy small {
+  color: var(--neutral-200);
+  font-size: 13px;
+}
+.r-tasters-summary__copy b {
+  font-size: 16px;
+}
+.r-tasters-summary__link {
+  min-height: 36px;
+  flex: none;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* 구독 관리 시트 */
+.r-tasters-manage-sheet {
+  gap: 16px;
+}
+.r-tasters-manage-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.r-tasters-manage-head > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-tasters-manage-head b {
+  font-size: 16px;
+}
+.r-tasters-manage-head small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.r-tasters-manage-term {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-soft);
+  padding: 14px 16px;
+}
+.r-tasters-manage-term span {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.r-tasters-manage-term b {
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
+}
+.r-tasters-manage-term small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-tasters-manage-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── 맛객 프로필 ── */
+.r-tasters-profile {
+  padding-bottom: calc(110px + env(safe-area-inset-bottom));
+}
+.r-tasters-profile__cover {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  background: var(--neutral-100);
+}
+.r-tasters-profile__cover > svg,
+.r-tasters-profile__cover > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-tasters-profile__cover > .r-icon-button {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 14px;
+}
+.r-tasters-profile__body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: -44px;
+  padding: 0 20px;
+}
+.r-tasters-profile__head {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+.r-tasters-stats {
+  display: flex;
+  flex: 1;
+  gap: 18px;
+  margin: 0;
+  padding-bottom: 4px;
+}
+.r-tasters-stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+.r-tasters-stats dt {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-tasters-stats dd {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.r-tasters-profile__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.r-tasters-profile__intro h1 {
+  margin: 0;
+  font-size: 26px;
+}
+.r-tasters-profile__intro p {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.r-tasters-profile__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.r-tasters-profile__meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.r-tasters-profile__meta .icon {
+  width: 15px;
+  height: 15px;
+}
+
+.r-tasters-match {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.r-tasters-match__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.r-tasters-match__top b {
+  font-size: 14px;
+}
+.r-tasters-match__top strong {
+  color: var(--color-primary);
+  font-size: 20px;
+  font-weight: 800;
+}
+.r-tasters-match__bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--neutral-150);
+}
+.r-tasters-match__bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--color-primary);
+}
+.r-tasters-match small {
+  font-size: 12px;
+}
+
+.r-tasters-tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--neutral-200);
+}
+.r-tasters-tabs > button {
+  min-height: 44px;
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  padding: 0;
+  color: var(--color-muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+.r-tasters-tabs > button[aria-selected="true"] {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-ink);
+  font-weight: 800;
+}
+
+.r-tasters-map {
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--color-surface-soft);
+}
+.r-tasters-records .r-row {
+  align-items: flex-start;
+}
+.r-tasters-records .r-thumb {
+  display: block;
+}
+.r-tasters-records .r-row__copy {
+  padding-top: 4px;
+}
+.r-tasters-records__note {
+  display: -webkit-box;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.r-row__copy small.r-tasters-records__note {
+  color: var(--neutral-700);
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.r-tasters-taste {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.r-tasters-taste h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.r-tasters-support.r-button {
+  width: 104px;
+  flex: none;
+}
+.r-tasters-subscribe.r-button,
+.r-tasters-subscribed.r-button {
+  min-width: 0;
+  flex: 1;
+}
+.r-tasters-subscribed.r-button {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ── 구독 시트 ── */
+.r-tasters-offer {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in srgb, var(--shadow-color) 36%, transparent);
+}
+.r-tasters-offer__panel.sheet {
+  display: flex;
+  width: min(var(--app-width), 100%);
+  max-height: calc(100dvh - 40px);
+  flex-direction: column;
+  gap: 16px;
+  overflow: auto;
+  border: 0;
+  border-radius: 28px 28px 0 0;
+  outline: 0;
+  background: var(--color-canvas);
+  padding: 0 20px calc(24px + env(safe-area-inset-bottom));
+  box-shadow: 0 -10px 30px color-mix(in srgb, var(--shadow-color) 14%, transparent);
+  color: var(--color-ink);
+}
+.r-tasters-offer__handle {
+  width: 40px;
+  height: 5px;
+  flex: none;
+  margin: 10px auto 0;
+  border-radius: 3px;
+  background: var(--neutral-200);
+}
+.r-tasters-offer__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.r-tasters-offer__head > span {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+.r-tasters-offer__head h2 {
+  overflow: hidden;
+  margin: 0;
+  font-size: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-tasters-offer__head small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.r-tasters-offer__head .r-icon-button {
+  margin-right: -10px;
+}
+.r-tasters-offer__options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-tasters-offer__option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 16px;
+  color: var(--color-ink);
+  text-align: left;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.r-tasters-offer__option.is-on {
+  border-color: var(--color-primary);
+  background: var(--brand-50);
+  box-shadow: none;
+}
+.r-tasters-offer__option > strong {
+  flex: none;
+  font-size: 16px;
+}
+.r-tasters-offer__option--paid {
+  flex-direction: column;
+  align-items: stretch;
+}
+.r-tasters-offer__paid-head {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+}
+.r-tasters-offer__radio {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border: 2px solid var(--neutral-300);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+.r-tasters-offer__option.is-on .r-tasters-offer__radio {
+  border: 6px solid var(--color-primary);
+}
+.r-tasters-offer__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-tasters-offer__copy b {
+  font-size: 16px;
+}
+.r-tasters-offer__copy small {
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-tasters-offer__plans {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.r-tasters-offer__plans > button {
+  display: flex;
+  min-height: 58px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: var(--neutral-100);
+  padding: 4px 2px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+.r-tasters-offer__plans > button.is-on {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+}
+.r-tasters-offer__plans small {
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.r-tasters-offer__plans del {
+  display: block;
+  color: var(--color-subtle);
+  text-align: center;
+}
+.r-tasters-offer__swap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: var(--radius-control);
+  background: var(--amber-50);
+  padding: 12px 14px;
+  color: var(--amber-800);
+}
+.r-tasters-offer__swap > span {
+  display: flex;
+  max-width: 40%;
+  align-items: center;
+  gap: 6px;
+}
+.r-tasters-offer__swap small {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-tasters-offer__swap > .icon {
+  width: 16px;
+  height: 16px;
+}
+.r-tasters-offer__swap p {
+  width: 100%;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+.r-tasters-offer__status,
+.r-tasters-offer__note {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-tasters-offer__status {
+  padding: 24px 0;
+  text-align: center;
+}
+.r-tasters-offer__error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 600;
+}

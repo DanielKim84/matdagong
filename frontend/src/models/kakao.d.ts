@@ -7,6 +7,7 @@ declare global {
   interface MapBounds {
     getSouthWest(): MapCoordinate;
     getNorthEast(): MapCoordinate;
+    extend(position: MapCoordinate): void;
   }
   interface MapInstance {
     setCenter(position: MapCoordinate): void;
@@ -16,6 +17,8 @@ declare global {
     getBounds(): MapBounds;
     getLevel(): number;
     setLevel(level: number, options?: { animate?: boolean }): void;
+    setBounds(bounds: MapBounds): void;
+    panTo(position: MapCoordinate): void;
   }
   interface MapMarker {
     setMap(map: MapInstance | null): void;
@@ -47,6 +50,7 @@ declare global {
         },
       ) => MapInstance;
       LatLng: new (latitude: number, longitude: number) => MapCoordinate;
+      LatLngBounds: new () => MapBounds;
       Size: new (width: number, height: number) => object;
       Point: new (x: number, y: number) => object;
       MarkerImage: new (

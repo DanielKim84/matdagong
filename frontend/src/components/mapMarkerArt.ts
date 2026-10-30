@@ -5,8 +5,11 @@ import type { MapKind } from "../models/place";
  * 지도 마커는 카카오 CustomOverlay에 DOM으로 넣으므로 React 요소 대신 문자열로 보관합니다.
  */
 
-/** 모든 핀 마커의 바깥 모양(viewBox 0 0 43 53)입니다. */
-export const MARKER_SHELL_PATH = "M21.5 52C18 48 3.5 33.5 3.5 20.5a18 18 0 1 1 36 0C39.5 33.5 25 48 21.5 52Z";
+/**
+ * 모든 핀 마커의 바깥 모양(viewBox 0 0 43 53)입니다. 지름 36 원(중심 21.5, 20.5) 아래에 짧은 꼬리를 붙인 모양이라
+ * 원 안의 맛객 사진·캐릭터 위치는 그대로입니다.
+ */
+export const MARKER_SHELL_PATH = "M21.5 47L16.24 37.71A18 18 0 1 1 26.76 37.71Z";
 
 /** 맛객 얼굴 대신 기호로 표시하는 마커 종류입니다. 나머지 종류는 맛객 핀(TasterMapMarker 모양)으로 그립니다. */
 export type CategoryMarkerKind = Extract<MapKind, "liked" | "ad">;

@@ -6,29 +6,29 @@
   place-items: center;
   overflow: hidden;
   overscroll-behavior: contain;
-  background: rgb(48 39 35 / 42%);
+  background: color-mix(in srgb, var(--shadow-color) 42%, transparent);
   padding: 20px;
   animation: notification-backdrop-in .16s ease-out both;
 }
 .notification-dialog {
-  --dialog-accent: #d9684c;
-  --dialog-soft: #fff0e8;
+  --dialog-accent: var(--brand-500);
+  --dialog-soft: var(--brand-50);
   width: min(100%, 380px);
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
   overscroll-behavior: contain;
   box-sizing: border-box;
-  border: 1px solid #f0e1d7;
+  border: 1px solid var(--brand-100);
   border-radius: 23px;
-  background: #fffdfa;
+  background: var(--neutral-25);
   padding: 25px 23px 21px;
   text-align: center;
-  box-shadow: 0 18px 55px rgb(48 35 29 / 22%);
+  box-shadow: 0 18px 55px color-mix(in srgb, var(--shadow-color) 22%, transparent);
   animation: notification-dialog-in .2s cubic-bezier(.2,.8,.2,1) both;
 }
-.notification-dialog--info { --dialog-accent: #d47754; --dialog-soft: #fff0e7; }
-.notification-dialog--success { --dialog-accent: #c27b3e; --dialog-soft: #fff3df; }
-.notification-dialog--warning { --dialog-accent: #b78638; --dialog-soft: #fbf2dc; }
+.notification-dialog--info { --dialog-accent: var(--brand-500); --dialog-soft: var(--brand-50); }
+.notification-dialog--success { --dialog-accent: var(--brand-500); --dialog-soft: var(--neutral-100); }
+.notification-dialog--warning { --dialog-accent: var(--amber-600); --dialog-soft: var(--neutral-100); }
 .notification-dialog-icon {
   display: grid;
   width: 54px;
@@ -40,19 +40,19 @@
   color: var(--dialog-accent);
 }
 .notification-dialog-icon > .icon { width: 23px; height: 23px; stroke-width: 1.9; }
-.notification-dialog h2 { margin: 0; color: #392d29; font-size: 19px; font-weight: 750; letter-spacing: -.45px; line-height: 1.4; }
-.notification-dialog p { margin: 9px 0 21px; color: #88776e; font-size: 13px; line-height: 1.65; word-break: keep-all; white-space: pre-line; }
-.notification-dialog-detail { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:-8px 0 18px; border:1px solid #f0dfd3; border-radius:13px; background:#fff6ef; padding:11px 12px; text-align:left; }
-.notification-dialog-detail > span { color:#88776e; font-size:11px; }
-.notification-dialog-detail > b { color:#a8513d; font-size:12px; font-weight:750; white-space:nowrap; }
+.notification-dialog h2 { margin: 0; color: var(--neutral-800); font-size: 19px; font-weight: 750; letter-spacing: -.45px; line-height: 1.4; }
+.notification-dialog p { margin: 9px 0 21px; color: var(--neutral-500); font-size: 13px; line-height: 1.65; word-break: keep-all; white-space: pre-line; }
+.notification-dialog-detail { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:-8px 0 18px; border:1px solid var(--brand-100); border-radius:13px; background:var(--neutral-50); padding:11px 12px; text-align:left; }
+.notification-dialog-detail > span { color:var(--neutral-500); font-size:11px; }
+.notification-dialog-detail > b { color:var(--brand-600); font-size:12px; font-weight:750; white-space:nowrap; }
 .notification-dialog-actions { display: grid; grid-template-columns: minmax(90px, .8fr) minmax(120px, 1.2fr); gap: 9px; }
 .notification-dialog-actions.is-alert { grid-template-columns: 1fr; }
 .notification-dialog-actions button { min-height: 46px; border: 1px solid transparent; border-radius: 15px; font: inherit; font-size: 13px; font-weight: 700; transition: transform .12s ease, background-color .12s ease, border-color .12s ease; }
 .notification-dialog-actions button:active { transform: scale(.98); }
-.notification-dialog-actions button:focus-visible { outline: 3px solid rgb(217 104 76 / 28%); outline-offset: 2px; }
-.notification-dialog-cancel { border-color: #eadbd0 !important; background: #fff !important; color: #75655c; }
-.notification-dialog-cancel:hover { background: #fff7f1 !important; }
-.notification-dialog-accept { background: #df694d; color: #fff; }
+.notification-dialog-actions button:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand-500) 28%, transparent); outline-offset: 2px; }
+.notification-dialog-cancel { border-color: var(--brand-200) !important; background: var(--neutral-0) !important; color: var(--neutral-500); }
+.notification-dialog-cancel:hover { background: var(--neutral-50) !important; }
+.notification-dialog-accept { background: var(--brand-500); color: var(--on-strong); }
 .notification-dialog-accept:hover { filter: brightness(.96); }
 @keyframes notification-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes notification-dialog-in { from { opacity: 0; transform: translateY(7px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }

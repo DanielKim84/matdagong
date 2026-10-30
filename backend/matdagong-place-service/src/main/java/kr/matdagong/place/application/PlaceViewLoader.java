@@ -3,6 +3,7 @@ package kr.matdagong.place.application;
 import static kr.matdagong.place.api.PlaceView.*;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,14 +52,15 @@ class PlaceViewLoader {
         }, (Object) placeIdArray);
 
         List<RecordRow> records = jdbc.query("""
-                SELECT record_id, place_id, account_id, author_name, reason, visibility
+                SELECT record_id, place_id, account_id, author_name, reason, visibility, reg_dt
                 FROM restaurant_records
                 WHERE place_id = ANY(?::uuid[]) AND %s
                 ORDER BY reg_dt DESC
                 """.formatted(recordFilter(scope)), (rs, row) -> new RecordRow(
                 rs.getObject("record_id", UUID.class), rs.getObject("place_id", UUID.class),
                 rs.getObject("account_id", UUID.class), rs.getString("author_name"),
-                rs.getString("reason"), rs.getString("visibility")), filterArgs(placeIdArray, viewerId, scope));
+                rs.getString("reason"), rs.getString("visibility"),
+                rs.getObject("reg_dt", OffsetDateTime.class).toString()), filterArgs(placeIdArray, viewerId, scope));
 
         Map<UUID, Integer> recordCounts = new HashMap<>();
         jdbc.query("""
@@ -154,7 +156,7 @@ class PlaceViewLoader {
                     tagGroups.getOrDefault(record.recordId(), Map.of()),
                     conditions.getOrDefault(record.recordId(), List.of()),
                     photos.getOrDefault(record.recordId(), List.of()), record.visibility(),
-                    placeCounts.getOrDefault(record.accountId(), 0)));
+                    placeCounts.getOrDefault(record.accountId(), 0), record.recordedAt()));
         }
         return authorsByPlace;
     }
@@ -194,5 +196,5 @@ class PlaceViewLoader {
                             String roadAddress, String lotAddress) {}
 
     private record RecordRow(UUID recordId, UUID placeId, UUID accountId, String authorName, String reason,
-                             String visibility) {}
+                             String visibility, String recordedAt) {}
 }

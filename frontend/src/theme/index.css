@@ -1,0 +1,4 @@
+/* 테마 패키지 진입점. 기본 테마 → 시즌 테마 → 의미 토큰 순서로 불러옵니다. */
+@import "./themes/default.css";
+@import "./themes/halloween.css";
+@import "./base.css";

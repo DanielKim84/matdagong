@@ -1,0 +1,666 @@
+/* A 시안 화면 표현: home-lists (홈 아래쪽 · 맛집 모음 · 취향 맛객 추천) */
+
+/*
+ * 홈은 섹션마다 16px 좌우 여백을 직접 줍니다(design-a.css의 인사말·구독 목록과 같은 방식).
+ * 가로로 넘기는 목록이 화면 끝까지 닿도록 바깥 여백은 없앱니다.
+ */
+.app-view .home-content {
+  padding: 0 0 32px;
+}
+
+/* ── 홈: 배너 카드 ── */
+.home-content .home-banner-carousel {
+  margin: 6px 16px 0;
+  border-radius: var(--radius-card);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.home-content .food-banner {
+  height: 184px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.home-content .banner-eyebrow {
+  top: 14px;
+  left: 16px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.home-content .banner-eyebrow .icon {
+  width: 14px;
+  height: 14px;
+}
+.home-content .home-banner-carousel .banner-copy {
+  right: 60px;
+  bottom: 18px;
+  left: 16px;
+  gap: 4px;
+}
+.home-content .banner-copy > b {
+  font-size: 25px;
+  line-height: 1.2;
+}
+.home-content .banner-copy > strong {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.home-content .banner-copy > small {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.home-content .banner-copy > small .icon {
+  width: 14px;
+  height: 14px;
+}
+.home-content .banner-end {
+  right: 16px;
+  bottom: 18px;
+  width: 36px;
+  height: 36px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+.home-content .banner-end .icon {
+  width: 18px;
+  height: 18px;
+}
+.home-content .home-banner-pagination {
+  margin: 10px auto 0;
+}
+.home-content .home-banner-pagination button.active > span {
+  background: var(--color-primary);
+}
+
+/* ── 홈: 내 취향 맛객 (상자 없이 제목 + 가로로 넘기는 흰 카드) ── */
+.home-content .home-taste-recommendations {
+  margin: 26px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+}
+.home-content .home-taste-heading {
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 0 16px;
+}
+.home-content .home-taste-heading > .mascot-buddy {
+  width: 44px;
+  height: 44px;
+}
+.home-content .home-taste-heading > .mascot-buddy > .avatar {
+  width: 42px;
+  height: 42px;
+  border-color: var(--color-surface);
+}
+.home-content .home-taste-heading > .mascot-buddy > i {
+  border-color: var(--color-surface);
+  color: var(--on-strong);
+}
+.home-content .home-taste-heading-copy {
+  gap: 2px;
+}
+.home-content .home-taste-heading h2 {
+  font-size: 19px;
+  letter-spacing: 0;
+}
+.home-content .home-taste-heading p {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.home-content .home-taster-list {
+  gap: 12px;
+  padding: 2px 16px 12px;
+  scroll-snap-type: x proximity;
+}
+.home-content .home-taster-card {
+  width: 156px;
+  min-height: 0;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+  scroll-snap-align: start;
+}
+.home-content .home-taster-cover {
+  height: 96px;
+}
+.home-content .home-taster-cover > i {
+  bottom: -22px;
+  left: 12px;
+  width: 48px;
+  height: 48px;
+  border-color: var(--color-surface);
+  background: var(--color-surface);
+}
+.home-content .home-taster-card-copy {
+  gap: 8px;
+  padding: 28px 14px 14px;
+}
+.home-content .home-taster-card-copy > b {
+  padding-right: 22px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+/* 취향 태그는 코랄 알약으로 줄을 바꿔 보여 줍니다. */
+.home-content .home-taster-card-copy > small {
+  display: flex;
+  width: auto;
+  flex-wrap: wrap;
+  gap: 6px;
+  overflow: visible;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  white-space: nowrap;
+}
+.home-content .home-taster-card-copy > small > span,
+.home-content .home-taster-card-copy > small em {
+  display: inline-flex;
+  height: 26px;
+  max-width: 100%;
+  align-items: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 10px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+.home-content .home-taster-card-copy > small > span {
+  display: block;
+  line-height: 26px;
+}
+.home-content .home-taster-card-copy > small em {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+}
+.home-content .home-taster-card > .icon {
+  top: 126px;
+  right: 12px;
+  bottom: auto;
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+
+/* 취향 맛객 빈 상태: 흰 카드 안 설명 + 작은 알약 버튼 */
+.home-content .home-taster-empty {
+  margin: 0 16px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 16px 18px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.6;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.home-content .home-taster-empty-action {
+  display: flex;
+  width: calc(100% - 32px);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+}
+.home-content .home-taster-empty-action > b {
+  display: inline-flex;
+  height: 40px;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 0 16px;
+  color: var(--on-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+.home-content .home-taster-empty-action > b .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── 홈: 맛객들이 많이 기록한 맛집 ── */
+.home-content .food-categories {
+  margin-top: 22px;
+}
+.home-content .recommendations {
+  margin-top: 6px;
+  padding: 0 16px;
+}
+.home-content .recommendations-heading {
+  align-items: flex-end;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+.home-content .recommendations-heading > div {
+  gap: 4px;
+}
+.home-content .recommendations-heading h2 {
+  color: var(--color-ink);
+  font-size: 19px;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+.home-content .recommendations-heading small {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+/* 지역 범위 버튼은 선택형 칩: 평소 흰 알약, 내 주변이면 먹색 */
+.home-content .home-scope-button {
+  height: 40px;
+  min-height: 40px;
+  gap: 6px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px 0 12px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: none;
+}
+.home-content .home-scope-button .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary);
+}
+.home-content .home-scope-button.active {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--on-strong);
+  box-shadow: none;
+}
+.home-content .home-scope-button.active .icon {
+  color: var(--on-strong);
+}
+.home-content .home-location-message {
+  margin: -4px 0 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── 맛집 타일: 사진이 위에 있는 흰 카드 (홈 · 맛집 모음 공통) ── */
+.home-content .tile-grid,
+.collection-content .tile-grid {
+  gap: 14px 12px;
+}
+.place-tile {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.place-tile .tile-photo {
+  border-radius: 0;
+  background: var(--neutral-100);
+}
+.place-tile .photo-link {
+  height: 136px;
+}
+.place-tile .photo-link > img,
+.place-tile .photo-link > .food-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.place-tile .photo-heart {
+  top: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  padding: 0;
+  color: var(--neutral-700);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-color) 14%, transparent);
+}
+.place-tile .photo-heart .icon {
+  width: 18px;
+  height: 18px;
+}
+.place-tile .photo-heart.is-liked {
+  color: var(--color-primary);
+}
+.place-tile .tile-description {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 12px 14px 14px;
+  color: var(--color-ink);
+}
+.place-tile .tile-description h3 {
+  width: 100%;
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 17px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+.place-tile .tile-place-category {
+  width: 100%;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.place-tile .tile-place-note {
+  width: 100%;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.5;
+}
+/* 추천 맛객 수는 코랄 태그 알약으로 카드 맨 아래에 둡니다. */
+.place-tile .tile-description .rating {
+  display: inline-flex;
+  height: 26px;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 10px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.place-tile .tile-description .rating .icon {
+  width: 14px;
+  height: 14px;
+}
+.place-tile .tile-description .rating small {
+  overflow: hidden;
+  margin: 0;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+/* 불러오는 중: 타일 카드 모양의 자리 */
+.home-content .tile-grid > .tile-skeleton,
+.collection-content .tile-grid > .tile-skeleton {
+  height: 252px;
+  border-radius: var(--radius-card);
+  background: linear-gradient(100deg, var(--color-surface), var(--neutral-100), var(--color-surface));
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+
+/* ── 빈 화면·오류: 흰 카드 + 아이콘 배지 + 작은 알약 버튼 ── */
+.home-content .recommendations .empty-state,
+.collection-content .empty-state {
+  min-height: 0;
+  gap: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 32px 20px 28px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.collection-content .empty-state.collection-empty {
+  margin-top: 4px;
+}
+.home-content .recommendations .empty-state > .icon,
+.collection-content .empty-state > .icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 0 14px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  padding: 16px;
+  color: var(--color-primary);
+}
+.collection-content .empty-state h2 {
+  margin: 0 0 6px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+}
+.home-content .recommendations .empty-state p,
+.collection-content .empty-state p {
+  margin: 0 0 18px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.home-content .recommendations .empty-state .outline-button,
+.collection-content .empty-state .outline-button,
+.collection-content .empty-state > .primary-button {
+  width: auto;
+  min-height: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.home-content .recommendations .empty-state .outline-button,
+.collection-content .empty-state .outline-button {
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+.collection-content .empty-state > .primary-button {
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+
+/* ── 맛집 모음(저장·좋아요·최근·기록) ── */
+.app-view .collection-content {
+  padding: 8px 16px 32px;
+}
+/* 요약 카드: 아이콘 배지 + 제목 + 개수 */
+.collection-content .collection-overview,
+.taster-recommendations .taster-recommendations-intro {
+  gap: 12px;
+  margin: 0 0 18px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 16px 18px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.collection-content .collection-overview > span,
+.taster-recommendations .taster-recommendations-intro > span {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.collection-content .collection-overview > span .icon,
+.taster-recommendations .taster-recommendations-intro > span .icon {
+  width: 20px;
+  height: 20px;
+}
+.collection-content .collection-overview > div {
+  gap: 2px;
+}
+.collection-content .collection-overview > div b,
+.taster-recommendations .taster-recommendations-intro > div b {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+.collection-content .collection-overview > div small,
+.taster-recommendations .taster-recommendations-intro > div p {
+  margin: 2px 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.collection-content .collection-overview > strong,
+.taster-recommendations .taster-recommendations-intro > strong {
+  color: var(--color-ink);
+  font-size: 20px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.collection-content .collection-overview > strong small,
+.taster-recommendations .taster-recommendations-intro > strong small {
+  margin-left: 2px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── 취향 맛객 추천 ── */
+.app-view .taster-recommendations {
+  padding: 8px 16px 32px;
+}
+.taster-recommendations .taster-recommendations-intro > div {
+  display: grid;
+  gap: 2px;
+}
+.taster-recommendations .taster-recommendation-list {
+  gap: 14px;
+}
+.taster-recommendations .taster-recommendation-card {
+  min-height: 132px;
+  align-items: stretch;
+  gap: 14px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 0 14px 0 0;
+  color: var(--color-ink);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.taster-recommendations .taster-recommendation-cover {
+  width: 108px;
+  height: auto;
+  min-height: 132px;
+}
+.taster-recommendations .taster-recommendation-cover > i {
+  right: 8px;
+  bottom: 8px;
+  width: 44px;
+  height: 44px;
+  border-color: var(--color-surface);
+  background: var(--color-surface);
+}
+.taster-recommendations .taster-recommendation-copy {
+  align-content: center;
+  gap: 6px;
+  padding: 14px 0;
+}
+.taster-recommendations .taster-recommendation-copy > b {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+.taster-recommendations .taster-recommendation-copy > small {
+  display: -webkit-box;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.taster-recommendations .taster-recommendation-tags {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.taster-recommendations .taster-recommendation-tags i,
+.taster-recommendations .taster-recommendation-tags em {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 10px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.taster-recommendations .taster-recommendation-tags em {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+}
+.taster-recommendations .taster-recommendation-meta {
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.taster-recommendations .taster-recommendation-meta .icon {
+  width: 14px;
+  height: 14px;
+}
+.taster-recommendations .taster-recommendation-meta > strong {
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+.taster-recommendations .taster-recommendation-card > .icon {
+  width: 18px;
+  height: 18px;
+  align-self: center;
+  color: var(--color-muted);
+}
+
+/* 추천할 맛객이 없을 때 */
+.taster-recommendations .taster-recommendations-empty {
+  gap: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 32px 20px 28px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.taster-recommendations .taster-recommendations-empty > span {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.taster-recommendations .taster-recommendations-empty > b {
+  margin-bottom: 6px;
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+.taster-recommendations .taster-recommendations-empty > p {
+  margin: 0 0 18px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.taster-recommendations .taster-recommendations-empty > .outline-button {
+  min-height: 40px;
+  height: 40px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 18px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}

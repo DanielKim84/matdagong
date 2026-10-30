@@ -1,0 +1,527 @@
+/*
+ * 리뉴얼 공통 부품입니다. 새 화면은 r- 로 시작하는 클래스만 쓰고, 색·글꼴·반경은 테마 토큰만 씁니다.
+ * 화면별 규칙은 styles/renewal/<화면>.css 에 둡니다.
+ */
+
+/* ── 화면 틀 ── */
+.r-screen {
+  min-height: 100dvh;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+.app-view.has-tabbar .r-screen {
+  padding-bottom: calc(108px + env(safe-area-inset-bottom));
+}
+.r-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.r-muted {
+  color: var(--color-muted);
+}
+
+/* 상단 바: 뒤로 + 제목 + 오른쪽 동작 */
+.r-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  min-height: 60px;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-canvas);
+  padding: 8px 12px 8px 8px;
+}
+.r-topbar h1 {
+  flex: 1;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
+}
+.r-topbar--root {
+  padding: 14px 20px 8px;
+}
+.r-topbar--root h1 {
+  font-size: 28px;
+}
+
+/* 아이콘 버튼 */
+.r-icon-button {
+  position: relative;
+  display: inline-grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  padding: 0;
+  color: var(--color-ink);
+}
+.r-icon-button .icon {
+  width: 22px;
+  height: 22px;
+}
+.r-icon-button--float {
+  background: var(--color-surface);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 14%, transparent);
+}
+.r-icon-button__dot {
+  position: absolute;
+  top: 10px;
+  right: 11px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--color-surface);
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+/* 섹션 제목 */
+.r-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.r-section-head h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 800;
+}
+.r-section-head a,
+.r-section-head button {
+  min-height: 32px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-primary-strong);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.r-label {
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* ── 카드 ── */
+.r-card {
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+  color: var(--color-ink);
+  text-align: left;
+}
+.r-card--flat {
+  box-shadow: none;
+}
+.r-card--dark {
+  background: var(--neutral-800);
+  color: var(--on-strong);
+  box-shadow: none;
+}
+
+/* ── 버튼 ── */
+.r-button {
+  display: inline-flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--radius-control);
+  padding: 0 20px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.r-button .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-button--primary {
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-button--secondary {
+  border: 1px solid var(--neutral-200);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+.r-button--soft {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+.r-button--block {
+  width: 100%;
+}
+.r-button--pill {
+  min-height: 40px;
+  border-radius: var(--radius-pill);
+  padding: 0 16px;
+  font-size: 14px;
+}
+.r-button:disabled {
+  opacity: 0.5;
+}
+
+/* ── 칩(선택형)과 태그(표시형) ── */
+.r-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.r-chips::-webkit-scrollbar {
+  display: none;
+}
+.r-chips--wrap {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+.r-chip {
+  display: inline-flex;
+  height: 38px;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--neutral-150);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 15px;
+  color: var(--neutral-700);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.r-chip .icon {
+  width: 16px;
+  height: 16px;
+}
+.r-chip.is-on {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--on-strong);
+}
+.r-chip--accent {
+  border-color: var(--amber-300);
+  background: var(--amber-50);
+  color: var(--amber-800);
+}
+.r-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.r-tag {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 10px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.r-tag--neutral {
+  border: 1px solid var(--neutral-150);
+  background: var(--color-surface);
+  color: var(--neutral-700);
+}
+.r-tag--amber {
+  background: var(--amber-50);
+  color: var(--amber-800);
+}
+
+/* ── 탭 전환(세그먼트) ── */
+.r-segmented {
+  display: flex;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 4px;
+}
+.r-segmented button {
+  min-height: 40px;
+  flex: 1;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+}
+.r-segmented button[aria-selected="true"] {
+  background: var(--color-ink);
+  color: var(--on-strong);
+  font-weight: 800;
+}
+
+/* ── 아바타 묶음·배지 ── */
+.r-avatar-stack {
+  display: flex;
+}
+.r-avatar-stack .avatar {
+  border: 2px solid var(--color-surface);
+}
+.r-avatar-stack .avatar + .avatar {
+  margin-left: -10px;
+}
+.r-badge-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.r-badge-icon .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-match {
+  display: inline-flex;
+  height: 24px;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--amber-50);
+  padding: 0 9px;
+  color: var(--amber-800);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ── 목록 행 ── */
+.r-row {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-bottom: 1px solid var(--neutral-150);
+  background: none;
+  padding: 10px 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+  width: 100%;
+}
+.r-row:last-child {
+  border-bottom: 0;
+}
+.r-row__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-row__copy b {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-row__copy small {
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-thumb {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--neutral-100);
+  object-fit: cover;
+}
+
+/* ── 빈 화면 ── */
+.r-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 24px;
+  text-align: center;
+}
+.r-empty b {
+  font-size: 16px;
+}
+.r-empty p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── 하단 고정 동작 바 ── */
+.r-action-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 25;
+  display: flex;
+  width: min(var(--app-width), 100%);
+  gap: 10px;
+  margin: 0 auto;
+  border-top: 1px solid var(--neutral-150);
+  background: var(--color-canvas);
+  padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
+}
+
+/*
+ * 넓은 화면에서는 앱이 둥근 틀(.app-view) 안에 그려집니다. 틀을 고정 위치의 기준으로 삼아
+ * 하단 탭·하단 동작 바가 브라우저 바닥이 아니라 틀 바닥에 붙게 합니다.
+ */
+@media (min-width: 700px) {
+  .app-view {
+    transform: translateZ(0);
+  }
+  /* 틀 높이는 창보다 32px 낮으므로 화면 최소 높이도 창(100dvh)이 아니라 틀에 맞춥니다. */
+  .r-screen {
+    min-height: 100%;
+  }
+}
+
+/* 마우스로 끌어 넘기는 중인 가로 목록(utils/dragScroll.ts) */
+.is-drag-scrolling {
+  cursor: grabbing;
+  user-select: none;
+}
+.is-drag-scrolling * {
+  pointer-events: none;
+}
+
+/* ── 떠 있는 하단 탭 ── */
+.r-tabbar {
+  position: fixed;
+  right: 0;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  left: 0;
+  z-index: 30;
+  display: flex;
+  width: min(calc(var(--app-width) - 32px), calc(100% - 32px));
+  height: 68px;
+  align-items: center;
+  justify-content: space-around;
+  margin: 0 auto;
+  border-radius: 34px;
+  background: var(--color-surface);
+  padding: 0 6px;
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--shadow-color) 18%, transparent);
+}
+.r-tabbar__tab {
+  display: flex;
+  width: 60px;
+  min-height: 52px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--neutral-500);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+}
+.r-tabbar__tab.is-active {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+.r-tabbar__icon {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.r-tabbar__record {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--on-strong);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--brand-600) 35%, transparent);
+}
+.r-tabbar__record .icon {
+  width: 26px;
+  height: 26px;
+}
+
+/* 기록 메뉴 시트 */
+.r-record-menu__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-record-menu__item {
+  display: flex;
+  width: 100%;
+  min-height: 84px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  font-family: var(--font-body);
+}
+.r-record-menu__icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.r-record-menu__icon.is-strong {
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-record-menu__copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-record-menu__copy b {
+  font-size: 16px;
+}
+.r-record-menu__copy small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.r-record-menu__item > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}

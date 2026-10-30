@@ -1,0 +1,969 @@
+/* 리뉴얼 record 화면 전용 규칙입니다. 공통 부품은 ui.css 를 씁니다. */
+
+/* ── 단계형 기록 화면 틀 ── */
+.r-record {
+  display: flex;
+  flex-direction: column;
+}
+.r-record-head {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  min-height: 60px;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-canvas);
+  padding: 8px 20px 8px 8px;
+}
+.r-record-progress {
+  height: 6px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--neutral-150);
+}
+.r-record-progress > div {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--color-primary);
+  transition: width 0.25s ease;
+}
+.r-record-progress__count {
+  min-width: 28px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+}
+.r-record-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 18px;
+  padding: 8px 20px calc(116px + env(safe-area-inset-bottom));
+}
+.r-record-step {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.r-record-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-record-title h1 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 30px;
+  line-height: 1.3;
+}
+.r-record-title p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.r-record-field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.r-record-field-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.r-record-field-head h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 800;
+}
+.r-record-field-head small {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.r-record-help,
+.r-record-hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-record-hint {
+  border-radius: var(--radius-control);
+  background: var(--amber-50);
+  padding: 12px 14px;
+  color: var(--amber-800);
+}
+.r-record-text-button {
+  align-self: flex-start;
+  min-height: 44px;
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 0 4px;
+  color: var(--color-primary-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-record-error {
+  margin: 0;
+  border-radius: var(--radius-control);
+  background: var(--brand-50);
+  padding: 12px 14px;
+  color: var(--color-primary-strong);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.r-record-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 8px 8px 8px 14px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-record-notice > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-success);
+}
+.r-record-notice span {
+  flex: 1;
+}
+.r-record-notice button {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  padding: 0 10px;
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+.r-record-place-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.r-record-place-chip img,
+.r-record-place-chip__pin {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+  object-fit: cover;
+}
+.r-record-place-chip__pin .icon {
+  width: 18px;
+  height: 18px;
+}
+.r-record-place-chip b {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-record-actions {
+  border-top: 0;
+  background: linear-gradient(to top, var(--color-canvas) 78%, color-mix(in srgb, var(--color-canvas) 0%, transparent));
+  padding-top: 20px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+/* ── 1단계 · 장소 검색 ── */
+.r-record-search {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid var(--neutral-150);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 8px 0 16px;
+  transition: border-color 0.15s;
+}
+.r-record-search:focus-within {
+  border-color: var(--brand-400);
+}
+.r-record-search > .icon {
+  width: 22px;
+  height: 22px;
+  color: var(--color-muted);
+}
+.r-record-search input {
+  min-width: 0;
+  min-height: 44px;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: 16px;
+}
+.r-record-search input::placeholder {
+  color: var(--color-subtle);
+}
+.r-record-search__state {
+  padding-right: 8px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.r-record-search__submit {
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--color-ink);
+  padding: 0 14px;
+  color: var(--on-strong);
+  font-size: 14px;
+  font-weight: 700;
+}
+.r-record-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-record-results__label {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-record-result {
+  cursor: pointer;
+}
+.r-record-result mark {
+  background: none;
+  color: var(--color-primary);
+}
+.r-record .r-badge-icon.is-quiet,
+.r-record-quick .r-badge-icon.is-quiet {
+  background: var(--neutral-100);
+  color: var(--color-muted);
+}
+.r-record-result__save {
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 6px 12px;
+  color: var(--color-primary-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-record-empty {
+  padding: 24px 12px;
+}
+.r-record-drafts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-record-drafts__toggle {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--neutral-100);
+  padding: 0 16px;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+.r-record-drafts__toggle b {
+  display: grid;
+  min-width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--color-primary);
+  padding: 0 8px;
+  color: var(--on-strong);
+  font-size: 13px;
+  font-weight: 800;
+}
+.r-record-drafts__list .r-row > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+.r-record-location {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 4px 8px 4px 14px;
+  min-height: 52px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-record-location > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+.r-record-location.is-ready > .icon {
+  color: var(--green-600);
+}
+.r-record-location span {
+  flex: 1;
+  padding: 8px 0;
+}
+.r-record-location .r-record-text-button {
+  align-self: center;
+}
+.r-record-picked {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+}
+.r-record-picked .r-badge-icon {
+  background: var(--green-50);
+  color: var(--green-600);
+}
+.r-record-picked__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.r-record-picked__copy b {
+  font-size: 17px;
+}
+.r-record-picked__copy small {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-record-picked__copy .r-tag {
+  height: auto;
+  min-height: 26px;
+  margin-top: 4px;
+  white-space: normal;
+}
+.r-record-picked .r-record-text-button {
+  align-self: center;
+}
+
+/* ── 2단계 · 사진과 메뉴 ── */
+.r-record-photos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.r-record-photo-add,
+.r-record-photo {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 16px;
+}
+.r-record-photo-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1.5px dashed var(--neutral-300);
+  background: var(--color-surface);
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.r-record-photo-add .icon {
+  width: 26px;
+  height: 26px;
+  color: var(--color-primary);
+}
+.r-record-photo-add.is-busy {
+  opacity: 0.6;
+}
+.r-record-photo-add:focus-within {
+  outline: 2px solid var(--brand-300);
+  outline-offset: 2px;
+}
+.r-record-photo__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--neutral-100);
+  padding: 0;
+}
+.r-record-photo__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-record-photo__cover {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 3px 8px;
+  color: var(--on-strong);
+  font-size: 11px;
+  font-weight: 800;
+  pointer-events: none;
+}
+.r-record-photo__remove {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--on-strong);
+}
+.r-record-photo__remove .icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--neutral-900) 60%, transparent);
+  padding: 5px;
+}
+.r-record-dishes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-record-dish {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px 10px 10px;
+}
+.r-record-dish__media {
+  position: relative;
+  flex: none;
+}
+.r-record-dish__photo {
+  display: flex;
+  width: 64px;
+  height: 64px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--neutral-100);
+  color: var(--color-muted);
+  cursor: pointer;
+}
+.r-record-dish__photo:focus-within {
+  outline: 2px solid var(--brand-300);
+  outline-offset: 2px;
+}
+.r-record-dish__photo .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-record-dish__photo small {
+  font-size: 11px;
+  font-weight: 700;
+}
+.r-record-dish__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-record-dish__photo-remove {
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--on-strong);
+}
+.r-record-dish__photo-remove .icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--neutral-900) 60%, transparent);
+  padding: 4px;
+}
+.r-record-dish__fields {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-record-dish__fields input {
+  width: 100%;
+  min-height: 32px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.r-record-dish__fields input::placeholder {
+  color: var(--color-subtle);
+  font-weight: 500;
+}
+.r-record-dish__price {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.r-record-dish__price input {
+  font-size: 14px;
+  font-weight: 600;
+}
+.r-record-dish__price i {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-style: normal;
+}
+.r-record-dish__remove .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+.r-record-dashed {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  border: 1px dashed var(--neutral-300);
+  border-radius: 14px;
+  background: none;
+  padding: 0 16px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+.r-record-dashed .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── 3단계 · 취향 태그(공용 TasteTagPicker를 칩 모양으로)와 방문 조건 ── */
+.r-record-tags .taste-tag-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.r-record-tags .taste-tag-picker > section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 0;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+}
+.r-record-tags .taste-tag-group__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+.r-record-tags .taste-tag-group__icon {
+  display: none;
+}
+.r-record-tags .taste-tag-group__titles {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.r-record-tags .taste-tag-group__titles b {
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 800;
+}
+.r-record-tags .taste-tag-group__titles small {
+  display: none;
+}
+.r-record-tags .taste-tag-group__count {
+  border-radius: var(--radius-pill);
+  background: none;
+  padding: 0;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-record-tags .taste-tag-group__count i {
+  font-style: normal;
+}
+.r-record-tags .taste-tag-picker .taste-tag-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.r-record-tags .taste-tag-picker .taste-tag-group .taste-tag-options button {
+  display: inline-flex;
+  width: auto;
+  height: 40px;
+  min-height: 40px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--neutral-150);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 15px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.r-record-tags .taste-tag-picker .taste-tag-group .taste-tag-options button.selected {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--on-strong);
+}
+.r-record-tags .taste-tag-picker .taste-tag-options .taste-tag-label > i {
+  display: none;
+}
+.r-record-tags .taste-tag-picker .taste-tag-check {
+  display: none;
+}
+.r-record-tags .taste-tag-picker .taste-tag-options button:disabled {
+  opacity: 0.4;
+}
+.r-record-condition {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-record-condition__title {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 800;
+}
+.r-record-condition__title small {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.r-record .r-chip {
+  height: 40px;
+}
+
+/* ── 4단계 · 한 줄 추천과 공개 범위 ── */
+.r-record-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+}
+.r-record-headline textarea {
+  width: 100%;
+  min-height: 66px;
+  resize: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 1.45;
+  caret-color: var(--color-primary);
+}
+.r-record-headline textarea::placeholder {
+  color: var(--color-subtle);
+}
+.r-record-headline small,
+.r-record-detail > small {
+  align-self: flex-end;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-record-headline:focus-within {
+  box-shadow: 0 0 0 2px var(--brand-300);
+}
+.r-record-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-record-detail > span {
+  font-size: 15px;
+  font-weight: 800;
+}
+.r-record-detail > span small {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.r-record-detail textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--neutral-150);
+  border-radius: var(--radius-control);
+  outline: 0;
+  background: var(--color-surface);
+  padding: 14px 16px;
+  color: var(--color-ink);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.r-record-detail textarea:focus {
+  border-color: var(--brand-400);
+}
+.r-record-visibility legend {
+  margin-bottom: 12px;
+  padding: 0;
+}
+.r-record-option {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid transparent;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+.r-record-option + .r-record-option {
+  margin-top: 0;
+}
+.r-record-option.is-on {
+  border-color: var(--color-primary);
+}
+.r-record-option:focus-within {
+  outline: 2px solid var(--brand-300);
+  outline-offset: 2px;
+}
+.r-record-option__copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-record-option__copy b {
+  font-size: 15px;
+}
+.r-record-option__copy small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.r-record-option__mark {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  place-items: center;
+  border: 2px solid var(--neutral-200);
+  border-radius: 50%;
+  color: transparent;
+}
+.r-record-option__mark .icon {
+  width: 16px;
+  height: 16px;
+}
+.r-record-option.is-on .r-record-option__mark {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+
+/* ── 5단계 · 확인 ── */
+.r-record-preview,
+.r-record-done__card {
+  overflow: hidden;
+}
+.r-record-preview > img,
+.r-record-done__card > img,
+.r-record-preview__empty,
+.r-record-done__placeholder {
+  display: grid;
+  width: 100%;
+  height: 160px;
+  place-items: center;
+  background: var(--neutral-100);
+  color: var(--color-subtle);
+  object-fit: cover;
+}
+.r-record-preview__empty .icon,
+.r-record-done__placeholder .icon {
+  width: 32px;
+  height: 32px;
+}
+.r-record-preview > div,
+.r-record-done__card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px 16px;
+}
+.r-record-preview b,
+.r-record-done__card b {
+  font-size: 16px;
+}
+.r-record-preview .r-display,
+.r-record-done__card .r-display {
+  font-size: 18px;
+  line-height: 1.4;
+}
+.r-record-preview p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.r-record-summary {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 4px 16px;
+}
+.r-record-summary__row {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--neutral-150);
+}
+.r-record-summary__row:last-child {
+  border-bottom: 0;
+}
+.r-record-summary__row > span {
+  width: 64px;
+  flex: none;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.r-record-summary__row > b {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-record-summary__row .r-record-text-button {
+  align-self: center;
+}
+
+/* ── 저장 완료 ── */
+.r-record-done {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 24px calc(28px + env(safe-area-inset-bottom));
+}
+.r-record-done__hero {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 340px;
+  border-radius: 0 0 48px 48px;
+  background: var(--brand-100);
+}
+.r-record-done__mascot {
+  position: relative;
+  display: block;
+  width: 180px;
+  height: 180px;
+  margin: 48px auto 0;
+}
+.r-record-done__body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  text-align: center;
+}
+.r-record-done__body h1 {
+  margin: 0;
+  font-size: 30px;
+}
+.r-record-done__body > p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.r-record-done__card {
+  width: 100%;
+  margin-top: 6px;
+  text-align: left;
+}
+.r-record-done__actions {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+/* ── 시트(방문 확인·빠른 저장) ── */
+.r-record-sheet__lead,
+.r-record-quick__lead {
+  margin: 0 0 16px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.r-record-sheet__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.r-record-quick {
+  gap: 0;
+}
+.r-record-quick .r-record-results {
+  margin-top: 12px;
+}
+.r-record-quick .r-record-error {
+  margin-top: 12px;
+}
+.r-record-quick .r-record-location {
+  margin-top: 12px;
+}

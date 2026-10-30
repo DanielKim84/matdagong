@@ -1,7 +1,7 @@
 import { useRef, useState, type PointerEvent } from "react";
 import type { Place } from "../models/place";
 import { go } from "../app/navigation";
-import { FoodPhoto, TasterMapMarker } from "../components/BrandAssets";
+import { Avatar, FoodPhoto, TasterMapMarker } from "../components/BrandAssets";
 import { FeedTabs } from "../components/AppChrome";
 import MapCanvas from "../components/MapCanvas";
 import Icon from "../components/Icon";
@@ -202,12 +202,29 @@ export default function MapScreen({
                   ? <img className="food-photo map-place-photo" src={recordPhoto} alt={`${place.name} 사진`} loading="lazy" decoding="async" />
                   : <FoodPhoto place={place} />;
               })()}
-              <span>
+              <span className="map-place-copy">
                 <h2>{place.name}</h2>
                 <span className="map-place-meta">
-                  <Rating count={place.recordCount} />
+                  {place.category && <small className="map-place-category">{place.category.split(">").pop()?.trim()}</small>}
                   <small><Icon name="pin" />{place.address}</small>
                 </span>
+                {(() => {
+                  // 시안처럼 추천한 맛객 얼굴과 이름을 한 줄로 보여 줍니다.
+                  const recommenders = place.tasters.filter((taster, index, list) =>
+                    list.findIndex((other) => other.tasterId === taster.tasterId) === index);
+                  if (!recommenders.length) return <span className="map-place-recommenders"><Rating count={place.recordCount} /></span>;
+                  const others = recommenders.length - 1;
+                  return (
+                    <span className="map-place-recommenders">
+                      <span className="map-place-recommender-avatars" aria-hidden="true">
+                        {recommenders.slice(0, 3).map((taster) => (
+                          <Avatar key={taster.tasterId} src={taster.avatar} name={taster.tasterName} variant={taster.avatarVariant} />
+                        ))}
+                      </span>
+                      <small><b>{recommenders[0].tasterName}</b>{others > 0 ? ` 외 ${others}명이 추천` : " 추천"}</small>
+                    </span>
+                  );
+                })()}
                 <span className="small-tags" aria-label="맛객 기록 요약">
                   {(() => {
                     const summaryTags = [...new Set(place.tasters.flatMap((taster) => [

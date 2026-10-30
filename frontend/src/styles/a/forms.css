@@ -1,0 +1,1957 @@
+/*
+ * A 시안 화면 표현: 입력 화면(맛집 등록, 빠른 기록, 프로필·취향 편집, 태그 제안).
+ * 크림 바탕 위 흰 카드, 52px 입력, 알약 칩(선택은 먹색), 아래 고정 주요 버튼.
+ * 같은 부품을 쓰는 가입 화면에는 번지지 않도록 화면 루트로 범위를 좁힙니다.
+ */
+
+.registration-form,
+.profile-settings,
+.quick-place-sheet,
+.tag-request-sheet {
+  --forms-card-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+  --forms-focus-ring: 0 0 0 3px var(--brand-50);
+}
+
+/* ═════════════ 맛집 등록 ═════════════ */
+
+.app-view .registration-form {
+  display: grid;
+  gap: 20px;
+  background: var(--color-canvas);
+  padding: 16px 16px 0;
+  color: var(--color-ink);
+}
+
+/* ── 섹션 카드: 테두리 없는 흰 카드 ── */
+.registration-form .register-place-picker,
+.registration-form .register-related-fields > .register-food-kind,
+.registration-form .register-related-fields > .registration-taste-tags,
+.registration-form .register-related-fields > .visit-condition-section,
+.registration-form .register-recommendation-fields > .reason-field,
+.registration-form .register-recommendation-fields > .form-section,
+.registration-form > .visibility-field {
+  margin: 0;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 18px;
+  box-shadow: var(--forms-card-shadow);
+}
+
+/* 묶음 상자는 풀고, 안의 섹션을 각각 카드로 띄웁니다. */
+.registration-form .register-related-fields,
+.registration-form .register-recommendation-fields {
+  display: grid;
+  gap: 20px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+}
+
+/* ── 섹션 제목: 제목 글꼴 ── */
+.registration-form .register-place-picker > header b,
+.registration-form .register-food-kind > legend,
+.registration-form .visibility-field > legend,
+.registration-form .registration-taste-tags h2,
+.registration-form .visit-condition-section h2,
+.registration-form .form-section h2,
+.registration-form .reason-field > b {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+/* 카드 안 legend가 카드 위 가장자리에 붙지 않도록 일반 흐름으로 둡니다. */
+.registration-form .register-food-kind > legend,
+.registration-form .visibility-field > legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 0;
+}
+.registration-form .form-section h2 small {
+  margin-left: 6px;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+}
+.registration-form .register-recommendation-fields > .form-section h2 small {
+  display: block;
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+.registration-form .required-mark {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  margin-left: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 8px;
+  color: var(--brand-700);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  vertical-align: 2px;
+}
+
+/* ── 복원 안내 ── */
+.registration-form > .register-draft-restored {
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 12px 14px;
+  color: var(--green-500);
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: var(--forms-card-shadow);
+}
+.registration-form > .register-draft-restored > .icon {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+.registration-form > .register-draft-restored > button {
+  min-height: 36px;
+  padding: 0 4px;
+  color: var(--color-primary-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ── 사진 ── */
+.registration-form .registration-photo-gallery {
+  gap: 10px;
+  margin: 0;
+}
+.registration-form .registration-photo-empty {
+  min-height: 188px;
+  gap: 10px;
+  border: 1.5px dashed var(--brand-200);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 24px 20px;
+  box-shadow: var(--forms-card-shadow);
+}
+.registration-form .registration-photo-empty > span {
+  width: 56px;
+  height: 56px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+.registration-form .registration-photo-empty > span .icon {
+  width: 24px;
+  height: 24px;
+}
+.registration-form .registration-photo-empty > b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.registration-form .registration-photo-empty > small {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.registration-form .registration-photo-cover {
+  height: 228px;
+  margin: 0;
+  border-radius: var(--radius-card);
+  box-shadow: var(--forms-card-shadow);
+}
+.registration-form .registration-photo-cover > .registration-photo-primary-badge,
+.registration-form .registration-photo-cover > .registration-photo-count {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.registration-form .registration-photo-cover > .registration-photo-add {
+  min-height: 40px;
+  gap: 6px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 16%, transparent);
+  backdrop-filter: none;
+}
+.registration-form .registration-photo-cover > .registration-photo-add .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary);
+}
+.registration-form .registration-photo-strip {
+  gap: 8px;
+  margin: 0 -4px;
+  padding: 4px;
+}
+.registration-form .registration-photo-thumbnail {
+  width: 72px;
+  height: 72px;
+}
+.registration-form .registration-photo-thumbnail-preview {
+  border: 0;
+  border-radius: 14px;
+  background: var(--neutral-200);
+}
+.registration-form .registration-photo-thumbnail-preview.active {
+  border: 0;
+  box-shadow: inset 0 0 0 2px var(--color-surface), 0 0 0 2px var(--color-primary);
+}
+.registration-form .registration-photo-thumbnail-preview.active > img {
+  border-radius: 14px;
+}
+.registration-form .registration-photo-thumbnail-delete {
+  border: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+/* ── 장소 선택 ── */
+.registration-form .register-place-picker > header {
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.registration-form .register-place-picker > header > .register-place-symbol {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.registration-form .register-place-symbol > .icon {
+  width: 20px;
+  height: 20px;
+}
+.registration-form .register-place-picker > header > div {
+  gap: 4px;
+}
+.registration-form .register-place-picker > header small,
+.registration-form .register-place-help {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.registration-form .register-place-help {
+  margin: 10px 2px 0;
+}
+.registration-form .register-location-status {
+  min-height: 36px;
+  gap: 6px;
+  margin: 0 0 10px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.registration-form .register-location-status.is-ready {
+  color: var(--green-500);
+}
+.registration-form .register-location-status > .icon {
+  width: 16px;
+  height: 16px;
+}
+.registration-form .register-location-status > button {
+  min-height: 36px;
+  padding: 0 4px;
+  color: var(--color-primary-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+.registration-form .address-selected {
+  gap: 4px;
+  margin: 10px 2px 0;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.registration-form .address-selected .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--green-500);
+}
+
+/* 임시 저장 장소 */
+.registration-form .saved-places-entry {
+  margin: 0 0 12px;
+}
+.registration-form .saved-places-entry > button {
+  min-height: 52px;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-canvas);
+  padding: 0 14px;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.registration-form .saved-places-entry > button > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-primary);
+}
+.registration-form .saved-places-entry > button > b {
+  display: inline-flex;
+  height: 24px;
+  min-width: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 0 8px;
+  color: var(--on-strong);
+  font-size: 12px;
+}
+.registration-form .saved-places-entry > button > .icon:last-child {
+  width: 16px;
+  height: 16px;
+  color: var(--color-muted);
+  transform: rotate(90deg);
+}
+.registration-form .saved-places-entry > button[aria-expanded="true"] > .icon:last-child {
+  transform: rotate(-90deg);
+}
+.registration-form .quick-place-drafts {
+  gap: 8px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-canvas);
+  padding: 8px;
+}
+.registration-form .quick-place-draft {
+  border: 0;
+  border-radius: 14px;
+  background: var(--color-surface);
+  padding: 0 14px;
+}
+.registration-form .quick-place-draft > .quick-place-draft-select {
+  min-height: 60px;
+  gap: 10px;
+}
+.registration-form .quick-place-draft > .quick-place-draft-select > span {
+  gap: 2px;
+}
+.registration-form .quick-place-draft b {
+  font-size: 15px;
+  font-weight: 700;
+}
+.registration-form .quick-place-draft small {
+  font-size: 13px;
+}
+.registration-form .quick-place-draft > .quick-place-draft-select > .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-muted);
+}
+
+/* 검색 입력: 맛집 등록과 빠른 기록이 같은 모양을 씁니다. */
+.registration-form .register-place-search,
+.quick-place-sheet .quick-place-search {
+  box-sizing: border-box;
+  height: 52px;
+  min-height: 52px;
+  gap: 10px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 6px 0 16px;
+  color: var(--color-muted);
+  box-shadow: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.registration-form .register-place-search:focus-within,
+.quick-place-sheet .quick-place-search:focus-within {
+  border-color: var(--brand-400);
+  box-shadow: var(--forms-focus-ring);
+}
+.registration-form .register-place-search > .icon,
+.quick-place-sheet .quick-place-search > .icon {
+  width: 20px;
+  height: 20px;
+}
+.registration-form .register-place-search > input,
+.quick-place-sheet .quick-place-search > input {
+  height: 100%;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: 15px;
+}
+.registration-form .register-place-search > input::placeholder,
+.quick-place-sheet .quick-place-search > input::placeholder {
+  color: var(--color-subtle);
+}
+.registration-form .register-place-search > button,
+.quick-place-sheet .quick-place-search > button {
+  display: grid;
+  min-width: 64px;
+  height: 40px;
+  min-height: 0;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 0 16px;
+  color: var(--on-strong);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 검색 결과 */
+.registration-form .register-place-results {
+  gap: 8px;
+  max-height: 320px;
+  margin-top: 10px;
+}
+.registration-form .register-place-results > button {
+  min-height: 64px;
+  gap: 10px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 10px 14px;
+}
+.registration-form .register-place-results > button > span {
+  gap: 2px;
+}
+.registration-form .register-place-results b {
+  font-size: 15px;
+  font-weight: 700;
+}
+.registration-form .register-place-results small {
+  font-size: 13px;
+}
+.registration-form .register-place-results .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-muted);
+}
+
+/* 선택한 장소 */
+.registration-form .register-place-selected {
+  gap: 12px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-canvas);
+  padding: 12px 12px 12px 14px;
+}
+.registration-form .register-place-selected > span {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--green-500);
+  color: var(--on-strong);
+}
+.registration-form .register-place-selected > span .icon {
+  width: 20px;
+  height: 20px;
+}
+.registration-form .register-place-selected > div {
+  gap: 2px;
+}
+.registration-form .register-place-selected b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.registration-form .register-place-selected small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.registration-form .register-place-selected > button {
+  min-height: 36px;
+  flex: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.registration-form .liked-place-visit-confirmation {
+  gap: 12px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-canvas);
+  padding: 12px 14px;
+  color: var(--color-ink);
+}
+.registration-form .liked-place-visit-confirmation b {
+  font-size: 14px;
+  font-weight: 700;
+}
+.registration-form .liked-place-visit-confirmation small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.registration-form .liked-place-visit-check {
+  width: 28px;
+  height: 28px;
+  background: var(--green-500);
+  color: var(--on-strong);
+}
+
+/* ── 장소 분야: 큰 선택 칩, 선택하면 먹색 ── */
+.registration-form .register-related-fields > .register-food-kind {
+  gap: 10px;
+}
+.registration-form .register-food-kind > button {
+  min-height: 64px;
+  gap: 10px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 10px 12px;
+  color: var(--color-ink);
+  box-shadow: none;
+  transition: background .15s, border-color .15s;
+}
+.registration-form .register-food-kind > button > .icon {
+  width: 22px;
+  height: 22px;
+  color: var(--color-primary);
+}
+.registration-form .register-food-kind > button > span {
+  gap: 2px;
+}
+.registration-form .register-food-kind b {
+  color: inherit;
+  font-size: 15px;
+  font-weight: 700;
+}
+.registration-form .register-food-kind small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.registration-form .register-food-kind > button[aria-pressed="true"] {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--on-strong);
+  box-shadow: none;
+}
+.registration-form .register-food-kind > button[aria-pressed="true"] > .icon,
+.registration-form .register-food-kind > button[aria-pressed="true"] small {
+  color: color-mix(in srgb, var(--on-strong) 78%, transparent);
+}
+
+/* ── 맛과 메뉴 태그 카드 ── */
+.registration-form .registration-taste-tags > header {
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.registration-form .registration-taste-tags > header > div {
+  gap: 4px;
+}
+.registration-form .registration-taste-tags > header small {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.registration-form .registration-taste-tags .tag-load-error {
+  margin: 4px 0 0;
+  border-radius: 14px;
+  background: var(--color-canvas);
+  padding: 12px 14px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── 매장 이용 정보 ── */
+.registration-form .place-info-heading {
+  align-items: flex-start;
+}
+.registration-form .place-info-heading p {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.registration-form .place-info-propose {
+  min-height: 36px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.registration-form .place-info-picker-trigger {
+  min-height: 52px;
+  margin-top: 14px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 14px 0 16px;
+}
+.registration-form .place-info-picker-trigger > span {
+  gap: 10px;
+  color: var(--color-ink);
+  font-size: 15px;
+}
+.registration-form .place-info-picker-trigger > span b {
+  font-weight: 600;
+}
+.registration-form .place-info-picker-trigger > span > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-primary);
+}
+.registration-form .place-info-picker-trigger > .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-muted);
+}
+.registration-form .place-info-selected {
+  gap: 6px;
+  margin-top: 12px;
+}
+.registration-form .place-info-selected span {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 12px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 매장 이용 정보 선택 시트의 내용 */
+.place-info-sheet > p {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.place-info-sheet .place-info-groups {
+  gap: 20px;
+}
+.place-info-sheet .place-info-group {
+  gap: 10px;
+}
+.place-info-sheet .place-info-group > header {
+  gap: 2px;
+}
+.place-info-sheet .place-info-group > header > b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.place-info-sheet .place-info-group > header > small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.place-info-sheet .visit-condition-options {
+  gap: 8px;
+}
+.place-info-sheet .visit-condition-options > label {
+  min-height: 48px;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  background: var(--color-surface);
+  padding: 8px 12px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: none;
+}
+.place-info-sheet .visit-condition-options > label > span {
+  gap: 8px;
+  line-height: 1.3;
+}
+.place-info-sheet .visit-condition-options > label > span > i {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--color-line);
+  border-radius: 6px;
+}
+.place-info-sheet .visit-condition-options > label.selected {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--on-strong);
+  box-shadow: none;
+}
+.place-info-sheet .visit-condition-options > label.selected > span > i {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.place-info-sheet > .primary-button {
+  min-height: 52px;
+  margin-top: 18px;
+  font-size: 16px;
+}
+.place-conversion-sheet > p {
+  color: var(--neutral-700);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.place-conversion-sheet .sheet-actions > * {
+  min-height: 52px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ── 추천 이유 ── */
+.registration-form .register-recommendation-fields > .reason-field {
+  gap: 12px;
+}
+.registration-form .reason-field textarea {
+  min-height: 132px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 14px 16px;
+  color: var(--color-ink);
+  font-size: 15px;
+  line-height: 1.6;
+  transition: border-color .15s, box-shadow .15s;
+}
+.registration-form .reason-field textarea::placeholder {
+  color: var(--color-subtle);
+}
+.registration-form .reason-field textarea:focus {
+  border-color: var(--brand-400);
+  outline: none;
+  box-shadow: var(--forms-focus-ring);
+}
+.registration-form .reason-field > small {
+  margin-top: -4px;
+  color: var(--color-subtle);
+  font-size: 12px;
+}
+
+/* ── 추천 메뉴: 이름 한 줄, 가격·사진·삭제 한 줄 ── */
+.registration-form .recommended-menu-rows {
+  gap: 10px;
+  margin-top: 14px;
+}
+.registration-form .recommended-menu-row,
+.registration-form .recommended-menu-row.has-remove {
+  grid-template-columns: minmax(0, 1fr) 64px 44px;
+  grid-template-areas:
+    "name name name"
+    "price photo remove";
+  align-items: end;
+  gap: 10px 8px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--color-canvas);
+  padding: 14px;
+}
+.registration-form .recommended-menu-row > label:first-child {
+  grid-area: name;
+}
+.registration-form .recommended-menu-row > .recommended-menu-price {
+  grid-area: price;
+}
+.registration-form .recommended-menu-row > .recommended-menu-photo-field {
+  grid-area: photo;
+}
+.registration-form .recommended-menu-row > .recommended-menu-remove,
+.registration-form .recommended-menu-row > .recommended-menu-remove-spacer {
+  grid-area: remove;
+}
+.registration-form .recommended-menu-row > label,
+.registration-form .recommended-menu-photo-field {
+  gap: 6px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+.registration-form .recommended-menu-row > label > input {
+  height: 52px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 16px;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 400;
+}
+.registration-form .recommended-menu-row > label > input::placeholder {
+  color: var(--color-subtle);
+}
+.registration-form .recommended-menu-row > label > input:focus {
+  border-color: var(--brand-400);
+  box-shadow: var(--forms-focus-ring);
+}
+.registration-form .recommended-menu-row > .recommended-menu-price > i {
+  right: 16px;
+  bottom: 16px;
+  color: var(--color-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+.registration-form .recommended-menu-row .recommended-menu-photo-field > .recommended-menu-photo {
+  height: 52px;
+  min-height: 52px;
+  max-height: 52px;
+  flex-direction: column;
+  gap: 2px;
+  border: 1.5px dashed var(--brand-200);
+  border-radius: 14px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.registration-form .recommended-menu-row .recommended-menu-photo-field > .recommended-menu-photo.has-photo {
+  border: 0;
+}
+.registration-form .recommended-menu-row .recommended-menu-photo-field > .recommended-menu-photo .icon {
+  width: 18px;
+  height: 18px;
+}
+.registration-form .recommended-menu-row .recommended-menu-photo-field > .recommended-menu-photo > span {
+  font-size: 12px;
+}
+.registration-form .recommended-menu-row .recommended-menu-photo-field > .recommended-menu-photo > button {
+  width: 22px;
+  height: 22px;
+}
+.registration-form .recommended-menu-row > .recommended-menu-remove {
+  width: 44px;
+  height: 52px;
+  min-width: 44px;
+  margin: 0;
+  border: 1px solid var(--color-line) !important;
+  border-radius: 14px !important;
+  background: var(--color-surface) !important;
+  color: var(--color-muted) !important;
+}
+.registration-form .recommended-menu-row > .recommended-menu-remove .icon {
+  width: 18px;
+  height: 18px;
+}
+.registration-form .recommended-menu-row > .recommended-menu-remove-spacer {
+  width: 44px;
+  height: 52px;
+  min-width: 44px;
+  border: 0 !important;
+  background: transparent !important;
+}
+.registration-form .recommended-menu-add {
+  width: 100%;
+  min-height: 52px;
+  gap: 6px;
+  margin-top: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.registration-form .recommended-menu-add:hover {
+  border-color: var(--brand-400);
+  background: var(--color-surface);
+}
+.registration-form .recommended-menu-add .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-primary);
+}
+
+/* ── 공개 범위: 라디오 카드, 선택 색은 주색 ── */
+.registration-form > .visibility-field {
+  display: grid;
+  gap: 10px;
+}
+.registration-form .visibility-field > label {
+  min-height: 64px;
+  gap: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 10px 16px;
+  color: var(--color-ink);
+  font-size: 15px;
+  box-shadow: none;
+}
+.registration-form .visibility-field > label > span {
+  gap: 2px;
+}
+.registration-form .visibility-field > label > span > b {
+  font-size: 15px;
+  font-weight: 700;
+}
+.registration-form .visibility-field > label > span > small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.registration-form .visibility-field > label > i {
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--color-line);
+}
+.registration-form .visibility-field > label > i .icon {
+  width: 14px;
+  height: 14px;
+}
+.registration-form .visibility-field > label.selected {
+  border-color: var(--color-primary);
+  background: var(--brand-50);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+.registration-form .visibility-field > label.selected > i {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.registration-form .visibility-like-note {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ── 오류와 아래 고정 등록 버튼 ── */
+.registration-form > .form-error {
+  margin: 0;
+  border-radius: 14px;
+  background: var(--brand-50);
+  padding: 12px 14px;
+  color: var(--brand-700);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.registration-form > .register-submit-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  margin: 0 -16px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-canvas) 0%, transparent), var(--color-canvas) 18px);
+  padding: 18px 16px calc(14px + env(safe-area-inset-bottom));
+}
+.registration-form > .register-submit-bar > .primary-button {
+  min-height: 52px;
+  margin: 0;
+  border-radius: var(--radius-control);
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+/* ═════════════ 맛 태그 선택(등록·프로필 공통) ═════════════ */
+
+.registration-form .taste-tag-picker,
+.profile-settings .taste-tag-picker {
+  gap: 0;
+}
+.registration-form .registration-taste-tags .taste-tag-picker > section.taste-tag-group,
+.profile-settings .settings-panel .taste-tag-picker > section.taste-tag-group {
+  gap: 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+.registration-form .registration-taste-tags .taste-tag-picker > section.taste-tag-group + section.taste-tag-group,
+.profile-settings .settings-panel .taste-tag-picker > section.taste-tag-group + section.taste-tag-group {
+  margin-top: 18px;
+  border-top: 1px solid var(--color-line);
+  padding-top: 18px;
+}
+.registration-form .taste-tag-picker .taste-tag-group__header,
+.profile-settings .taste-tag-picker .taste-tag-group__header {
+  gap: 12px;
+}
+.registration-form .taste-tag-picker .taste-tag-group__icon,
+.profile-settings .taste-tag-picker .taste-tag-group__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.registration-form .taste-tag-picker .taste-tag-group__icon .icon,
+.profile-settings .taste-tag-picker .taste-tag-group__icon .icon {
+  width: 20px;
+  height: 20px;
+}
+.registration-form .taste-tag-picker .taste-tag-group__titles,
+.profile-settings .taste-tag-picker .taste-tag-group__titles {
+  gap: 2px;
+}
+.registration-form .taste-tag-picker .taste-tag-group__titles b,
+.profile-settings .taste-tag-picker .taste-tag-group__titles b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.registration-form .taste-tag-picker .taste-tag-group__titles small,
+.profile-settings .taste-tag-picker .taste-tag-group__titles small {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.registration-form .taste-tag-picker .taste-tag-group .taste-tag-group__count,
+.profile-settings .taste-tag-picker .taste-tag-group .taste-tag-group__count {
+  gap: 1px;
+  align-self: center;
+  color: var(--color-muted);
+}
+.registration-form .taste-tag-picker .taste-tag-group .taste-tag-group__count b,
+.profile-settings .taste-tag-picker .taste-tag-group .taste-tag-group__count b {
+  color: var(--color-primary-strong);
+  font-size: 14px;
+  font-weight: 800;
+}
+.registration-form .taste-tag-picker .taste-tag-group .taste-tag-group__count i,
+.profile-settings .taste-tag-picker .taste-tag-group .taste-tag-group__count i {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.registration-form .taste-tag-picker .taste-tag-group__compact-count,
+.profile-settings .taste-tag-picker .taste-tag-group__compact-count {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.registration-form .taste-tag-picker .taste-tag-options,
+.profile-settings .taste-tag-picker .taste-tag-options {
+  gap: 8px;
+}
+/* 칩: 흰 알약, 선택하면 먹색 */
+.registration-form .taste-tag-picker .taste-tag-group .taste-tag-options button,
+.profile-settings .taste-tag-picker .taste-tag-group .taste-tag-options button {
+  min-height: 38px;
+  gap: 0;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  box-shadow: none;
+}
+.registration-form .taste-tag-picker .taste-tag-group .taste-tag-options button:hover:not(:disabled),
+.profile-settings .taste-tag-picker .taste-tag-group .taste-tag-options button:hover:not(:disabled) {
+  border-color: var(--brand-400);
+  background: var(--color-surface);
+  color: var(--neutral-700);
+}
+.registration-form .taste-tag-picker .taste-tag-group .taste-tag-options button.selected,
+.registration-form .taste-tag-picker .taste-tag-group .taste-tag-options button.selected:hover:not(:disabled),
+.profile-settings .taste-tag-picker .taste-tag-group .taste-tag-options button.selected,
+.profile-settings .taste-tag-picker .taste-tag-group .taste-tag-options button.selected:hover:not(:disabled) {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--on-strong);
+  font-weight: 700;
+  box-shadow: none;
+}
+.registration-form .taste-tag-picker .taste-tag-options .taste-tag-label > i,
+.profile-settings .taste-tag-picker .taste-tag-options .taste-tag-label > i {
+  margin-right: 1px;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+.registration-form .taste-tag-picker .taste-tag-group .taste-tag-options button.selected .taste-tag-label > i,
+.profile-settings .taste-tag-picker .taste-tag-group .taste-tag-options button.selected .taste-tag-label > i {
+  color: color-mix(in srgb, var(--on-strong) 70%, transparent);
+}
+.registration-form .taste-tag-picker .taste-tag-options button:disabled,
+.profile-settings .taste-tag-picker .taste-tag-options button:disabled {
+  opacity: .4;
+}
+
+/* ═════════════ 빠른 장소 기록(시트 안 내용) ═════════════ */
+
+.quick-place-sheet .quick-place-intro {
+  margin: 0 0 14px;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.quick-place-sheet .quick-place-location,
+.quick-place-sheet .quick-place-location.is-ready {
+  min-height: 72px;
+  gap: 12px;
+  margin-bottom: 12px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--color-surface);
+  padding: 8px 12px 8px 8px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  box-shadow: var(--forms-card-shadow);
+}
+.quick-place-sheet .quick-place-location.is-ready > span:nth-child(2) {
+  color: var(--green-500);
+  font-weight: 600;
+}
+.quick-place-sheet .quick-place-location-art {
+  border-radius: 14px;
+}
+.quick-place-sheet .quick-place-location button {
+  min-height: 36px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 12px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.quick-place-sheet .quick-place-error {
+  margin: 10px 2px 0;
+  border-radius: 14px;
+  background: var(--brand-50);
+  padding: 10px 14px;
+  color: var(--brand-700);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.quick-place-sheet .quick-place-results {
+  gap: 10px;
+  margin-top: 12px;
+}
+.quick-place-sheet .quick-place-result {
+  grid-template-columns: 44px minmax(0, 1fr) 18px;
+  min-height: 76px;
+  gap: 12px !important;
+  border: 0;
+  border-radius: 18px !important;
+  background: var(--color-surface);
+  padding: 12px 14px 12px 12px !important;
+  box-shadow: var(--forms-card-shadow);
+}
+.quick-place-sheet .quick-place-result-pin {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.quick-place-sheet .quick-place-result-pin .icon {
+  width: 20px;
+  height: 20px;
+}
+.quick-place-sheet .quick-place-result-copy {
+  gap: 2px;
+}
+.quick-place-sheet .quick-place-result-copy b {
+  color: var(--color-ink);
+  font-size: 15px !important;
+  font-weight: 700;
+}
+.quick-place-sheet .quick-place-result-copy small {
+  color: var(--color-muted);
+  font-size: 13px !important;
+}
+.quick-place-sheet .quick-place-result-copy em {
+  justify-self: start;
+  margin-top: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 3px 10px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.quick-place-sheet .quick-place-result-next {
+  color: var(--color-muted);
+}
+.quick-place-sheet .quick-place-result-next .icon {
+  width: 16px;
+  height: 16px;
+}
+.quick-place-sheet .quick-place-storage-note {
+  margin-top: 14px;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ═════════════ 프로필·취향 편집 ═════════════ */
+
+.app-view .profile-settings {
+  background: var(--color-canvas);
+}
+
+/* 공개 프로필 / 추천 취향 전환: 흰 알약 안의 먹색 선택 */
+.profile-settings .settings-view-switch {
+  gap: 4px;
+  margin: 12px 20px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 4px;
+  box-shadow: var(--forms-card-shadow);
+}
+.profile-settings .settings-view-switch button {
+  min-height: 44px;
+  gap: 6px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: none;
+}
+.profile-settings .settings-view-switch button .icon {
+  width: 18px;
+  height: 18px;
+  color: currentColor;
+}
+.profile-settings .settings-view-switch button[aria-pressed="true"] {
+  border: 0;
+  background: var(--color-ink);
+  color: var(--on-strong);
+  box-shadow: none;
+}
+.profile-settings .settings-view-switch button[aria-pressed="true"] .icon {
+  color: var(--on-strong);
+}
+
+/* ── 공개 프로필 카드 ── */
+.profile-settings .profile-edit-avatar-section,
+.profile-settings .profile-edit-card,
+.profile-settings .public-style-settings,
+.profile-settings .taste-settings-block,
+.profile-settings .tag-request-entry {
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--forms-card-shadow);
+}
+.profile-settings .profile-edit-avatar-section {
+  min-height: 0;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 16px 18px;
+}
+.profile-settings .profile-edit-avatar-button,
+.profile-settings .profile-edit-avatar-button > .avatar {
+  width: 64px;
+  height: 64px;
+}
+.profile-settings .profile-edit-avatar-button > span:last-child {
+  width: 26px;
+  height: 26px;
+  border-color: var(--color-surface);
+  background: var(--color-primary);
+}
+.profile-settings .profile-edit-avatar-button > span:last-child .icon {
+  width: 14px;
+  height: 14px;
+}
+.profile-settings .profile-edit-avatar-section > div {
+  gap: 3px;
+}
+.profile-settings .profile-edit-avatar-section b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-avatar-section small {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.profile-settings .profile-edit-avatar-section .text-action {
+  min-height: 36px;
+  flex: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 12px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* 배경 사진 */
+.profile-settings .profile-edit-cover {
+  height: 200px;
+  border-radius: var(--radius-card);
+  box-shadow: var(--forms-card-shadow);
+}
+.profile-settings .profile-edit-cover > button {
+  min-height: 40px;
+  gap: 6px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 16%, transparent);
+  backdrop-filter: none;
+}
+.profile-settings .profile-edit-cover > button .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary);
+}
+.profile-settings .profile-edit-cover > .profile-default-cover-badge,
+.profile-settings .profile-edit-cover > .profile-primary-cover-badge,
+.profile-settings .profile-edit-cover > .profile-cover-count {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-cover > .profile-cover-count {
+  top: 12px;
+  right: 12px;
+  bottom: auto;
+}
+.profile-settings .profile-edit-cover-thumbnails {
+  gap: 8px;
+  margin: 8px 16px 0;
+  padding: 4px;
+}
+.profile-settings .profile-edit-cover-thumbnail {
+  width: 80px;
+  height: 64px;
+}
+.profile-settings .profile-edit-cover-thumbnail-preview {
+  border: 0;
+  border-radius: 14px;
+  background: var(--neutral-200);
+}
+.profile-settings .profile-edit-cover-thumbnail-preview.active {
+  border: 0;
+  box-shadow: inset 0 0 0 2px var(--color-surface), 0 0 0 2px var(--color-primary);
+}
+.profile-settings .profile-edit-cover-thumbnail-preview > img {
+  border-radius: 14px;
+}
+.profile-settings .profile-edit-cover-thumbnail-delete {
+  border: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+/* 입력 카드 */
+.profile-settings .profile-edit-card {
+  margin-top: 16px;
+  padding: 18px;
+}
+.profile-settings .profile-edit-card > .profile-edit-field {
+  margin-top: 0;
+}
+.profile-settings .profile-edit-card > .profile-edit-field + .profile-edit-field {
+  margin-top: 20px;
+}
+
+/* ── 입력 칸(프로필 편집·태그 제안 공통) ── */
+.profile-settings .profile-edit-field,
+.tag-request-form .profile-edit-field {
+  gap: 8px;
+}
+.profile-settings .profile-edit-field > span,
+.tag-request-form .profile-edit-field > span {
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-field em,
+.tag-request-form .profile-edit-field em {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  margin-left: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 8px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-field > span > small,
+.tag-request-form .profile-edit-field > span > small {
+  margin-left: 6px;
+  color: var(--color-subtle);
+  font-size: 12px;
+  font-weight: 500;
+}
+.profile-settings .profile-edit-field > input,
+.profile-settings .profile-edit-field > textarea,
+.tag-request-form .profile-edit-field > input,
+.tag-request-form .profile-edit-field > textarea {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 16px;
+  color: var(--color-ink);
+  font-size: 15px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.profile-settings .profile-edit-field > input,
+.tag-request-form .profile-edit-field > input {
+  height: 52px;
+  min-height: 52px;
+}
+.profile-settings .profile-edit-field > textarea,
+.tag-request-form .profile-edit-field > textarea {
+  min-height: 120px;
+  padding: 14px 16px;
+  line-height: 1.6;
+}
+.profile-settings .profile-edit-field input::placeholder,
+.profile-settings .profile-edit-field textarea::placeholder,
+.tag-request-form .profile-edit-field input::placeholder,
+.tag-request-form .profile-edit-field textarea::placeholder {
+  color: var(--color-subtle);
+}
+.profile-settings .profile-edit-field > input:focus,
+.profile-settings .profile-edit-field > textarea:focus,
+.tag-request-form .profile-edit-field > input:focus,
+.tag-request-form .profile-edit-field > textarea:focus {
+  border-color: var(--brand-400);
+  outline: none;
+  box-shadow: var(--forms-focus-ring);
+}
+.profile-settings .profile-edit-field > small,
+.tag-request-form .profile-edit-field > small {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ── 맛집 스타일(접고 펴는 카드) ── */
+.profile-settings .public-style-settings {
+  margin-top: 16px;
+}
+.profile-settings .public-style-settings > summary {
+  gap: 12px;
+  min-height: 64px;
+  padding: 18px;
+}
+.profile-settings .public-style-settings summary > span {
+  gap: 4px;
+}
+.profile-settings .public-style-settings summary b {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+.profile-settings .public-style-settings summary em {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  margin-left: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 8px;
+  color: var(--brand-700);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: 2px;
+}
+.profile-settings .public-style-settings summary small {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.profile-settings .public-style-settings summary > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+.profile-settings .public-style-settings > div {
+  gap: 22px;
+  border-top: 1px solid var(--color-line);
+  padding: 18px;
+}
+.profile-settings .public-style-settings p {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.profile-settings .copy-taste-button {
+  min-height: 52px;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--brand-50);
+  padding: 0 16px;
+  color: var(--brand-700);
+  font-size: 15px;
+  font-weight: 700;
+}
+.profile-settings .copy-taste-button .icon {
+  width: 18px;
+  height: 18px;
+}
+.profile-settings .copy-taste-help {
+  margin-top: -12px;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.profile-settings .copy-taste-notice {
+  margin: -8px 0 0;
+  border-radius: 14px;
+  background: var(--color-canvas);
+  padding: 10px 14px;
+  color: var(--green-500);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── 분야·활동 범위 선택 카드: 선택하면 먹색 ── */
+.profile-settings .food-focus-picker > legend,
+.profile-settings .activity-scope-picker legend,
+.profile-settings .activity-region-field > legend {
+  margin-bottom: 10px;
+  padding: 0;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.profile-settings .activity-region-field > legend small {
+  margin-left: 6px;
+  color: var(--color-subtle);
+  font-size: 12px;
+  font-weight: 500;
+}
+.profile-settings .food-focus-picker > div,
+.profile-settings .activity-scope-picker > div {
+  gap: 8px;
+}
+.profile-settings .food-focus-picker label > span,
+.profile-settings .activity-scope-picker label > span {
+  gap: 8px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: none;
+  transition: background .15s, border-color .15s;
+}
+.profile-settings .food-focus-picker label > span {
+  min-height: 80px;
+}
+.profile-settings .activity-scope-picker label > span {
+  min-height: 104px;
+  padding: 12px 8px;
+}
+.profile-settings .food-focus-picker .icon,
+.profile-settings .activity-scope-picker label .icon {
+  width: 22px;
+  height: 22px;
+  color: var(--color-primary);
+}
+.profile-settings .food-focus-picker b,
+.profile-settings .activity-scope-picker b {
+  color: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+.profile-settings .activity-scope-picker small {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.profile-settings .food-focus-picker input:checked + span,
+.profile-settings .activity-scope-picker label > input:checked + span {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--on-strong);
+  box-shadow: none;
+}
+.profile-settings .food-focus-picker input:checked + span .icon,
+.profile-settings .activity-scope-picker label > input:checked + span .icon,
+.profile-settings .activity-scope-picker label > input:checked + span small {
+  color: color-mix(in srgb, var(--on-strong) 78%, transparent);
+}
+.profile-settings .food-focus-picker input:focus-visible + span,
+.profile-settings .activity-scope-picker input:focus-visible + span {
+  outline: 2px solid var(--brand-400);
+  outline-offset: 3px;
+}
+
+/* 활동 지역 */
+.profile-settings .activity-region-picker {
+  gap: 8px;
+}
+.profile-settings .region-picker-field {
+  gap: 6px;
+}
+.profile-settings .region-picker-field > span {
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+.profile-settings .activity-region-picker .region-picker-trigger {
+  min-height: 52px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 10px 0 12px;
+  color: var(--color-ink);
+  box-shadow: none;
+}
+.profile-settings .activity-region-picker .region-picker-trigger > span {
+  font-size: 14px;
+  font-weight: 600;
+}
+.profile-settings .activity-region-picker .region-picker-trigger > .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--color-muted);
+}
+.profile-settings .activity-region-picker .region-picker-trigger:disabled {
+  background: var(--color-canvas);
+  color: var(--color-subtle);
+}
+.profile-settings .region-picker-menu {
+  border: 0;
+  border-radius: 18px;
+  background: var(--color-surface);
+  padding: 8px;
+}
+.profile-settings .region-picker-menu > input {
+  min-height: 44px;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  background: var(--color-surface);
+  padding: 0 12px;
+  color: var(--color-ink);
+  font-size: 15px;
+}
+.profile-settings .region-picker-menu > button {
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 0 12px;
+  color: var(--color-ink);
+  font-size: 15px;
+}
+.profile-settings .region-picker-menu > button:hover,
+.profile-settings .region-picker-menu > button[aria-selected="true"] {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+.profile-settings .region-picker-menu > small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.profile-settings .activity-region-field > small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+/* ── 추천 취향 ── */
+.profile-settings .taste-settings-panel {
+  padding: 0 20px;
+}
+.profile-settings .taste-settings-intro {
+  padding: 4px 0 22px;
+}
+.profile-settings .taste-settings-intro h2 {
+  margin: 12px 0 8px;
+  color: var(--color-ink);
+  font-size: 24px;
+  letter-spacing: 0;
+}
+.profile-settings .taste-settings-intro p {
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.profile-settings .taste-settings-intro > small {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  margin-top: 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 12px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.profile-settings .taste-settings-block,
+.profile-settings .taste-settings-block:first-of-type {
+  margin-bottom: 16px;
+  padding: 18px;
+}
+.profile-settings .taste-settings-block .food-focus-picker > legend {
+  margin-bottom: 14px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+}
+.profile-settings .taste-section-heading {
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+.profile-settings .taste-section-heading h2 {
+  color: var(--color-ink);
+  font-size: 18px;
+  letter-spacing: 0;
+}
+.profile-settings .taste-section-heading > span {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.profile-settings .avoid-settings-block > p {
+  margin: -8px 0 16px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.profile-settings .tag-request-entry {
+  width: calc(100% - 40px);
+  min-height: 72px;
+  gap: 12px;
+  margin: 0 20px 20px;
+  padding: 14px 16px;
+}
+.profile-settings .tag-request-entry-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.profile-settings .tag-request-entry-icon > .icon {
+  width: 20px;
+  height: 20px;
+}
+.profile-settings .tag-request-entry > span:nth-child(2) {
+  gap: 2px;
+}
+.profile-settings .tag-request-entry b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.profile-settings .tag-request-entry small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.profile-settings .tag-request-entry > .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-muted);
+}
+
+/* ── 아래 고정 저장 버튼 ── */
+.profile-settings .settings-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  border-top: 0;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-canvas) 0%, transparent), var(--color-canvas) 18px);
+  padding: 18px 20px calc(14px + env(safe-area-inset-bottom));
+}
+.profile-settings .settings-save-bar > button {
+  min-height: 52px;
+  border-radius: var(--radius-control);
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+/* ═════════════ 태그·매장 정보 제안(시트 안 내용) ═════════════ */
+
+.tag-request-sheet .tag-request-lead {
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.tag-request-sheet .tag-request-category {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tag-request-sheet .tag-request-category > legend {
+  width: 100%;
+  margin-bottom: 10px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+.tag-request-sheet .tag-request-category label > span {
+  display: inline-flex;
+  height: 38px;
+  align-items: center;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: none;
+}
+.tag-request-sheet .tag-request-category input:checked + span {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--on-strong);
+  font-weight: 700;
+  box-shadow: none;
+}
+.tag-request-sheet .tag-request-category input:focus-visible + span {
+  outline: 2px solid var(--brand-400);
+  outline-offset: 2px;
+}
+.tag-request-sheet .tag-request-error {
+  border-radius: 14px;
+  background: var(--brand-50);
+  padding: 12px 14px;
+  color: var(--brand-700);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.tag-request-sheet .tag-request-form > .primary-button,
+.tag-request-sheet .tag-request-success > .primary-button {
+  min-height: 52px;
+  border-radius: var(--radius-control);
+  font-size: 16px;
+  font-weight: 700;
+}
+.tag-request-sheet .tag-request-disclaimer {
+  margin-top: 12px;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.tag-request-sheet .tag-request-history {
+  margin-top: 24px;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  background: none;
+  padding-top: 20px;
+}
+.tag-request-sheet .tag-request-history > h3 {
+  margin: 0 0 8px;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+}
+.tag-request-sheet .tag-request-history > p {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.tag-request-sheet .tag-request-history article {
+  gap: 8px;
+  min-height: 64px;
+  border-bottom: 1px solid var(--color-line);
+  padding: 12px 0;
+}
+.tag-request-sheet .tag-request-history article > div {
+  gap: 2px;
+}
+.tag-request-sheet .tag-request-history b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.tag-request-sheet .tag-request-history small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.tag-request-sheet .tag-request-history article p {
+  margin: 2px 0 0;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.tag-request-sheet .tag-request-status {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--amber-50);
+  padding: 0 10px;
+  color: var(--neutral-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+.tag-request-sheet .tag-request-status.approved {
+  background: color-mix(in srgb, var(--green-500) 14%, transparent);
+  color: var(--green-500);
+}
+.tag-request-sheet .tag-request-status.rejected {
+  background: var(--neutral-200);
+  color: var(--color-muted);
+}
+.tag-request-sheet .proposal-history-empty {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.tag-request-sheet .proposal-history-empty button {
+  min-height: 36px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 12px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.tag-request-sheet .tag-request-success > span {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.tag-request-sheet .tag-request-success h3 {
+  margin: 16px 0 8px;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 400;
+}
+.tag-request-sheet .tag-request-success p {
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.tag-request-sheet .tag-request-success p b {
+  color: var(--color-primary-strong);
+}

@@ -61,6 +61,8 @@ public class SubscriptionService {
                                OR MAX(my_profile.preference_focus) = p.taster_focus) THEN 1
                            ELSE 0
                        END AS match_score,
+                       -- 일치율의 분모: 내가 좋아요로 고른 태그 수 + 분야를 정했으면 1
+                       MAX(my_likes.like_count) + CASE WHEN MAX(my_profile.preference_focus) <> 'BOTH' THEN 1 ELSE 0 END AS match_total,
                        string_agg(DISTINCT profile_tag.tag_name, ',' ORDER BY profile_tag.tag_name)
                          FILTER (WHERE profile_tag.tag_name IS NOT NULL) AS profile_tags,
                        string_agg(DISTINCT profile_tag.tag_name, ',' ORDER BY profile_tag.tag_name)
@@ -71,6 +73,10 @@ public class SubscriptionService {
                     SELECT string_agg(photo_id::text, ',' ORDER BY sort_no) AS photo_ids
                     FROM user_profile_cover_photos WHERE account_id = p.account_id
                 ) cover_images ON true
+                LEFT JOIN LATERAL (
+                    SELECT count(*) AS like_count FROM user_preference_tags
+                    WHERE account_id = my_profile.account_id AND preference_type = 'LIKE'
+                ) my_likes ON true
                 LEFT JOIN user_subscriptions subscribers
                   ON subscribers.target_account_id = p.account_id AND subscribers.subscription_st = 'ACTIVE'
                 LEFT JOIN user_profile_tags profile_tags
@@ -103,8 +109,14 @@ public class SubscriptionService {
                     rs.getInt("subscriber_count"),
                     splitTagNames(rs.getString("profile_tags")),
                     splitTagNames(rs.getString("matched_tags")),
-                    rs.getInt("match_score"));
+                    matchPercent(rs.getInt("match_score"), rs.getInt("match_total")));
         }, currentAccountId, currentAccountId);
+    }
+
+    /** 겹친 취향 수를 내 취향 수에 대한 백분율(0~100)로 바꿉니다. 내 취향이 없으면 0입니다. */
+    static int matchPercent(int matched, int total) {
+        if (total <= 0 || matched <= 0) return 0;
+        return Math.min(100, (int) Math.round(matched * 100.0 / total));
     }
 
     private List<String> splitTagNames(String tagNames) {

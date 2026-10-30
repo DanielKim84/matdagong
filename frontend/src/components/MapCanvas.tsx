@@ -14,7 +14,13 @@ type Props = {
   onPick?: (position: Coordinates) => void;
   onPositionChange?: (position: Coordinates) => void;
   selected?: Coordinates | null;
+  /** 강조할 장소. 바뀌면 그 마커를 키우고 지도 중심을 옮깁니다(발견 화면의 카드 선택). */
+  focusedPlaceId?: string | null;
+  /** 처음 그릴 때 받은 장소가 모두 보이도록 지도 범위를 맞춥니다(맛객 프로필 지도). */
+  fitToPlaces?: boolean;
 };
+
+type FocusableOverlay = MapOverlay & { setZIndex?: (zIndex: number) => void };
 
 export default function MapCanvas({
   places,
@@ -26,6 +32,8 @@ export default function MapCanvas({
   onPick,
   onPositionChange,
   selected,
+  focusedPlaceId = null,
+  fitToPlaces = false,
 }: Props) {
   const element = useRef<HTMLDivElement>(null);
   const instance = useRef<MapInstance | null>(null);
@@ -37,6 +45,12 @@ export default function MapCanvas({
   selectCallback.current = onSelect;
   boundsCallback.current = onBoundsChange;
   positionCallback.current = onPositionChange;
+  const placesRef = useRef(places);
+  placesRef.current = places;
+  const focusedRef = useRef(focusedPlaceId);
+  focusedRef.current = focusedPlaceId;
+  // 장소 ID별 개별 마커입니다. 강조 상태를 마커를 다시 만들지 않고 바꿀 때 씁니다.
+  const markers = useRef(new Map<string, { button: HTMLElement; overlay: FocusableOverlay }>());
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [position, setPosition] = useState<Coordinates | null>(null);
@@ -98,6 +112,14 @@ export default function MapCanvas({
       maps = window.kakao?.maps;
     if (!ready || !map || !maps) return;
     const overlays: MapOverlay[] = [];
+    const placeMarkers = markers.current;
+    const remember = (place: Place, button: HTMLElement, overlay: FocusableOverlay) => {
+      placeMarkers.set(place.id, { button, overlay });
+      if (place.id === focusedRef.current) {
+        button.classList.add("is-focused");
+        overlay.setZIndex?.(10);
+      }
+    };
     // 가까이 볼 때는 개별 핀, 축소하면 격자 단위 묶음(광고 제외), 가장 넓게 볼 때는 마커를 숨깁니다.
     if (zoomLevel >= 10) return;
     if (zoomLevel >= 7) {
@@ -223,6 +245,7 @@ export default function MapCanvas({
           yAnchor: 1.08,
         });
         overlays.push(overlay);
+        remember(place, button, overlay);
         return;
       }
       // 내 맛집과 광고 장소는 맛객 얼굴 대신 각 상태를 나타내는 기호로 표시합니다.
@@ -242,11 +265,46 @@ export default function MapCanvas({
         yAnchor: 1.08,
       });
       overlays.push(overlay);
+      remember(place, button, overlay);
     });
     return () => {
       overlays.forEach((overlay) => overlay.setMap(null));
+      placeMarkers.clear();
     };
   }, [places, subscriptions, liked, recommendedTasterIds, ready, zoomLevel]);
+
+  // 강조할 장소가 바뀌면 그 마커만 키우고, 묶음으로 보이는 배율이면 개별 핀이 보이게 확대한 뒤 중심을 옮깁니다.
+  useEffect(() => {
+    const map = instance.current,
+      maps = window.kakao?.maps;
+    markers.current.forEach(({ button, overlay }, placeId) => {
+      const focused = placeId === focusedPlaceId;
+      button.classList.toggle("is-focused", focused);
+      overlay.setZIndex?.(focused ? 10 : 0);
+    });
+    if (!ready || !map || !maps || !focusedPlaceId) return;
+    const place = placesRef.current.find((item) => item.id === focusedPlaceId);
+    if (!place) return;
+    if (map.getLevel() >= 7) map.setLevel(5);
+    const center = new maps.LatLng(place.latitude, place.longitude);
+    map.panTo(center);
+  }, [focusedPlaceId, ready]);
+
+  // 장소 구성이 바뀔 때만 모두 보이게 맞춥니다(사용자가 옮긴 지도를 다시 그릴 때마다 되돌리지 않음). 한 곳뿐이면 그곳을 가운데 둡니다.
+  const fitKey = fitToPlaces ? places.map((place) => place.id).join(",") : "";
+  useEffect(() => {
+    const places = placesRef.current;
+    const map = instance.current,
+      maps = window.kakao?.maps;
+    if (!fitToPlaces || !ready || !map || !maps || !places.length) return;
+    if (places.length === 1) {
+      map.setCenter(new maps.LatLng(places[0].latitude, places[0].longitude));
+      return;
+    }
+    const bounds = new maps.LatLngBounds();
+    places.forEach((place) => bounds.extend(new maps.LatLng(place.latitude, place.longitude)));
+    map.setBounds(bounds);
+  }, [fitToPlaces, fitKey, ready]);
 
   useEffect(() => {
     const map = instance.current,
