@@ -14,6 +14,8 @@ declare global {
     setZoomable(value: boolean): void;
     relayout(): void;
     getBounds(): MapBounds;
+    getLevel(): number;
+    setLevel(level: number, options?: { animate?: boolean }): void;
   }
   interface MapMarker {
     setMap(map: MapInstance | null): void;
@@ -25,7 +27,7 @@ declare global {
     id: string;
     place_name: string;
     category_name: string;
-  phone: string;
+    phone: string;
     address_name: string;
     road_address_name: string;
     x: string;
@@ -71,7 +73,7 @@ declare global {
           keywordSearch(
             keyword: string,
             callback: (results: KakaoPlaceResult[], status: string) => void,
-            options?: { size?: number },
+            options?: { size?: number; location?: MapCoordinate; radius?: number },
           ): void;
         };
       };

@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { back, go } from "../app/navigation";
 import type { Screen } from "../models/place";
 import { BrandArt } from "./BrandAssets";
 import Icon from "./Icon";
+import QuickPlaceSheet from "./QuickPlaceSheet";
 
 export function HomeHeader({ unread }: { unread: boolean }) {
   return (
@@ -14,13 +16,6 @@ export function HomeHeader({ unread }: { unread: boolean }) {
         <BrandArt name="logo" label="맛다공" />
       </button>
       <div>
-        <button
-          className="icon-button"
-          onClick={() => go("map")}
-          aria-label="맛집 검색"
-        >
-          <Icon name="search" />
-        </button>
         <button
           className="icon-button bell-button"
           onClick={() => go("notifications")}
@@ -58,7 +53,9 @@ export function ScreenHeader({
   );
 }
 
-export function BottomTabs({ screen }: { screen: Screen }) {
+export function BottomTabs({ screen, accessToken, unread = false }: { screen: Screen; accessToken: string; unread?: boolean }) {
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
   const tabs = [
     { screen: "home", label: "홈", icon: "home" },
     { screen: "map", label: "내 주변", icon: "search" },
@@ -73,7 +70,10 @@ export function BottomTabs({ screen }: { screen: Screen }) {
           key={tab.screen}
           aria-current={screen === tab.screen ? "page" : undefined}
           className={`${screen === tab.screen ? "active" : ""} ${tab.screen === "register" ? "register-tab" : ""}`}
-          onClick={() => go(tab.screen)}
+          onClick={() => {
+            if (tab.screen === "register") setActionsOpen((open) => !open);
+            else { setActionsOpen(false); go(tab.screen); }
+          }}
           aria-label={tab.label}
         >
           <span>
@@ -81,10 +81,16 @@ export function BottomTabs({ screen }: { screen: Screen }) {
               name={tab.icon}
               filled={screen === tab.screen && tab.screen === "home"}
             />
+            {tab.screen === "notifications" && unread && <i className="bottom-notification-dot" aria-label="읽지 않은 알림" />}
           </span>
           {tab.screen !== "register" && <small>{tab.label}</small>}
         </button>
       ))}
+      {actionsOpen && <div className="quick-action-menu" role="menu" aria-label="기록 메뉴">
+        <button type="button" role="menuitem" onClick={() => { setActionsOpen(false); go("register"); }}><span><Icon name="fork" /></span><b>맛집 등록</b><small>추천 이유와 사진까지 남겨요</small></button>
+        <button type="button" role="menuitem" onClick={() => { setActionsOpen(false); setQuickOpen(true); }}><span><Icon name="pin" /></span><b>빠른 기록</b><small>장소만 저장하고 나중에 완성해요</small></button>
+      </div>}
+      {quickOpen && <QuickPlaceSheet accessToken={accessToken} onClose={() => setQuickOpen(false)} />}
     </nav>
   );
 }

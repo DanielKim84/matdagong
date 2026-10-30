@@ -36,6 +36,12 @@ function routeKey(screen: Screen, id = ""): string {
 let routeHistory = [window.location.hash.replace(/^#/, "") || "home"];
 let routeHistoryIndex = 0;
 
+/** 로그인 콜백에서 이전 화면 경로를 복원한 뒤 앱 내부 이동 기록을 현재 주소 기준으로 다시 시작합니다. */
+export function resetRouteHistory() {
+  routeHistory = [window.location.hash.replace(/^#/, "") || "home"];
+  routeHistoryIndex = 0;
+}
+
 function syncRouteHistory() {
   const current = window.location.hash.replace(/^#/, "") || "home";
   if (routeHistory[routeHistoryIndex] === current) return;

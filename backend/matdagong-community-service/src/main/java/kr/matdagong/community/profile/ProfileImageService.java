@@ -9,7 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-/** 프로필 사진과 배경의 형식을 검증하고 파일 데이터와 MIME 형식을 함께 저장합니다. */
+/**
+ * 프로필 사진과 배경 사진의 형식을 검증하고 파일 데이터와 MIME 형식을 함께 저장·조회합니다.
+ * 배경 사진은 V33부터 user_profile_cover_photos 갤러리에만 저장하며, user_profiles의 예전 배경 칼럼은 읽거나 쓰지 않습니다.
+ */
 @Service
 public class ProfileImageService {
     private static final long MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -19,14 +22,14 @@ public class ProfileImageService {
         this.jdbc = jdbc;
     }
 
-    public ProfileImage find(UUID accountId, Kind kind) {
+    public ProfileImage findAvatar(UUID accountId) {
         ProfileImage image = jdbc.query("""
-                SELECT %s AS image_data, %s AS mime_type
+                SELECT profile_img_data, profile_img_mime_type
                 FROM user_profiles WHERE account_id = ?
-                """.formatted(kind.dataColumn, kind.mimeColumn), rs -> {
+                """, rs -> {
             if (!rs.next()) return null;
-            byte[] data = rs.getBytes("image_data");
-            String mimeType = rs.getString("mime_type");
+            byte[] data = rs.getBytes(1);
+            String mimeType = rs.getString(2);
             return data == null || mimeType == null ? null : new ProfileImage(data, mimeType);
         }, accountId);
         if (image == null) {
@@ -35,7 +38,18 @@ public class ProfileImageService {
         return image;
     }
 
-    public void save(UUID accountId, Kind kind, MultipartFile file) throws IOException {
+    /** 주소의 계정과 사진 소유 계정이 같을 때만 반환해 다른 맛객 경로로 같은 사진을 열 수 없게 합니다. */
+    public ProfileImage findCoverPhoto(UUID accountId, UUID photoId) {
+        return jdbc.query("SELECT photo_data, mime_type FROM user_profile_cover_photos WHERE account_id = ? AND photo_id = ?",
+                rs -> rs.next() ? new ProfileImage(rs.getBytes(1), rs.getString(2)) : null, accountId, photoId);
+    }
+
+    public void saveAvatar(UUID accountId, MultipartFile file) throws IOException {
+        ProfileImage image = validate(file);
+        updateAvatar(accountId, image.data(), image.mimeType());
+    }
+
+    public ProfileImage validate(MultipartFile file) throws IOException {
         if (file.isEmpty() || file.getSize() > MAX_IMAGE_BYTES) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미지는 5MB 이하로 선택해 주세요.");
         }
@@ -45,20 +59,19 @@ public class ProfileImageService {
         if (mimeType == null || !matchesImageSignature(mimeType, data)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "JPG, PNG, WEBP 이미지 파일을 선택해 주세요.");
         }
-        update(accountId, kind, data, mimeType);
+        return new ProfileImage(data, mimeType);
     }
 
-    public void delete(UUID accountId, Kind kind) {
-        update(accountId, kind, null, null);
+    public void deleteAvatar(UUID accountId) {
+        updateAvatar(accountId, null, null);
     }
 
-    private void update(UUID accountId, Kind kind, byte[] data, String mimeType) {
-        // 칼럼명은 아래 enum에서만 선택하므로 사용자 입력이 SQL 식별자로 들어가지 않습니다.
+    private void updateAvatar(UUID accountId, byte[] data, String mimeType) {
         int updated = jdbc.update("""
                 UPDATE user_profiles
-                SET %s = ?, %s = ?, upd_dt = now()
+                SET profile_img_data = ?, profile_img_mime_type = ?, upd_dt = now()
                 WHERE account_id = ?
-                """.formatted(kind.dataColumn, kind.mimeColumn), data, mimeType, accountId);
+                """, data, mimeType, accountId);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로필을 찾을 수 없습니다.");
         }
@@ -79,25 +92,4 @@ public class ProfileImageService {
     }
 
     public record ProfileImage(byte[] data, String mimeType) {}
-
-    public enum Kind {
-        AVATAR("profile_img_data", "profile_img_mime_type"),
-        COVER("profile_cover_data", "profile_cover_mime_type");
-
-        private final String dataColumn;
-        private final String mimeColumn;
-
-        Kind(String dataColumn, String mimeColumn) {
-            this.dataColumn = dataColumn;
-            this.mimeColumn = mimeColumn;
-        }
-
-        public static Kind fromPath(String kind) {
-            return switch (kind) {
-                case "avatar" -> AVATAR;
-                case "cover" -> COVER;
-                default -> throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-            };
-        }
-    }
 }

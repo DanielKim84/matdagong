@@ -22,6 +22,7 @@ public final class SubscriptionModels {
             String avatar,
             int avatarVariant,
             String profileCoverUrl,
+            List<String> profileCoverUrls,
             String tasterFocus,
             String activityScope,
             String activityRegion,
@@ -39,7 +40,8 @@ public final class SubscriptionModels {
     public record SubscribeRequest(
             @NotNull UUID targetAccountId,
             @NotNull SubscriptionType subscriptionType,
-            Integer termMonths) {}
+            Integer termMonths,
+            boolean confirmFreeReplacement) {}
 
     public record SubscriptionView(
             UUID subscriptionId,

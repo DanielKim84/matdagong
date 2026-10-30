@@ -27,7 +27,8 @@ export type IconName =
   | "route"
   | "sparkle"
   | "map"
-  | "phone";
+  | "phone"
+  | "more";
 const shapes: Record<IconName, string> = {
   home: "m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9",
   search: "M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0m-2 6 5 5",
@@ -60,6 +61,7 @@ const shapes: Record<IconName, string> = {
   sparkle: "m12 2 1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7L12 2Zm7 13 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z",
   map: "M3 6.5 9 3l6 3 6-3v14.5L15 21l-6-3-6 3V6.5ZM9 3v15m6-12v15",
   phone: "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.4 2.8a2 2 0 0 1-.6 1.7L7.6 9.5a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 1.7-.6l2.8.4a2 2 0 0 1 1.7 1.9Z",
+  more: "M5 12h.01M12 12h.01M19 12h.01",
 };
 
 export default function Icon({

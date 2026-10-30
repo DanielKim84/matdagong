@@ -23,12 +23,7 @@ public class TasteTagController {
                 FROM taste_tags
                 ORDER BY sort_order
                 """, (rs, row) -> new TasteTagView(
-                rs.getString("tag_name"), categoryFor(rs.getString("tag_group")), rs.getString("tag_group")));
-    }
-
-    // 상위 분류는 세부 그룹에서 계산해 DB에 같은 의미를 두 번 저장하지 않습니다.
-    private String categoryFor(String tagGroup) {
-        return "VISIT".equals(tagGroup) ? "VISIT" : "MENU";
+                rs.getString("tag_name"), TasteTagGroups.categoryFor(rs.getString("tag_group")), rs.getString("tag_group")));
     }
 
     public record TasteTagView(String name, String category, String tagGroup) {}

@@ -4,11 +4,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import kr.matdagong.community.security.AuthenticatedAccount;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +34,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/v1/users/me/profile")
 public class UserProfileController {
+    private static final int MAX_COVER_PHOTOS = 10;
     private final JdbcTemplate jdbc;
     private final ProfileImageService images;
 
@@ -43,7 +48,7 @@ public class UserProfileController {
     public ProfileView ensureProfile(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody EnsureProfileRequest request) {
-        UUID accountId = UUID.fromString(jwt.getSubject());
+        UUID accountId = AuthenticatedAccount.id(jwt);
         String nickname = uniqueNickname(accountId, request.nickname().trim());
 
         // 공통 계정 ID가 이미 있으면 사용자가 맛다공에서 정한 닉네임을 덮어쓰지 않습니다.
@@ -56,13 +61,25 @@ public class UserProfileController {
         return findProfile(accountId);
     }
 
+    /** 로그인한 계정의 프로필을 조회합니다. 장소 서비스가 기록 작성자 정보를 확인할 때도 사용합니다. */
+    @GetMapping
+    public ProfileView profile(@AuthenticationPrincipal Jwt jwt) {
+        UUID accountId = AuthenticatedAccount.id(jwt);
+        Boolean exists = jdbc.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM user_profiles WHERE account_id = ?)", Boolean.class, accountId);
+        if (!Boolean.TRUE.equals(exists)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "맛객 프로필이 없습니다.");
+        }
+        return findProfile(accountId);
+    }
+
     /** 프로필과 두 종류의 태그를 함께 저장합니다. 검증 실패 시 모든 변경을 되돌립니다. */
     @PutMapping
     @Transactional
     public ProfileView updateProfile(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody UpdateProfileRequest request) {
-        UUID accountId = UUID.fromString(jwt.getSubject());
+        UUID accountId = AuthenticatedAccount.id(jwt);
         String nickname = request.nickname().trim();
         if (nickname.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "맛객 닉네임을 입력해 주세요.");
@@ -98,8 +115,7 @@ public class UserProfileController {
     private ProfileView findProfile(UUID accountId) {
         ProfileBase profile = jdbc.queryForObject("""
                 SELECT account_id, nickname, profile_img_data IS NOT NULL AS has_avatar,
-                       avatar_variant, profile_cover_data IS NOT NULL AS has_cover,
-                       taster_focus, preference_focus, activity_scope, activity_region, intro
+                       avatar_variant, taster_focus, preference_focus, activity_scope, activity_region, intro
                 FROM user_profiles
                 WHERE account_id = ?
                 """, (rs, row) -> new ProfileBase(
@@ -107,22 +123,29 @@ public class UserProfileController {
                 rs.getString("nickname"),
                 rs.getBoolean("has_avatar"),
                 rs.getInt("avatar_variant"),
-                rs.getBoolean("has_cover"),
                 rs.getString("taster_focus"),
                 rs.getString("preference_focus"),
                 rs.getString("activity_scope"),
                 rs.getString("activity_region"),
                 rs.getString("intro")), accountId);
+        List<String> coverUrls = coverPhotoUrls(accountId);
         return new ProfileView(
                 profile.accountId(), profile.nickname(),
-                profile.hasAvatar() ? mediaUrl(profile.accountId(), "avatar") : null,
+                profile.hasAvatar() ? ProfileMediaUrls.avatar(profile.accountId()) : null,
                 profile.avatarVariant(),
-                profile.hasCover() ? mediaUrl(profile.accountId(), "cover") : null,
+                // 단일 배경 주소를 읽는 화면과 호환되도록 갤러리의 첫 사진을 대표 배경으로 함께 내려줍니다.
+                coverUrls.isEmpty() ? null : coverUrls.get(0),
+                coverUrls,
                 profile.tasterFocus(), profile.preferenceFocus(),
                 profile.activityScope(), profile.activityRegion(), profile.intro(),
                 tagNames(accountId, "user_profile_tags"),
                 tagNames(accountId, "user_preference_tags", "LIKE"),
                 tagNames(accountId, "user_preference_tags", "AVOID"));
+    }
+
+    private List<String> coverPhotoUrls(UUID accountId) {
+        return jdbc.query("SELECT photo_id FROM user_profile_cover_photos WHERE account_id = ? ORDER BY sort_no",
+                (rs, row) -> ProfileMediaUrls.coverPhoto(accountId, rs.getObject(1, UUID.class)), accountId);
     }
 
     private List<String> tagNames(UUID accountId, String relationTable) {
@@ -187,7 +210,7 @@ public class UserProfileController {
 
     private void validateTagNames(List<String> tagNames, boolean visitOnly, String focus) {
         if (!tagNames.isEmpty()) {
-            String placeholders = String.join(",", java.util.Collections.nCopies(tagNames.size(), "?"));
+            String placeholders = String.join(",", Collections.nCopies(tagNames.size(), "?"));
             List<String> groups = jdbc.query(
                     "SELECT tag_group FROM taste_tags WHERE tag_name IN (" + placeholders + ")",
                     (rs, row) -> rs.getString("tag_group"),
@@ -229,29 +252,73 @@ public class UserProfileController {
     public ResponseEntity<Void> uploadAvatar(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam("file") MultipartFile file) throws IOException {
-        UUID accountId = UUID.fromString(jwt.getSubject());
-        images.save(accountId, ProfileImageService.Kind.AVATAR, file);
+        images.saveAvatar(AuthenticatedAccount.id(jwt), file);
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping(value = "/cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> uploadCover(
+    /** 배경 사진을 기존 갤러리 뒤에 추가하고, 추가 후 전체 배경 사진 주소를 순서대로 반환합니다. */
+    @PostMapping(value = "/covers", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Transactional
+    public List<String> uploadCoverGallery(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestParam("file") MultipartFile file) throws IOException {
-        UUID accountId = UUID.fromString(jwt.getSubject());
-        images.save(accountId, ProfileImageService.Kind.COVER, file);
-        return ResponseEntity.noContent().build();
+            @RequestParam("files") List<MultipartFile> files) throws IOException {
+        UUID accountId = AuthenticatedAccount.id(jwt);
+        if (files.isEmpty() || files.size() > MAX_COVER_PHOTOS) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "배경 사진은 최대 10장까지 등록할 수 있어요.");
+        long totalBytes = files.stream().mapToLong(MultipartFile::getSize).sum();
+        if (totalBytes > 30L * 1024 * 1024) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "배경 사진의 전체 용량은 30MB 이하로 선택해 주세요.");
+        // 같은 계정의 동시 업로드가 같은 순번을 계산하지 않도록 프로필 행을 잠근 뒤 기존 장수와 순번을 읽습니다.
+        List<UUID> lockedProfile = jdbc.query("SELECT account_id FROM user_profiles WHERE account_id = ? FOR UPDATE",
+                (rs, row) -> rs.getObject(1, UUID.class), accountId);
+        if (lockedProfile.isEmpty()) throw new ResponseStatusException(HttpStatus.CONFLICT, "맛객 프로필을 먼저 만들어 주세요.");
+        Integer existing = jdbc.queryForObject("SELECT count(*) FROM user_profile_cover_photos WHERE account_id = ?", Integer.class, accountId);
+        if ((existing == null ? 0 : existing) + files.size() > MAX_COVER_PHOTOS) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "배경 사진은 최대 10장까지 등록할 수 있어요.");
+        }
+        int next = jdbc.queryForObject("SELECT COALESCE(MAX(sort_no), -1) + 1 FROM user_profile_cover_photos WHERE account_id = ?", Integer.class, accountId);
+        for (MultipartFile file : files) {
+            ProfileImageService.ProfileImage image = images.validate(file);
+            jdbc.update("INSERT INTO user_profile_cover_photos(account_id, photo_data, mime_type, sort_no) VALUES (?, ?, ?, ?)",
+                    accountId, image.data(), image.mimeType(), next++);
+        }
+        return coverPhotoUrls(accountId);
     }
 
     @DeleteMapping("/avatar")
     public ResponseEntity<Void> removeAvatar(@AuthenticationPrincipal Jwt jwt) {
-        images.delete(UUID.fromString(jwt.getSubject()), ProfileImageService.Kind.AVATAR);
+        images.deleteAvatar(AuthenticatedAccount.id(jwt));
         return ResponseEntity.noContent().build();
     }
 
+    /** 배경 사진 전체 삭제입니다. 화면의 기존 호출 경로(/cover)를 유지합니다. */
     @DeleteMapping("/cover")
     public ResponseEntity<Void> removeCover(@AuthenticationPrincipal Jwt jwt) {
-        images.delete(UUID.fromString(jwt.getSubject()), ProfileImageService.Kind.COVER);
+        jdbc.update("DELETE FROM user_profile_cover_photos WHERE account_id = ?", AuthenticatedAccount.id(jwt));
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/covers/{photoId}")
+    @Transactional
+    public ResponseEntity<Void> removeCoverPhoto(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID photoId) {
+        UUID accountId = AuthenticatedAccount.id(jwt);
+        Integer sortNo = jdbc.query("""
+                SELECT sort_no FROM user_profile_cover_photos
+                WHERE account_id = ? AND photo_id = ?
+                """, rs -> rs.next() ? rs.getInt(1) : null, accountId, photoId);
+        // 저장 재시도에서도 이미 지운 사진을 다시 요청할 수 있어 삭제는 멱등하게 처리합니다.
+        if (sortNo == null) return ResponseEntity.noContent().build();
+
+        jdbc.update("DELETE FROM user_profile_cover_photos WHERE account_id = ? AND photo_id = ?", accountId, photoId);
+        // 음수 순번으로 잠시 옮겨 고유 제약과 충돌하지 않게 한 뒤 남은 사진 순서를 다시 매깁니다.
+        jdbc.update("UPDATE user_profile_cover_photos SET sort_no = -sort_no - 1 WHERE account_id = ?", accountId);
+        List<UUID> remainingPhotoIds = jdbc.query(
+                "SELECT photo_id FROM user_profile_cover_photos WHERE account_id = ? ORDER BY sort_no DESC",
+                (rs, row) -> rs.getObject(1, UUID.class), accountId);
+        for (int index = 0; index < remainingPhotoIds.size(); index++) {
+            jdbc.update("UPDATE user_profile_cover_photos SET sort_no = ? WHERE account_id = ? AND photo_id = ?",
+                    index, accountId, remainingPhotoIds.get(index));
+        }
         return ResponseEntity.noContent().build();
     }
 
@@ -269,10 +336,6 @@ public class UserProfileController {
         String suffix = "-" + accountId.toString().substring(0, 6);
         int prefixLength = 30 - suffix.length();
         return base.substring(0, Math.min(base.length(), prefixLength)) + suffix;
-    }
-
-    private String mediaUrl(UUID accountId, String kind) {
-        return "/media/profiles/%s/%s".formatted(accountId, kind);
     }
 
     private String focusName(String focus) {
@@ -297,17 +360,17 @@ public class UserProfileController {
         return value.length() > 50 ? value.substring(0, 50) : value;
     }
 
-    public record EnsureProfileRequest(@NotBlank @Size(max = 30) String nickname) {}
+    public record EnsureProfileRequest(@NotBlank @Size(max = 12) String nickname) {}
 
     public record UpdateProfileRequest(
-            @NotBlank @Size(max = 30) String nickname,
+            @NotBlank @Size(max = 12) String nickname,
             @Size(max = 300) String intro,
             String tasterFocus,
             String preferenceFocus,
             String activityScope,
             @Size(max = 50) String activityRegion,
-            @Size(max = 20) List<@NotBlank @Size(max = 30) String> profileTags,
-            @Size(max = 20) List<@NotBlank @Size(max = 30) String> preferenceTags,
+            @Size(max = 30) List<@NotBlank @Size(max = 30) String> profileTags,
+            @Size(max = 30) List<@NotBlank @Size(max = 30) String> preferenceTags,
             @Size(max = 5) List<@NotBlank @Size(max = 30) String> excludedTags) {}
 
     public record ProfileView(
@@ -316,6 +379,7 @@ public class UserProfileController {
             String profileImgUrl,
             int avatarVariant,
             String profileCoverUrl,
+            List<String> profileCoverUrls,
             String tasterFocus,
             String preferenceFocus,
             String activityScope,
@@ -330,7 +394,6 @@ public class UserProfileController {
             String nickname,
             boolean hasAvatar,
             int avatarVariant,
-            boolean hasCover,
             String tasterFocus,
             String preferenceFocus,
             String activityScope,

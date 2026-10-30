@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Place } from "../models/place";
+import { MARKER_SHELL_PATH } from "./mapMarkerArt";
 
 const regions = {
   avatar: [1352, 481, 47, 47],
@@ -85,11 +86,13 @@ export function FoodPhoto({
 export function Avatar({
   className = "",
   src,
+  fallbackSrc,
   name = "맛객",
   variant = 1,
 }: {
   className?: string;
   src?: string | null;
+  fallbackSrc?: string | null;
   name?: string;
   variant?: number;
 }) {
@@ -97,7 +100,9 @@ export function Avatar({
   const selectedVariant = Math.min(10, Math.max(1, Math.trunc(variant || 1)));
   const column = (selectedVariant - 1) % 5;
   const row = Math.floor((selectedVariant - 1) / 5);
-  const demoPhoto = src?.match(/^demo-avatar:(\d)$/);
+  // 오래된 업로드 URL이 사라졌으면 맛객별 기본 이미지로 바꿔 깨진 이미지 표시를 막습니다.
+  const displayedSrc = src && failedImage === src ? fallbackSrc : src;
+  const demoPhoto = displayedSrc?.match(/^demo-avatar:(\d)$/);
   const demoCell = demoPhoto ? Number(demoPhoto[1]) - 1 : -1;
   return (
     <span className={`avatar ${className}`} role="img" aria-label={`${name} 프로필`}>
@@ -105,8 +110,8 @@ export function Avatar({
         <svg className="brand-art avatar-character" viewBox={`${(demoCell % 2) * 627} ${Math.floor(demoCell / 2) * 627} 627 627`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <image href="/assets/demo-taster-portraits.png" width="1254" height="1254" />
         </svg>
-      ) : src && failedImage !== src ? (
-        <img src={src} alt="" onError={() => setFailedImage(src)} />
+      ) : displayedSrc ? (
+        <img src={displayedSrc} alt="" onError={() => setFailedImage(displayedSrc)} />
       ) : (
         <svg
           className="brand-art avatar-character"
@@ -142,7 +147,7 @@ export function ProfileCover({ src, className = "" }: { src: string; className?:
   return <img className={className} src={src} alt="" />;
 }
 
-/** 구독 마커 두 종류가 같은 코랄 핀을 쓰도록 지도 안내에도 재사용합니다. */
+/** 지도 마커 안내에서 실제 지도(MapCanvas)와 같은 모양의 맛객 핀을 보여줍니다. */
 export function TasterMapMarker({
   src,
   name = "맛객",
@@ -152,16 +157,16 @@ export function TasterMapMarker({
   src?: string | null;
   name?: string;
   variant?: number;
-  kind?: "subscribed" | "other" | "matched";
+  kind?: "subscribed" | "other" | "matched" | "own";
 }) {
   const fallbackVariant = kind === "subscribed" ? 4 : kind === "matched" ? 7 : 1;
   return (
     <span className={`taster-map-marker-preview taster-map-marker--${kind}`} aria-label={name}>
-      <svg className="taster-map-marker-shell" viewBox="0 0 43 53" aria-hidden="true"><path d="M21.5 52S2 32.7 2 19.4a19.5 19.5 0 1 1 39 0C41 32.7 21.5 52 21.5 52Z" /></svg>
+      <svg className="taster-map-marker-shell" viewBox="0 0 43 53" aria-hidden="true"><path d={MARKER_SHELL_PATH} /></svg>
       <span className="taster-map-marker-face">
         <Avatar src={src} name={name} variant={variant ?? fallbackVariant} />
       </span>
-      {kind !== "other" && <i className={`taster-map-marker-badge taster-map-marker-badge--${kind}`} aria-hidden="true">{kind === "subscribed" ? "♥" : "✦"}</i>}
+      {kind !== "other" && <i className={`taster-map-marker-badge taster-map-marker-badge--${kind}`} aria-hidden="true">{kind === "subscribed" ? "♥" : kind === "own" ? "✓" : "✦"}</i>}
     </span>
   );
 }

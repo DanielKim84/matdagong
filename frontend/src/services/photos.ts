@@ -1,3 +1,4 @@
+/** 고른 사진을 긴 변 960px 이하 JPEG data URL로 줄여 등록 요청과 입력 보관 크기를 줄입니다. */
 export async function loadPhoto(file: File): Promise<string> {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
     throw new Error("JPG, PNG, WebP 사진을 선택해 주세요.");

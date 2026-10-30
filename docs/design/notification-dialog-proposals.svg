@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#52382c" flood-opacity=".12"/></filter>
+    <style>
+      text{font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;fill:#392d29}
+      .muted{fill:#88776e}.inverse{fill:#fff}.tiny{font-size:13px}.small{font-size:15px}.body{font-size:17px}.title{font-size:23px;font-weight:750}.heading{font-size:29px;font-weight:800}.label{font-size:14px;font-weight:750;letter-spacing:.4px}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#f7f2ed"/>
+  <text x="48" y="55" class="heading">맛다공 공통 알림 팝업 · 디자인 시안</text>
+  <text x="49" y="84" class="small muted">삭제 확인을 예로 든 3가지 방향 · 안내/완료/오류/확인에도 같은 컴포넌트 틀을 사용합니다</text>
+
+  <!-- Option A -->
+  <g transform="translate(36 116)">
+    <rect width="490" height="744" rx="25" fill="#fff" stroke="#eadbd0"/>
+    <text x="25" y="39" class="label" fill="#bf6047">A · 중앙형 다이얼로그</text>
+    <text x="25" y="65" class="tiny muted">익숙하고 또렷한 기본형 · 가장 범용적</text>
+    <rect x="18" y="88" width="454" height="500" rx="18" fill="#f7f4f0"/>
+    <rect x="18" y="88" width="454" height="500" rx="18" fill="#3d302b" opacity=".24"/>
+    <rect x="58" y="217" width="374" height="250" rx="23" fill="#fffdfa" stroke="#f0e1d7" filter="url(#shadow)"/>
+    <circle cx="245" cy="271" r="27" fill="#fff0e8"/>
+    <path d="M236 261h18m-14 0v18m10-18v18m-17-22h24m-18-4h12" fill="none" stroke="#d5684d" stroke-width="2.4" stroke-linecap="round"/>
+    <text x="245" y="325" text-anchor="middle" class="title">장소 기록을 삭제할까요?</text>
+    <text x="245" y="356" text-anchor="middle" class="small muted">삭제한 기록은 다시 복구할 수 없어요.</text>
+    <rect x="84" y="390" width="128" height="47" rx="15" fill="#fff" stroke="#e9d9cf"/>
+    <text x="148" y="420" text-anchor="middle" class="small" font-weight="700">취소</text>
+    <rect x="222" y="390" width="184" height="47" rx="15" fill="#df694d"/>
+    <text x="314" y="420" text-anchor="middle" class="small inverse" font-weight="750">삭제할게요</text>
+    <text x="25" y="625" class="body" font-weight="700">공통 규칙</text>
+    <text x="25" y="655" class="small muted">아이콘·제목·설명·버튼을 상황에 맞게 바꾸고</text>
+    <text x="25" y="679" class="small muted">성공/오류 알림은 확인 버튼 하나로 간결하게.</text>
+    <text x="25" y="718" class="tiny muted">차분하고 익숙한 앱 기본 알림에 적합</text>
+  </g>
+
+  <!-- Option B -->
+  <g transform="translate(555 116)">
+    <rect width="490" height="744" rx="25" fill="#fff" stroke="#eadbd0"/>
+    <text x="25" y="39" class="label" fill="#bf6047">B · 모바일 바텀시트</text>
+    <text x="25" y="65" class="tiny muted">화면 아래에서 올라오는 형태 · 모바일 친화적</text>
+    <rect x="18" y="88" width="454" height="500" rx="18" fill="#f7f4f0"/>
+    <rect x="18" y="88" width="454" height="500" rx="18" fill="#3d302b" opacity=".24"/>
+    <path d="M18 355 Q18 337 36 337 H454 Q472 337 472 355 V570 Q472 588 454 588 H36 Q18 588 18 570Z" fill="#fffdfa" stroke="#f0e1d7" filter="url(#shadow)"/>
+    <rect x="218" y="351" width="54" height="5" rx="3" fill="#e3d9d1"/>
+    <circle cx="68" cy="405" r="23" fill="#fff0e8"/>
+    <path d="M59 397h18m-14 0v16m10-16v16m-17-20h24m-18-4h12" fill="none" stroke="#d5684d" stroke-width="2.1" stroke-linecap="round"/>
+    <text x="104" y="407" class="title">장소 기록을 삭제할까요?</text>
+    <text x="43" y="451" class="small muted">삭제한 기록은 다시 복구할 수 없어요.</text>
+    <text x="43" y="475" class="small muted">필요한 정보인지 한 번 더 확인해 주세요.</text>
+    <rect x="42" y="504" width="406" height="42" rx="14" fill="#df694d"/>
+    <text x="245" y="531" text-anchor="middle" class="small inverse" font-weight="750">삭제할게요</text>
+    <text x="245" y="570" text-anchor="middle" class="tiny muted">취소</text>
+    <text x="25" y="625" class="body" font-weight="700">공통 규칙</text>
+    <text x="25" y="655" class="small muted">확인은 손가락이 닿기 쉬운 넓은 버튼으로.</text>
+    <text x="25" y="679" class="small muted">취소는 보조 동작으로 아래에 분리합니다.</text>
+    <text x="25" y="718" class="tiny muted">장소 저장·삭제 등 모바일 작업 흐름에 적합</text>
+  </g>
+
+  <!-- Option C -->
+  <g transform="translate(1074 116)">
+    <rect width="490" height="744" rx="25" fill="#fff" stroke="#eadbd0"/>
+    <text x="25" y="39" class="label" fill="#bf6047">C · 컴팩트 안내 카드</text>
+    <text x="25" y="65" class="tiny muted">내용을 먼저 읽히는 형태 · 덜 무겁고 빠른 확인</text>
+    <rect x="18" y="88" width="454" height="500" rx="18" fill="#f7f4f0"/>
+    <rect x="18" y="88" width="454" height="500" rx="18" fill="#3d302b" opacity=".24"/>
+    <rect x="48" y="256" width="394" height="170" rx="20" fill="#fffdfa" stroke="#f0e1d7" filter="url(#shadow)"/>
+    <rect x="48" y="256" width="5" height="170" rx="3" fill="#df694d"/>
+    <circle cx="91" cy="302" r="20" fill="#fff0e8"/>
+    <path d="M84 295h14m-11 0v13m8-13v13m-13-17h18m-13-3h8" fill="none" stroke="#d5684d" stroke-width="1.9" stroke-linecap="round"/>
+    <text x="124" y="306" class="title">삭제할까요?</text>
+    <text x="75" y="350" class="small muted">장소 기록을 삭제하면 다시 복구할 수 없어요.</text>
+    <rect x="75" y="375" width="102" height="35" rx="12" fill="#fff" stroke="#e9d9cf"/>
+    <text x="126" y="398" text-anchor="middle" class="tiny" font-weight="700">취소</text>
+    <rect x="186" y="375" width="105" height="35" rx="12" fill="#df694d"/>
+    <text x="238" y="398" text-anchor="middle" class="tiny inverse" font-weight="750">삭제</text>
+    <text x="25" y="625" class="body" font-weight="700">공통 규칙</text>
+    <text x="25" y="655" class="small muted">짧은 안내를 빠르게 확인할 때 공간을 덜 차지.</text>
+    <text x="25" y="679" class="small muted">성공/오류도 같은 카드에서 상태색만 변경.</text>
+    <text x="25" y="718" class="tiny muted">간단한 확인과 짧은 오류 안내에 적합</text>
+  </g>
+</svg>

@@ -11,17 +11,29 @@ spring:
     gateway:
       server:
         webflux:
+          # Gateway는 요청 본문을 메모리에 모으지 않고 서비스로 흘려보내므로, 본문 크기는 route별 RequestSize 필터
+          # (Content-Length 기준)와 각 서비스의 제한으로만 막습니다.
           routes:
             # 사용자 프로필과 커뮤니티 활동은 한 서비스에서 함께 처리합니다.
             - id: matdagong-community-service
               uri: ${COMMUNITY_SERVICE_URL:http://localhost:5844}
               predicates:
-                - Path=/api/v1/users/**,/api/v1/tasters,/api/v1/tasters/**,/api/v1/taste-tags,/api/v1/taste-tags/**,/api/v1/diary/**,/api/v1/subscriptions,/api/v1/subscriptions/**,/api/v1/notifications/**,/api/v1/points,/media/profiles/**
+                - Path=/api/v1/users/**,/api/v1/tasters,/api/v1/tasters/**,/api/v1/taste-tags,/api/v1/taste-tags/**,/api/v1/subscriptions,/api/v1/subscriptions/**,/api/v1/notifications/**,/api/v1/points,/media/profiles/**
+              # 프로필·배경 사진 업로드의 multipart 최대 크기(55MB)보다 큰 요청은 서비스로 보내지 않습니다.
+              filters:
+                - name: RequestSize
+                  args:
+                    maxSize: 55MB
             # 장소 API를 별도 서버로 보내 장애가 다른 API 경로에 번지지 않게 합니다.
             - id: matdagong-place-service
               uri: ${PLACE_SERVICE_URL:http://localhost:5845}
               predicates:
-                - Path=/api/v1/places,/api/v1/places/**
+                - Path=/api/v1/places,/api/v1/places/**,/media/place-record-photos/**,/media/place-menu-photos/**
+              # 장소 서비스의 요청 크기 제한(dagong.place.max-request-size, 30MB)과 맞춥니다.
+              filters:
+                - name: RequestSize
+                  args:
+                    maxSize: 30MB
 
 management:
   endpoints:

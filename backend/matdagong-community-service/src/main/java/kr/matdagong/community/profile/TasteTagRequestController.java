@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.List;
-import java.util.UUID;
+import kr.matdagong.community.security.AuthenticatedAccount;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -33,12 +33,12 @@ public class TasteTagRequestController {
     public ResponseEntity<TasteTagRequestService.RequestView> create(
             @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody TagRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(
-                UUID.fromString(jwt.getSubject()), request.name(), request.tagGroup(), request.reason()));
+                AuthenticatedAccount.id(jwt), request.requestType(), request.name(), request.tagGroup(), request.reason()));
     }
 
     @GetMapping("/mine")
     public List<TasteTagRequestService.RequestView> mine(@AuthenticationPrincipal Jwt jwt) {
-        return service.mine(UUID.fromString(jwt.getSubject()));
+        return service.mine(AuthenticatedAccount.id(jwt));
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -47,6 +47,7 @@ public class TasteTagRequestController {
     }
 
     public record TagRequest(
+            @Pattern(regexp = "TAG|PLACE_INFO") String requestType,
             @NotBlank @Size(max = 30) String name,
             @NotBlank @Pattern(regexp = "CUISINE|TASTE|CAFE|OCCASION|VISIT") String tagGroup,
             @Size(max = 300) String reason) {}

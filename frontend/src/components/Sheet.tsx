@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import Icon from "./Icon";
+import { useNotificationPageLock } from "./NotificationDialog";
 
 export default function Sheet({
   title,
@@ -15,11 +16,10 @@ export default function Sheet({
   const panel = useRef<HTMLElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  useNotificationPageLock(true);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    panel.current?.focus();
+    panel.current?.focus({ preventScroll: true });
     function keydown(event: KeyboardEvent) {
       if (event.key === "Escape") closeRef.current();
       if (event.key !== "Tab") return;
@@ -50,9 +50,8 @@ export default function Sheet({
     }
     document.addEventListener("keydown", keydown);
     return () => {
-      document.body.style.overflow = overflow;
       document.removeEventListener("keydown", keydown);
-      previous?.focus();
+      previous?.focus({ preventScroll: true });
     };
   }, []);
   return (

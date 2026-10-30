@@ -1,4 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import Icon from "./Icon";
+import { useNotificationPageLock } from "./NotificationDialog";
+import "../styles/notification-dialog.css";
 
 export type NoticeKind = "info" | "success" | "error";
 
@@ -9,62 +13,42 @@ type Props = {
   onDismiss: () => void;
 };
 
-/** 페이지 배치를 바꾸지 않고 상태와 안내를 함께 보여주는 공통 플로팅 알림입니다. */
+/** 앱의 안내·성공·오류 알림도 확인창과 같은 중앙형 디자인으로 보여줍니다. */
 export default function NoticeToast({ kind, title, message, onDismiss }: Props) {
-  useEffect(() => {
-    const timeout = window.setTimeout(onDismiss, 3500);
-    return () => window.clearTimeout(timeout);
-  }, [message, onDismiss]);
+  const acknowledgeButton = useRef<HTMLButtonElement>(null);
+  useNotificationPageLock(true);
 
-  return (
-    <div
-      className={`global-notice global-notice--${kind}`}
-      role={kind === "error" ? "alert" : "status"}
-      aria-live={kind === "error" ? "assertive" : "polite"}
-    >
-      <span className="global-notice__icon" aria-hidden="true">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          {kind === "success" ? (
-            <path d="m5 12 4 4L19 6" />
-          ) : kind === "error" ? (
-            <path d="M12 8v5m0 3h.01M10.3 3.9 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3l-7.5-13.1a2 2 0 0 0-3.4 0Z" />
-          ) : (
-            <>
-              <path d="M12 11v5" />
-              <path d="M12 8h.01" />
-              <circle cx="12" cy="12" r="9" />
-            </>
-          )}
-        </svg>
-      </span>
-      <span className="global-notice__copy">
-        <b>{title}</b>
-        <span>{message}</span>
-      </span>
-      <button
-        className="global-notice__close"
-        type="button"
-        onClick={onDismiss}
-        aria-label="알림 닫기"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          <path d="m6 6 12 12M18 6 6 18" />
-        </svg>
-      </button>
-    </div>
+  useEffect(() => {
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    acknowledgeButton.current?.focus({ preventScroll: true });
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onDismiss();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      previousFocus?.focus({ preventScroll: true });
+    };
+  }, [onDismiss]);
+
+  const tone = kind === "error" ? "danger" : kind;
+  const icon = kind === "success" ? "check" : kind === "error" ? "close" : "message";
+
+  return createPortal(
+    <div className="notification-backdrop" onMouseDown={(event) => {
+      if (event.target === event.currentTarget) onDismiss();
+    }}>
+      <section className={`notification-dialog notification-dialog--${tone}`}
+        role={kind === "error" ? "alertdialog" : "dialog"} aria-modal="true"
+        aria-labelledby="app-notice-title" aria-describedby="app-notice-message">
+        <span className="notification-dialog-icon"><Icon name={icon} /></span>
+        <h2 id="app-notice-title">{title}</h2>
+        <p id="app-notice-message">{message}</p>
+        <div className="notification-dialog-actions is-alert">
+          <button ref={acknowledgeButton} type="button" className="notification-dialog-accept" onClick={onDismiss}>확인했어요</button>
+        </div>
+      </section>
+    </div>,
+    document.body,
   );
 }

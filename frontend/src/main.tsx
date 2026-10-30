@@ -3,6 +3,15 @@ import { createRoot } from "react-dom/client";
 import App from "./app/App";
 import SignupScreen from "./screens/SignupScreen";
 import IntroScreen from "./screens/IntroScreen";
+import { resetRouteHistory } from "./app/navigation";
+import {
+  ACCESS_TOKEN_KEY,
+  SESSION_EXPIRING_EVENT,
+  TOKEN_EXPIRY_KEY,
+  setSessionExpiredHandler,
+} from "./services/http";
+import { clearRegisterDraft } from "./services/registerDraft";
+import { accountIdFromAccessToken } from "./utils/accessToken";
 import "./styles/app.css";
 import "./styles/screens.css";
 import "./styles/notice.css";
@@ -10,6 +19,7 @@ import "./styles/auth-start.css";
 import "./styles/subscription.css";
 import "./styles/profile-settings.css";
 import "./styles/design-system.css";
+import "./styles/photo-tag-detail.css";
 
 const AUTHORIZATION_SERVER =
   import.meta.env.VITE_AUTH_SERVER_URL ?? "http://localhost:5840";
@@ -17,11 +27,12 @@ const CLIENT_ID = import.meta.env.VITE_AUTH_CLIENT_ID ?? "matdagong-web-dev";
 const REDIRECT_URI =
   import.meta.env.VITE_AUTH_REDIRECT_URI ??
   `${window.location.origin}/auth/callback`;
-const ACCESS_TOKEN_KEY = "matdagong.auth.access-token";
-const TOKEN_EXPIRY_KEY = "matdagong.auth.expires-at";
 const STATE_KEY = "matdagong.auth.oauth-state";
 const VERIFIER_KEY = "matdagong.auth.pkce-verifier";
+const RETURN_HASH_KEY = "matdagong.auth.return-hash";
 const ONBOARDING_KEY = "matdagong.onboarding.completed";
+// 로그인 뒤 돌아갈 주소는 앱 내부 해시 경로(#화면 또는 #화면/ID)만 허용해 외부 주소로 이동하지 않게 합니다.
+const SAFE_RETURN_HASH = /^#[a-z-]+(\/[A-Za-z0-9_-]+)?$/;
 
 type MembershipStatus = {
   registered: boolean;
@@ -41,6 +52,9 @@ async function logout(): Promise<void> {
     sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
     sessionStorage.removeItem(STATE_KEY);
     sessionStorage.removeItem(VERIFIER_KEY);
+    // 로그아웃은 다른 계정으로 다시 들어올 수 있으므로 돌아갈 화면과 작성 중 입력을 남기지 않습니다.
+    sessionStorage.removeItem(RETURN_HASH_KEY);
+    clearRegisterDraft();
     // 로그인 페이지만 열면 인증 완료 후 돌아올 앱이 없어지므로 OAuth 흐름을 다시 시작합니다.
     await beginSignIn();
   }
@@ -57,18 +71,45 @@ function base64Url(bytes: Uint8Array): string {
     .replace(/=+$/, "");
 }
 
+/** 서비스 소개를 계정별로 한 번만 보여주도록 공통 계정 UUID를 붙인 저장 키를 만듭니다. */
 function onboardingKey(accessToken: string): string {
-  try {
-    const payload = accessToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    const claims = JSON.parse(atob(payload)) as { sub?: string };
-    return claims.sub ? `${ONBOARDING_KEY}:${claims.sub}` : ONBOARDING_KEY;
-  } catch {
-    return ONBOARDING_KEY;
-  }
+  const accountId = accountIdFromAccessToken(accessToken);
+  return accountId ? `${ONBOARDING_KEY}:${accountId}` : ONBOARDING_KEY;
 }
 
 function randomBase64Url(byteLength: number): string {
   return base64Url(crypto.getRandomValues(new Uint8Array(byteLength)));
+}
+
+/** 로그인으로 떠나기 전 현재 화면의 해시 경로를 기억합니다. 허용 형식이 아니면 이전 값도 지웁니다. */
+function rememberReturnHash(): void {
+  try {
+    const hash = window.location.hash;
+    if (SAFE_RETURN_HASH.test(hash)) sessionStorage.setItem(RETURN_HASH_KEY, hash);
+    else sessionStorage.removeItem(RETURN_HASH_KEY);
+  } catch {
+    // 저장소를 쓸 수 없으면 로그인 뒤 홈으로 돌아갑니다.
+  }
+}
+
+/** 기억한 해시 경로를 다시 검증해 돌려줍니다. 형식이 맞지 않으면 빈 문자열(홈)입니다. */
+function readReturnHash(): string {
+  try {
+    const hash = sessionStorage.getItem(RETURN_HASH_KEY) ?? "";
+    return SAFE_RETURN_HASH.test(hash) ? hash : "";
+  } catch {
+    return "";
+  }
+}
+
+function takeReturnHash(): string {
+  const hash = readReturnHash();
+  try {
+    sessionStorage.removeItem(RETURN_HASH_KEY);
+  } catch {
+    // 지우지 못해도 다음 로그인 시작 때 현재 화면 기준으로 다시 덮어씁니다.
+  }
+  return hash;
 }
 
 async function beginSignIn(): Promise<void> {
@@ -142,8 +183,9 @@ async function completeSignIn(): Promise<void> {
   );
   sessionStorage.removeItem(STATE_KEY);
   sessionStorage.removeItem(VERIFIER_KEY);
-  // 인가 코드가 주소창과 새로고침 기록에 남지 않도록 홈 주소로 정리합니다.
-  window.history.replaceState(null, "", "/");
+  // 인가 코드가 주소창과 새로고침 기록에 남지 않도록 정리하고, 로그인 전에 보던 화면이 있으면 그 경로로 돌아갑니다.
+  window.history.replaceState(null, "", `/${takeReturnHash()}`);
+  resetRouteHistory();
 }
 
 /** 저장된 access token이 맛다공 가입 상태인지 인증 서버에서 확인합니다. */
@@ -177,7 +219,7 @@ function showSignInError(message: string): void {
   retry.type = "button";
   retry.textContent = "다시 로그인";
   retry.addEventListener("click", () => {
-    window.location.assign("/");
+    window.location.assign(`/${readReturnHash()}`);
   });
   panel.append(title, description, retry);
   root.replaceChildren(panel);
@@ -218,6 +260,8 @@ async function startMatdagong(): Promise<void> {
     if (!accessToken || expiresAt <= Date.now()) {
       sessionStorage.removeItem(ACCESS_TOKEN_KEY);
       sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
+      // 공유받은 /#place/<id> 같은 주소로 처음 들어와도 로그인 뒤 같은 화면을 엽니다.
+      rememberReturnHash();
       await beginSignIn();
       return;
     }
@@ -227,6 +271,7 @@ async function startMatdagong(): Promise<void> {
       await fetch("/auth-api/auth/session/clear", { method: "POST" });
       sessionStorage.removeItem(ACCESS_TOKEN_KEY);
       sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
+      rememberReturnHash();
       await beginSignIn();
       return;
     }
@@ -270,6 +315,22 @@ async function startMatdagong(): Promise<void> {
     );
   }
 }
+
+/**
+ * API 요청 중 토큰이 만료되거나 401을 받으면 http.ts가 한 번만 호출합니다.
+ * 화면에 입력 보관을 알리고, 현재 해시 경로를 기억한 뒤 공통 인증을 다시 거칩니다.
+ * 인증 서버의 SSO 세션이 살아 있으면 로그인 화면 없이 바로 콜백으로 돌아옵니다.
+ */
+function handleSessionExpired(): void {
+  // 이벤트 처리기는 동기로 실행되므로 페이지를 떠나기 전에 작성 중 입력이 저장됩니다.
+  window.dispatchEvent(new Event(SESSION_EXPIRING_EVENT));
+  rememberReturnHash();
+  beginSignIn().catch(() => {
+    showSignInError("로그인을 다시 시작하지 못했어요. 다시 시도해 주세요.");
+  });
+}
+
+setSessionExpiredHandler(handleSessionExpired);
 
 // 맛다공은 먼저 홈 진입을 시도하고, 유효한 로그인 정보가 없으면 공통 인증을 시작합니다.
 void startMatdagong();

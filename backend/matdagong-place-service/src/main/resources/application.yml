@@ -3,5 +3,33 @@ server:
 spring:
   application:
     name: matdagong-place-service
+  config:
+    import:
+      - optional:file:./.env[.properties]
+      - optional:file:../../.env[.properties]
+  # 기본값은 docker-compose의 로컬 PostgreSQL(infra/postgres/init이 만드는 DB)입니다. 공유 개발 DB는 .env의 PLACE_DB_*로 지정합니다.
+  datasource:
+    url: ${PLACE_DB_URL:jdbc:postgresql://localhost:54329/matdagong_places}
+    username: ${PLACE_DB_USERNAME:mdg}
+    password: ${PLACE_DB_PASSWORD:mdg_local}
+  flyway:
+    enabled: true
+
+dagong:
+  auth:
+    issuer: ${AUTH_ISSUER:http://localhost:5840}
+    client-id: ${AUTH_CLIENT_ID:matdagong-web-dev}
+  # 기록 작성자 프로필을 조회할 커뮤니티 서비스 주소입니다. Gateway를 거치지 않고 직접 호출합니다.
+  community-service:
+    url: ${COMMUNITY_SERVICE_URL:http://localhost:5844}
+  # 가게 기본정보를 서버에서 카카오 Local API로 확인할 때 쓰는 REST API 키입니다. 비어 있으면 검증하지 않습니다.
+  kakao:
+    rest-api-key: ${KAKAO_REST_API_KEY:}
+  place:
+    # 사진 전체 20MB를 base64로 보내도 들어가도록 여유를 둔 요청 본문 최대 크기입니다.
+    max-request-size: 30MB
+    # 비공개 기록 사진 서명 주소용 HMAC 키입니다. 비워 두면 시작할 때마다 새로 만들어 재시작 전 주소는 열리지 않습니다.
+    media-signing-key: ${PLACE_MEDIA_SIGNING_KEY:}
+    media-url-ttl: PT6H
 management:
   endpoints.web.exposure.include: health,info

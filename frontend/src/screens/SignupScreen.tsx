@@ -9,6 +9,7 @@ import {
   type FoodFocus,
   type TasteTag,
 } from "../services/community";
+import { apiRequest } from "../services/http";
 
 type SignupScreenProps = {
   accessToken: string;
@@ -24,7 +25,7 @@ export default function SignupScreen({
   email: initialEmail,
   onComplete,
 }: SignupScreenProps) {
-  const [displayName, setDisplayName] = useState(initialName);
+  const [displayName, setDisplayName] = useState(initialName.slice(0, 12));
   const [email, setEmail] = useState(initialEmail ?? "");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -45,22 +46,11 @@ export default function SignupScreen({
     setError("");
     try {
       if (!membershipComplete) {
-        const response = await fetch("/auth-api/api/v1/matdagong/membership", {
+        await apiRequest<void>("/auth-api/api/v1/matdagong/membership", accessToken, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({ displayName, email: email.trim() || null }),
+          errorMessage: "가입을 완료하지 못했어요. 다시 시도해 주세요.",
         });
-        if (!response.ok) {
-          const result = (await response.json().catch(() => null)) as {
-            message?: string;
-          } | null;
-          throw new Error(
-            result?.message ?? "가입을 완료하지 못했어요. 다시 시도해 주세요.",
-          );
-        }
         setMembershipComplete(true);
       }
       // 취향은 선택 사항입니다. 고르지 않아도 같은 가입 절차로 진행합니다.
@@ -103,10 +93,11 @@ export default function SignupScreen({
         <input
           id="signup-display-name"
           required
-          maxLength={30}
+          maxLength={12}
           value={displayName}
-          onChange={(event) => setDisplayName(event.target.value.slice(0, 30))}
+          onChange={(event) => setDisplayName(event.target.value.slice(0, 12))}
         />
+        <small>{displayName.length}/12자</small>
         <label htmlFor="signup-email">
           이메일 <span>선택</span>
         </label>

@@ -28,8 +28,15 @@ export function loadMapSdk() {
   return sdkPromise;
 }
 
-/** 등록 폼에서 카카오 장소 검색 결과를 고르고 동일 장소 식별자를 보존합니다. */
-export async function searchKakaoPlaces(keyword: string): Promise<KakaoPlaceResult[]> {
+/**
+ * 카카오 장소를 키워드로 검색합니다. center를 주면 그 주변 radiusMeters 안에서 찾습니다.
+ * 맛집 등록과 빠른 장소 기록에서 쓰며, 결과의 id(카카오 장소 ID)로 같은 장소를 구분합니다.
+ */
+export async function searchKakaoPlaces(
+  keyword: string,
+  center?: { latitude: number; longitude: number },
+  radiusMeters = 1000,
+): Promise<KakaoPlaceResult[]> {
   await loadMapSdk();
   const services = window.kakao?.maps.services;
   if (!services) throw new Error("카카오 장소 검색을 불러오지 못했어요.");
@@ -38,6 +45,12 @@ export async function searchKakaoPlaces(keyword: string): Promise<KakaoPlaceResu
       if (status === services.Status.OK) resolve(results);
       else if (status === services.Status.ZERO_RESULT) resolve([]);
       else reject(new Error("장소 검색에 실패했어요. 잠시 후 다시 시도해 주세요."));
-    }, { size: 8 });
+    }, {
+      size: 8,
+      ...(center ? {
+        location: new window.kakao!.maps.LatLng(center.latitude, center.longitude),
+        radius: radiusMeters,
+      } : {}),
+    });
   });
 }

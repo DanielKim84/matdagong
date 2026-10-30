@@ -32,7 +32,7 @@ export default function PlaceTile({
           aria-label={`${place.name} 상세`}
         >
           {photo ? (
-            <img src={photo} alt={place.name} />
+            <img src={photo} alt={place.name} loading="lazy" decoding="async" />
           ) : (
             <FoodPhoto place={place} />
           )}

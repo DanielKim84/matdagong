@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="1150" viewBox="0 0 560 1150">
+  <rect width="560" height="1150" rx="30" fill="#f8f4ef"/>
+  <text x="30" y="50" fill="#3c2c25" font-family="Arial, sans-serif" font-size="25" font-weight="700">태그 스타일 시안 5가지</text>
+  <text x="30" y="78" fill="#8e7c70" font-family="Arial, sans-serif" font-size="13">맛다공의 코랄·크림 색감에 맞춘 비교용 시안</text>
+  <g font-family="Arial, sans-serif">
+    <rect x="20" y="104" width="520" height="190" rx="20" fill="#fffdfa" stroke="#efdfd4"/>
+    <text x="42" y="138" fill="#e46b4e" font-size="12" font-weight="700">A · 소프트 라벨</text><text x="42" y="163" fill="#44342c" font-size="17" font-weight="700">음식 종류</text>
+    <rect x="42" y="181" width="74" height="36" rx="18" fill="#fff0e7"/><text x="53" y="204" fill="#bd553c" font-size="14" font-weight="700">#한식</text>
+    <rect x="124" y="181" width="74" height="36" rx="18" fill="#fff0e7"/><text x="135" y="204" fill="#bd553c" font-size="14" font-weight="700">#일식</text>
+    <rect x="206" y="181" width="82" height="36" rx="18" fill="#fff0e7"/><text x="217" y="204" fill="#bd553c" font-size="14" font-weight="700">#중식</text>
+    <text x="42" y="258" fill="#8e7c70" font-size="12">옅은 코랄 바탕, 테두리 없이 부드럽게</text>
+
+    <rect x="20" y="310" width="520" height="190" rx="20" fill="#fffdfa" stroke="#efdfd4"/>
+    <text x="42" y="344" fill="#e46b4e" font-size="12" font-weight="700">B · 얇은 라인</text><text x="42" y="369" fill="#44342c" font-size="17" font-weight="700">음식 종류</text>
+    <rect x="42" y="387" width="74" height="36" rx="18" fill="#fffdfa" stroke="#e8c8b9"/><text x="53" y="410" fill="#59463b" font-size="14" font-weight="600">#한식</text>
+    <rect x="124" y="387" width="74" height="36" rx="18" fill="#fffdfa" stroke="#e8c8b9"/><text x="135" y="410" fill="#59463b" font-size="14" font-weight="600">#일식</text>
+    <rect x="206" y="387" width="82" height="36" rx="18" fill="#fffdfa" stroke="#e8c8b9"/><text x="217" y="410" fill="#59463b" font-size="14" font-weight="600">#중식</text>
+    <text x="42" y="464" fill="#8e7c70" font-size="12">흰 바탕에 얇은 웜톤 테두리</text>
+
+    <rect x="20" y="516" width="520" height="190" rx="20" fill="#fffdfa" stroke="#efdfd4"/>
+    <text x="42" y="550" fill="#e46b4e" font-size="12" font-weight="700">C · 카테고리 포인트</text><text x="42" y="575" fill="#44342c" font-size="17" font-weight="700">음식 종류</text>
+    <rect x="42" y="593" width="78" height="36" rx="12" fill="#f8f3ed"/><circle cx="57" cy="611" r="4" fill="#dc7051"/><text x="68" y="616" fill="#514137" font-size="13" font-weight="600">한식</text>
+    <rect x="128" y="593" width="78" height="36" rx="12" fill="#f8f3ed"/><circle cx="143" cy="611" r="4" fill="#dc7051"/><text x="154" y="616" fill="#514137" font-size="13" font-weight="600">일식</text>
+    <rect x="214" y="593" width="78" height="36" rx="12" fill="#f8f3ed"/><circle cx="229" cy="611" r="4" fill="#dc7051"/><text x="240" y="616" fill="#514137" font-size="13" font-weight="600">중식</text>
+    <text x="42" y="670" fill="#8e7c70" font-size="12">태그 표면은 통일하고 제목에만 포인트</text>
+
+    <rect x="20" y="722" width="520" height="190" rx="20" fill="#fffdfa" stroke="#efdfd4"/>
+    <text x="42" y="756" fill="#e46b4e" font-size="12" font-weight="700">D · 텍스트형</text><text x="42" y="781" fill="#44342c" font-size="17" font-weight="700">음식 종류</text>
+    <text x="42" y="828" fill="#c85f43" font-size="16" font-weight="700">#한식</text><text x="100" y="828" fill="#c6b4a8" font-size="16">·</text>
+    <text x="119" y="828" fill="#c85f43" font-size="16" font-weight="700">#일식</text><text x="177" y="828" fill="#c6b4a8" font-size="16">·</text>
+    <text x="196" y="828" fill="#c85f43" font-size="16" font-weight="700">#중식</text>
+    <line x1="42" y1="849" x2="500" y2="849" stroke="#f0e5dc"/>
+    <text x="42" y="883" fill="#8e7c70" font-size="12">캡슐을 없애 화면을 가볍게</text>
+
+    <rect x="20" y="928" width="520" height="190" rx="20" fill="#fffdfa" stroke="#efdfd4"/>
+    <text x="42" y="962" fill="#e46b4e" font-size="12" font-weight="700">E · 컴팩트 칩</text><text x="42" y="987" fill="#44342c" font-size="17" font-weight="700">음식 종류</text>
+    <rect x="42" y="1005" width="68" height="30" rx="9" fill="#f8f1eb"/><text x="52" y="1025" fill="#514137" font-size="12" font-weight="650">#한식</text>
+    <rect x="117" y="1005" width="68" height="30" rx="9" fill="#f8f1eb"/><text x="127" y="1025" fill="#514137" font-size="12" font-weight="650">#일식</text>
+    <rect x="192" y="1005" width="76" height="30" rx="9" fill="#f8f1eb"/><text x="202" y="1025" fill="#514137" font-size="12" font-weight="650">#중식</text>
+    <text x="42" y="1083" fill="#8e7c70" font-size="12">작은 모서리와 낮은 대비로 정돈된 느낌</text>
+  </g>
+</svg>

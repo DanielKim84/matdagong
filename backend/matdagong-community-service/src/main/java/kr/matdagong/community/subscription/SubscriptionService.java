@@ -7,9 +7,12 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import kr.matdagong.community.notification.NotificationService;
+import kr.matdagong.community.profile.ProfileMediaUrls;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -20,7 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 /** 구독 관계와 구독 회차를 한 DB 트랜잭션으로 함께 갱신합니다. */
 @Service
 public class SubscriptionService {
-    // 실제 결제 연동 전까지 화면과 API 동작을 검증할 개발용 금액입니다.
+    // 오픈 전 무료 이용 기간에도 유료 플랜의 기간별 테스트 안내 금액은 화면에 표시합니다.
     private static final Map<Integer, BigDecimal> TEST_PRICES = Map.of(
             1, new BigDecimal("1000"),
             3, new BigDecimal("2700"),
@@ -28,9 +31,11 @@ public class SubscriptionService {
             12, new BigDecimal("9000"));
 
     private final JdbcTemplate jdbc;
+    private final NotificationService notifications;
 
-    public SubscriptionService(JdbcTemplate jdbc) {
+    public SubscriptionService(JdbcTemplate jdbc, NotificationService notifications) {
         this.jdbc = jdbc;
+        this.notifications = notifications;
     }
 
     public PlanCatalog plans() {
@@ -47,7 +52,7 @@ public class SubscriptionService {
         return jdbc.query("""
                 SELECT p.account_id, p.nickname, p.avatar_variant, p.taster_focus,
                        p.activity_scope, p.activity_region,
-                       p.profile_cover_data IS NOT NULL AS has_cover,
+                       cover_images.photo_ids AS profile_cover_photo_ids,
                        p.profile_img_data IS NOT NULL AS has_avatar, p.intro,
                        COUNT(DISTINCT subscribers.subscription_id) AS subscriber_count,
                        COUNT(DISTINCT preference.tag_id) + CASE
@@ -62,6 +67,10 @@ public class SubscriptionService {
                          FILTER (WHERE preference.tag_id IS NOT NULL) AS matched_tags
                 FROM user_profiles p
                 LEFT JOIN user_profiles my_profile ON my_profile.account_id = ?
+                LEFT JOIN LATERAL (
+                    SELECT string_agg(photo_id::text, ',' ORDER BY sort_no) AS photo_ids
+                    FROM user_profile_cover_photos WHERE account_id = p.account_id
+                ) cover_images ON true
                 LEFT JOIN user_subscriptions subscribers
                   ON subscribers.target_account_id = p.account_id AND subscribers.subscription_st = 'ACTIVE'
                 LEFT JOIN user_profile_tags profile_tags
@@ -72,32 +81,42 @@ public class SubscriptionService {
                  AND preference.preference_type = 'LIKE'
                  AND preference.tag_id = profile_tags.tag_id
                 WHERE p.account_id <> ?
-                GROUP BY p.account_id, p.taster_focus
+                GROUP BY p.account_id, p.taster_focus, cover_images.photo_ids
                 ORDER BY match_score DESC, subscriber_count DESC, p.nickname
-                """, (rs, row) -> new TasterView(
-                rs.getString("account_id"),
-                rs.getString("nickname"),
-                "맛객",
-                rs.getBoolean("has_avatar")
-                        ? "/media/profiles/%s/avatar".formatted(rs.getString("account_id")) : null,
-                rs.getInt("avatar_variant"),
-                rs.getBoolean("has_cover")
-                        ? "/media/profiles/%s/cover".formatted(rs.getString("account_id")) : null,
-                rs.getString("taster_focus"),
-                rs.getString("activity_scope"),
-                rs.getString("activity_region"),
-                "맛있는 장소를 찾아 기록하고 있어요.",
-                rs.getString("intro"),
-                rs.getInt("subscriber_count"),
-                splitTagNames(rs.getString("profile_tags")),
-                splitTagNames(rs.getString("matched_tags")),
-                rs.getInt("match_score")), currentAccountId, currentAccountId);
+                """, (rs, row) -> {
+            UUID accountId = rs.getObject("account_id", UUID.class);
+            List<String> coverUrls = coverPhotoUrls(rs.getString("profile_cover_photo_ids"), accountId);
+            return new TasterView(
+                    accountId.toString(),
+                    rs.getString("nickname"),
+                    "맛객",
+                    rs.getBoolean("has_avatar") ? ProfileMediaUrls.avatar(accountId) : null,
+                    rs.getInt("avatar_variant"),
+                    // 단일 배경 주소를 읽는 화면과 호환되도록 갤러리의 첫 사진을 대표 배경으로 함께 내려줍니다.
+                    coverUrls.isEmpty() ? null : coverUrls.get(0),
+                    coverUrls,
+                    rs.getString("taster_focus"),
+                    rs.getString("activity_scope"),
+                    rs.getString("activity_region"),
+                    "맛있는 장소를 찾아 기록하고 있어요.",
+                    rs.getString("intro"),
+                    rs.getInt("subscriber_count"),
+                    splitTagNames(rs.getString("profile_tags")),
+                    splitTagNames(rs.getString("matched_tags")),
+                    rs.getInt("match_score"));
+        }, currentAccountId, currentAccountId);
     }
 
     private List<String> splitTagNames(String tagNames) {
         return tagNames == null || tagNames.isBlank()
                 ? List.of()
                 : List.of(tagNames.split(","));
+    }
+
+    private List<String> coverPhotoUrls(String photoIds, UUID accountId) {
+        if (photoIds == null || photoIds.isBlank()) return List.of();
+        return Arrays.stream(photoIds.split(","))
+                .map(photoId -> ProfileMediaUrls.coverPhoto(accountId, UUID.fromString(photoId))).toList();
     }
 
     @Transactional
@@ -113,6 +132,29 @@ public class SubscriptionService {
                 WHERE s.subscriber_id = ? AND s.subscription_st = 'ACTIVE'
                 ORDER BY s.reg_dt DESC
                 """, subscriptionRowMapper(), subscriberId);
+    }
+
+    /** 요청한 사용자의 현재 구독과 활성 회차를 함께 취소합니다. */
+    @Transactional
+    public void cancelSubscription(UUID subscriberId, UUID subscriptionId) {
+        List<UUID> ownedActiveIds = jdbc.query("""
+                SELECT subscription_id FROM user_subscriptions
+                WHERE subscription_id = ? AND subscriber_id = ? AND subscription_st = 'ACTIVE'
+                FOR UPDATE
+                """, (rs, row) -> rs.getObject(1, UUID.class), subscriptionId, subscriberId);
+        if (ownedActiveIds.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "취소할 구독을 찾을 수 없습니다.");
+        }
+        jdbc.update("""
+                UPDATE user_subscription_history
+                SET period_st = 'CANCELED'
+                WHERE subscription_id = ? AND period_st = 'ACTIVE'
+                """, subscriptionId);
+        jdbc.update("""
+                UPDATE user_subscriptions
+                SET subscription_st = 'INACTIVE', upd_dt = now()
+                WHERE subscription_id = ? AND subscriber_id = ?
+                """, subscriptionId, subscriberId);
     }
 
     /** 내 맛객 프로필을 구독 중인 사용자와 현재 이용 중인 구독 회차를 반환합니다. */
@@ -133,8 +175,7 @@ public class SubscriptionService {
                 rs.getObject("subscription_id", UUID.class),
                 rs.getObject("subscriber_id", UUID.class),
                 rs.getString("nickname"),
-                rs.getBoolean("has_avatar")
-                        ? "/media/profiles/%s/avatar".formatted(rs.getString("subscriber_id")) : null,
+                rs.getBoolean("has_avatar") ? ProfileMediaUrls.avatar(rs.getObject("subscriber_id", UUID.class)) : null,
                 rs.getInt("avatar_variant"),
                 SubscriptionType.valueOf(rs.getString("subscription_type")),
                 (Integer) rs.getObject("term_months"),
@@ -158,11 +199,19 @@ public class SubscriptionService {
         if (targetNickname == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "구독할 맛객을 찾을 수 없습니다.");
         }
+        String subscriberNickname = jdbc.query(
+                "SELECT nickname FROM user_profiles WHERE account_id = ?",
+                rs -> rs.next() ? rs.getString(1) : "새 사용자",
+                subscriberId);
+
+        // 무료 구독 교체 요청을 한 계정씩 처리해 동시에 신청해도 무료 자리가 둘 생기지 않게 합니다.
+        if (request.subscriptionType() == SubscriptionType.FREE) {
+            jdbc.queryForList("SELECT account_id FROM user_profiles WHERE account_id = ? FOR UPDATE", subscriberId);
+        }
 
         int termMonths = validatePlan(request);
-        BigDecimal price = request.subscriptionType() == SubscriptionType.FREE
-                ? BigDecimal.ZERO
-                : TEST_PRICES.get(termMonths);
+        // 결제 연동 전에는 유료 플랜도 무료 제공하며, 요금표는 화면 안내용으로만 유지합니다.
+        BigDecimal price = BigDecimal.ZERO;
 
         List<UUID> existingIds = jdbc.query(
                 "SELECT subscription_id FROM user_subscriptions WHERE subscriber_id = ? AND target_account_id = ?",
@@ -181,15 +230,22 @@ public class SubscriptionService {
 
         String replacedNickname = null;
         if (request.subscriptionType() == SubscriptionType.FREE) {
-            // 무료 구독은 한 자리만 유지하므로 새 무료 구독을 만들 때 기존 회차부터 종료합니다.
+            // 사용자 확인이 끝난 경우에만 현재 무료 구독을 취소하고 새 맛객으로 교체합니다.
             List<Map<String, Object>> previousFree = jdbc.queryForList("""
-                    SELECT s.subscription_id, p.nickname
+                    SELECT s.subscription_id, s.target_account_id, p.nickname
                     FROM user_subscriptions s
                     JOIN user_profiles p ON p.account_id = s.target_account_id
                     WHERE s.subscriber_id = ? AND s.subscription_st = 'ACTIVE'
                       AND s.subscription_type = 'FREE'
                     FOR UPDATE OF s
                     """, subscriberId);
+            boolean changingFreeTaster = previousFree.stream()
+                    .anyMatch(previous -> !targetId.equals(previous.get("target_account_id")));
+            if (changingFreeTaster && !request.confirmFreeReplacement()) {
+                String currentName = (String) previousFree.get(0).get("nickname");
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "현재 " + currentName + " 맛객을 무료 구독 중입니다. 기존 무료 구독 변경을 확인해 주세요.");
+            }
             for (Map<String, Object> previous : previousFree) {
                 UUID previousId = (UUID) previous.get("subscription_id");
                 replacedNickname = (String) previous.get("nickname");
@@ -226,18 +282,21 @@ public class SubscriptionService {
         }
 
         Instant start = Instant.now().truncatedTo(ChronoUnit.MICROS);
-        // 결제 모형 단계에서는 PAID 요청도 결제 완료로 기록해 실제 금액 없이 구독 흐름을 시험합니다.
+        // 유료 플랜의 무료 제공 기간에는 선택한 이용 기간만 기록하고 실제 청구는 하지 않습니다.
         Instant end = request.subscriptionType() == SubscriptionType.FREE
                 ? null
                 : start.atZone(ZoneOffset.UTC).plusMonths(termMonths).toInstant();
         // PostgreSQL JDBC는 Instant를 직접 바인딩하지 못하므로 Timestamp로 변환해 전달합니다.
+        UUID historyId = UUID.randomUUID();
         jdbc.update("""
                 INSERT INTO user_subscription_history (
                     subscription_history_id, subscription_id, subscription_type,
                     term_months, period_st, price_amt, start_dt, end_dt
                 ) VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?, ?)
-                """, UUID.randomUUID(), subscriptionId, request.subscriptionType().name(),
+                """, historyId, subscriptionId, request.subscriptionType().name(),
                 nullableTerm(request), price, Timestamp.from(start), end == null ? null : Timestamp.from(end));
+
+        notifications.newSubscriber(targetId, subscriberId, subscriberNickname, historyId);
 
         SubscriptionView view = new SubscriptionView(
                 subscriptionId, targetId, targetNickname, request.subscriptionType(),

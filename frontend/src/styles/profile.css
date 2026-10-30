@@ -45,21 +45,28 @@
 .profile-place-copy .icon { width: 11px; height: 11px; }
 
 .profile-screen .profile-tag-groups { display: grid; gap: 11px; padding: 14px 0 4px; text-align: left; }
-.profile-screen .profile-tag-group { display: grid; gap: 12px; border: 1px solid #f0e9e0; border-radius: 15px; background: #fff; padding: 14px; }
+.profile-screen .profile-tag-group { --tag-accent:#b85d45; --tag-surface:#fff4ed; --tag-border:#f0d8cc; display: grid; gap: 12px; border: 1px solid #f0e9e0; border-radius: 16px; background: #fff; padding: 15px; box-shadow: 0 4px 14px #4930200a; }
+.profile-screen .profile-tag-group--cuisine { --tag-accent:#b66d50; --tag-surface:#fff9f4; --tag-border:#efdfd4; }
+.profile-screen .profile-tag-group--taste { --tag-accent:#bf6349; --tag-surface:#fff7f2; --tag-border:#efdcd0; }
+.profile-screen .profile-tag-group--cafe { --tag-accent:#b27652; --tag-surface:#fffbf6; --tag-border:#efe3d8; }
+.profile-screen .profile-tag-group--occasion { --tag-accent:#b65e4f; --tag-surface:#fff8f5; --tag-border:#efded6; }
 .profile-screen .profile-tag-group h2 { display: flex; align-items: center; gap: 8px; margin: 0; color: #55483b; font-size: 12px; font-weight: 700; }
 .profile-screen .profile-tag-group h2 > span { display: grid; width: 27px; height: 27px; place-items: center; border-radius: 9px; background: #fff2e5; color: #dc8054; }
-.profile-screen .profile-tag-group--cuisine h2 > span { background: #f0f5eb; color: #66885b; }
-.profile-screen .profile-tag-group--taste h2 > span { background: #fbf1e9; color: #c77851; }
-.profile-screen .profile-tag-group--cafe h2 > span { background: #f7f1e8; color: #9b7955; }
-.profile-screen .profile-tag-group--occasion h2 > span { background: #edf4f7; color: #65869b; }
+.profile-screen .profile-tag-group--cuisine h2 > span,
+.profile-screen .profile-tag-group--taste h2 > span,
+.profile-screen .profile-tag-group--cafe h2 > span,
+.profile-screen .profile-tag-group--occasion h2 > span { background:var(--tag-surface);color:var(--tag-accent); }
 .profile-screen .profile-tag-group h2 .icon { width: 14px; height: 14px; }
 .profile-screen .profile-tag-group h2 > small { margin-left: auto; color: #a69b8e; font-size: 9px; font-weight: 500; }
 .profile-screen .profile-tag-group > div { display: flex; flex-wrap: wrap; gap: 7px; }
-.profile-screen .profile-tag-group > div > span { border: 1px solid #f1e7da; border-radius: 18px; background: #fffaf3; padding: 7px 10px; color: #73604d; font-size: 10px; }
+.profile-screen .profile-tag-group > div > span { display:inline-flex; align-items:center; gap:3px; border:1px solid var(--tag-border); border-radius:999px; background:var(--tag-surface); padding:7px 11px; color:#56473e; font-size:11px; font-weight:600; letter-spacing:-.15px; }
+.profile-screen .profile-tag-group > div > span > i { color:var(--tag-accent); font-size:12px; font-style:normal; font-weight:800; }
 .profile-empty { grid-column: 1 / -1; display: grid; justify-items: center; gap: 8px; border: 1px dashed #eadfce; border-radius: 15px; background: #fffaf3; padding: 28px 15px; color: #928475; text-align: center; }
 .profile-empty > .icon { width: 25px; height: 25px; margin-bottom: 3px; color: #d99467; }
 .profile-empty > b { color: #655444; font-size: 12px; }
 .profile-empty > span { font-size: 10px; line-height: 1.6; }
+
+
 
 @media (max-width: 360px) {
   .profile-screen .profile-grid { gap: 8px; }

@@ -6,7 +6,10 @@ import kr.matdagong.place.api.PlaceView;
 import kr.matdagong.place.api.PlaceView.TasterRecordView;
 import org.springframework.stereotype.Component;
 
-/** 실제 장소 DB가 연결되기 전까지 화면 개발에 사용할 읽기 전용 샘플 목록입니다. */
+/**
+ * 화면 개발용 읽기 전용 샘플 장소입니다. DB 장소와 함께 목록·상세·최근 본 장소에 섞여 제공됩니다.
+ * ID가 "p-"로 시작해 DB 장소의 UUID와 겹치지 않으며, 하트·최근 본 장소에는 이 ID가 그대로 저장됩니다.
+ */
 @Component
 public class SamplePlaceCatalog {
     // 샘플 장소 작성자 ID는 dev/seed-community-test-users.sql의 테스트 프로필과 맞춥니다.

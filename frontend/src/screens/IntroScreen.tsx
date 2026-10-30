@@ -33,19 +33,24 @@ export default function IntroScreen({ onComplete }: { onComplete?: () => void })
         <div><small>01 · 직접 다녀온 기록</small><h2>맛객마다 다른<br />추천 이유를 읽어요</h2><p>같은 장소도 누구는 메뉴를, 누구는 분위기를 추천해요. 메뉴와 방문 팁까지 살펴보고 나와 맞는 기록을 골라요.</p></div>
       </section>
 
+      <section className="intro-story-chapter intro-story-quick-record">
+        <div className="intro-story-chapter-art"><BrandArt name="map" /><span className="intro-story-art-orbit"><Icon name="clock" /></span></div>
+        <div><small>02 · 바쁠 땐 장소만 먼저</small><h2>가게에서 빠르게 저장하고<br />나중에 기록을 완성해요</h2><p>현재 위치 주변의 장소를 검색해 임시 저장해 두세요. 시간 날 때 추천 이유와 메뉴, 사진을 더해 맛객의 기록으로 완성할 수 있어요.</p></div>
+      </section>
+
       <section className="intro-story-chapter intro-story-map-chapter">
-        <div><small>02 · 내 기준으로 찾기</small><h2>취향에 맞는 기록을<br />지도에서 발견해요</h2><p>지금 있는 곳이나 여행할 지역을 살펴보고, 구독한 맛객의 맛집과 내 기록을 한눈에 찾아요.</p></div>
+        <div><small>03 · 내 기준으로 찾기</small><h2>취향에 맞는 기록을<br />지도에서 발견해요</h2><p>지금 있는 곳이나 여행할 지역을 살펴보고, 구독한 맛객의 맛집과 내 기록을 한눈에 찾아요.</p></div>
         <div className="intro-story-map-art"><BrandArt name="map" /><i><Icon name="pin" /></i><i><Icon name="sparkle" /></i><i><Icon name="heart" /></i></div>
       </section>
 
       <section className="intro-story-chapter intro-story-subscribe">
         <div className="intro-story-chapter-art"><BrandArt name="subscribe" /><span className="intro-story-art-orbit"><Icon name="heart" filled /></span></div>
-        <div><small>03 · 믿고 보는 맛객 구독</small><h2>마음에 드는 맛객을<br />구독하고 새 기록을 받아요</h2><p>한 명은 무료로 구독할 수 있고, 더 많은 맛객은 원하는 기간을 골라 구독해요.</p></div>
+        <div><small>04 · 믿고 보는 맛객 구독</small><h2>마음에 드는 맛객을<br />구독하고 새 기록을 받아요</h2><p>한 명은 무료로 구독할 수 있고, 더 많은 맛객은 원하는 기간을 골라 구독해요.</p></div>
       </section>
 
       <section className="intro-story-reward">
         <div className="intro-story-reward-art"><BrandArt name="points" /><span>맛객 리워드</span></div>
-        <div><small>기록을 나누는 사람에게도 가치 있게</small><h2>맛객의 경험이<br />다른 사람의 선택을 도와요</h2><p>맛집 기록이 구독으로 이어지면 맛객에게 리워드가 돌아가는 구조를 만들어요.</p></div>
+        <div><small>기록을 나누는 사람에게도 가치 있게</small><h2>맛객의 경험이<br />다른 사람의 선택을 도와요</h2><p>맛집 기록과 구독이 이어져, 경험을 나누는 맛객에게도 보람이 돌아가는 서비스를 만들어요.</p><small className="intro-reward-coming-soon">포인트 적립과 정산은 준비 중이에요. 시작되면 안내해 드릴게요.</small></div>
       </section>
 
       <section className="intro-story-trust">

@@ -4,9 +4,9 @@ import Icon, { type IconName } from "./Icon";
 
 const sections: { id: TasteTagGroup; label: string; hint: string; icon: IconName; limit: number }[] = [
   { id: "CUISINE", label: "음식 종류", hint: "어떤 음식 분야를 즐겨 찾나요?", icon: "fork", limit: 5 },
-  { id: "TASTE", label: "맛과 메뉴", hint: "좋아하는 맛이나 메뉴를 골라요.", icon: "heart", limit: 5 },
+  { id: "TASTE", label: "맛과 메뉴", hint: "좋아하는 맛이나 메뉴를 골라요.", icon: "heart", limit: 10 },
   { id: "CAFE", label: "카페와 디저트", hint: "커피와 달콤한 취향을 골라요.", icon: "coffee", limit: 5 },
-  { id: "OCCASION", label: "방문 스타일", hint: "함께 가거나 즐기는 상황을 골라요.", icon: "route", limit: 5 },
+  { id: "OCCASION", label: "방문 스타일", hint: "함께 가거나 즐기는 상황을 골라요.", icon: "route", limit: 10 },
   { id: "VISIT", label: "피하고 싶은 조건", hint: "이 조건이 있는 장소를 추천에서 빼요.", icon: "pin", limit: 5 },
 ];
 

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="1510" viewBox="0 0 620 1510">
+  <defs>
+    <style>
+      .bg{fill:#fffdfa}.ink{fill:#3f3029}.muted{fill:#8c786b}.coral{fill:#d9684b}.line{stroke:#ead8cc}.soft{fill:#fff7f1}.white{fill:#fff}.label{font:600 12px Arial,sans-serif}.small{font:12px Arial,sans-serif}.body{font:14px Arial,sans-serif}.title{font:700 18px Arial,sans-serif}.option{font:700 17px Arial,sans-serif}.button{font:700 12px Arial,sans-serif}
+    </style>
+  </defs>
+  <rect class="bg" width="620" height="1510"/>
+  <text x="30" y="42" class="ink" style="font:700 25px Arial,sans-serif">메뉴 입력 카드 디자인 시안</text>
+  <text x="30" y="68" class="muted body">따뜻한 코랄·크림 톤을 유지하고, 입력 폼의 구성은 같게 두었습니다.</text>
+
+  <!-- A -->
+  <g transform="translate(22 92)">
+    <rect width="576" height="250" rx="20" fill="#fff" stroke="#ead8cc"/>
+    <circle cx="31" cy="32" r="15" fill="#fff0e8"/><text x="26" y="38" class="coral option">A</text>
+    <text x="58" y="37" class="ink title">가벼운 라인형</text><text x="58" y="57" class="muted small">입력 칸을 담백하게 정리하고 사진만 포인트로</text>
+    <text x="20" y="91" class="muted label">메뉴명</text><text x="318" y="91" class="muted label">가격</text><text x="425" y="91" class="muted label">메뉴 사진</text>
+    <rect x="20" y="100" width="282" height="48" rx="12" fill="#fffdfa" stroke="#e8d9cf"/><text x="34" y="130" class="muted body">예: 들기름 막국수</text>
+    <rect x="312" y="100" width="98" height="48" rx="12" fill="#fffdfa" stroke="#e8d9cf"/><text x="326" y="130" class="muted body">선택　 원</text>
+    <rect x="420" y="100" width="112" height="48" rx="12" fill="#fff6f0" stroke="#f0cbb9"/><text x="444" y="130" class="coral button">▧　사진 추가</text>
+    <circle cx="551" cy="124" r="20" fill="#fff7f2" stroke="#f0dfd5"/><text x="545" y="130" class="muted body">×</text>
+    <rect x="20" y="174" width="130" height="38" rx="12" fill="#fff" stroke="#e9b59f" stroke-dasharray="4 3"/><text x="34" y="198" class="coral button">＋ 메뉴 추가</text>
+    <text x="165" y="198" class="muted small">얇은 테두리와 넉넉한 여백</text>
+  </g>
+
+  <!-- B -->
+  <g transform="translate(22 366)">
+    <rect width="576" height="250" rx="20" fill="#fff8f3" stroke="#eed5c6"/>
+    <rect x="0" y="0" width="7" height="250" rx="4" fill="#e27655"/>
+    <circle cx="31" cy="32" r="15" fill="#fbe5d8"/><text x="26" y="38" class="coral option">B</text>
+    <text x="58" y="37" class="ink title">코랄 포인트형</text><text x="58" y="57" class="muted small">카드 바탕은 크림, 왼쪽 포인트와 작은 버튼에 코랄 적용</text>
+    <text x="20" y="91" class="muted label">메뉴명</text><text x="318" y="91" class="muted label">가격</text><text x="425" y="91" class="muted label">메뉴 사진</text>
+    <rect x="20" y="100" width="282" height="48" rx="12" fill="#fff" stroke="#ead8cc"/><text x="34" y="130" class="muted body">예: 들기름 막국수</text>
+    <rect x="312" y="100" width="98" height="48" rx="12" fill="#fff" stroke="#ead8cc"/><text x="326" y="130" class="muted body">선택　 원</text>
+    <rect x="420" y="100" width="112" height="48" rx="12" fill="#fce8de" stroke="#f0b49b"/><text x="444" y="130" class="coral button">▧　사진 추가</text>
+    <circle cx="551" cy="124" r="20" fill="#fff" stroke="#ead8cc"/><text x="545" y="130" class="muted body">×</text>
+    <rect x="20" y="174" width="130" height="38" rx="12" fill="#e87555"/><text x="34" y="198" class="white button">＋ 메뉴 추가</text>
+    <text x="165" y="198" class="muted small">주요 추가 동작이 분명한 구성</text>
+  </g>
+
+  <!-- C -->
+  <g transform="translate(22 640)">
+    <rect width="576" height="250" rx="20" fill="#fff" stroke="#ead8cc"/>
+    <circle cx="31" cy="32" r="15" fill="#fff0e8"/><text x="26" y="38" class="coral option">C</text>
+    <text x="58" y="37" class="ink title">메뉴 카드형</text><text x="58" y="57" class="muted small">각 메뉴를 독립 카드로 묶어 항목 구분을 쉽게</text>
+    <rect x="16" y="73" width="544" height="125" rx="15" fill="#fffaf6" stroke="#efdfd5"/>
+    <rect x="28" y="88" width="270" height="44" rx="10" fill="#fff" stroke="#ead8cc"/><text x="41" y="115" class="muted body">메뉴명　 들기름 막국수</text>
+    <rect x="307" y="88" width="100" height="44" rx="10" fill="#fff" stroke="#ead8cc"/><text x="321" y="115" class="muted body">가격　 원</text>
+    <rect x="416" y="88" width="102" height="44" rx="10" fill="#fff3eb" stroke="#efcbb9"/><text x="435" y="115" class="coral button">▧ 사진 추가</text>
+    <circle cx="537" cy="110" r="17" fill="#fff" stroke="#efdfd5"/><text x="531" y="116" class="muted body">×</text>
+    <text x="28" y="169" class="muted small">메뉴 한 줄마다 넓은 카드로 분리</text>
+    <rect x="20" y="208" width="130" height="30" rx="10" fill="#fff" stroke="#e9b59f"/><text x="34" y="228" class="coral button">＋ 메뉴 추가</text>
+  </g>
+
+  <!-- D -->
+  <g transform="translate(22 914)">
+    <rect width="576" height="250" rx="20" fill="#fffdfa" stroke="#ead8cc"/>
+    <circle cx="31" cy="32" r="15" fill="#fff0e8"/><text x="26" y="38" class="coral option">D</text>
+    <text x="58" y="37" class="ink title">에디토리얼 넘버형</text><text x="58" y="57" class="muted small">메뉴 순번을 작은 배지로 보여줘 여러 메뉴를 정돈</text>
+    <circle cx="42" cy="124" r="18" fill="#f8e9dd"/><text x="37" y="129" class="coral label">01</text>
+    <text x="76" y="91" class="muted label">메뉴명</text><text x="318" y="91" class="muted label">가격</text><text x="425" y="91" class="muted label">메뉴 사진</text>
+    <rect x="76" y="100" width="226" height="48" rx="8" fill="#fff" stroke="#e8d9cf"/><text x="90" y="130" class="muted body">들기름 막국수</text>
+    <rect x="312" y="100" width="98" height="48" rx="8" fill="#fff" stroke="#e8d9cf"/><text x="326" y="130" class="muted body">선택　 원</text>
+    <rect x="420" y="100" width="112" height="48" rx="8" fill="#fff" stroke="#e8d9cf"/><text x="444" y="130" class="coral button">▧　추가</text>
+    <circle cx="551" cy="124" r="17" fill="#fff" stroke="#ead8cc"/><text x="545" y="130" class="muted body">×</text>
+    <path d="M76 165h456" stroke="#f0e4dc"/>
+    <text x="76" y="193" class="muted small">단정한 입력 라인 · 항목이 많아도 리듬감 유지</text>
+    <text x="22" y="231" class="coral button">＋ 메뉴 한 줄 추가</text>
+  </g>
+
+  <!-- E -->
+  <g transform="translate(22 1188)">
+    <rect width="576" height="250" rx="20" fill="#fff" stroke="#ead8cc"/>
+    <circle cx="31" cy="32" r="15" fill="#fff0e8"/><text x="26" y="38" class="coral option">E</text>
+    <text x="58" y="37" class="ink title">사진 강조형</text><text x="58" y="57" class="muted small">사진을 크게 인지하고, 이름·가격 입력은 아래로 정리</text>
+    <rect x="20" y="76" width="92" height="92" rx="13" fill="#fff3eb" stroke="#efcdbb"/><text x="48" y="119" class="coral" style="font:24px Arial,sans-serif">▧</text><text x="40" y="145" class="coral label">사진 추가</text>
+    <text x="130" y="91" class="muted label">메뉴명</text><rect x="130" y="99" width="290" height="42" rx="10" fill="#fffdfa" stroke="#e8d9cf"/><text x="143" y="126" class="muted body">예: 들기름 막국수</text>
+    <text x="130" y="160" class="muted label">가격</text><rect x="130" y="168" width="190" height="38" rx="10" fill="#fffdfa" stroke="#e8d9cf"/><text x="143" y="193" class="muted body">선택　 원</text>
+    <circle cx="551" cy="94" r="18" fill="#fff7f2" stroke="#f0dfd5"/><text x="545" y="100" class="muted body">×</text>
+    <rect x="20" y="194" width="128" height="36" rx="11" fill="#fff" stroke="#e9b59f" stroke-dasharray="4 3"/><text x="34" y="217" class="coral button">＋ 메뉴 추가</text>
+    <text x="163" y="217" class="muted small">사진 등록을 자연스럽게 유도</text>
+  </g>
+  <text x="30" y="1478" class="muted small">※ 다섯 안 모두 메뉴명·가격·사진·삭제·추가 동작을 유지합니다.</text>
+</svg>

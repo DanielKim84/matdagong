@@ -1,9 +1,12 @@
+import { useState } from "react";
 import type { Place, Taster } from "../models/place";
 import { go } from "../app/navigation";
 import { ScreenHeader } from "../components/AppChrome";
 import { Avatar } from "../components/BrandAssets";
 import PlaceTile from "../components/PlaceTile";
 import Icon from "../components/Icon";
+import { useNotificationDialog } from "../components/NotificationDialog";
+import type { UserNotification } from "../services/community";
 
 export function CollectionScreen({
   title,
@@ -62,10 +65,20 @@ export function CollectionScreen({
 }
 
 export function SubscriptionsScreen({
-  tasters,
+  subscriptions,
+  onCancel,
 }: {
-  tasters: Taster[];
+  subscriptions: {
+    subscriptionId: string;
+    taster: Taster;
+    subscriptionType: "FREE" | "PAID";
+    termMonths: number | null;
+    endAt: string | null;
+  }[];
+  onCancel: (subscriptionId: string) => Promise<void>;
 }) {
+  const { confirm } = useNotificationDialog();
+  const [cancelingId, setCancelingId] = useState("");
   return (
     <>
       <ScreenHeader title="내 구독 맛객" fallback="my" />
@@ -73,11 +86,11 @@ export function SubscriptionsScreen({
         <section className="collection-overview">
           <span><Icon name="user" /></span>
           <div><b>내가 구독하는 맛객</b><small>구독한 맛객의 새 맛집 기록을 모아봐요</small></div>
-          <strong>{tasters.length}<small>명</small></strong>
+          <strong>{subscriptions.length}<small>명</small></strong>
         </section>
-        {tasters.length ? (
+        {subscriptions.length ? (
           <>
-            {tasters.map((taster) => (
+            {subscriptions.map(({ subscriptionId, taster, subscriptionType, termMonths, endAt }) => (
               <article key={taster.tasterId}>
                 <button
                   className="subscription-profile"
@@ -87,9 +100,24 @@ export function SubscriptionsScreen({
                   <span>
                     <b>{taster.tasterName}</b>
                     <small>{taster.tag}</small>
+                    <small className="subscription-plan-label">{subscriptionType === "FREE"
+                      ? "기간 제한 없음"
+                      : `${termMonths ?? 0}개월 이용${endAt ? ` · ${new Date(endAt).toLocaleDateString("ko-KR")}까지` : ""}`}</small>
                   </span>
                 </button>
-                <span className="subscribed-chip">구독 중</span>
+                <span className={`subscription-type-chip ${subscriptionType === "FREE" ? "is-free" : "is-paid"}`}>{subscriptionType === "FREE" ? "무료" : "유료"}</span>
+                <button className="subscription-cancel" type="button" disabled={cancelingId === subscriptionId} onClick={async () => {
+                  const accepted = await confirm({
+                    title: "구독을 취소할까요?",
+                    message: `${taster.tasterName} 맛객의 새 기록 알림과 구독 목록 표시가 중단돼요.`,
+                    tone: "danger",
+                    confirmLabel: "구독 취소",
+                  });
+                  if (!accepted) return;
+                  setCancelingId(subscriptionId);
+                  try { await onCancel(subscriptionId); }
+                  finally { setCancelingId(""); }
+                }}>{cancelingId === subscriptionId ? "구독 취소 중" : "구독 취소"}</button>
               </article>
             ))}
           </>
@@ -109,37 +137,73 @@ export function SubscriptionsScreen({
 }
 
 export function NotificationsScreen({
-  registrations,
+  items,
+  unreadCount,
+  loading,
+  error,
+  onMarkAllRead,
+  onRead,
+  onDelete,
+  onDeleteAll,
+  onRetry,
 }: {
-  registrations: { id: string; name: string; createdAt: string }[];
+  items: UserNotification[];
+  unreadCount: number;
+  loading: boolean;
+  error: string;
+  onMarkAllRead: () => void;
+  onRead: (notification: UserNotification) => void;
+  onDelete: (id: string) => void;
+  onDeleteAll: () => void;
+  onRetry: () => void;
 }) {
+  const { confirm } = useNotificationDialog();
   return (
     <>
       <ScreenHeader title="알림" fallback="home" />
       <main className="notification-list">
-        {registrations.map((place) => (
-          <button key={place.id} onClick={() => go("place", place.id)}>
-            <span className="red-menu-icon">
-              <Icon name="fork" />
-            </span>
-            <span>
-              <b>맛집 등록이 완료됐어요.</b>
-              <p>{place.name}의 맛있는 이야기를 확인해 보세요.</p>
-              <small>
-                {new Date(place.createdAt).toLocaleDateString("ko-KR")}
-              </small>
-            </span>
-            <Icon name="chevron" />
-          </button>
-        ))}
-        <button onClick={() => go("subscriptions")}>
-          <Avatar name="맛다공" />
-          <span>
-            <b>맛다공에 오신 걸 환영해요!</b>
-            <p>취향이 닮은 맛객을 구독하고 맛집을 발견해 보세요.</p>
-            <small>맛다공의 첫 인사</small>
-          </span>
-        </button>
+        {items.length > 0 && <div className="notification-toolbar">
+          <button type="button" className="notification-mark-all" onClick={onMarkAllRead} disabled={unreadCount === 0}>모두 읽음</button>
+          <button type="button" className="notification-delete-all" onClick={onDeleteAll}>모두 삭제</button>
+        </div>}
+        {loading ? <p className="notification-state">알림을 불러오고 있어요.</p> : error ? (
+          <div className="notification-state"><p>{error}</p><button type="button" onClick={onRetry}>다시 불러오기</button></div>
+        ) : items.length ? items.map((item) => {
+          const hasAction = (item.targetType === "PLACE" && !!item.targetId) || item.targetType === "MY_SUBSCRIBERS";
+          return (
+          <article className={`notification-entry${item.readAt ? " is-read" : " is-unread"}`} key={item.notificationId}>
+            <button type="button" className="notification-entry-open" aria-label={`${item.title}${hasAction ? ", 내용 보기" : ""}`} onClick={() => {
+                onRead(item);
+                if (item.targetType === "PLACE" && item.targetId) go("place", item.targetId);
+                else if (item.targetType === "MY_SUBSCRIBERS") go("my");
+              }}>
+                <span className="notification-entry-icon"><Icon name={item.notificationType === "NEW_SUBSCRIBER" ? "user" : "fork"} /></span>
+                <span className="notification-entry-copy">
+                  <b>{item.title}</b>
+                  <p>{item.message}</p>
+                  <time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</time>
+                  {hasAction && <span className="notification-action-cue">눌러서 내용 보기 <span aria-hidden="true">›</span></span>}
+                </span>
+                {!item.readAt && <i className="notification-unread-dot" aria-label="읽지 않음" />}
+            </button>
+            <button type="button" className="notification-entry-delete" aria-label="알림 삭제" onClick={async () => {
+              const accepted = await confirm({
+                title: "알림을 삭제할까요?",
+                message: "삭제한 알림은 알림 목록에서 사라져요.",
+                tone: "danger",
+                confirmLabel: "삭제하기",
+              });
+              if (accepted) onDelete(item.notificationId);
+            }}><Icon name="close" /></button>
+          </article>
+          );
+        }) : (
+          <div className="empty-state notification-empty">
+            <Icon name="bell" />
+            <h2>새로운 알림이 없어요</h2>
+            <p>구독과 맛집 기록 소식을 이곳에서 확인할 수 있어요.</p>
+          </div>
+        )}
       </main>
     </>
   );

@@ -5,7 +5,7 @@ import { Avatar, ProfileCover } from "../components/BrandAssets";
 import Icon from "../components/Icon";
 import { profileCoverFor } from "../utils/profileMedia";
 
-/** 취향 점수가 있는 맛객을 모아 구독 목록의 빈 상태에서 바로 탐색하게 합니다. */
+/** 취향 점수가 있는 맛객을 모아 보여줍니다. 홈 배너, 마이 화면, 빈 구독 목록에서 들어옵니다. */
 export default function RecommendedTastersScreen({ tasters }: { tasters: Taster[] }) {
   return (
     <>
@@ -25,7 +25,7 @@ export default function RecommendedTastersScreen({ tasters }: { tasters: Taster[
               return (
                 <button className="taster-recommendation-card" key={taster.tasterId} onClick={() => go("profile", taster.tasterId)}>
                   <span className="taster-recommendation-cover">
-                    <ProfileCover className="taster-recommendation-cover-image" src={profileCoverFor(taster.tasterId, taster.profileCoverUrl)} />
+                    <ProfileCover className="taster-recommendation-cover-image" src={profileCoverFor(taster.tasterId, taster.profileCoverUrls?.[0] ?? taster.profileCoverUrl)} />
                     <i><Avatar src={taster.avatar} name={taster.tasterName} variant={taster.avatarVariant} /></i>
                   </span>
                   <span className="taster-recommendation-copy">
@@ -50,7 +50,7 @@ export default function RecommendedTastersScreen({ tasters }: { tasters: Taster[
             <span><Icon name="sparkle" /></span>
             <b>아직 추천할 맛객을 찾지 못했어요</b>
             <p>추천 취향을 설정하면 더 잘 맞는 맛객을 찾아드릴게요.</p>
-            <button className="outline-button" onClick={() => go("profile-edit")}>내 취향 설정하기</button>
+            <button className="outline-button" onClick={() => go("profile-edit", "taste")}>내 취향 설정하기</button>
           </section>
         )}
       </main>

@@ -5,7 +5,10 @@ import Icon from "../components/Icon";
 import TasteTagPicker from "../components/TasteTagPicker";
 import FoodFocusPicker from "../components/FoodFocusPicker";
 import TasteTagRequestSheet from "./TasteTagRequestSheet";
+import { useNotificationDialog } from "../components/NotificationDialog";
 import { filterTagsForFocus } from "../models/tasteTags";
+import PaginationDots from "../components/PaginationDots";
+import { swipeHandlers, wrapIndex } from "../utils/swipe";
 import type { ActivityScope, FoodFocus, MyProfile, TasteTag, TagRequest, TagRequestInput } from "../services/community";
 
 type RegionData = { name: string; districts: { name: string; dongs: string[] }[] };
@@ -91,7 +94,8 @@ type ProfileChanges = {
   nickname: string;
   intro: string;
   avatarFile?: File;
-  coverFile?: File;
+  coverFiles?: File[];
+  removedCoverPhotoIds: string[];
   removeAvatar?: boolean;
   removeCover?: boolean;
   profileTags: string[];
@@ -105,6 +109,7 @@ type ProfileChanges = {
 
 export default function ProfileSettingsScreen({
   profile,
+  initialTab = "profile",
   options,
   onSave,
   onError,
@@ -112,23 +117,26 @@ export default function ProfileSettingsScreen({
   onLoadTagRequests,
 }: {
   profile: MyProfile;
+  initialTab?: "profile" | "taste";
   options: TasteTag[];
   onSave: (changes: ProfileChanges) => Promise<void>;
   onError: (message: string) => void;
   onRequestTag: (input: TagRequestInput) => Promise<TagRequest>;
   onLoadTagRequests: () => Promise<TagRequest[]>;
 }) {
-  const [activeTab, setActiveTab] = useState<"profile" | "taste">("profile");
+  const { confirm } = useNotificationDialog();
+  const [activeTab, setActiveTab] = useState<"profile" | "taste">(initialTab);
   const [regions, setRegions] = useState<RegionData[]>([]);
   const [regionCatalogError, setRegionCatalogError] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   // 실제로 피하고 싶은 조건만 제외 태그로 두고, 나머지는 소개·추천 취향에 씁니다.
   const positiveOptions = options.filter((tag) => tag.tagGroup !== "VISIT");
   const avoidOptions = options.filter((tag) => tag.tagGroup === "VISIT");
-  const [nickname, setNickname] = useState(profile.nickname);
+  const [nickname, setNickname] = useState(profile.nickname.slice(0, 12));
   const [intro, setIntro] = useState(profile.intro ?? "");
   const [avatarFile, setAvatarFile] = useState<File>();
-  const [coverFile, setCoverFile] = useState<File>();
+  const [coverFiles, setCoverFiles] = useState<File[]>([]);
+  const [removedCoverPhotoIds, setRemovedCoverPhotoIds] = useState<string[]>([]);
   const [removeAvatar, setRemoveAvatar] = useState(false);
   const [removeCover, setRemoveCover] = useState(false);
   const [profileTags, setProfileTags] = useState(profile.profileTags ?? []);
@@ -140,8 +148,10 @@ export default function ProfileSettingsScreen({
   const [activityRegionChanged, setActivityRegionChanged] = useState(false);
   const [preferenceFocus, setPreferenceFocus] = useState<FoodFocus>(profile.preferenceFocus ?? "BOTH");
   const [saving, setSaving] = useState(false);
+  const [copyNotice, setCopyNotice] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string>();
-  const [coverPreview, setCoverPreview] = useState<string>();
+  const [coverPreviews, setCoverPreviews] = useState<string[]>([]);
+  const [coverPreviewIndex, setCoverPreviewIndex] = useState(0);
   const avatarInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
 
@@ -176,16 +186,16 @@ export default function ProfileSettingsScreen({
   }, [avatarFile]);
 
   useEffect(() => {
-    if (!coverFile) {
-      setCoverPreview(undefined);
+    if (!coverFiles.length) {
+      setCoverPreviews([]);
       return;
     }
-    const url = URL.createObjectURL(coverFile);
-    setCoverPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [coverFile]);
+    const urls = coverFiles.map((file) => URL.createObjectURL(file));
+    setCoverPreviews(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [coverFiles]);
 
-  function chooseImage(file: File | undefined, kind: "avatar" | "cover") {
+  function chooseImage(file: File | undefined) {
     if (!file) return;
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
       onError("JPG, PNG, WEBP 이미지 파일을 선택해 주세요.");
@@ -195,13 +205,27 @@ export default function ProfileSettingsScreen({
       onError("이미지는 5MB 이하로 선택해 주세요.");
       return;
     }
-    if (kind === "avatar") {
-      setAvatarFile(file);
-      setRemoveAvatar(false);
-    } else {
-      setCoverFile(file);
-      setRemoveCover(false);
+    setAvatarFile(file);
+    setRemoveAvatar(false);
+  }
+
+  function chooseCoverImages(files: FileList | null) {
+    if (!files?.length) return;
+    const selected = [...files];
+    const totalExistingCount = profile.profileCoverUrls?.length || (profile.profileCoverUrl ? 1 : 0);
+    const existingCount = removeCover ? 0 : Math.max(0, totalExistingCount - removedCoverPhotoIds.length);
+    if (selected.length + coverFiles.length + existingCount > 10) {
+      onError("프로필 배경은 최대 10장까지 등록할 수 있어요.");
+      return;
     }
+    for (const file of selected) {
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024) {
+        onError("JPG, PNG, WEBP 이미지 파일을 장당 5MB 이하로 선택해 주세요.");
+        return;
+      }
+    }
+    setCoverFiles((current) => [...current, ...selected]);
+    setCoverPreviewIndex(existingCount + coverFiles.length);
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -235,13 +259,16 @@ export default function ProfileSettingsScreen({
         preferenceTags: filterTagsForFocus(preferenceTags, preferenceFocus, positiveOptions),
         excludedTags,
         avatarFile,
-        coverFile,
+        coverFiles,
+        removedCoverPhotoIds,
         removeAvatar,
         removeCover,
       });
       // 저장이 끝난 파일은 비워 다음 저장에서 같은 이미지를 다시 업로드하지 않습니다.
       setAvatarFile(undefined);
-      setCoverFile(undefined);
+      setCoverFiles([]);
+      setRemovedCoverPhotoIds([]);
+      setCoverPreviewIndex(0);
       setRemoveAvatar(false);
       setRemoveCover(false);
     } catch (error) {
@@ -249,6 +276,38 @@ export default function ProfileSettingsScreen({
     } finally {
       setSaving(false);
     }
+  }
+
+  const allExistingCoverUrls = profile.profileCoverUrls?.length
+    ? profile.profileCoverUrls
+    : profile.profileCoverUrl ? [profile.profileCoverUrl] : [];
+  const existingCoverUrls = removeCover ? [] : allExistingCoverUrls.filter((url) => {
+    const photoId = url.match(/\/covers\/([0-9a-f-]{36})(?:$|[?#])/i)?.[1];
+    return !photoId || !removedCoverPhotoIds.includes(photoId);
+  });
+  const coverGallery = [...existingCoverUrls, ...coverPreviews];
+  const activeCoverPreview = coverGallery[coverPreviewIndex] ?? "/assets/profile-cover.png";
+
+  async function removeCoverPhotoAt(index: number) {
+    if (!await confirm({ title: "배경 사진을 삭제할까요?", message: "프로필 저장을 누르면 삭제돼요.", confirmLabel: "삭제할게요", tone: "danger" })) return;
+
+    const existingCount = existingCoverUrls.length;
+    const localIndex = index - existingCount;
+    if (index < existingCount) {
+      const photoId = existingCoverUrls[index].match(/\/covers\/([0-9a-f-]{36})(?:$|[?#])/i)?.[1];
+      if (photoId) setRemovedCoverPhotoIds((current) => current.includes(photoId) ? current : [...current, photoId]);
+      else setRemoveCover(true);
+    } else {
+      setCoverFiles((current) => current.filter((_, fileIndex) => fileIndex !== localIndex));
+    }
+
+    const remainingCount = coverGallery.length - 1;
+    setCoverPreviewIndex((current) => {
+      if (remainingCount <= 0) return 0;
+      if (current > index) return current - 1;
+      if (current === index) return Math.min(index, remainingCount - 1);
+      return current;
+    });
   }
 
   return (
@@ -265,18 +324,6 @@ export default function ProfileSettingsScreen({
         </div>
         <form onSubmit={(event) => void submit(event)}>
           <section className="settings-panel" hidden={activeTab !== "profile"} aria-label="공개 프로필 설정">
-            <div className="profile-edit-cover">
-              <img src={coverPreview ?? (removeCover ? "/assets/profile-cover.png" : profile.profileCoverUrl ?? "/assets/profile-cover.png")} alt="프로필 배경 미리보기" />
-              <button type="button" onClick={() => coverInput.current?.click()}><Icon name="camera" /> 배경 바꾸기</button>
-              {(profile.profileCoverUrl || coverFile) && !removeCover && (
-                <button className="profile-image-reset" type="button" onClick={() => {
-                  setCoverFile(undefined); setRemoveCover(true);
-                  if (coverInput.current) coverInput.current.value = "";
-                }}>기본 배경</button>
-              )}
-              <input ref={coverInput} className="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp"
-                onChange={(event) => chooseImage(event.target.files?.[0], "cover")} />
-            </div>
             <div className="profile-edit-form">
               <section className="profile-edit-avatar-section">
                 <button className="profile-edit-avatar-button" type="button" onClick={() => avatarInput.current?.click()} aria-label="프로필 사진 변경">
@@ -284,24 +331,46 @@ export default function ProfileSettingsScreen({
                   <span><Icon name="camera" /></span>
                 </button>
                 <input ref={avatarInput} className="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp"
-                  onChange={(event) => chooseImage(event.target.files?.[0], "avatar")} />
+                  onChange={(event) => chooseImage(event.target.files?.[0])} />
                 <div>
                   <b>나를 소개하는 사진</b>
                   <small>맛객 목록과 내 프로필에 보여요.</small>
                   <small>JPG, PNG, WEBP · 사진당 5MB 이하</small>
                 </div>
                 {(profile.profileImgUrl || avatarFile) && !removeAvatar && (
-                  <button className="text-action" type="button" onClick={() => {
+                  <button className="text-action" type="button" onClick={async () => {
+                    if (!await confirm({ title: "프로필 사진을 삭제할까요?", message: "등록한 프로필 사진이 삭제되고 기본 캐릭터로 바뀝니다.", confirmLabel: "삭제할게요", tone: "danger" })) return;
                     setAvatarFile(undefined); setRemoveAvatar(true);
                     if (avatarInput.current) avatarInput.current.value = "";
                   }}>기본 캐릭터</button>
                 )}
               </section>
+            </div>
+            <div className="profile-edit-cover" {...swipeHandlers(
+              (step) => setCoverPreviewIndex((current) => wrapIndex(current, step, coverGallery.length)),
+              { threshold: 40, enabled: coverGallery.length > 0 },
+            )}>
+              <div className="profile-edit-cover-track" style={{ transform: `translateX(-${coverPreviewIndex * 100}%)` }}>{(coverGallery.length ? coverGallery : [activeCoverPreview]).map((url, index) => <img key={`${url}-${index}`} src={url} alt={`프로필 배경 미리보기 ${coverGallery.length ? `${index + 1} / ${coverGallery.length}` : ""}`} />)}</div>
+              <button type="button" onClick={() => coverInput.current?.click()}><Icon name="camera" /> 배경 사진 추가</button>
+              {coverGallery.length > 0 && coverPreviewIndex === 0 && <span className="profile-primary-cover-badge">대표 사진</span>}
+              {coverGallery.length === 0 && <span className="profile-default-cover-badge">기본 배경</span>}
+              <span className="profile-cover-count">{coverGallery.length}/10장</span>
+            </div>
+            {coverGallery.length > 0 && <PaginationDots activeIndex={coverPreviewIndex} total={coverGallery.length} onSelect={setCoverPreviewIndex} className="profile-edit-cover-indicators" label="배경 사진 페이지" />}
+            {coverGallery.length > 0 && <div className="profile-edit-cover-thumbnails" aria-label="등록한 배경 사진">
+              {coverGallery.map((url, index) => <div className="profile-edit-cover-thumbnail" key={`${url}-${index}`}>
+                <button type="button" className={`profile-edit-cover-thumbnail-preview${coverPreviewIndex === index ? " active" : ""}`} aria-label={`배경 사진 ${index + 1} 미리보기`} aria-pressed={coverPreviewIndex === index} onClick={() => setCoverPreviewIndex(index)}><img src={url} alt="" loading="lazy" /></button>
+                <button type="button" className="profile-edit-cover-thumbnail-delete" aria-label={`배경 사진 ${index + 1} 삭제`} disabled={saving} onClick={() => void removeCoverPhotoAt(index)}><Icon name="close" /></button>
+              </div>)}
+            </div>}
+            <input ref={coverInput} className="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" multiple
+              onChange={(event) => { chooseCoverImages(event.target.files); event.target.value = ""; }} />
+            <div className="profile-edit-form">
               <label className="profile-edit-field">
                 <span>닉네임 <em>필수</em></span>
-                <input value={nickname} onChange={(event) => setNickname(event.target.value.slice(0, 30))}
-                  maxLength={30} required={activeTab === "profile"} placeholder="맛다공에서 사용할 이름" />
-                <small>{nickname.length}/30자 · 다른 맛객과 겹치지 않는 이름으로 정해 주세요.</small>
+                <input value={nickname} onChange={(event) => setNickname(event.target.value.slice(0, 12))}
+                  maxLength={12} required={activeTab === "profile"} placeholder="맛다공에서 사용할 이름" />
+                <small>{nickname.length}/12자 · 다른 맛객과 겹치지 않는 이름으로 정해 주세요.</small>
               </label>
               <label className="profile-edit-field">
                 <span>나를 소개해 주세요 <small>선택</small></span>
@@ -317,7 +386,9 @@ export default function ProfileSettingsScreen({
                     // 공개 스타일로는 추천 분야와 선호 태그만 복사하고, 제외 조건은 공개하지 않습니다.
                     setTasterFocus(preferenceFocus);
                     setProfileTags(filterTagsForFocus(preferenceTags, preferenceFocus, positiveOptions));
+                    setCopyNotice("추천 취향을 가져왔어요. 확인한 뒤 프로필 저장을 눌러 주세요.");
                   }}><Icon name="heart" /> 추천 취향에서 복사</button>
+                  {copyNotice && <small className="copy-taste-notice" role="status">{copyNotice}</small>}
                   <small className="copy-taste-help">추천 취향의 분야와 좋아하는 태그만 가져옵니다. 피하고 싶은 조건은 공개되지 않아요. 복사 후 두 설정은 따로 수정할 수 있고, 프로필 저장을 눌러야 반영됩니다.</small>
                   <FoodFocusPicker label="어떤 곳을 소개하나요?" value={tasterFocus} onChange={(focus) => {
                     setTasterFocus(focus);

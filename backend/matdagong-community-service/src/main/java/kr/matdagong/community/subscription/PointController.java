@@ -3,6 +3,7 @@ package kr.matdagong.community.subscription;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import kr.matdagong.community.security.AuthenticatedAccount;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -10,7 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 포인트 잔액과 적립·사용 원장을 로그인 사용자에게 제공합니다. */
+/**
+ * 포인트 잔액과 적립·사용 원장을 로그인 사용자에게 제공합니다.
+ * 지급·사용 처리는 아직 연결되지 않아 조회만 제공합니다. 연결 기준은 docs/point-security.md를 따릅니다.
+ */
 @RestController
 @RequestMapping("/api/v1/points")
 public class PointController {
@@ -22,7 +26,7 @@ public class PointController {
 
     @GetMapping
     public PointAccount points(@AuthenticationPrincipal Jwt jwt) {
-        UUID accountId = accountId(jwt);
+        UUID accountId = AuthenticatedAccount.id(jwt);
         Long balance = jdbc.queryForObject(
                 "SELECT COALESCE(SUM(point_amt), 0) FROM user_point_history WHERE account_id = ?",
                 Long.class, accountId);
@@ -40,15 +44,6 @@ public class PointController {
                 rs.getInt("point_amt"),
                 rs.getTimestamp("reg_dt").toInstant()), accountId);
         return new PointAccount(balance == null ? 0L : balance, history);
-    }
-
-    private UUID accountId(Jwt jwt) {
-        try {
-            return UUID.fromString(jwt.getSubject());
-        } catch (IllegalArgumentException exception) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.UNAUTHORIZED, "인증 계정 ID가 올바르지 않습니다.");
-        }
     }
 
     public record PointAccount(long balance, List<PointEntry> history) {}

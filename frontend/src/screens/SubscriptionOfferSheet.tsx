@@ -6,15 +6,20 @@ import {
   type PlanCatalog,
 } from "../services/community";
 import Icon from "../components/Icon";
+import { Avatar } from "../components/BrandAssets";
+import { useNotificationDialog } from "../components/NotificationDialog";
 
 type Props = {
   taster: Taster;
   accessToken: string;
+  currentFreeTasterId?: string;
   currentFreeName?: string;
+  currentFreeTaster?: Taster;
   onClose: () => void;
   onComplete: (result: {
     replacedFreeNickname: string | null;
     isFree: boolean;
+    termMonths: number | null;
   }) => void;
 };
 
@@ -23,16 +28,20 @@ const currency = new Intl.NumberFormat("ko-KR");
 export default function SubscriptionOfferSheet({
   taster,
   accessToken,
+  currentFreeTasterId,
   currentFreeName,
+  currentFreeTaster,
   onClose,
   onComplete,
 }: Props) {
+  const { confirm } = useNotificationDialog();
   const [catalog, setCatalog] = useState<PlanCatalog | null>(null);
   const [type, setType] = useState<"FREE" | "PAID">("FREE");
   const [months, setMonths] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [confirmFreeReplacement, setConfirmFreeReplacement] = useState(false);
 
   useEffect(() => {
     getPlanCatalog(accessToken)
@@ -48,8 +57,21 @@ export default function SubscriptionOfferSheet({
     (plan) => plan.termMonths === months,
   );
 
-  async function submit() {
+  async function submit(confirmedReplacement = false) {
     if (type === "PAID" && months === null) return;
+    if (type === "FREE" && currentFreeTasterId && currentFreeTasterId !== taster.tasterId && !confirmedReplacement) {
+      setConfirmFreeReplacement(true);
+      return;
+    }
+    if (type === "PAID") {
+      const accepted = await confirm({
+        title: "맛객 구독 확인",
+        message: `${taster.tasterName} 맛객의 기록을 ${months}개월 동안 구독해요.\n현재는 별도 결제 없이 이용할 수 있어요.`,
+        tone: "info",
+        confirmLabel: "구독하기",
+      });
+      if (!accepted) return;
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -58,10 +80,12 @@ export default function SubscriptionOfferSheet({
         taster.tasterId,
         type,
         type === "FREE" ? null : months,
+        confirmedReplacement,
       );
       onComplete({
         replacedFreeNickname: result.replacedFreeNickname,
         isFree: type === "FREE",
+        termMonths: type === "FREE" ? null : months,
       });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "구독을 완료하지 못했어요.");
@@ -99,7 +123,7 @@ export default function SubscriptionOfferSheet({
           <>
             <button
               className={`subscription-choice ${type === "FREE" ? "selected" : ""}`}
-              onClick={() => setType("FREE")}
+              onClick={() => { setType("FREE"); setConfirmFreeReplacement(false); }}
               type="button"
             >
               <span className="subscription-radio" />
@@ -110,22 +134,36 @@ export default function SubscriptionOfferSheet({
               <strong>무료</strong>
             </button>
 
-            {currentFreeName && type === "FREE" && currentFreeName !== taster.tasterName && (
-              <p className="subscription-replace-note">
-                무료 구독을 신청하면 현재 구독 중인 <b>{currentFreeName}</b> 구독이
-                취소되고 이 맛객으로 바뀌어요.
-              </p>
+            {currentFreeTasterId && currentFreeTasterId !== taster.tasterId && type === "FREE" && (
+              <section className="subscription-replace-card" aria-label="무료 구독 대상 변경 안내">
+                <b className="subscription-replace-title">무료 구독 대상이 바뀌어요</b>
+                <div className="subscription-replace-flow">
+                  <div className="subscription-replace-person">
+                    <Avatar src={currentFreeTaster?.avatar} name={currentFreeName ?? "기존 맛객"} variant={currentFreeTaster?.avatarVariant} />
+                    <span><small>현재 구독 중</small><strong>{currentFreeName ?? "기존 맛객"}</strong></span>
+                  </div>
+                  <span className="subscription-replace-arrow" aria-hidden="true">→</span>
+                  <div className="subscription-replace-person">
+                    <Avatar src={taster.avatar} name={taster.tasterName} variant={taster.avatarVariant} />
+                    <span><small>새로 구독</small><strong>{taster.tasterName}</strong></span>
+                  </div>
+                </div>
+                <p>신청하면 무료 구독 대상이 {taster.tasterName} 맛객으로 바뀌어요.</p>
+              </section>
             )}
 
             <button
               className={`subscription-choice ${type === "PAID" ? "selected" : ""}`}
-              onClick={() => setType("PAID")}
+              onClick={() => {
+                setType("PAID");
+                setConfirmFreeReplacement(false);
+              }}
               type="button"
             >
               <span className="subscription-radio" />
               <span className="subscription-choice-copy">
                 <b>유료 구독</b>
-                <small>원하는 기간을 선택해 구독해요.</small>
+                <small>원하는 기간을 골라 구독할 수 있어요.</small>
               </span>
               <strong>기간 선택</strong>
             </button>
@@ -140,7 +178,7 @@ export default function SubscriptionOfferSheet({
                     onClick={() => setMonths(plan.termMonths)}
                   >
                     <span>{plan.termMonths}개월</span>
-                    <b>₩{currency.format(plan.priceAmount)}</b>
+                    <span className="subscription-plan-price"><del>₩{currency.format(plan.priceAmount)}</del><b>0원</b></span>
                   </button>
                 ))}
               </div>
@@ -148,29 +186,27 @@ export default function SubscriptionOfferSheet({
 
             <div className="subscription-summary">
               <span>{type === "FREE" ? "구독료" : `${months ?? "-"}개월 구독료`}</span>
-              <b>
-                {type === "FREE"
-                  ? "무료"
-                  : selectedPlan
-                    ? `₩${currency.format(selectedPlan.priceAmount)}`
-                    : "-"}
-              </b>
+              {type === "FREE" ? <b>무료</b> : selectedPlan ? (
+                <span className="subscription-summary-price"><del>₩{currency.format(selectedPlan.priceAmount)}</del><b>0원</b></span>
+              ) : <b>-</b>}
             </div>
-            <p className="subscription-renewal-note">
-              유료 구독은 자동 결제되지 않으며, 기간이 끝난 뒤 다시 구독할 수 있어요.
-            </p>
-            {catalog?.testMode && (
-              <p className="subscription-test-note">
-                테스트 구독료예요. 결제하기를 눌러도 실제 결제는 발생하지 않습니다.
-              </p>
-            )}
           </>
         )}
 
+        {confirmFreeReplacement && (
+          <div className="subscription-replacement-confirm" role="alertdialog" aria-labelledby="free-replacement-title">
+            <b id="free-replacement-title">무료 구독 맛객을 바꿀까요?</b>
+            <p><strong>{currentFreeName ?? "현재 구독 중인"}</strong> 맛객의 무료 구독을 취소하고 <strong>{taster.tasterName}</strong> 맛객을 무료 구독합니다.</p>
+            <div>
+              <button type="button" onClick={() => setConfirmFreeReplacement(false)}>취소</button>
+              <button type="button" disabled={submitting} onClick={() => void submit(true)}>{submitting ? "변경 중…" : "무료 구독 바꾸기"}</button>
+            </div>
+          </div>
+        )}
         {error && <p className="subscription-error" role="alert">{error}</p>}
         <button
           className="primary-button subscription-submit"
-          disabled={loading || submitting || (type === "PAID" && !selectedPlan)}
+          disabled={loading || submitting || confirmFreeReplacement || (type === "PAID" && !selectedPlan)}
           onClick={() => void submit()}
         >
           {submitting
@@ -178,7 +214,7 @@ export default function SubscriptionOfferSheet({
             : type === "FREE"
               ? "무료 구독 신청"
               : selectedPlan
-                ? `₩${currency.format(selectedPlan.priceAmount)} 결제하고 구독`
+                ? `${months}개월 무료 구독 신청`
                 : "기간을 선택해 주세요"}
         </button>
       </section>
