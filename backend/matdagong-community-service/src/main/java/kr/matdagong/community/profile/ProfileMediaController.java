@@ -1,5 +1,7 @@
 package kr.matdagong.community.profile;
 
+import static kr.matdagong.community.profile.ProfileModels.*;
+
 import java.util.UUID;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
@@ -26,17 +28,19 @@ public class ProfileMediaController {
 
     @GetMapping("/{accountId}/avatar")
     public ResponseEntity<byte[]> avatar(@PathVariable UUID accountId) {
-        return image(images.findAvatar(accountId));
+        return images.findAvatar(accountId)
+                .map(ProfileMediaController::image)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "등록된 프로필 이미지가 없습니다."));
     }
 
     @GetMapping("/{accountId}/covers/{photoId}")
     public ResponseEntity<byte[]> coverPhoto(@PathVariable UUID accountId, @PathVariable UUID photoId) {
-        ProfileImageService.ProfileImage image = images.findCoverPhoto(accountId, photoId);
-        if (image == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        return image(image);
+        return images.findCoverPhoto(accountId, photoId)
+                .map(ProfileMediaController::image)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "배경 사진을 찾을 수 없습니다."));
     }
 
-    private static ResponseEntity<byte[]> image(ProfileImageService.ProfileImage image) {
+    private static ResponseEntity<byte[]> image(ProfileImage image) {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(image.mimeType()))
                 .cacheControl(CacheControl.noStore())

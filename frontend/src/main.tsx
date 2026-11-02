@@ -1,249 +1,20 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import App from "./app/App";
-import SignupScreen from "./screens/SignupScreen";
-import IntroScreen from "./screens/IntroScreen";
-import { resetRouteHistory } from "./app/navigation";
-import {
-  ACCESS_TOKEN_KEY,
-  SESSION_EXPIRING_EVENT,
-  TOKEN_EXPIRY_KEY,
-  setSessionExpiredHandler,
-} from "./services/http";
-import { clearRegisterDraft } from "./services/registerDraft";
-import { accountIdFromAccessToken } from "./utils/accessToken";
+import { beginSignIn, clearPendingSignIn, completeSignIn, rememberReturnHash, restartSignIn } from "./app/signIn";
+import { renderMatdagong, showSignInError, showStartupStatus } from "./app/startupView";
+import { clearStoredAccessToken, getMembership, readStoredAccessToken } from "./services/auth";
+import { SESSION_EXPIRING_EVENT, setSessionExpiredHandler } from "./services/http";
 import { applyTheme } from "./theme/applyTheme";
 import { installMouseDragScroll } from "./utils/dragScroll";
+import { errorMessage } from "./utils/errorMessage";
 import "./theme/index.css";
 import "./styles/app.css";
-import "./styles/screens.css";
-import "./styles/notice.css";
 import "./styles/auth-start.css";
-import "./styles/subscription.css";
 import "./styles/profile-settings.css";
 import "./styles/design-system.css";
 import "./styles/photo-tag-detail.css";
-import "./styles/design-a.css";
-import "./styles/a/home-lists.css";
-import "./styles/a/my.css";
 import "./styles/a/forms.css";
-import "./styles/a/overlays.css";
 import "./styles/renewal/index.css";
 
-const AUTHORIZATION_SERVER =
-  import.meta.env.VITE_AUTH_SERVER_URL ?? "http://localhost:5840";
-const CLIENT_ID = import.meta.env.VITE_AUTH_CLIENT_ID ?? "matdagong-web-dev";
-const REDIRECT_URI =
-  import.meta.env.VITE_AUTH_REDIRECT_URI ??
-  `${window.location.origin}/auth/callback`;
-const STATE_KEY = "matdagong.auth.oauth-state";
-const VERIFIER_KEY = "matdagong.auth.pkce-verifier";
-const RETURN_HASH_KEY = "matdagong.auth.return-hash";
-const ONBOARDING_KEY = "matdagong.onboarding.completed";
-// 로그인 뒤 돌아갈 주소는 앱 내부 해시 경로(#화면 또는 #화면/ID)만 허용해 외부 주소로 이동하지 않게 합니다.
-const SAFE_RETURN_HASH = /^#[a-z-]+(\/[A-Za-z0-9_-]+)?$/;
-
-type MembershipStatus = {
-  registered: boolean;
-  displayName: string;
-  email: string | null;
-};
-
-/** 맛다공 인증 정보를 지우고 공통 인증을 다시 시작해 로그인 뒤 앱으로 돌아오게 합니다. */
-async function logout(): Promise<void> {
-  try {
-    // 공통 서버 세션도 끊어 다음 방문에서 이전 SSO 세션이 재사용되지 않게 합니다.
-    await fetch("/auth-api/auth/session/clear", { method: "POST" });
-  } catch {
-    // 서버에 닿지 못해도 현재 탭의 인증 정보를 지우고 로그인을 다시 시작합니다.
-  } finally {
-    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-    sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
-    sessionStorage.removeItem(STATE_KEY);
-    sessionStorage.removeItem(VERIFIER_KEY);
-    // 로그아웃은 다른 계정으로 다시 들어올 수 있으므로 돌아갈 화면과 작성 중 입력을 남기지 않습니다.
-    sessionStorage.removeItem(RETURN_HASH_KEY);
-    clearRegisterDraft();
-    // 로그인 페이지만 열면 인증 완료 후 돌아올 앱이 없어지므로 OAuth 흐름을 다시 시작합니다.
-    await beginSignIn();
-  }
-}
-
-function base64Url(bytes: Uint8Array): string {
-  let binary = "";
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
-  return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-}
-
-/** 서비스 소개를 계정별로 한 번만 보여주도록 공통 계정 UUID를 붙인 저장 키를 만듭니다. */
-function onboardingKey(accessToken: string): string {
-  const accountId = accountIdFromAccessToken(accessToken);
-  return accountId ? `${ONBOARDING_KEY}:${accountId}` : ONBOARDING_KEY;
-}
-
-function randomBase64Url(byteLength: number): string {
-  return base64Url(crypto.getRandomValues(new Uint8Array(byteLength)));
-}
-
-/** 로그인으로 떠나기 전 현재 화면의 해시 경로를 기억합니다. 허용 형식이 아니면 이전 값도 지웁니다. */
-function rememberReturnHash(): void {
-  try {
-    const hash = window.location.hash;
-    if (SAFE_RETURN_HASH.test(hash)) sessionStorage.setItem(RETURN_HASH_KEY, hash);
-    else sessionStorage.removeItem(RETURN_HASH_KEY);
-  } catch {
-    // 저장소를 쓸 수 없으면 로그인 뒤 홈으로 돌아갑니다.
-  }
-}
-
-/** 기억한 해시 경로를 다시 검증해 돌려줍니다. 형식이 맞지 않으면 빈 문자열(홈)입니다. */
-function readReturnHash(): string {
-  try {
-    const hash = sessionStorage.getItem(RETURN_HASH_KEY) ?? "";
-    return SAFE_RETURN_HASH.test(hash) ? hash : "";
-  } catch {
-    return "";
-  }
-}
-
-function takeReturnHash(): string {
-  const hash = readReturnHash();
-  try {
-    sessionStorage.removeItem(RETURN_HASH_KEY);
-  } catch {
-    // 지우지 못해도 다음 로그인 시작 때 현재 화면 기준으로 다시 덮어씁니다.
-  }
-  return hash;
-}
-
-async function beginSignIn(): Promise<void> {
-  // PKCE verifier는 브라우저 탭에만 보관하고, 공개 클라이언트에는 secret을 두지 않습니다.
-  const verifier = randomBase64Url(32);
-  const state = randomBase64Url(32);
-  const challenge = base64Url(
-    new Uint8Array(
-      await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)),
-    ),
-  );
-  sessionStorage.setItem(STATE_KEY, state);
-  sessionStorage.setItem(VERIFIER_KEY, verifier);
-
-  const authorizationUrl = new URL("/oauth2/authorize", AUTHORIZATION_SERVER);
-  authorizationUrl.search = new URLSearchParams({
-    response_type: "code",
-    client_id: CLIENT_ID,
-    redirect_uri: REDIRECT_URI,
-    scope: "openid profile",
-    state,
-    code_challenge: challenge,
-    code_challenge_method: "S256",
-  }).toString();
-  window.location.assign(authorizationUrl.toString());
-}
-
-async function completeSignIn(): Promise<void> {
-  const callback = new URL(window.location.href);
-  const code = callback.searchParams.get("code");
-  const returnedState = callback.searchParams.get("state");
-  const expectedState = sessionStorage.getItem(STATE_KEY);
-  const verifier = sessionStorage.getItem(VERIFIER_KEY);
-
-  if (callback.searchParams.has("error")) {
-    throw new Error("공통 계정 인증이 완료되지 않았어요. 다시 시도해 주세요.");
-  }
-  if (!code || !returnedState || returnedState !== expectedState || !verifier) {
-    throw new Error("로그인 응답을 확인할 수 없어요. 다시 시도해 주세요.");
-  }
-
-  const response = await fetch("/oauth2/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      client_id: CLIENT_ID,
-      redirect_uri: REDIRECT_URI,
-      code,
-      code_verifier: verifier,
-    }),
-  });
-  if (!response.ok) {
-    throw new Error("로그인 정보를 확인하지 못했어요. 다시 시도해 주세요.");
-  }
-
-  const token = (await response.json()) as {
-    access_token?: string;
-    expires_in?: number;
-  };
-  if (!token.access_token || !token.expires_in) {
-    throw new Error(
-      "인증 서버 응답에 로그인 정보가 없어요. 다시 시도해 주세요.",
-    );
-  }
-
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, token.access_token);
-  sessionStorage.setItem(
-    TOKEN_EXPIRY_KEY,
-    String(Date.now() + token.expires_in * 1000),
-  );
-  sessionStorage.removeItem(STATE_KEY);
-  sessionStorage.removeItem(VERIFIER_KEY);
-  // 인가 코드가 주소창과 새로고침 기록에 남지 않도록 정리하고, 로그인 전에 보던 화면이 있으면 그 경로로 돌아갑니다.
-  window.history.replaceState(null, "", `/${takeReturnHash()}`);
-  resetRouteHistory();
-}
-
-/** 저장된 access token이 맛다공 가입 상태인지 인증 서버에서 확인합니다. */
-async function getMembership(
-  accessToken: string,
-): Promise<MembershipStatus | "reauthenticate"> {
-  const response = await fetch("/auth-api/api/v1/matdagong/membership", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  // 토큰이 거부되거나 DB가 초기화돼 SSO 세션만 남았다면 Kakao 인증부터 다시 받습니다.
-  if (response.status === 401 || response.status === 404)
-    return "reauthenticate";
-  if (!response.ok)
-    throw new Error(
-      "맛다공 가입 상태를 확인하지 못했어요. 다시 로그인해 주세요.",
-    );
-  return (await response.json()) as MembershipStatus;
-}
-
-function showSignInError(message: string): void {
-  const root = document.getElementById("root");
-  if (!root) return;
-
-  const panel = document.createElement("main");
-  panel.className = "auth-start-screen auth-start-error";
-  const title = document.createElement("h1");
-  title.textContent = "로그인을 이어갈 수 없어요";
-  const description = document.createElement("p");
-  description.textContent = message;
-  const retry = document.createElement("button");
-  retry.type = "button";
-  retry.textContent = "다시 로그인";
-  retry.addEventListener("click", () => {
-    window.location.assign(`/${readReturnHash()}`);
-  });
-  panel.append(title, description, retry);
-  root.replaceChildren(panel);
-}
-
-function showStartupStatus(message: string): void {
-  const root = document.getElementById("root");
-  if (!root) return;
-  const panel = document.createElement("main");
-  panel.className = "auth-start-screen";
-  const status = document.createElement("p");
-  status.textContent = message;
-  panel.append(status);
-  root.replaceChildren(panel);
-}
+const CALLBACK_PATH = "/auth/callback";
 
 async function startMatdagong(): Promise<void> {
   const root = document.getElementById("root");
@@ -255,20 +26,13 @@ async function startMatdagong(): Promise<void> {
   }
 
   try {
-    showStartupStatus(
-      window.location.pathname === "/auth/callback"
-        ? "로그인 결과를 확인하고 있어요…"
-        : "맛다공에 접속하고 있어요…",
-    );
-    if (window.location.pathname === "/auth/callback") {
-      await completeSignIn();
-    }
+    const isCallback = window.location.pathname === CALLBACK_PATH;
+    showStartupStatus(isCallback ? "로그인 결과를 확인하고 있어요…" : "맛다공에 접속하고 있어요…");
+    if (isCallback) await completeSignIn();
 
-    const expiresAt = Number(sessionStorage.getItem(TOKEN_EXPIRY_KEY));
-    const accessToken = sessionStorage.getItem(ACCESS_TOKEN_KEY);
-    if (!accessToken || expiresAt <= Date.now()) {
-      sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-      sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
+    const accessToken = readStoredAccessToken();
+    if (!accessToken) {
+      clearStoredAccessToken();
       // 공유받은 /#place/<id> 같은 주소로 처음 들어와도 로그인 뒤 같은 화면을 엽니다.
       rememberReturnHash();
       await beginSignIn();
@@ -277,51 +41,13 @@ async function startMatdagong(): Promise<void> {
 
     const membership = await getMembership(accessToken);
     if (membership === "reauthenticate") {
-      await fetch("/auth-api/auth/session/clear", { method: "POST" });
-      sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-      sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
-      rememberReturnHash();
-      await beginSignIn();
+      await restartSignIn();
       return;
     }
-    const reactRoot = createRoot(root);
-    if (membership.registered) {
-      reactRoot.render(
-        <StrictMode>
-          <App accessToken={accessToken} displayName={membership.displayName} onLogout={() => void logout()} />
-        </StrictMode>,
-      );
-    } else {
-      const renderSignup = () => reactRoot.render(
-        <StrictMode>
-          <SignupScreen
-            accessToken={accessToken}
-            displayName={membership.displayName}
-            email={membership.email ?? ""}
-            onComplete={() => reactRoot.render(
-              <StrictMode>
-                <App accessToken={accessToken} displayName={membership.displayName} onLogout={() => void logout()} />
-              </StrictMode>,
-            )}
-          />
-        </StrictMode>,
-      );
-      const accountOnboardingKey = onboardingKey(accessToken);
-      if (localStorage.getItem(accountOnboardingKey) === "true") {
-        renderSignup();
-      } else {
-        reactRoot.render(<StrictMode><IntroScreen onComplete={() => {
-          localStorage.setItem(accountOnboardingKey, "true");
-          renderSignup();
-        }} /></StrictMode>);
-      }
-    }
-  } catch (error) {
-    sessionStorage.removeItem(STATE_KEY);
-    sessionStorage.removeItem(VERIFIER_KEY);
-    showSignInError(
-      error instanceof Error ? error.message : "잠시 후 다시 시도해 주세요.",
-    );
+    renderMatdagong(root, accessToken, membership);
+  } catch (cause) {
+    clearPendingSignIn();
+    showSignInError(errorMessage(cause, "잠시 후 다시 시도해 주세요."));
   }
 }
 
@@ -330,7 +56,7 @@ async function startMatdagong(): Promise<void> {
  * 화면에 입력 보관을 알리고, 현재 해시 경로를 기억한 뒤 공통 인증을 다시 거칩니다.
  * 인증 서버의 SSO 세션이 살아 있으면 로그인 화면 없이 바로 콜백으로 돌아옵니다.
  */
-function handleSessionExpired(): void {
+function restartExpiredSession(): void {
   // 이벤트 처리기는 동기로 실행되므로 페이지를 떠나기 전에 작성 중 입력이 저장됩니다.
   window.dispatchEvent(new Event(SESSION_EXPIRING_EVENT));
   rememberReturnHash();
@@ -342,7 +68,7 @@ function handleSessionExpired(): void {
 // 첫 화면을 그리기 전에 테마를 정해 기본 색이 잠깐 보였다가 바뀌지 않게 합니다.
 applyTheme();
 installMouseDragScroll();
-setSessionExpiredHandler(handleSessionExpired);
+setSessionExpiredHandler(restartExpiredSession);
 
 // 맛다공은 먼저 홈 진입을 시도하고, 유효한 로그인 정보가 없으면 공통 인증을 시작합니다.
 void startMatdagong();

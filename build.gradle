@@ -1,6 +1,7 @@
 plugins {
     id 'org.springframework.boot' version '4.0.9' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
+    id 'com.diffplug.spotless' version '7.0.2' apply false
 }
 
 ext {
@@ -15,20 +16,40 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'com.diffplug.spotless'
+    // 공통 모듈은 서비스들이 가져다 쓰는 라이브러리라 실행 jar(bootJar)를 만들지 않습니다.
+    if (name == 'matdagong-common') {
+        apply plugin: 'java-library'
+    } else {
+        apply plugin: 'org.springframework.boot'
+    }
 
     java {
         toolchain { languageVersion = JavaLanguageVersion.of(21) }
     }
 
     dependencyManagement {
-        imports { mavenBom "org.springframework.cloud:spring-cloud-dependencies:${rootProject.ext.springCloudVersion}" }
+        imports {
+            mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${rootProject.ext.springCloudVersion}"
+        }
     }
 
     dependencies {
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    // Java 서식 규칙(docs/coding-style.md). 확인: gradlew spotlessCheck, 자동 정리: gradlew spotlessApply
+    spotless {
+        java {
+            target 'src/**/*.java'
+            palantirJavaFormat('2.50.0')
+            removeUnusedImports()
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
     }
 
     tasks.withType(Test).configureEach {

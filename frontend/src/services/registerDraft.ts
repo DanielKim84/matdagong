@@ -1,21 +1,16 @@
+import { STORAGE_KEYS, readStorage, removeStorage, writeStorage } from "../utils/storage";
+
 /**
  * 맛집 등록 화면에서 로그인이 만료됐을 때 작성 중이던 입력을 탭 저장소(sessionStorage)에 잠시 보관합니다.
  * 재로그인 뒤 등록 화면으로 돌아오면 한 번 복원하고 지웁니다.
  */
 
-/**
- * 다른 화면이 등록 화면을 열면서 넘기는 일회성 장소 전달값의 sessionStorage 키입니다.
- * 등록 화면이 읽는 즉시 지우며, 이 값이 있으면 로그인 만료로 보관한 입력보다 우선합니다.
- */
-export const LIKE_CONVERSION_HANDOFF_KEY = "matdagong.place-conversion.from-like";
-export const QUICK_PLACE_HANDOFF_KEY = "matdagong.quick-place.selected-place";
-
-const REGISTER_DRAFT_KEY = "matdagong.register.form-draft";
+const REGISTER_DRAFT_KEY = STORAGE_KEYS.registerDraft;
 const REGISTER_DRAFT_VERSION = 1;
 // 오래된 입력이 뒤늦게 나타나지 않도록 보관 시간을 제한합니다.
 const REGISTER_DRAFT_TTL_MS = 6 * 60 * 60 * 1000;
 // 재로그인에 필요한 state/verifier/토큰을 쓸 공간을 남겨 두지 못하면 사진 없이 저장합니다.
-const STORAGE_HEADROOM_PROBE_KEY = "matdagong.register.form-draft.probe";
+const STORAGE_HEADROOM_PROBE_KEY = STORAGE_KEYS.registerDraftProbe;
 const STORAGE_HEADROOM_BYTES = 16 * 1024;
 
 export type RegisterDraftMenu = { name: string; price: string; photo?: string };
@@ -53,12 +48,12 @@ export type RestoredRegisterDraft = { form: RegisterDraftForm; photosOmitted: bo
 export type RegisterDraftSaveResult = "saved" | "saved-without-photos" | "failed";
 
 /** 사용자가 이번에 새로 고른 사진은 data URL이고, 이미 저장된 사진은 /media/... 주소입니다. */
-export function isNewPhoto(source: string): boolean {
+function isNewPhoto(source: string): boolean {
   return source.startsWith("data:");
 }
 
 /** 서명된 비공개 사진 주소(?exp=...&sig=...)도 같은 사진으로 비교할 수 있도록 경로만 남깁니다. */
-export function mediaPath(source: string): string {
+function mediaPath(source: string): string {
   return source.split(/[?#]/, 1)[0];
 }
 
@@ -73,24 +68,19 @@ export function refreshMediaUrl(source: string, currentSources: readonly string[
 }
 
 export function clearRegisterDraft(): void {
-  try {
-    sessionStorage.removeItem(REGISTER_DRAFT_KEY);
-  } catch {
-    // 저장소를 쓸 수 없는 환경이면 지울 내용도 없습니다.
-  }
+  removeStorage(REGISTER_DRAFT_KEY, "session");
 }
 
-function writeWithHeadroom(value: string): void {
-  sessionStorage.setItem(REGISTER_DRAFT_KEY, value);
-  try {
-    sessionStorage.setItem(STORAGE_HEADROOM_PROBE_KEY, "x".repeat(STORAGE_HEADROOM_BYTES));
-  } finally {
-    try {
-      sessionStorage.removeItem(STORAGE_HEADROOM_PROBE_KEY);
-    } catch {
-      // 확인용 값이 남지 않도록 최선을 다하고, 실패해도 저장 결과에는 영향을 주지 않습니다.
-    }
-  }
+/**
+ * 입력을 저장하고 남은 공간을 확인합니다. 저장하지 못했거나 여유 공간이 없으면 false를 돌려주어
+ * 호출한 쪽(saveRegisterDraft)이 사진을 빼고 다시 저장하게 합니다.
+ */
+function writeWithHeadroom(value: string): boolean {
+  if (!writeStorage(REGISTER_DRAFT_KEY, value, "session")) return false;
+  const hasHeadroom = writeStorage(STORAGE_HEADROOM_PROBE_KEY, "x".repeat(STORAGE_HEADROOM_BYTES), "session");
+  // 확인용 값은 남기지 않습니다.
+  removeStorage(STORAGE_HEADROOM_PROBE_KEY, "session");
+  return hasHeadroom;
 }
 
 /** 입력 내용을 저장합니다. 사진 때문에 저장 공간이 부족하면 새 사진만 빼고 다시 저장합니다. */
@@ -102,32 +92,29 @@ export function saveRegisterDraft(form: RegisterDraftForm, accountId: string | n
     savedAt: Date.now(),
     photosOmitted: false,
   };
-  try {
-    writeWithHeadroom(JSON.stringify(stored));
-    return "saved";
-  } catch {
-    // QuotaExceededError 등으로 실패하면 큰 data URL 사진을 제외하고 다시 시도합니다.
-  }
+  if (writeWithHeadroom(JSON.stringify(stored))) return "saved";
 
+  // QuotaExceededError 등으로 실패하면 큰 data URL 사진을 제외하고 다시 시도합니다.
   const photos = form.photos.filter((photo) => !isNewPhoto(photo));
-  const menus = form.menus.map((menu) => (menu.photo && isNewPhoto(menu.photo) ? { name: menu.name, price: menu.price } : menu));
-  const photosOmitted = photos.length !== form.photos.length
-    || menus.some((menu, index) => menu.photo !== form.menus[index]?.photo);
-  try {
-    clearRegisterDraft();
-    writeWithHeadroom(JSON.stringify({ ...stored, photos, menus, photosOmitted }));
-    return "saved-without-photos";
-  } catch {
-    clearRegisterDraft();
-    return "failed";
-  }
+  const menus = form.menus.map((menu) =>
+    menu.photo && isNewPhoto(menu.photo) ? { name: menu.name, price: menu.price } : menu,
+  );
+  const photosOmitted =
+    photos.length !== form.photos.length || menus.some((menu, index) => menu.photo !== form.menus[index]?.photo);
+  clearRegisterDraft();
+  if (writeWithHeadroom(JSON.stringify({ ...stored, photos, menus, photosOmitted }))) return "saved-without-photos";
+  clearRegisterDraft();
+  return "failed";
 }
 
 /** 복원할 사진은 이미지 data URL, 같은 출처의 상대 경로(/media/...), https 주소만 받습니다. */
 function isRestorablePhoto(value: unknown): value is string {
-  return typeof value === "string"
-    && (value.startsWith("data:image/") || value.startsWith("https://")
-      || (value.startsWith("/") && !value.startsWith("//")));
+  return (
+    typeof value === "string" &&
+    (value.startsWith("data:image/") ||
+      value.startsWith("https://") ||
+      (value.startsWith("/") && !value.startsWith("//")))
+  );
 }
 
 function stringList(value: unknown): string[] {
@@ -141,8 +128,13 @@ function stringOrNull(value: unknown): string | null {
 function parseSelectedPlace(value: unknown): KakaoPlaceResult | null {
   if (!value || typeof value !== "object") return null;
   const place = value as Partial<Record<keyof KakaoPlaceResult, unknown>>;
-  if (typeof place.id !== "string" || typeof place.place_name !== "string"
-    || typeof place.x !== "string" || typeof place.y !== "string") return null;
+  if (
+    typeof place.id !== "string" ||
+    typeof place.place_name !== "string" ||
+    typeof place.x !== "string" ||
+    typeof place.y !== "string"
+  )
+    return null;
   return {
     id: place.id,
     place_name: place.place_name,
@@ -161,12 +153,7 @@ function parseSelectedPlace(value: unknown): KakaoPlaceResult | null {
  * 다른 계정이거나 오래되거나 손상된 값은 지우고, 대상만 다르면 그대로 둡니다.
  */
 export function readRegisterDraft(accountId: string | null, editPlaceId: string | null): RestoredRegisterDraft | null {
-  let raw: string | null;
-  try {
-    raw = sessionStorage.getItem(REGISTER_DRAFT_KEY);
-  } catch {
-    return null;
-  }
+  const raw = readStorage(REGISTER_DRAFT_KEY, "session");
   if (!raw) return null;
 
   let value: Partial<StoredRegisterDraft>;
@@ -176,27 +163,34 @@ export function readRegisterDraft(accountId: string | null, editPlaceId: string 
     clearRegisterDraft();
     return null;
   }
-  if (!value || typeof value !== "object" || value.version !== REGISTER_DRAFT_VERSION
-    || typeof value.savedAt !== "number" || Date.now() - value.savedAt > REGISTER_DRAFT_TTL_MS
-    || (value.accountId && accountId && value.accountId !== accountId)) {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    value.version !== REGISTER_DRAFT_VERSION ||
+    typeof value.savedAt !== "number" ||
+    Date.now() - value.savedAt > REGISTER_DRAFT_TTL_MS ||
+    (value.accountId && accountId && value.accountId !== accountId)
+  ) {
     clearRegisterDraft();
     return null;
   }
   if ((value.editPlaceId ?? null) !== editPlaceId) return null;
 
-  const coordinates = value.coordinates
-    && Number.isFinite(value.coordinates.latitude) && Number.isFinite(value.coordinates.longitude)
-    ? { latitude: value.coordinates.latitude, longitude: value.coordinates.longitude }
-    : null;
+  const coordinates =
+    value.coordinates && Number.isFinite(value.coordinates.latitude) && Number.isFinite(value.coordinates.longitude)
+      ? { latitude: value.coordinates.latitude, longitude: value.coordinates.longitude }
+      : null;
   const menus = Array.isArray(value.menus)
     ? value.menus
-      .filter((menu): menu is RegisterDraftMenu => !!menu && typeof menu === "object" && typeof menu.name === "string")
-      .slice(0, 5)
-      .map((menu) => ({
-        name: menu.name,
-        price: typeof menu.price === "string" ? menu.price : "",
-        ...(isRestorablePhoto(menu.photo) ? { photo: menu.photo } : {}),
-      }))
+        .filter(
+          (menu): menu is RegisterDraftMenu => !!menu && typeof menu === "object" && typeof menu.name === "string",
+        )
+        .slice(0, 5)
+        .map((menu) => ({
+          name: menu.name,
+          price: typeof menu.price === "string" ? menu.price : "",
+          ...(isRestorablePhoto(menu.photo) ? { photo: menu.photo } : {}),
+        }))
     : [];
 
   return {

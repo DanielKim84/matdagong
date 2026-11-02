@@ -1,0 +1,24 @@
+// 커뮤니티·장소 서비스가 함께 쓰는 토큰 검증, 오류 응답, 외부 호출, 이미지 검사 코드입니다(실행 서버 아님).
+apply plugin: 'java-test-fixtures'
+
+dependencies {
+    // 실행 서버(Tomcat)와 DB 드라이버는 각 서비스가 정하고, 여기서는 쓰는 API만 가져옵니다.
+    api 'org.springframework:spring-webmvc'
+    api 'org.springframework.security:spring-security-config'
+    api 'org.springframework.security:spring-security-web'
+    api 'org.springframework.security:spring-security-oauth2-resource-server'
+    api 'org.springframework.security:spring-security-oauth2-jose'
+    api 'jakarta.validation:jakarta.validation-api'
+    implementation 'org.slf4j:slf4j-api'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api'
+
+    // 서비스 DB 테스트가 함께 쓰는 embedded PostgreSQL 지원 클래스입니다.
+    testFixturesApi 'io.zonky.test:embedded-postgres:2.1.0'
+    testFixturesApi 'org.flywaydb:flyway-database-postgresql'
+    testFixturesApi 'org.springframework:spring-jdbc'
+    testFixturesApi 'org.junit.jupiter:junit-jupiter-api'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation'
+    testImplementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+}

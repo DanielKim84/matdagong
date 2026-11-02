@@ -1,6 +1,6 @@
 # 백엔드 서비스
 
-각 Gradle 모듈은 독립 실행 가능한 Spring Boot 서버입니다. 모듈 간 코드는 직접 참조하지 않습니다. 브라우저 요청은 API Gateway가 버전이 있는 HTTP 경로로 전달하고, 서비스끼리 확인이 필요할 때는 Gateway를 거치지 않고 사용자의 access token을 그대로 실어 상대 서비스 API를 직접 호출합니다.
+`matdagong-common`을 뺀 각 Gradle 모듈은 독립 실행 가능한 Spring Boot 서버입니다. 서비스끼리 코드는 직접 참조하지 않고, 함께 쓰는 토큰 검증·주소 허용 정책·ProblemDetail 오류 응답·RestClient 생성·이미지 형식 검사·취향 태그 그룹은 `matdagong-common` 라이브러리(실행 서버 아님)에서 가져옵니다. 브라우저 요청은 API Gateway가 버전이 있는 HTTP 경로로 전달하고, 서비스끼리 확인이 필요할 때는 Gateway를 거치지 않고 사용자의 access token을 그대로 실어 상대 서비스 API를 직접 호출합니다.
 
 ```text
 matdagong-api-gateway       :5843
@@ -24,18 +24,37 @@ matdagong-community-service ──GET /api/v1/places/{id}──→ matdagong-pla
 장소 서비스는 인증된 검색·상세·내 기록·좋아요·최근 본 장소·임시 장소 API와 화면 개발용 샘플 카탈로그를 제공합니다. 기록 사진은 data URL로 받아 DB에 저장하고, 응답에는 사진 주소만 담습니다. 비공개 기록 사진 주소에는 `PLACE_MEDIA_SIGNING_KEY`로 만든 만료 서명이 붙습니다. 커뮤니티 서비스는 프로필·이미지·취향·구독·포인트 조회·알림을 제공합니다. 두 서비스는 각자의 PostgreSQL DB를 JDBC로 조회하고 Flyway로 스키마를 관리합니다.
 
 ```text
+kr.matdagong.common/          # (matdagong-common) 서비스 공통 코드
+├─ security/        # access token 검증(JwtDecoder·audience), 계정 ID 추출, 허용 목록 주소 정책
+├─ web/             # ProblemDetail 오류 응답 기반(ApiExceptionHandlerSupport), 공통 오류 문구
+├─ http/            # 시간 제한을 둔 RestClient 생성
+├─ media/           # 이미지 머리 바이트 검사
+├─ jdbc/            # timestamptz 읽기 도우미
+└─ tag/             # 취향 태그 그룹(CUISINE·TASTE·CAFE·OCCASION·VISIT)
+
 kr.matdagong.community/
-├─ profile/         # 프로필·이미지·취향 태그 API와 이미지 저장 서비스
-├─ subscription/    # 구독 API·요금·회차 처리, 포인트 원장 조회
+├─ profile/         # 내 프로필·프로필 사진·배경 갤러리 API와 서비스
+├─ tastetag/        # 취향 태그 목록, 태그 추가 제안
+├─ taster/          # 맛객 목록과 취향 일치율
+├─ subscription/    # 구독 API·요금·회차 처리
+├─ point/           # 포인트 원장 조회
 ├─ notification/    # 알림함 API, 장소 서비스 기록 확인
-└─ security/        # 공통 계정 토큰 검증
+└─ security/        # 토큰 검증과 공개 주소(/media/profiles/**) 설정
 
 kr.matdagong.place/
-├─ api/             # 장소·기록 API와 사진 응답
-├─ application/     # 기록 저장·조회, 카카오 확인, 커뮤니티 프로필 조회, 사진 주소 서명
-└─ security/        # 공통 계정 토큰 검증, 요청 본문 크기 제한
+├─ catalog/         # 장소 검색·상세, 샘플 장소, 장소 응답 조립(PlaceViewLoader)
+├─ record/          # 맛집 기록 저장·내 기록, 하트↔기록 전환
+├─ draft/           # 빠른 기록(나중에 쓸 장소)
+├─ like/            # 하트(내 맛집)
+├─ recent/          # 최근 본 장소(15일·30곳)
+├─ media/           # 기록·메뉴 사진 응답, 사진 해석, 비공개 사진 주소 서명
+├─ kakao/           # 카카오 Local API 가게 정보 확인
+├─ profile/         # 커뮤니티 서비스의 작성자 프로필 조회
+└─ security/        # 토큰 검증과 공개 사진 주소 설정, 요청 본문 크기 제한
 ```
+
+기능 패키지 안에서 Controller는 HTTP 입출력만, Service는 규칙·DB·트랜잭션을 맡고, 요청·응답 record는 `XxxModels` 한 파일에 모읍니다. 오류는 `ResponseStatusException`(한국어 문구)으로 던지면 서비스마다 하나인 `@RestControllerAdvice`(`CommunityExceptionHandler`, `PlaceExceptionHandler`)가 `detail`에 한국어 문구를 담은 ProblemDetail로 바꿉니다. `@Valid` 실패는 record 애너테이션의 `message`를, 없으면 공통 안내를 씁니다.
 
 태그 추가 요청은 `taste_tag_requests`에 저장합니다. `POST /api/v1/taste-tags/requests`는 태그명·분류·사유를 접수하고, `GET /api/v1/taste-tags/requests/mine`은 로그인한 본인의 최근 20건을 반환합니다. 같은 사용자의 동일 태그 검토 대기 요청과 기존 목록에 있는 태그는 중복 접수하지 않습니다. 요청은 `PENDING`으로 시작하고 검토 결과·검토자·처리일을 보관합니다. 관리자 검토 화면과 승인 처리는 추후 관리자 서비스에서 구현합니다.
 
-테스트는 저장소 루트에서 `.\gradlew.bat test`로 실행합니다. `PlaceRecordServiceIntegrationTest`는 embedded PostgreSQL에 장소 서비스 Flyway 스키마를 적용해 실제 SQL을 검증합니다.
+테스트는 저장소 루트에서 `.\gradlew.bat test`로 실행합니다. DB 테스트(`*IntegrationTest`)는 `matdagong-common`의 테스트 지원 클래스 `EmbeddedPostgresTestSupport`를 상속해 테스트 클래스마다 embedded PostgreSQL을 한 번 띄우고 그 서비스의 Flyway 스키마를 적용한 뒤, 테스트마다 쓰는 테이블을 TRUNCATE합니다. DB가 필요 없는 단위 테스트는 `*Test`입니다.

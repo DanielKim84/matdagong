@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Screen } from "../models/place";
 
-const screens: Screen[] = [
+const SCREENS: Screen[] = [
   "home",
   "map",
   "register",
@@ -26,7 +26,7 @@ const screens: Screen[] = [
 function currentRoute(): { screen: Screen; id: string } {
   const [screen, id = ""] = window.location.hash.replace("#", "").split("/");
   return {
-    screen: screens.includes(screen as Screen) ? (screen as Screen) : "home",
+    screen: SCREENS.find((item) => item === screen) ?? "home",
     id: decodeURIComponent(id),
   };
 }

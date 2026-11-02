@@ -1,15 +1,22 @@
 import type { NewPlace, Place } from "../models/place";
-import { apiRequest, type ApiRequestOptions } from "./http";
-
-const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
+import { API_BASE_URL, apiRequest, type ApiRequestOptions } from "./http";
 
 /** 빠른 장소 기록처럼 마이 화면 숫자가 바뀌는 저장을 마친 뒤 window에 알리는 이벤트입니다. */
 export const MY_ACTIVITY_CHANGED_EVENT = "matdagong:my-activity-changed";
 
 export type QuickPlaceDraft = {
-  providerCode: string; providerPlaceId: string; placeName: string; category: string | null; address: string;
-  latitude: number; longitude: number; providerPhone: string | null; providerUrl: string | null;
-  roadAddress: string | null; lotAddress: string | null; savedAt: string;
+  providerCode: string;
+  providerPlaceId: string;
+  placeName: string;
+  category: string | null;
+  address: string;
+  latitude: number;
+  longitude: number;
+  providerPhone: string | null;
+  providerUrl: string | null;
+  roadAddress: string | null;
+  lotAddress: string | null;
+  savedAt: string;
 };
 export type QuickPlaceDuplicate = { alreadyRegistered: boolean; alreadySaved: boolean; placeName: string | null };
 
@@ -45,24 +52,20 @@ export function kakaoPlaceFromPlace(place: Place): KakaoPlaceResult | null {
 }
 
 // 검색어가 바뀌면 이전 요청을 취소해 늦게 도착한 응답이 최신 결과를 덮지 않게 합니다.
-export function getPlaces(
-  search: string,
-  accessToken: string,
-  signal?: AbortSignal,
-): Promise<Place[]> {
+export function getPlaces(accessToken: string, search: string, signal?: AbortSignal): Promise<Place[]> {
   return request(search ? `?q=${encodeURIComponent(search)}` : "", accessToken, {
     signal,
     errorMessage: "맛집을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.",
   });
 }
 
-export function getPlace(id: string, accessToken: string): Promise<Place> {
+export function getPlace(accessToken: string, id: string): Promise<Place> {
   return request(`/${encodeURIComponent(id)}`, accessToken, { errorMessage: "맛집 정보를 불러오지 못했어요." });
 }
 
 /** 장소 API도 공통 요청 도구를 거쳐 로그인 만료와 오류 메시지를 다른 화면과 같게 처리합니다. */
 function request<T>(path: string, accessToken: string, init: ApiRequestOptions = {}): Promise<T> {
-  return apiRequest<T>(`${baseUrl}/v1/places${path}`, accessToken, {
+  return apiRequest<T>(`${API_BASE_URL}/v1/places${path}`, accessToken, {
     errorMessage: "맛집 정보를 처리하지 못했어요.",
     ...init,
   });
@@ -90,17 +93,34 @@ export function checkQuickPlaceDuplicate(accessToken: string, place: KakaoPlaceR
 }
 
 export function saveQuickPlaceDraft(accessToken: string, place: KakaoPlaceResult): Promise<QuickPlaceDraft> {
-  return request("/drafts", accessToken, { method: "POST", body: JSON.stringify({
-    providerCode: "KAKAO", providerPlaceId: place.id, placeName: place.place_name, category: place.category_name,
-    address: place.road_address_name || place.address_name,
-    roadAddress: place.road_address_name || null, lotAddress: place.address_name || null,
-    latitude: Number(place.y), longitude: Number(place.x),
-    providerPhone: place.phone || null, providerUrl: place.place_url || null,
-  }) });
+  return request("/drafts", accessToken, {
+    method: "POST",
+    body: JSON.stringify({
+      providerCode: "KAKAO",
+      providerPlaceId: place.id,
+      placeName: place.place_name,
+      category: place.category_name,
+      address: place.road_address_name || place.address_name,
+      roadAddress: place.road_address_name || null,
+      lotAddress: place.address_name || null,
+      latitude: Number(place.y),
+      longitude: Number(place.x),
+      providerPhone: place.phone || null,
+      providerUrl: place.place_url || null,
+    }),
+  });
 }
 
-export function deleteQuickPlaceDraft(accessToken: string, providerPlaceId: string, providerCode = "KAKAO"): Promise<void> {
-  return request(`/drafts/${encodeURIComponent(providerPlaceId)}?providerCode=${encodeURIComponent(providerCode)}`, accessToken, { method: "DELETE" });
+export function deleteQuickPlaceDraft(
+  accessToken: string,
+  providerPlaceId: string,
+  providerCode = "KAKAO",
+): Promise<void> {
+  return request(
+    `/drafts/${encodeURIComponent(providerPlaceId)}?providerCode=${encodeURIComponent(providerCode)}`,
+    accessToken,
+    { method: "DELETE" },
+  );
 }
 
 /** 새 기록 등록과 하트→기록 전환이 같은 기록 본문(CreatePlaceRecordRequest)을 보내도록 화면 입력을 바꿉니다. */

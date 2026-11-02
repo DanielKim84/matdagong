@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { VisitCondition } from "../../models/place";
 import Sheet from "../../components/Sheet";
 import { Segmented } from "../../components/ui";
 import {
@@ -17,7 +16,7 @@ export default function FilterSheet({
   categories,
   tags,
   hasPosition,
-  countFor,
+  countMatches,
   onApply,
   onClose,
 }: {
@@ -25,16 +24,18 @@ export default function FilterSheet({
   categories: string[];
   tags: string[];
   hasPosition: boolean;
-  countFor: (filters: DiscoverFilters) => number;
+  countMatches: (filters: DiscoverFilters) => number;
   onApply: (filters: DiscoverFilters) => void;
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState(initial);
-  const toggle = <T,>(list: T[], value: T) => list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
+  const toggle = <T,>(list: T[], value: T) =>
+    list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
   // 지금 고른 값이 목록에 없어도(다른 검색어로 바뀐 경우) 해제할 수 있게 함께 보여 줍니다.
-  const categoryOptions = draft.category && !categories.includes(draft.category) ? [draft.category, ...categories] : categories;
+  const categoryOptions =
+    draft.category && !categories.includes(draft.category) ? [draft.category, ...categories] : categories;
   const tagOptions = [...draft.tags.filter((tag) => !tags.includes(tag)), ...tags];
-  const count = countFor(draft);
+  const count = countMatches(draft);
 
   return (
     <Sheet title="필터" onClose={onClose} className="r-discover-filter">
@@ -63,7 +64,12 @@ export default function FilterSheet({
               label="거리"
               value={`${draft.distance}`}
               options={DISTANCE_OPTIONS.map((option) => ({ value: `${option.value}`, label: option.label }))}
-              onChange={(value) => setDraft({ ...draft, distance: Number(value) as DistanceLimit })}
+              onChange={(value) =>
+                setDraft({
+                  ...draft,
+                  distance: DISTANCE_OPTIONS.find((option) => `${option.value}` === value)?.value ?? 0,
+                })
+              }
             />
           ) : (
             <p className="r-discover-filter__note">지도에서 내 위치를 켜면 거리로 고를 수 있어요.</p>
@@ -111,7 +117,7 @@ export default function FilterSheet({
         <fieldset className="r-discover-filter__group">
           <legend>매장 정보</legend>
           <div className="r-chips r-chips--wrap">
-            {FILTER_CONDITIONS.map((condition: VisitCondition) => (
+            {FILTER_CONDITIONS.map((condition) => (
               <button
                 key={condition}
                 type="button"
@@ -131,7 +137,12 @@ export default function FilterSheet({
         <button type="button" className="r-button r-button--secondary" onClick={() => setDraft(DEFAULT_FILTERS)}>
           초기화
         </button>
-        <button type="button" className="r-button r-button--primary" onClick={() => onApply(draft)} disabled={count === 0}>
+        <button
+          type="button"
+          className="r-button r-button--primary"
+          onClick={() => onApply(draft)}
+          disabled={count === 0}
+        >
           {count ? `${count}곳 보기` : "맞는 곳이 없어요"}
         </button>
       </div>

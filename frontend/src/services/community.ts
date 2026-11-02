@@ -1,104 +1,22 @@
+import type {
+  ActiveSubscription,
+  ActivityScope,
+  FoodFocus,
+  IncomingSubscription,
+  MyProfile,
+  NotificationFeed,
+  PlanCatalog,
+  PointAccount,
+  ProfileChanges,
+  SubscribeResult,
+  TagRequest,
+  TagRequestInput,
+  TasteTag,
+  UserNotification,
+} from "../models/community";
 import type { Taster } from "../models/place";
 import { avatarVariantFor, demoTasterAvatar } from "../utils/profileMedia";
-import { apiRequest, type ApiRequestOptions } from "./http";
-
-const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
-
-export type PaidPlan = { termMonths: number; priceAmount: number };
-export type PlanCatalog = {
-  currency: "KRW";
-  testMode: boolean;
-  freePrice: number;
-  paidPlans: PaidPlan[];
-};
-export type ActiveSubscription = {
-  subscriptionId: string;
-  targetAccountId: string;
-  targetNickname: string;
-  subscriptionType: "FREE" | "PAID";
-  termMonths: number | null;
-  startAt: string;
-  endAt: string | null;
-};
-export type SubscribeResult = {
-  subscription: ActiveSubscription;
-  replacedFreeNickname: string | null;
-};
-export type IncomingSubscription = {
-  subscriptionId: string;
-  subscriberAccountId: string;
-  subscriberNickname: string;
-  avatar: string | null;
-  avatarVariant: number;
-  subscriptionType: "FREE" | "PAID";
-  termMonths: number | null;
-  startAt: string;
-  endAt: string | null;
-};
-export type PointEntry = {
-  historyId: string;
-  eventType: "EARN" | "SPEND" | "ADJUST";
-  title: string;
-  memo: string | null;
-  amount: number;
-  createdAt: string;
-};
-export type PointAccount = { balance: number; history: PointEntry[] };
-export type UserNotification = {
-  notificationId: string;
-  notificationType: "PLACE_RECORD_CREATED" | "TASTER_NEW_PLACE" | "NEW_SUBSCRIBER" | "SYSTEM_NOTICE";
-  title: string;
-  message: string;
-  targetType: string | null;
-  targetId: string | null;
-  createdAt: string;
-  readAt: string | null;
-};
-export type NotificationFeed = { items: UserNotification[]; unreadCount: number };
-
-export type MyProfile = {
-  accountId: string;
-  nickname: string;
-  profileImgUrl: string | null;
-  avatarVariant: number;
-  profileCoverUrl: string | null;
-  profileCoverUrls: string[];
-  tasterFocus: FoodFocus;
-  preferenceFocus: FoodFocus;
-  activityScope: ActivityScope;
-  activityRegion: string | null;
-  intro: string | null;
-  profileTags: string[];
-  preferenceTags: string[];
-  excludedTags: string[];
-};
-
-export type FoodFocus = "RESTAURANT" | "CAFE_DESSERT" | "BOTH";
-export type ActivityScope = "LOCAL" | "TRAVEL" | "BOTH";
-export type TasteTag = {
-  name: string;
-  category: "MENU" | "VISIT";
-  tagGroup: "CUISINE" | "TASTE" | "CAFE" | "OCCASION" | "VISIT";
-};
-
-export type TagRequestInput = {
-  requestType?: "TAG" | "PLACE_INFO";
-  name: string;
-  tagGroup: TasteTag["tagGroup"];
-  reason: string;
-};
-export type TagRequest = {
-  requestType: "TAG" | "PLACE_INFO";
-  requestId: string;
-  tagName: string;
-  tagCategory: TasteTag["category"];
-  tagGroup: TasteTag["tagGroup"];
-  reason: string | null;
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  reviewNote: string | null;
-  createdAt: string;
-  reviewedAt: string | null;
-};
+import { API_BASE_URL, apiRequest, type ApiRequestOptions } from "./http";
 
 type TasterResponse = {
   tasterId: string;
@@ -120,12 +38,8 @@ type TasterResponse = {
 };
 
 /** 커뮤니티 API도 공통 요청 도구를 거쳐 로그인 만료, 204 응답, 오류 메시지를 같게 처리합니다. */
-function request<T>(
-  path: string,
-  accessToken: string,
-  init: ApiRequestOptions = {},
-): Promise<T> {
-  return apiRequest<T>(`${baseUrl}/v1${path}`, accessToken, {
+function request<T>(path: string, accessToken: string, init: ApiRequestOptions = {}): Promise<T> {
+  return apiRequest<T>(`${API_BASE_URL}/v1${path}`, accessToken, {
     errorMessage: "요청을 처리하지 못했어요.",
     ...init,
   });
@@ -168,10 +82,7 @@ export function createTagRequest(accessToken: string, input: TagRequestInput): P
   });
 }
 
-export function ensureMyProfile(
-  accessToken: string,
-  nickname: string,
-): Promise<MyProfile> {
+export function ensureMyProfile(accessToken: string, nickname: string): Promise<MyProfile> {
   return request("/users/me/profile", accessToken, {
     method: "POST",
     body: JSON.stringify({ nickname }),
@@ -214,15 +125,14 @@ export async function uploadProfileCovers(accessToken: string, files: File[]): P
   const form = new FormData();
   files.forEach((file) => form.append("files", file));
   const urls = await request<string[] | undefined>("/users/me/profile/covers", accessToken, {
-    method: "POST", body: form, errorMessage: "배경 사진을 저장하지 못했어요.",
+    method: "POST",
+    body: form,
+    errorMessage: "배경 사진을 저장하지 못했어요.",
   });
   return urls ?? [];
 }
 
-export async function removeProfileImage(
-  accessToken: string,
-  kind: "avatar" | "cover",
-): Promise<void> {
+export async function removeProfileImage(accessToken: string, kind: "avatar" | "cover"): Promise<void> {
   await request<void>(`/users/me/profile/${kind}`, accessToken, {
     method: "DELETE",
     errorMessage: "프로필 이미지를 삭제하지 못했어요.",
@@ -240,9 +150,7 @@ export function getPlanCatalog(accessToken: string): Promise<PlanCatalog> {
   return request("/subscriptions/plans", accessToken);
 }
 
-export function getSubscriptions(
-  accessToken: string,
-): Promise<ActiveSubscription[]> {
+export function getSubscriptions(accessToken: string): Promise<ActiveSubscription[]> {
   return request("/subscriptions", accessToken);
 }
 
@@ -278,10 +186,7 @@ export function getNotifications(accessToken: string): Promise<NotificationFeed>
   return request("/notifications", accessToken);
 }
 
-export function createPlaceRegisteredNotification(
-  accessToken: string,
-  placeId: string,
-): Promise<UserNotification> {
+export function createPlaceRegisteredNotification(accessToken: string, placeId: string): Promise<UserNotification> {
   // 장소 이름과 공개 여부는 서버가 저장된 기록에서 확인합니다.
   return request("/notifications/place-recorded", accessToken, {
     method: "POST",
@@ -294,7 +199,7 @@ async function updateNotification(accessToken: string, path: string, method: "PU
 }
 
 export function markNotificationRead(accessToken: string, id: string): Promise<void> {
-  return updateNotification(accessToken, `/notifications/${id}/read`, "PUT");
+  return updateNotification(accessToken, `/notifications/${encodeURIComponent(id)}/read`, "PUT");
 }
 
 export function markAllNotificationsRead(accessToken: string): Promise<void> {
@@ -306,9 +211,54 @@ export function markPassiveNotificationsRead(accessToken: string): Promise<void>
 }
 
 export function deleteNotification(accessToken: string, id: string): Promise<void> {
-  return updateNotification(accessToken, `/notifications/${id}`, "DELETE");
+  return updateNotification(accessToken, `/notifications/${encodeURIComponent(id)}`, "DELETE");
 }
 
 export function deleteAllNotifications(accessToken: string): Promise<void> {
   return updateNotification(accessToken, "/notifications/all", "DELETE");
+}
+
+/**
+ * 프로필 설정 화면의 변경 내용을 순서대로 저장하고, 화면 상태에 바로 쓸 프로필을 돌려줍니다.
+ * 사진 업로드 응답에는 프로필 전체가 없으므로 바뀐 사진 주소만 직접 맞춥니다.
+ */
+export async function saveMyProfile(accessToken: string, changes: ProfileChanges): Promise<MyProfile> {
+  const savedProfile = await updateMyProfile(accessToken, {
+    nickname: changes.nickname,
+    intro: changes.intro,
+    profileTags: changes.profileTags,
+    preferenceTags: changes.preferenceTags,
+    excludedTags: changes.excludedTags,
+    tasterFocus: changes.tasterFocus,
+    preferenceFocus: changes.preferenceFocus,
+    activityScope: changes.activityScope,
+    activityRegion: changes.activityRegion,
+  });
+  if (changes.avatarFile) await uploadProfileImage(accessToken, changes.avatarFile);
+  else if (changes.removeAvatar) await removeProfileImage(accessToken, "avatar");
+  if (changes.removeCover) await removeProfileImage(accessToken, "cover");
+  else {
+    for (const photoId of changes.removedCoverPhotoIds) {
+      await removeProfileCoverPhoto(accessToken, photoId);
+    }
+  }
+  const savedCoverUrls = changes.coverFiles?.length
+    ? await uploadProfileCovers(accessToken, changes.coverFiles)
+    : undefined;
+  const remainingCoverUrls = changes.removeCover
+    ? []
+    : (savedProfile.profileCoverUrls ?? []).filter(
+        (url) => !changes.removedCoverPhotoIds.some((photoId) => url.includes(`/covers/${photoId}`)),
+      );
+  const updatedCoverUrls = savedCoverUrls ?? remainingCoverUrls;
+  return {
+    ...savedProfile,
+    profileImgUrl: changes.removeAvatar
+      ? null
+      : changes.avatarFile
+        ? `/media/profiles/${savedProfile.accountId}/avatar`
+        : savedProfile.profileImgUrl,
+    profileCoverUrl: updatedCoverUrls.length ? savedProfile.profileCoverUrl : null,
+    profileCoverUrls: updatedCoverUrls,
+  };
 }

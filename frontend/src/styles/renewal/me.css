@@ -12,10 +12,6 @@
   flex-direction: column;
   gap: 10px;
 }
-.r-me-count {
-  font-size: 13px;
-  font-weight: 600;
-}
 .r-me-note {
   margin: 0;
   font-size: 13px;
@@ -38,61 +34,50 @@
   width: 16px;
   height: 16px;
 }
-.r-me-thumb {
-  display: block;
-  overflow: hidden;
-  background: var(--neutral-100);
-}
-.r-me-thumb > img,
-.r-me-thumb > .food-photo {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 .r-me-list {
   padding: 0 16px;
 }
-.r-empty .r-badge-icon {
+/* me 화면의 빈 화면(EmptyState className="r-me-empty")만 아이콘·버튼 간격을 조금 띄웁니다. */
+.r-me-empty .r-badge-icon {
   margin-bottom: 4px;
 }
-.r-empty .r-button {
+.r-me-empty .r-button {
   margin-top: 6px;
 }
 
-/* ── 나 홈: 프로필 머리 ── */
-.r-me-head {
+/* ── 나 홈: 프로필 (상단 바 TopBar root 아래) ── */
+.r-me-profile {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: calc(16px + env(safe-area-inset-top)) 12px 12px 20px;
+  padding: 4px 20px 12px;
 }
-.r-me-head__avatar {
+.r-me-profile__avatar {
   flex: none;
   border: 0;
   border-radius: 50%;
   background: none;
   padding: 0;
 }
-.r-me-head__avatar .avatar {
+.r-me-profile__avatar .avatar {
   width: 60px;
   height: 60px;
   border: 0;
   background: var(--brand-50);
 }
-.r-me-head__copy {
+.r-me-profile__copy {
   display: flex;
   min-width: 0;
   flex: 1;
   flex-direction: column;
 }
-.r-me-head__name {
+.r-me-profile__name {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 8px;
 }
-.r-me-head__name h1 {
+.r-me-profile__name h2 {
   overflow: hidden;
   margin: 0;
   font-size: 24px;
@@ -123,12 +108,12 @@
   background: var(--neutral-800);
   color: var(--on-strong);
 }
-.r-me-head__links {
+.r-me-profile__links {
   display: flex;
   flex-wrap: wrap;
   column-gap: 14px;
 }
-.r-me-head__links button {
+.r-me-profile__links button {
   min-height: 36px;
   border: 0;
   background: none;
@@ -138,12 +123,12 @@
   font-size: 13px;
   font-weight: 700;
 }
-.r-me-head__links button + button {
+.r-me-profile__links button + button {
   color: var(--color-muted);
 }
 
-/* ── 나 홈: 다이어리 카드 ── */
-.r-me-diary {
+/* ── 나 홈: 다이어리 카드(MeDiaryCard) ── */
+.r-me-diary-card {
   display: flex;
   width: 100%;
   flex-direction: column;
@@ -151,15 +136,15 @@
   padding: 16px;
   font-family: var(--font-body);
 }
-.r-me-diary__head {
+.r-me-diary-card__head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
 }
-.r-me-diary__head b {
+.r-me-diary-card__head b {
   font-size: 20px;
 }
-.r-me-diary__head small {
+.r-me-diary-card__head small {
   font-size: 13px;
 }
 .r-me-week {
@@ -170,7 +155,11 @@
 .r-me-week__day,
 .r-me-week__photo {
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
+}
+/* PlaceThumb 기본 64px 대신 달력 칸 폭을 채웁니다. */
+.r-me-week__photo {
+  width: auto;
 }
 .r-me-week__day {
   display: flex;
@@ -192,16 +181,16 @@
   color: var(--color-primary);
   font-weight: 800;
 }
-.r-me-diary__total {
+.r-me-diary-card__total {
   display: flex;
   align-items: baseline;
   gap: 6px;
 }
-.r-me-diary__total b {
+.r-me-diary-card__total b {
   font-size: 24px;
   font-weight: 800;
 }
-.r-me-diary__total small {
+.r-me-diary-card__total small {
   font-size: 13px;
 }
 
@@ -317,7 +306,7 @@
 }
 .r-me-sheet__error {
   margin: 0 0 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--brand-50);
   padding: 10px 12px;
   color: var(--brand-700);
@@ -383,7 +372,7 @@
   justify-content: center;
   overflow: hidden;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: none;
   padding: 0;
   color: var(--neutral-700);
@@ -396,9 +385,12 @@
   color: var(--color-primary);
   font-weight: 800;
 }
-.r-me-day--photo .r-me-thumb {
+.r-me-day__photo {
   position: absolute;
   inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
 }
 .r-me-day--photo::after {
   content: "";
@@ -440,7 +432,7 @@
   position: absolute;
   z-index: 2;
   inset: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   box-shadow: inset 0 0 0 2px var(--color-primary);
 }
 .r-me-day.is-selected::before {
@@ -455,12 +447,6 @@
   gap: 12px;
   padding: 10px 14px 10px 10px;
   font-family: var(--font-body);
-}
-.r-me-entry__thumb {
-  width: 64px;
-  height: 64px;
-  flex: none;
-  border-radius: 14px;
 }
 .r-me-entry__copy {
   display: flex;
@@ -514,10 +500,10 @@
   font-family: var(--font-body);
   text-align: left;
 }
-.r-me-photos__item .r-me-thumb {
+.r-me-photos__thumb {
   width: 100%;
+  height: auto;
   aspect-ratio: 1;
-  border-radius: 14px;
 }
 .r-me-photos__item > span:last-child {
   overflow: hidden;
@@ -704,7 +690,7 @@
   height: 28px;
   flex: none;
   place-items: center;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 800;
 }
@@ -735,7 +721,7 @@
   left: 2px;
   width: 48px;
   height: 28px;
-  border-radius: 14px;
+  border-radius: var(--radius-pill);
   background: var(--neutral-300);
   transition: background 0.15s;
 }

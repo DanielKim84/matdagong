@@ -3,7 +3,7 @@ import { useAppData } from "../../app/AppData";
 import { go, useRoute } from "../../app/navigation";
 import Icon from "../../components/Icon";
 import PlaceTile from "../../components/PlaceTile";
-import { Segmented, TopBar } from "../../components/ui";
+import { EmptyState, Segmented, Skeleton, TopBar } from "../../components/ui";
 import type { Place } from "../../models/place";
 
 type Tab = "saved" | "recent";
@@ -13,7 +13,7 @@ export default function CollectionsScreen() {
   const app = useAppData();
   const route = useRoute();
   const tab: Tab = route.screen === "recent" ? "recent" : "saved";
-  const [visitedOnly, setVisitedOnly] = useState(false);
+  const [isVisitedOnly, setIsVisitedOnly] = useState(false);
 
   const lookup = [...app.places, ...app.privatePlaces, ...app.myRecords, ...app.recentPlaces];
   const savedIds = [...new Set(app.likedPlaceIds)];
@@ -21,7 +21,7 @@ export default function CollectionsScreen() {
     .map((id) => lookup.find((place) => place.id === id))
     .filter((place): place is Place => !!place);
   const visitedSaved = saved.filter((place) => app.visitedLikedPlaceIds.includes(place.id));
-  const places = tab === "recent" ? app.recentPlaces : visitedOnly ? visitedSaved : saved;
+  const places = tab === "recent" ? app.recentPlaces : isVisitedOnly ? visitedSaved : saved;
 
   return (
     <main className="r-screen r-me-collections">
@@ -38,10 +38,20 @@ export default function CollectionsScreen() {
         />
         {tab === "saved" && visitedSaved.length > 0 && (
           <div className="r-chips" role="group" aria-label="저장한 곳 거르기">
-            <button type="button" className={`r-chip ${!visitedOnly ? "is-on" : ""}`} aria-pressed={!visitedOnly} onClick={() => setVisitedOnly(false)}>
+            <button
+              type="button"
+              className={`r-chip ${!isVisitedOnly ? "is-on" : ""}`}
+              aria-pressed={!isVisitedOnly}
+              onClick={() => setIsVisitedOnly(false)}
+            >
               전체 {saved.length}
             </button>
-            <button type="button" className={`r-chip ${visitedOnly ? "is-on" : ""}`} aria-pressed={visitedOnly} onClick={() => setVisitedOnly(true)}>
+            <button
+              type="button"
+              className={`r-chip ${isVisitedOnly ? "is-on" : ""}`}
+              aria-pressed={isVisitedOnly}
+              onClick={() => setIsVisitedOnly(true)}
+            >
               <Icon name="check" /> 다녀온 곳 {visitedSaved.length}
             </button>
           </div>
@@ -60,29 +70,28 @@ export default function CollectionsScreen() {
           </div>
         ) : tab === "saved" && savedIds.length > 0 ? (
           app.loading ? (
-            <p className="r-empty r-muted" role="status">저장한 맛집을 불러오고 있어요…</p>
+            <Skeleton shape="card" count={4} label="저장한 맛집을 불러오고 있어요…" className="r-me-grid" />
           ) : (
-            <div className="r-card r-empty">
-              <b>저장한 맛집 정보를 찾지 못했어요</b>
-              <p>잠시 후 다시 불러와 주세요.</p>
-              <button type="button" className="r-button r-button--secondary r-button--pill" onClick={app.actions.retry}>
-                다시 불러오기
-              </button>
-            </div>
+            <EmptyState
+              tone="error"
+              title="저장한 맛집 정보를 찾지 못했어요"
+              message="잠시 후 다시 불러와 주세요."
+              action={{ label: "다시 불러오기", onClick: app.actions.retry }}
+              className="r-card r-me-empty"
+            />
           )
         ) : (
-          <div className="r-card r-empty">
-            <span className="r-badge-icon"><Icon name={tab === "recent" ? "clock" : "heart"} /></span>
-            <b>{tab === "recent" ? "최근 본 맛집이 없어요" : "아직 저장한 맛집이 없어요"}</b>
-            <p>
-              {tab === "recent"
+          <EmptyState
+            icon={tab === "recent" ? "clock" : "heart"}
+            title={tab === "recent" ? "최근 본 맛집이 없어요" : "아직 저장한 맛집이 없어요"}
+            message={
+              tab === "recent"
                 ? "맛집 상세를 열어 보면 이곳에 차례로 남아요."
-                : "마음에 드는 맛집의 하트를 누르면 이곳에 모여요."}
-            </p>
-            <button type="button" className="r-button r-button--primary r-button--pill" onClick={() => go("home")}>
-              맛집 둘러보기
-            </button>
-          </div>
+                : "마음에 드는 맛집의 하트를 누르면 이곳에 모여요."
+            }
+            action={{ label: "맛집 둘러보기", onClick: () => go("home"), variant: "primary" }}
+            className="r-card r-me-empty"
+          />
         )}
       </div>
     </main>

@@ -1,17 +1,20 @@
 import { createContext, useContext } from "react";
-import type { NewPlace, Place, Taster } from "../models/place";
 import type {
   ActiveSubscription,
   IncomingSubscription,
   MyProfile,
   NotificationFeed,
   PointAccount,
+  ProfileChanges,
+  TagRequest,
   TagRequestInput,
   TasteTag,
   UserNotification,
-} from "../services/community";
-import type { NoticeKind } from "../components/NoticeToast";
+} from "../models/community";
+import type { NewPlace, Place, Taster } from "../models/place";
 
+/** 안내창 종류입니다. error는 위험 색, 나머지는 기본 색으로 보입니다. */
+export type NoticeKind = "info" | "success" | "error";
 export type AppNotice = { kind: NoticeKind; title: string; message: string };
 export type AccountRole = "ADMIN" | "SUPER_TASTER" | "TASTER" | "USER";
 
@@ -57,6 +60,8 @@ export type AppData = {
   /** 취향 점수가 있고 아직 구독하지 않은 맛객(점수 높은 순) */
   recommendedTasters: Taster[];
   tasteTags: TasteTag[];
+  /** 구독 시트를 열어 둔 맛객. 없으면 null */
+  subscriptionTarget: Taster | null;
 
   notificationFeed: NotificationFeed;
   notificationLoading: boolean;
@@ -78,10 +83,16 @@ export type AppData = {
     notify: (notice: AppNotice) => void;
     toggleLike: (placeId: string) => Promise<void>;
     openSubscription: (tasterId: string) => void;
+    closeSubscription: () => void;
     cancelSubscriptionById: (subscriptionId: string) => Promise<void>;
     cancelTasterSubscription: (tasterId: string) => Promise<void>;
     /** 저장된 장소를 돌려줍니다. stayOnScreen이면 새 기록 저장 뒤 상세로 이동하지 않습니다. */
-    register: (place: NewPlace, convertFromPlaceId?: string, visitedConfirmed?: boolean, stayOnScreen?: boolean) => Promise<Place>;
+    register: (
+      place: NewPlace,
+      convertFromPlaceId?: string,
+      visitedConfirmed?: boolean,
+      stayOnScreen?: boolean,
+    ) => Promise<Place>;
     startRecordConversion: (place: Place) => void;
     convertRecordToLike: (place: Place) => Promise<void>;
     refreshCommunity: () => Promise<void>;
@@ -90,8 +101,10 @@ export type AppData = {
     markAllNotificationsRead: () => void;
     deleteNotification: (notificationId: string) => void;
     deleteAllNotifications: () => Promise<void>;
-    requestTag: (input: TagRequestInput) => ReturnType<typeof import("../services/community").createTagRequest>;
-    loadTagRequests: () => ReturnType<typeof import("../services/community").getMyTagRequests>;
+    requestTag: (input: TagRequestInput) => Promise<TagRequest>;
+    loadTagRequests: () => Promise<TagRequest[]>;
+    /** 프로필 설정을 저장하고 화면 상태와 맛객 목록을 새로 맞춘 뒤 완료 안내를 띄웁니다. 실패하면 오류를 던집니다. */
+    saveProfile: (changes: ProfileChanges) => Promise<void>;
     logout: () => void;
   };
 };

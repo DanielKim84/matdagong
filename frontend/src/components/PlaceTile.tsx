@@ -3,15 +3,6 @@ import type { Place } from "../models/place";
 import { FoodPhoto } from "./BrandAssets";
 import Icon from "./Icon";
 
-export function Rating({ count }: { count: number }) {
-  return (
-    <span className="rating">
-      <Icon name="user" />
-      <small>추천한 맛객 {count}명</small>
-    </span>
-  );
-}
-
 /** 모음 화면의 장소 카드: 사진, 이름, 분류·주소, 저장(하트) 버튼. */
 export default function PlaceTile({
   place,

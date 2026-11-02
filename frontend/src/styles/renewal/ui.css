@@ -48,6 +48,48 @@
 .r-topbar--root h1 {
   font-size: 28px;
 }
+/* 떠 있는 상단 바(TopBar variant="float"): 높이 0인 sticky 틀 위에 겹쳐 큰 사진을 밀어내지 않습니다. */
+.r-topbar-float {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 0;
+}
+.r-topbar--float {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  gap: 8px;
+  background: transparent;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.r-topbar-float.is-scrolled .r-topbar--float {
+  background: var(--color-canvas);
+  box-shadow: 0 1px 0 var(--color-line);
+}
+.r-topbar__title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  opacity: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+.r-topbar-float.is-scrolled .r-topbar__title {
+  opacity: 1;
+}
+.r-topbar-float.is-scrolled .r-icon-button--float {
+  box-shadow: none;
+}
 
 /* 아이콘 버튼 */
 .r-icon-button {
@@ -89,8 +131,9 @@
   justify-content: space-between;
   gap: 12px;
 }
+/* 제목이 남는 폭을 차지해 보조 정보·버튼이 오른쪽에 모입니다. */
 .r-section-head h2 {
-  margin: 0;
+  margin: 0 auto 0 0;
   color: var(--color-ink);
   font-family: var(--font-body);
   font-size: 17px;
@@ -106,6 +149,12 @@
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
+}
+.r-section-head__meta {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 .r-label {
   color: var(--color-primary);
@@ -174,6 +223,22 @@
 }
 .r-button:disabled {
   opacity: 0.5;
+}
+/* 글자만 있는 작은 버튼("모두 읽음", "다시 고르기") */
+.r-text-button {
+  min-height: 44px;
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 0 8px;
+  color: var(--color-primary-strong);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-text-button:disabled {
+  color: var(--color-subtle);
+  opacity: 1;
 }
 
 /* ── 칩(선택형)과 태그(표시형) ── */
@@ -376,6 +441,113 @@
   line-height: 1.6;
 }
 
+/* ── 불러오는 중(Skeleton) ── */
+.r-skeleton-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.r-skeleton {
+  display: block;
+  border-radius: var(--radius-md);
+  background: var(--neutral-100);
+  animation: r-pulse 1.3s ease-in-out infinite;
+}
+.r-skeleton--row {
+  height: 64px;
+}
+.r-skeleton--card {
+  height: 120px;
+  border-radius: var(--radius-card);
+}
+.r-skeleton--line {
+  height: 22px;
+}
+@keyframes r-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .r-skeleton {
+    animation: none;
+  }
+}
+
+/* ── 장소 사진 칸(PlaceThumb) ── */
+.r-place-thumb {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--neutral-100);
+}
+.r-place-thumb > img,
+.r-place-thumb > .food-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-place-thumb--icon {
+  background: var(--brand-50);
+  color: var(--brand-400);
+}
+.r-place-thumb--icon .icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* ── 단계 진행 막대(StepProgress) ── */
+.r-step-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.r-step-progress__spacer {
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+.r-step-progress__bar {
+  height: 6px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-150);
+}
+.r-step-progress__bar i {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  transition: width 0.24s ease;
+}
+.r-step-progress__count {
+  min-width: 28px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+}
+@media (prefers-reduced-motion: reduce) {
+  .r-step-progress__bar i,
+  .r-topbar--float,
+  .r-topbar__title {
+    transition: none;
+  }
+}
+
+/* ── 맛다공 캐릭터 그림(MascotArt). 크기는 감싸는 칸이나 className으로 정합니다. ── */
+.r-mascot {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 /* ── 하단 고정 동작 바 ── */
 .r-action-bar {
   position: fixed;
@@ -524,4 +696,236 @@
   width: 18px;
   height: 18px;
   color: var(--color-muted);
+}
+
+/* ── 아래에서 올라오는 시트(Sheet): 크림 시트, 손잡이, 제목 글꼴 20px. 넓은 화면에서는 가운데 카드 ── */
+.r-sheet-backdrop {
+  position: fixed;
+  z-index: 90;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in srgb, var(--shadow-color) 33%, transparent);
+  padding: 0;
+}
+.r-sheet {
+  display: flex;
+  width: min(var(--app-width), 100%);
+  max-width: none;
+  max-height: calc(100dvh - 40px);
+  flex-direction: column;
+  overflow: auto;
+  border: 0;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  outline: 0;
+  background: var(--color-canvas);
+  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 32px color-mix(in srgb, var(--shadow-color) 16%, transparent);
+  animation: r-sheet-in 0.22s ease-out both;
+}
+.r-sheet::before {
+  display: block;
+  width: 40px;
+  height: 5px;
+  flex: none;
+  align-self: center;
+  margin-bottom: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-200);
+  content: "";
+}
+.r-sheet__head {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+/* 영역 시트가 제목 h2를 따로 꾸며도 공통 제목 모양이 이기도록 두 단계로 씁니다. */
+.r-sheet .r-sheet__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.r-sheet__close {
+  margin-right: -6px;
+  background: var(--color-surface);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
+.r-sheet__close .icon {
+  width: 20px;
+  height: 20px;
+}
+@keyframes r-sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@media (min-width: 700px) {
+  .r-sheet-backdrop {
+    align-items: center;
+    padding: 16px;
+  }
+  .r-sheet {
+    max-height: calc(100dvh - 48px);
+    border-radius: var(--radius-sheet);
+    padding-bottom: 24px;
+  }
+}
+
+/* ── 확인창·안내창(NotificationDialog): 가운데 카드, 둥근 아이콘, 아래 버튼 ── */
+.r-dialog-backdrop {
+  position: fixed;
+  z-index: 150;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: color-mix(in srgb, var(--shadow-color) 42%, transparent);
+  padding: 20px;
+  animation: r-dialog-backdrop-in 0.16s ease-out both;
+}
+.r-dialog {
+  --dialog-accent: var(--brand-500);
+  --dialog-soft: var(--brand-50);
+  width: min(100%, 360px);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 0;
+  border-radius: var(--radius-sheet);
+  background: var(--color-surface);
+  padding: 28px 22px 20px;
+  text-align: center;
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--shadow-color) 20%, transparent);
+  animation: r-dialog-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.r-dialog--success {
+  --dialog-soft: var(--neutral-100);
+}
+.r-dialog--warning {
+  --dialog-accent: var(--amber-600);
+  --dialog-soft: var(--neutral-100);
+}
+.r-dialog__icon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: var(--dialog-soft);
+  color: var(--dialog-accent);
+}
+.r-dialog__icon > .icon {
+  width: 26px;
+  height: 26px;
+  stroke-width: 1.9;
+}
+.r-dialog__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+.r-dialog__message {
+  margin: 10px 0 22px;
+  color: var(--color-muted);
+  font-size: 15px;
+  line-height: 1.6;
+  word-break: keep-all;
+  white-space: pre-line;
+}
+.r-dialog__detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: -6px 0 20px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-canvas);
+  padding: 14px 16px;
+  text-align: left;
+}
+.r-dialog__detail > span {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.r-dialog__detail > b {
+  color: var(--color-primary-strong);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.r-dialog__actions {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.8fr) minmax(120px, 1.2fr);
+  gap: 10px;
+}
+.r-dialog__actions.is-alert {
+  grid-template-columns: 1fr;
+}
+.r-dialog__actions > button {
+  min-height: 52px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  transition:
+    transform 0.12s ease,
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+.r-dialog__actions > button:active {
+  transform: scale(0.98);
+}
+.r-dialog__actions > button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand-500) 28%, transparent);
+  outline-offset: 2px;
+}
+.r-dialog__actions > .r-dialog__cancel {
+  border-color: var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+.r-dialog__actions > .r-dialog__accept {
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-dialog__actions > .r-dialog__accept:hover {
+  filter: brightness(0.96);
+}
+@keyframes r-dialog-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes r-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

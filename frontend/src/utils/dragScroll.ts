@@ -16,7 +16,8 @@ function horizontalScroller(target: EventTarget | null): HTMLElement | null {
   while (element && element !== document.body) {
     if (element instanceof HTMLElement) {
       const overflow = getComputedStyle(element).overflowX;
-      if ((overflow === "auto" || overflow === "scroll") && element.scrollWidth > element.clientWidth + 1) return element;
+      if ((overflow === "auto" || overflow === "scroll") && element.scrollWidth > element.clientWidth + 1)
+        return element;
     }
     element = element.parentElement;
   }
@@ -30,7 +31,11 @@ function snapPositions(element: HTMLElement): number[] {
   const box = element.getBoundingClientRect();
   const items = [...element.children].filter((child) => getComputedStyle(child).scrollSnapAlign !== "none");
   const positions = (items.length ? items : [...element.children]).map((child) =>
-    Math.min(max, Math.max(0, Math.round(element.scrollLeft + child.getBoundingClientRect().left - box.left - padding))));
+    Math.min(
+      max,
+      Math.max(0, Math.round(element.scrollLeft + child.getBoundingClientRect().left - box.left - padding)),
+    ),
+  );
   return [...new Set([...positions, max])].sort((left, right) => left - right);
 }
 
@@ -153,13 +158,22 @@ export function installMouseDragScroll() {
 
     if (snaps) {
       const positions = snapPositions(element);
-      const current = positions.reduce((best, position) =>
-        Math.abs(position - startLeft) < Math.abs(best - startLeft) ? position : best, positions[0]);
+      const current = positions.reduce(
+        (best, position) => (Math.abs(position - startLeft) < Math.abs(best - startLeft) ? position : best),
+        positions[0],
+      );
       const index = positions.indexOf(current);
       const dx = event.clientX - startX;
       // 왼쪽으로 끌면(dx < 0) 다음 카드, 오른쪽으로 끌면 이전 카드입니다.
       // 끌기가 취소되면(pointercancel) 좌표를 믿을 수 없으니 가장 가까운 카드로만 돌아갑니다.
-      const direction = event.type === "pointercancel" ? 0 : Math.abs(dx) >= PAGE_DISTANCE || Math.abs(velocity) >= PAGE_VELOCITY ? (dx < 0 ? 1 : -1) : 0;
+      const direction =
+        event.type === "pointercancel"
+          ? 0
+          : Math.abs(dx) >= PAGE_DISTANCE || Math.abs(velocity) >= PAGE_VELOCITY
+            ? dx < 0
+              ? 1
+              : -1
+            : 0;
       const target = positions[Math.min(positions.length - 1, Math.max(0, index + direction))];
       glideTo(element, target);
     } else if (Math.abs(velocity) > 0.05) {

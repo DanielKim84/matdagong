@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import type { Place } from "../../models/place";
-import { loadMapSdk } from "../../services/kakao";
 import Icon from "../../components/Icon";
+import { loadMapSdk } from "../../services/kakao";
+import type { Place } from "../../models/place";
 import { hasCoordinates, type PlacePhoto } from "./placeRecords";
 
 /** 상단 큰 사진. 사진이 없으면 가게 위치 지도를 보여 줍니다. */
-export default function PlaceHero({ place, photos, onOpenPhoto }: {
+export default function PlaceHero({
+  place,
+  photos,
+  onOpenPhoto,
+}: {
   place: Place;
   photos: PlacePhoto[];
   onOpenPhoto: (index: number) => void;
@@ -13,17 +17,22 @@ export default function PlaceHero({ place, photos, onOpenPhoto }: {
   const track = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
 
-  function onScroll() {
+  function syncIndex() {
     const element = track.current;
     if (!element || !element.clientWidth) return;
     setIndex(Math.round(element.scrollLeft / element.clientWidth));
   }
 
-  if (!photos.length) return <div className="r-place-hero r-place-hero--map"><PlaceMap place={place} /></div>;
+  if (!photos.length)
+    return (
+      <div className="r-place-hero r-place-hero--map">
+        <PlaceMap place={place} />
+      </div>
+    );
 
   return (
     <div className="r-place-hero">
-      <div className="r-place-hero__track" ref={track} onScroll={onScroll}>
+      <div className="r-place-hero__track" ref={track} onScroll={syncIndex}>
         {photos.map((photo, photoIndex) => (
           <button
             type="button"
@@ -36,7 +45,11 @@ export default function PlaceHero({ place, photos, onOpenPhoto }: {
           </button>
         ))}
       </div>
-      {photos.length > 1 && <span className="r-place-hero__count" aria-hidden="true">{Math.min(index, photos.length - 1) + 1} / {photos.length}</span>}
+      {photos.length > 1 && (
+        <span className="r-place-hero__count" aria-hidden="true">
+          {Math.min(index, photos.length - 1) + 1} / {photos.length}
+        </span>
+      )}
     </div>
   );
 }
@@ -45,7 +58,7 @@ export default function PlaceHero({ place, photos, onOpenPhoto }: {
 function PlaceMap({ place }: { place: Place }) {
   const element = useRef<HTMLDivElement>(null);
   const { latitude, longitude } = place;
-  const [error, setError] = useState(!hasCoordinates({ latitude, longitude }));
+  const [hasError, setHasError] = useState(!hasCoordinates({ latitude, longitude }));
 
   useEffect(() => {
     if (!hasCoordinates({ latitude, longitude })) return;
@@ -66,14 +79,16 @@ function PlaceMap({ place }: { place: Place }) {
           map.setCenter(center);
         });
       })
-      .catch(() => { if (active) setError(true); });
+      .catch(() => {
+        if (active) setHasError(true);
+      });
     return () => {
       active = false;
       overlay?.setMap(null);
     };
   }, [latitude, longitude]);
 
-  if (error) {
+  if (hasError) {
     return (
       <div className="r-place-hero__placeholder">
         <Icon name="pin" />

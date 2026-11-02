@@ -5,14 +5,6 @@
   flex-direction: column;
   gap: 14px;
 }
-.r-feed-visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
 
 /* ── 스토리 줄 ── */
 .r-feed-stories {
@@ -56,7 +48,7 @@
   height: 58px;
   place-items: center;
   border: 2px dashed var(--neutral-300);
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   color: var(--color-muted);
 }
 .r-feed-story-chip__ring {
@@ -64,7 +56,7 @@
   width: 58px;
   height: 58px;
   place-items: center;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: var(--neutral-200);
   padding: 3px;
 }
@@ -91,7 +83,6 @@
 }
 .r-feed-card {
   overflow: hidden;
-  border-radius: 24px;
 }
 .r-feed-card__head {
   display: flex;
@@ -107,7 +98,7 @@
   align-items: center;
   gap: 10px;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: none;
   padding: 0 6px;
   color: var(--color-ink);
@@ -179,7 +170,7 @@
   gap: 12px;
   margin: 0 14px;
   border: 0;
-  border-radius: 16px;
+  border-radius: var(--radius-control);
   background: var(--color-surface-soft);
   padding: 10px 12px;
   color: var(--color-ink);
@@ -190,8 +181,15 @@
   height: 18px;
   color: var(--color-muted);
 }
-.r-feed-card__place .r-badge-icon {
+.r-feed-card__place .r-place-thumb {
+  width: 44px;
+  height: 44px;
   background: var(--color-surface);
+  color: var(--color-primary);
+}
+.r-feed-card__place .r-place-thumb .icon {
+  width: 20px;
+  height: 20px;
 }
 .r-feed-card__body {
   display: flex;
@@ -255,17 +253,9 @@
   padding: 0;
 }
 
-/* 불러오는 중 */
-.r-feed-skeleton {
+/* 불러오는 중: 기록 카드 높이에 맞춥니다. */
+.r-feed-skeletons .r-skeleton {
   height: 360px;
-  border-radius: 24px;
-  background: linear-gradient(100deg, var(--neutral-100), var(--neutral-50), var(--neutral-100));
-  animation: r-feed-pulse 1.3s infinite;
-}
-@keyframes r-feed-pulse {
-  50% {
-    opacity: 0.55;
-  }
 }
 
 /* 구독 없음 */
@@ -307,23 +297,21 @@
   font-family: var(--font-body);
 }
 .r-feed-story__media,
-.r-feed-story__media img,
-.r-feed-story__blank {
+.r-feed-story__media .r-place-thumb {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
-.r-feed-story__media img {
-  object-fit: cover;
+.r-feed-story__media .r-place-thumb {
+  border-radius: 0;
+  background: none;
 }
-.r-feed-story__blank {
-  display: grid;
-  place-items: center;
+.r-feed-story__media .r-place-thumb--icon {
   background: var(--clay-800);
   color: var(--clay-400);
 }
-.r-feed-story__blank .icon {
+.r-feed-story__media .r-place-thumb--icon .icon {
   width: 72px;
   height: 72px;
 }
@@ -357,7 +345,7 @@
   height: 3px;
   flex: 1;
   overflow: hidden;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   background: color-mix(in srgb, var(--on-strong) 40%, transparent);
 }
 .r-feed-story__bars span.is-done {
@@ -513,21 +501,6 @@
 }
 
 /* ── 알림 ── */
-.r-feed-text-button {
-  min-height: 44px;
-  flex: none;
-  border: 0;
-  background: none;
-  padding: 0 8px;
-  color: var(--color-primary-strong);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 700;
-}
-.r-feed-text-button:disabled {
-  color: var(--color-subtle);
-  opacity: 1;
-}
 .r-feed-noti__body {
   display: flex;
   flex-direction: column;
@@ -539,11 +512,9 @@
   flex-direction: column;
   gap: 8px;
 }
-.r-feed-noti__label {
-  margin: 0;
+.r-feed-noti__label h2 {
   color: var(--color-muted);
   font-size: 13px;
-  font-weight: 800;
 }
 .r-feed-noti__list {
   margin: 0;
@@ -578,7 +549,7 @@
   height: 44px;
   flex: none;
   place-items: center;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: var(--color-primary-soft);
   color: var(--color-primary);
 }
@@ -616,16 +587,13 @@
 .r-feed-noti__thumb {
   width: 48px;
   height: 48px;
-  flex: none;
-  border-radius: 12px;
-  background: var(--neutral-100);
-  object-fit: cover;
+  border-radius: var(--radius-sm);
 }
 .r-feed-noti__dot {
   width: 8px;
   height: 8px;
   flex: none;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: var(--color-primary);
 }
 .r-icon-button.r-feed-noti__delete {
@@ -635,20 +603,13 @@
   width: 18px;
   height: 18px;
 }
-.r-feed-noti__skeleton {
+.r-feed-noti__skeletons {
+  gap: 8px;
+}
+.r-feed-noti__skeletons .r-skeleton {
   height: 68px;
-  border-radius: 18px;
-  background: linear-gradient(100deg, var(--neutral-100), var(--neutral-50), var(--neutral-100));
-  animation: r-feed-pulse 1.3s infinite;
 }
 .r-feed-noti__delete-all {
   align-self: center;
   color: var(--color-muted);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .r-feed-skeleton,
-  .r-feed-noti__skeleton {
-    animation: none;
-  }
 }

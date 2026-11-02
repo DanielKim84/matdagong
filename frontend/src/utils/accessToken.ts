@@ -9,7 +9,7 @@ export function accessTokenClaims(accessToken: string): Record<string, unknown> 
     // 닉네임 같은 한글 클레임도 깨지지 않도록 UTF-8로 해석합니다.
     const json = new TextDecoder().decode(Uint8Array.from(binary, (char) => char.charCodeAt(0)));
     const claims: unknown = JSON.parse(json);
-    return claims && typeof claims === "object" ? claims as Record<string, unknown> : null;
+    return claims && typeof claims === "object" ? (claims as Record<string, unknown>) : null;
   } catch {
     return null;
   }

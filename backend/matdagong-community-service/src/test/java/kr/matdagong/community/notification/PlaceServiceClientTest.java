@@ -35,10 +35,14 @@ class PlaceServiceClientTest {
     void 본인_기록이_있으면_저장된_장소_이름과_공개_여부를_사용한다() {
         server.expect(requestTo("http://place-service/api/v1/places/" + PLACE_ID))
                 .andExpect(header("Authorization", "Bearer user-token"))
-                .andRespond(withSuccess(place("""
+                .andRespond(withSuccess(
+                        place(
+                                """
                         {"tasterId": "33333333-3333-3333-3333-333333333333", "visibility": "PUBLIC"},
                         {"tasterId": "%s", "visibility": "PUBLIC"}
-                        """.formatted(OWNER)), MediaType.APPLICATION_JSON));
+                        """
+                                        .formatted(OWNER)),
+                        MediaType.APPLICATION_JSON));
 
         PlaceServiceClient.RecordedPlace recorded = client.findOwnRecord("user-token", PLACE_ID, OWNER);
 
@@ -49,42 +53,54 @@ class PlaceServiceClientTest {
     @Test
     void 비공개_기록이면_구독자_알림_대상이_아니다() {
         server.expect(requestTo("http://place-service/api/v1/places/" + PLACE_ID))
-                .andRespond(withSuccess(place("""
+                .andRespond(withSuccess(
+                        place(
+                                """
                         {"tasterId": "%s", "visibility": "PRIVATE"}
-                        """.formatted(OWNER)), MediaType.APPLICATION_JSON));
+                        """
+                                        .formatted(OWNER)),
+                        MediaType.APPLICATION_JSON));
 
-        assertThat(client.findOwnRecord("user-token", PLACE_ID, OWNER).publicRecord()).isFalse();
+        assertThat(client.findOwnRecord("user-token", PLACE_ID, OWNER).publicRecord())
+                .isFalse();
     }
 
     @Test
     void 다른_맛객의_기록만_있으면_알림을_만들지_않는다() {
         server.expect(requestTo("http://place-service/api/v1/places/" + PLACE_ID))
-                .andRespond(withSuccess(place("""
+                .andRespond(withSuccess(
+                        place(
+                                """
                         {"tasterId": "33333333-3333-3333-3333-333333333333", "visibility": "PUBLIC"}
-                        """), MediaType.APPLICATION_JSON));
+                        """),
+                        MediaType.APPLICATION_JSON));
 
         assertStatus(() -> client.findOwnRecord("user-token", PLACE_ID, OWNER), HttpStatus.NOT_FOUND);
     }
 
     @Test
     void 장소가_없으면_404_장소_서비스_장애면_503으로_알린다() {
-        server.expect(requestTo("http://place-service/api/v1/places/" + PLACE_ID)).andRespond(withResourceNotFound());
+        server.expect(requestTo("http://place-service/api/v1/places/" + PLACE_ID))
+                .andRespond(withResourceNotFound());
         assertStatus(() -> client.findOwnRecord("user-token", PLACE_ID, OWNER), HttpStatus.NOT_FOUND);
 
         server.reset();
-        server.expect(requestTo("http://place-service/api/v1/places/" + PLACE_ID)).andRespond(withServerError());
+        server.expect(requestTo("http://place-service/api/v1/places/" + PLACE_ID))
+                .andRespond(withServerError());
         assertStatus(() -> client.findOwnRecord("user-token", PLACE_ID, OWNER), HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     private static String place(String tasters) {
         return """
                 {"id": "%s", "name": "저장된 가게", "category": "한식", "tasters": [%s]}
-                """.formatted(PLACE_ID, tasters);
+                """
+                .formatted(PLACE_ID, tasters);
     }
 
     private static void assertStatus(Runnable call, HttpStatus status) {
         assertThatThrownBy(call::run)
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(exception -> assertThat(((ResponseStatusException) exception).getStatusCode()).isEqualTo(status));
+                .satisfies(exception -> assertThat(((ResponseStatusException) exception).getStatusCode())
+                        .isEqualTo(status));
     }
 }

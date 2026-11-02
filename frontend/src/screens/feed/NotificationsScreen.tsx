@@ -3,27 +3,27 @@ import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon, { type IconName } from "../../components/Icon";
 import { useNotificationDialog } from "../../components/NotificationDialog";
-import { TopBar, relativeTime } from "../../components/ui";
-import type { Place } from "../../models/place";
-import type { UserNotification } from "../../services/community";
+import PlaceThumb from "../../components/PlaceThumb";
+import { EmptyState, SectionHead, Skeleton, TopBar } from "../../components/ui";
+import type { UserNotification } from "../../models/community";
+import { placePhoto, type Place } from "../../models/place";
+import { DAY_MS, formatRelativeTime, parseTime } from "../../utils/format";
 
-type Group = { label: string; items: UserNotification[] };
-
-const DAY_MS = 24 * 60 * 60 * 1000;
+type NotificationGroup = { label: string; items: UserNotification[] };
 
 /** 오늘 / 이번 주 / 이전 으로 묶습니다. 서버가 준 순서는 그대로 둡니다. */
-function groupByDate(items: UserNotification[]): Group[] {
+function groupByDate(items: UserNotification[]): NotificationGroup[] {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
   const today = startOfToday.getTime();
-  const groups: Group[] = [
+  const groups: NotificationGroup[] = [
     { label: "오늘", items: [] },
     { label: "이번 주", items: [] },
     { label: "이전", items: [] },
   ];
   for (const item of items) {
-    const time = new Date(item.createdAt).getTime();
-    if (Number.isNaN(time) || time < today - 6 * DAY_MS) groups[2].items.push(item);
+    const time = parseTime(item.createdAt);
+    if (time === null || time < today - 6 * DAY_MS) groups[2].items.push(item);
     else if (time >= today) groups[0].items.push(item);
     else groups[1].items.push(item);
   }
@@ -31,7 +31,7 @@ function groupByDate(items: UserNotification[]): Group[] {
 }
 
 /** 알림 종류별 아이콘과 바탕색 */
-function kindOf(item: UserNotification): { icon: IconName; tone: "brand" | "amber" } {
+function describeKind(item: UserNotification): { icon: IconName; tone: "brand" | "amber" } {
   if (item.notificationType === "NEW_SUBSCRIBER") return { icon: "user", tone: "brand" };
   if (item.notificationType === "SYSTEM_NOTICE") return { icon: "bell", tone: "amber" };
   if (item.notificationType === "PLACE_RECORD_CREATED") return { icon: "pin", tone: "brand" };
@@ -39,7 +39,7 @@ function kindOf(item: UserNotification): { icon: IconName; tone: "brand" | "ambe
 }
 
 /** 예전 알림 화면과 같은 이동 규칙: 장소 알림은 맛집 상세, 구독자 알림은 나 탭. */
-function targetOf(item: UserNotification): (() => void) | null {
+function resolveTarget(item: UserNotification): (() => void) | null {
   if (item.targetType === "PLACE" && item.targetId) {
     const id = item.targetId;
     return () => go("place", id);
@@ -59,18 +59,19 @@ export default function NotificationsScreen() {
   // 장소 알림에는 그 장소의 기록 사진을 작게 붙입니다.
   const placeById = useMemo(() => {
     const map = new Map<string, Place>();
-    for (const place of [...app.places, ...app.myRecords, ...app.privatePlaces]) if (!map.has(place.id)) map.set(place.id, place);
+    for (const place of [...app.places, ...app.myRecords, ...app.privatePlaces])
+      if (!map.has(place.id)) map.set(place.id, place);
     return map;
   }, [app.places, app.myRecords, app.privatePlaces]);
 
   async function remove(item: UserNotification) {
-    const accepted = await confirm({
+    const isAccepted = await confirm({
       title: "알림을 삭제할까요?",
       message: "삭제한 알림은 알림 목록에서 사라져요.",
       tone: "danger",
       confirmLabel: "삭제하기",
     });
-    if (accepted) actions.deleteNotification(item.notificationId);
+    if (isAccepted) actions.deleteNotification(item.notificationId);
   }
 
   return (
@@ -78,66 +79,87 @@ export default function NotificationsScreen() {
       <TopBar
         title="알림"
         fallback="feed"
-        right={items.length > 0 ? (
-          <button type="button" className="r-feed-text-button" onClick={actions.markAllNotificationsRead} disabled={unreadCount === 0}>
-            모두 읽음
-          </button>
-        ) : undefined}
+        right={
+          items.length > 0 ? (
+            <button
+              type="button"
+              className="r-text-button"
+              onClick={actions.markAllNotificationsRead}
+              disabled={unreadCount === 0}
+            >
+              모두 읽음
+            </button>
+          ) : undefined
+        }
       />
 
       <div className="r-feed-noti__body">
         {notificationLoading ? (
-          <div className="r-feed-noti__group" role="status" aria-label="알림을 불러오고 있어요">
-            {[0, 1, 2].map((index) => <div className="r-feed-noti__skeleton" key={index} aria-hidden="true" />)}
-          </div>
+          <Skeleton count={3} label="알림을 불러오고 있어요." className="r-feed-noti__skeletons" />
         ) : notificationError ? (
-          <div className="r-empty">
-            <span className="r-badge-icon"><Icon name="bell" /></span>
-            <b>알림을 불러오지 못했어요</b>
-            <p>{notificationError}</p>
-            <button type="button" className="r-button r-button--secondary r-button--pill" onClick={() => void actions.refreshNotifications(true)}>
-              다시 불러오기
-            </button>
-          </div>
+          <EmptyState
+            icon="bell"
+            tone="error"
+            title="알림을 불러오지 못했어요"
+            message={notificationError}
+            action={{ label: "다시 불러오기", onClick: () => void actions.refreshNotifications(true) }}
+          />
         ) : items.length === 0 ? (
-          <div className="r-empty">
-            <span className="r-badge-icon"><Icon name="bell" /></span>
-            <b>새로운 알림이 없어요</b>
-            <p>구독한 맛객의 새 기록과 구독 소식을<br />이곳에서 알려 드릴게요.</p>
-          </div>
+          <EmptyState
+            icon="bell"
+            title="새로운 알림이 없어요"
+            message={
+              <>
+                구독한 맛객의 새 기록과 구독 소식을
+                <br />
+                이곳에서 알려 드릴게요.
+              </>
+            }
+          />
         ) : (
           <>
             {groups.map((group) => (
               <section className="r-feed-noti__group" key={group.label} aria-label={group.label}>
-                <h2 className="r-feed-noti__label">{group.label}</h2>
+                <SectionHead title={group.label} className="r-feed-noti__label" />
                 <ul className="r-card r-feed-noti__list">
                   {group.items.map((item) => {
-                    const kind = kindOf(item);
-                    const open = targetOf(item);
-                    const unread = !item.readAt;
-                    const place = item.targetType === "PLACE" && item.targetId ? placeById.get(item.targetId) : undefined;
-                    const photo = place?.tasters.find((taster) => taster.photos?.length)?.photos?.[0];
+                    const kind = describeKind(item);
+                    const openTarget = resolveTarget(item);
+                    const isUnread = !item.readAt;
+                    const place =
+                      item.targetType === "PLACE" && item.targetId ? placeById.get(item.targetId) : undefined;
+                    const photo = place && placePhoto(place);
                     return (
-                      <li className={`r-feed-noti__item${unread ? " is-unread" : " is-read"}`} key={item.notificationId}>
+                      <li
+                        className={`r-feed-noti__item${isUnread ? " is-unread" : " is-read"}`}
+                        key={item.notificationId}
+                      >
                         <button
                           type="button"
                           className="r-feed-noti__open"
-                          aria-label={`${unread ? "읽지 않음, " : ""}${item.title}. ${item.message}${open ? ", 내용 보기" : ""}`}
+                          aria-label={`${isUnread ? "읽지 않음, " : ""}${item.title}. ${item.message}${openTarget ? ", 내용 보기" : ""}`}
                           onClick={() => {
                             actions.markNotificationRead(item);
-                            open?.();
+                            openTarget?.();
                           }}
                         >
-                          <span className={`r-feed-noti__icon is-${kind.tone}`}><Icon name={kind.icon} /></span>
+                          <span className={`r-feed-noti__icon is-${kind.tone}`}>
+                            <Icon name={kind.icon} />
+                          </span>
                           <span className="r-feed-noti__copy">
                             <b>{item.title}</b>
                             {item.message && <span>{item.message}</span>}
-                            <time dateTime={item.createdAt}>{relativeTime(item.createdAt)}</time>
+                            <time dateTime={item.createdAt}>{formatRelativeTime(item.createdAt)}</time>
                           </span>
-                          {photo && <img className="r-feed-noti__thumb" src={photo} alt="" loading="lazy" decoding="async" />}
-                          {unread && <i className="r-feed-noti__dot" aria-hidden="true" />}
+                          {place && photo && <PlaceThumb place={place} photo={photo} className="r-feed-noti__thumb" />}
+                          {isUnread && <i className="r-feed-noti__dot" aria-hidden="true" />}
                         </button>
-                        <button type="button" className="r-icon-button r-feed-noti__delete" aria-label={`${item.title} 알림 삭제`} onClick={() => void remove(item)}>
+                        <button
+                          type="button"
+                          className="r-icon-button r-feed-noti__delete"
+                          aria-label={`${item.title} 알림 삭제`}
+                          onClick={() => void remove(item)}
+                        >
                           <Icon name="close" />
                         </button>
                       </li>
@@ -146,7 +168,12 @@ export default function NotificationsScreen() {
                 </ul>
               </section>
             ))}
-            <button type="button" className="r-feed-text-button r-feed-noti__delete-all" onClick={() => void actions.deleteAllNotifications()}>
+            {/* 확인 창은 actions.deleteAllNotifications가 띄웁니다(App). */}
+            <button
+              type="button"
+              className="r-text-button r-feed-noti__delete-all"
+              onClick={() => void actions.deleteAllNotifications()}
+            >
               알림 모두 삭제
             </button>
           </>

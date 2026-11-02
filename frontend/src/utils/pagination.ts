@@ -5,3 +5,8 @@ export function visiblePageIndices(activeIndex: number, total: number, maxVisibl
   const start = Math.max(0, Math.min(activeIndex - Math.floor(count / 2), total - count));
   return Array.from({ length: count }, (_, offset) => start + offset);
 }
+
+/** 마지막 다음은 처음으로, 처음 이전은 마지막으로 돌아가는 슬라이드 번호입니다. */
+export function wrapIndex(index: number, step: number, total: number): number {
+  return (index + step + total) % total;
+}

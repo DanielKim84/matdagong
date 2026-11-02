@@ -1,12 +1,25 @@
-import { DEFAULT_THEME_ID, THEME_SCHEDULE, findTheme, type ThemeDefinition, type ThemeSchedule } from "./themes";
+import { STORAGE_KEYS, readStorage, removeStorage, writeStorage } from "../utils/storage";
+import {
+  DEFAULT_THEME_ID,
+  THEMES,
+  THEME_SCHEDULE,
+  findTheme,
+  type ThemeDefinition,
+  type ThemeSchedule,
+} from "./themes";
 
 const PREVIEW_PARAM = "theme";
-const PREVIEW_STORAGE_KEY = "matdagong.theme.preview";
+const PREVIEW_STORAGE_KEY = STORAGE_KEYS.themePreview;
 const FONT_LINK_ID = "matdagong-theme-font";
 
 /** 한국 시간 기준 날짜(YYYY-MM-DD)입니다. 테마 기간은 서비스 지역 날짜로 판단합니다. */
 function koreanDate(now: Date): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
 }
 
 export function scheduledTheme(now: Date, schedule: readonly ThemeSchedule[] = THEME_SCHEDULE): string | undefined {
@@ -19,24 +32,18 @@ export function scheduledTheme(now: Date, schedule: readonly ThemeSchedule[] = T
  * `?theme=auto`는 미리 보기를 지웁니다.
  */
 function previewTheme(): string | undefined {
-  try {
-    const requested = new URLSearchParams(window.location.search).get(PREVIEW_PARAM);
-    if (requested === "auto") sessionStorage.removeItem(PREVIEW_STORAGE_KEY);
-    else if (findTheme(requested)) sessionStorage.setItem(PREVIEW_STORAGE_KEY, requested!);
-    return findTheme(sessionStorage.getItem(PREVIEW_STORAGE_KEY))?.id;
-  } catch {
-    return undefined;
-  }
+  const requested = new URLSearchParams(window.location.search).get(PREVIEW_PARAM);
+  const requestedTheme = findTheme(requested);
+  if (requested === "auto") removeStorage(PREVIEW_STORAGE_KEY, "session");
+  else if (requestedTheme) writeStorage(PREVIEW_STORAGE_KEY, requestedTheme.id, "session");
+  return findTheme(readStorage(PREVIEW_STORAGE_KEY, "session"))?.id;
 }
 
 /** 미리 보기 → 배포 설정(VITE_APP_THEME) → 기간 예약 → 기본 테마 순서로 적용할 테마를 고릅니다. */
 export function resolveTheme(now = new Date()): ThemeDefinition {
-  const id =
-    previewTheme() ??
-    findTheme(import.meta.env.VITE_APP_THEME)?.id ??
-    scheduledTheme(now) ??
-    DEFAULT_THEME_ID;
-  return findTheme(id) ?? findTheme(DEFAULT_THEME_ID)!;
+  const id = previewTheme() ?? findTheme(import.meta.env.VITE_APP_THEME)?.id ?? scheduledTheme(now) ?? DEFAULT_THEME_ID;
+  // 기본 테마는 THEMES 맨 앞에 항상 등록되어 있습니다.
+  return findTheme(id) ?? THEMES[0];
 }
 
 export function applyTheme(theme: ThemeDefinition = resolveTheme()): void {
@@ -45,7 +52,8 @@ export function applyTheme(theme: ThemeDefinition = resolveTheme()): void {
 
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme.themeColor);
 
-  const existing = document.getElementById(FONT_LINK_ID) as HTMLLinkElement | null;
+  const found = document.getElementById(FONT_LINK_ID);
+  const existing = found instanceof HTMLLinkElement ? found : null;
   if (!theme.fontStylesheet) {
     existing?.remove();
     return;

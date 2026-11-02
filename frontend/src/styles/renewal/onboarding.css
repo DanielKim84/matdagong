@@ -17,14 +17,8 @@
   #root > .r-onboarding {
     min-height: calc(100dvh - 32px);
     border: 1px solid var(--neutral-300);
-    border-radius: 23px;
+    border-radius: var(--radius-card);
   }
-}
-
-.r-onboarding-mascot {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 
 .r-onboarding-skip {
@@ -81,6 +75,7 @@
   right: 0;
   left: 0;
   height: min(56%, 470px);
+  /* 배경 곡선은 부품 반경이 아니라 장식이라 토큰 대신 시안 값을 씁니다. */
   border-radius: 0 0 48px 48px;
   background: var(--brand-100);
 }
@@ -121,9 +116,11 @@
 .r-onboarding-dots span {
   width: 8px;
   height: 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-pill);
   background: var(--neutral-200);
-  transition: width 200ms ease, background 200ms ease;
+  transition:
+    width 200ms ease,
+    background 200ms ease;
 }
 .r-onboarding-dots span.is-on {
   width: 24px;
@@ -180,38 +177,15 @@
   line-height: 1.5;
 }
 
-/* 진행 막대 */
-.r-onboarding-progress {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.r-onboarding-progress__back {
+/* 진행 막대(StepProgress): 가입 화면은 이전 버튼을 왼쪽 여백 쪽으로 붙이고, 버튼이 없을 때 빈 자리도 그만큼 줄입니다. */
+.r-onboarding-progress .r-step-progress__back {
   margin-left: -12px;
 }
-.r-onboarding-progress__spacer {
+.r-onboarding-progress .r-step-progress__spacer {
   width: 32px;
-  height: 44px;
-  flex: none;
 }
-.r-onboarding-progress__bar {
-  height: 6px;
-  flex: 1;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--neutral-150);
-}
-.r-onboarding-progress__bar i {
-  display: block;
-  height: 100%;
-  border-radius: 3px;
-  background: var(--color-primary);
-  transition: width 240ms ease;
-}
-.r-onboarding-progress__count {
-  color: var(--color-muted);
-  font-size: 13px;
-  font-weight: 700;
+.r-onboarding-progress .r-step-progress__count {
+  min-width: 0;
 }
 
 /* 닉네임 입력 */
@@ -289,7 +263,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  border-radius: 18px;
+  border-radius: var(--radius-control);
   background: var(--color-surface);
   padding: 14px 16px;
 }
@@ -326,9 +300,11 @@
 .r-onboarding-match__head .r-onboarding-skip {
   margin-top: -10px;
 }
+/* EmptyState는 그림(children)을 문구 아래에 두므로 순서만 위로 올립니다. */
 .r-onboarding-empty-art {
   width: 120px;
   height: 120px;
+  order: -1;
 }
 
 .r-onboarding-match__stack {
@@ -341,7 +317,7 @@
   right: 18px;
   bottom: -8px;
   left: 18px;
-  border-radius: 28px;
+  border-radius: var(--radius-sheet);
   background: var(--color-surface);
   box-shadow: 0 6px 18px color-mix(in srgb, var(--shadow-color) 8%, transparent);
   transform: rotate(3deg);
@@ -349,7 +325,7 @@
 .r-onboarding-match__card {
   position: relative;
   overflow: hidden;
-  border-radius: 28px;
+  border-radius: var(--radius-sheet);
   background: var(--color-surface);
   box-shadow: 0 12px 28px color-mix(in srgb, var(--shadow-color) 16%, transparent);
   animation: r-onboarding-in 260ms ease-out;
@@ -427,7 +403,7 @@
 .r-onboarding-match__photos img {
   width: 100%;
   height: 64px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--neutral-100);
   object-fit: cover;
 }
@@ -441,7 +417,7 @@
   width: 64px;
   min-height: 64px;
   flex: none;
-  border-radius: 32px;
+  border-radius: var(--radius-pill);
   padding: 0;
 }
 .r-onboarding-match__pass .icon {
@@ -451,5 +427,5 @@
 .r-onboarding-match__subscribe {
   min-height: 64px;
   flex: 1;
-  border-radius: 32px;
+  border-radius: var(--radius-pill);
 }

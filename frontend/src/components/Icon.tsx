@@ -29,7 +29,7 @@ export type IconName =
   | "map"
   | "phone"
   | "more";
-const shapes: Record<IconName, string> = {
+const ICON_SHAPES: Record<IconName, string> = {
   home: "m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9",
   search: "M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0m-2 6 5 5",
   plus: "M12 3v18M3 12h18",
@@ -38,15 +38,13 @@ const shapes: Record<IconName, string> = {
   back: "m15 4-8 8 8 8",
   close: "m6 6 12 12M6 18 18 6",
   chevron: "m9 5 7 7-7 7",
-  heart:
-    "M20.8 8.8c0 5.2-8.8 11.2-8.8 11.2S3.2 14 3.2 8.8A4.6 4.6 0 0 1 12 6.5a4.6 4.6 0 0 1 8.8 2.3Z",
+  heart: "M20.8 8.8c0 5.2-8.8 11.2-8.8 11.2S3.2 14 3.2 8.8A4.6 4.6 0 0 1 12 6.5a4.6 4.6 0 0 1 8.8 2.3Z",
   bookmark: "M6 3h12v19l-6-4-6 4V3Z",
   share: "M12 15V2m-4 4 4-4 4 4M7 10H4v12h16V10h-3",
   pin: "M20 9c0 6-8 13-8 13S4 15 4 9a8 8 0 1 1 16 0ZM15 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
   clock: "M12 7v5l4 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
   star: "m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z",
-  settings:
-    "m9 3-1 3-3 1-2 4 2 2v4l3 1 2 3h4l2-3 3-1v-4l2-2-2-4-3-1-1-3H9ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
+  settings: "m9 3-1 3-3 1-2 4 2 2v4l3 1 2 3h4l2-3 3-1v-4l2-2-2-4-3-1-1-3H9ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
   list: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
   filter: "M4 6h16M4 18h16M8 3v6M16 15v6",
   locate: "M12 1v5M12 18v5M1 12h5M18 12h5M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0",
@@ -58,19 +56,15 @@ const shapes: Record<IconName, string> = {
   message: "M3 3h18v14H9l-6 5V3Z",
   image: "M3 3h18v18H3V3Zm0 13 6-7 6 8 3-4 3 3M17 6h.01",
   route: "m4 4 17 7-8 3-3 8L4 4Z",
-  sparkle: "m12 2 1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7L12 2Zm7 13 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z",
+  sparkle:
+    "m12 2 1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7L12 2Zm7 13 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z",
   map: "M3 6.5 9 3l6 3 6-3v14.5L15 21l-6-3-6 3V6.5ZM9 3v15m6-12v15",
-  phone: "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.4 2.8a2 2 0 0 1-.6 1.7L7.6 9.5a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 1.7-.6l2.8.4a2 2 0 0 1 1.7 1.9Z",
+  phone:
+    "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.4 2.8a2 2 0 0 1-.6 1.7L7.6 9.5a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 1.7-.6l2.8.4a2 2 0 0 1 1.7 1.9Z",
   more: "M5 12h.01M12 12h.01M19 12h.01",
 };
 
-export default function Icon({
-  name,
-  filled = false,
-}: {
-  name: IconName;
-  filled?: boolean;
-}) {
+export default function Icon({ name, filled = false }: { name: IconName; filled?: boolean }) {
   return (
     <svg
       className="icon"
@@ -82,7 +76,7 @@ export default function Icon({
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d={shapes[name]} />
+      <path d={ICON_SHAPES[name]} />
     </svg>
   );
 }

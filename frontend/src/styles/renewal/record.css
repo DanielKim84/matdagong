@@ -16,25 +16,8 @@
   background: var(--color-canvas);
   padding: 8px 20px 8px 8px;
 }
-.r-record-progress {
-  height: 6px;
+.r-record-head__progress {
   flex: 1;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--neutral-150);
-}
-.r-record-progress > div {
-  height: 100%;
-  border-radius: 3px;
-  background: var(--color-primary);
-  transition: width 0.25s ease;
-}
-.r-record-progress__count {
-  min-width: 28px;
-  color: var(--color-muted);
-  font-size: 13px;
-  font-weight: 700;
-  text-align: right;
 }
 .r-record-body {
   display: flex;
@@ -84,8 +67,7 @@
   font-size: 15px;
   font-weight: 800;
 }
-.r-record-field-head small {
-  color: var(--color-muted);
+.r-record-field-head .r-section-head__meta {
   font-size: 12px;
   font-weight: 700;
 }
@@ -102,17 +84,12 @@
   padding: 12px 14px;
   color: var(--amber-800);
 }
-.r-record-text-button {
+/* 공용 글자 버튼을 기록 화면의 세로 칸 안에서 왼쪽 정렬·좁은 여백으로 씁니다. */
+.r-record .r-text-button {
   align-self: flex-start;
-  min-height: 44px;
-  flex: none;
-  border: 0;
-  background: none;
   padding: 0 4px;
-  color: var(--color-primary-strong);
-  font-size: 13px;
-  font-weight: 700;
 }
+/* 빠른 기록 시트(components/QuickPlaceSheet)가 아직 쓰는 이름입니다. 그쪽이 .r-text-button으로 바뀌면 지웁니다. */
 .r-record-error {
   margin: 0;
   border-radius: var(--radius-control);
@@ -163,7 +140,7 @@
   height: 40px;
   flex: none;
   place-items: center;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--brand-50);
   color: var(--color-primary);
   object-fit: cover;
@@ -228,7 +205,7 @@
 .r-record-search__submit {
   min-height: 44px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--color-ink);
   padding: 0 14px;
   color: var(--on-strong);
@@ -294,7 +271,7 @@
   min-width: 26px;
   height: 26px;
   place-items: center;
-  border-radius: 13px;
+  border-radius: var(--radius-pill);
   background: var(--color-primary);
   padding: 0 8px;
   color: var(--on-strong);
@@ -330,7 +307,7 @@
   flex: 1;
   padding: 8px 0;
 }
-.r-record-location .r-record-text-button {
+.r-record-location .r-text-button {
   align-self: center;
 }
 .r-record-picked {
@@ -365,7 +342,7 @@
   margin-top: 4px;
   white-space: normal;
 }
-.r-record-picked .r-record-text-button {
+.r-record-picked .r-text-button {
   align-self: center;
 }
 
@@ -380,7 +357,7 @@
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: var(--radius-control);
 }
 .r-record-photo-add {
   display: flex;
@@ -448,7 +425,7 @@
 .r-record-photo__remove .icon {
   width: 26px;
   height: 26px;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--neutral-900) 60%, transparent);
   padding: 5px;
 }
@@ -476,7 +453,7 @@
   justify-content: center;
   gap: 2px;
   overflow: hidden;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--neutral-100);
   color: var(--color-muted);
   cursor: pointer;
@@ -514,7 +491,7 @@
 .r-record-dish__photo-remove .icon {
   width: 22px;
   height: 22px;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--neutral-900) 60%, transparent);
   padding: 4px;
 }
@@ -565,7 +542,7 @@
   align-items: center;
   gap: 8px;
   border: 1px dashed var(--neutral-300);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: none;
   padding: 0 16px;
   color: var(--neutral-700);
@@ -647,15 +624,12 @@
   font-weight: 600;
   white-space: nowrap;
 }
-.r-record-tags .taste-tag-picker .taste-tag-group .taste-tag-options button.selected {
+.r-record-tags .taste-tag-picker .taste-tag-group .taste-tag-options button.is-selected {
   border-color: var(--color-ink);
   background: var(--color-ink);
   color: var(--on-strong);
 }
 .r-record-tags .taste-tag-picker .taste-tag-options .taste-tag-label > i {
-  display: none;
-}
-.r-record-tags .taste-tag-picker .taste-tag-check {
   display: none;
 }
 .r-record-tags .taste-tag-picker .taste-tag-options button:disabled {
@@ -788,7 +762,7 @@
   flex: none;
   place-items: center;
   border: 2px solid var(--neutral-200);
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   color: transparent;
 }
 .r-record-option__mark .icon {
@@ -882,7 +856,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.r-record-summary__row .r-record-text-button {
+.r-record-summary__row .r-text-button {
   align-self: center;
 }
 

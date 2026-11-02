@@ -1,243 +1,583 @@
-.screen-content:has(> .profile-settings) { display: flex; min-height: 100dvh; flex-direction: column; }
-.screen-content:has(> .profile-settings) > .screen-header { flex: none; }
-.profile-settings { display: flex; flex: 1; min-height: calc(100dvh - 54px); flex-direction: column; padding-bottom: 0; }
-.profile-settings > form { display: flex; flex: 1; flex-direction: column; }
-.settings-view-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  margin: 16px 20px;
-  border-radius: 14px;
-  background: var(--neutral-100);
-  padding: 4px;
-}
-.settings-view-switch button {
+/*
+ * 프로필 편집 화면과 태그 고르기·태그 제안의 뼈대(배치·위치)입니다.
+ * 색·크기·반경 같은 겉모양은 a/forms.css가 정합니다. 그 파일은 design-system.css 뒤에 불러와야 이기므로
+ * 같은 속성을 여기 다시 쓰지 않습니다.
+ */
+.screen-content:has(> .profile-settings) {
   display: flex;
-  min-height: 42px;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  border: 0;
-  border-radius: 11px;
-  background: transparent;
-  color: var(--neutral-500);
-  font-size: 13px;
-  font-weight: 600;
+  min-height: 100dvh;
+  flex-direction: column;
 }
-.settings-view-switch button[aria-pressed="true"] {
-  background: white;
-  color: var(--neutral-700);
-  box-shadow: 0 2px 5px color-mix(in srgb, var(--shadow-color) 4%, transparent);
+.profile-settings {
+  display: flex;
+  flex: 1;
+  min-height: calc(100dvh - 54px);
+  flex-direction: column;
+  padding-bottom: 0;
 }
-.settings-view-switch .icon { width: 17px; height: 17px; }
-.settings-view-switch button[aria-pressed="true"] .icon { color: var(--brand-400); }
-.settings-panel[hidden] { display: none; }
+.profile-settings > form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.settings-panel[hidden] {
+  display: none;
+}
+.profile-settings > form > .settings-panel:not([hidden]) {
+  margin-bottom: 12px;
+}
+
+/* 배경 사진 */
 .profile-edit-cover {
   position: relative;
-  height: 210px;
   overflow: hidden;
   margin: 0 20px;
-  border-radius: 16px;
   background: var(--neutral-150);
+  touch-action: pan-y;
 }
-.profile-edit-cover-track { position:absolute;inset:0;display:flex;width:100%;height:100%;transition:transform .35s cubic-bezier(.22,.7,.25,1);will-change:transform; }
-.profile-edit-cover-track > img { width:100%;height:100%;flex:0 0 100%;object-fit:cover; }
+.profile-edit-cover-track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.35s cubic-bezier(0.22, 0.7, 0.25, 1);
+  will-change: transform;
+}
+.profile-edit-cover-track > img {
+  width: 100%;
+  height: 100%;
+  flex: 0 0 100%;
+  object-fit: cover;
+}
 .profile-edit-cover::after {
-  position: absolute; inset: 45% 0 0;
+  position: absolute;
+  inset: 45% 0 0;
   background: linear-gradient(transparent, color-mix(in srgb, var(--shadow-color) 40%, transparent));
-  content: ""; pointer-events: none;
+  content: "";
+  pointer-events: none;
 }
 .profile-edit-cover > button {
-  position: absolute; right: 12px; bottom: 12px; z-index: 1;
-  display: flex; align-items: center; gap: 5px;
-  border: 1px solid color-mix(in srgb, var(--neutral-0) 40%, transparent); border-radius: 18px;
-  background: color-mix(in srgb, var(--shadow-color) 42%, transparent); padding: 8px 11px;
-  color: white; font-size: 11px; backdrop-filter: blur(8px);
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
 }
-.profile-edit-cover > button .icon { width: 14px; height: 14px; }
-.profile-edit-cover > .profile-default-cover-badge { position:absolute;z-index:1;left:12px;bottom:12px;border:1px solid color-mix(in srgb, var(--neutral-0) 44%, transparent);border-radius:18px;background:color-mix(in srgb, var(--shadow-color) 42%, transparent);padding:8px 11px;color:var(--on-strong);font-size:11px;backdrop-filter:blur(8px); }
-.profile-edit-cover > .profile-primary-cover-badge { position:absolute;z-index:1;left:12px;bottom:12px;border:1px solid color-mix(in srgb, var(--neutral-0) 40%, transparent);border-radius:18px;background:color-mix(in srgb, var(--shadow-color) 42%, transparent);padding:8px 11px;color:var(--on-strong);font-size:11px;font-weight:600;backdrop-filter:blur(8px); }
-.profile-edit-cover { touch-action:pan-y; }
-.profile-edit-cover-thumbnails { display:flex;gap:9px;overflow-x:auto;margin:9px 20px 0;padding:2px 1px 5px;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain; }
-.profile-edit-cover-thumbnails::-webkit-scrollbar { display:none; }
-.profile-edit-cover-thumbnail { position:relative;width:82px;height:68px;flex:none; }
-.profile-edit-cover-thumbnail-preview { display:block;width:100%;height:100%;overflow:hidden;border:1px solid var(--brand-200);border-radius:9px;background:var(--neutral-100);padding:0; }
-.profile-edit-cover-thumbnail-preview.active { border:2px solid var(--brand-500);box-shadow:0 0 0 2px var(--brand-100); }
-.profile-edit-cover-thumbnails img { display:block;width:100%;height:100%;object-fit:cover; }
-.profile-edit-cover-thumbnail-delete { position:absolute;top:4px;right:4px;display:grid;width:24px;height:24px;place-items:center;border:1px solid var(--neutral-0);border-radius:50%;background:var(--neutral-25);color:var(--brand-600);padding:0;box-shadow:0 1px 4px color-mix(in srgb, var(--shadow-color) 33%, transparent); }
-.profile-edit-cover-thumbnail-delete .icon { width:14px;height:14px; }
-.profile-edit-form { padding: 0 20px; }
+.profile-edit-cover > .profile-default-cover-badge,
+.profile-edit-cover > .profile-primary-cover-badge {
+  position: absolute;
+  z-index: 1;
+  left: 12px;
+  bottom: 12px;
+  background: color-mix(in srgb, var(--shadow-color) 42%, transparent);
+  color: var(--on-strong);
+  backdrop-filter: blur(8px);
+}
+.profile-cover-count {
+  position: absolute;
+  background: color-mix(in srgb, var(--shadow-color) 44%, transparent);
+  color: var(--on-strong);
+}
+.profile-edit-cover-thumbnails {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+}
+.profile-edit-cover-thumbnails::-webkit-scrollbar {
+  display: none;
+}
+.profile-edit-cover-thumbnail {
+  position: relative;
+  flex: none;
+}
+.profile-edit-cover-thumbnail-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+}
+.profile-edit-cover-thumbnails img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-edit-cover-thumbnail-delete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  padding: 0;
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--shadow-color) 33%, transparent);
+}
+.profile-edit-cover-thumbnail-delete .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* 프로필 사진·입력 칸 */
+.profile-edit-form {
+  padding: 0 20px;
+}
 .profile-edit-avatar-section {
-  display: flex; min-height: 102px; align-items: center; gap: 12px;
-  border-bottom: 1px solid var(--neutral-150);
+  display: flex;
+  align-items: center;
 }
 .profile-edit-avatar-button {
-  position: relative; width: 62px; height: 62px; flex: none;
-  border: 0; border-radius: 50%; background: none; padding: 0;
+  position: relative;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  padding: 0;
 }
-.profile-edit-avatar-button > .avatar { width: 62px; height: 62px; border: 2px solid white; box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-color) 8%, transparent); }
+.profile-edit-avatar-button > .avatar {
+  border: 2px solid var(--neutral-0);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+}
 .profile-edit-avatar-button > span:last-child {
-  position: absolute; right: -1px; bottom: -1px;
-  display: grid; width: 23px; height: 23px; place-items: center;
-  border: 2px solid var(--neutral-25); border-radius: 50%; background: var(--brand-400); color: white;
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--neutral-25);
+  border-radius: 50%;
+  color: var(--on-strong);
 }
-.profile-edit-avatar-button > span:last-child .icon { width: 12px; height: 12px; }
-.profile-edit-avatar-section > div { display: grid; flex: 1; gap: 5px; }
-.profile-edit-avatar-section b { font-size: 13px; color: var(--neutral-700); }
-.profile-edit-avatar-section small { color: var(--neutral-400); font-size: 11px; }
-.profile-edit-avatar-section .text-action { border: 0; background: none; padding: 10px 0; color: var(--clay-500); font-size: 10px; }
-.profile-edit-field { display: grid; gap: 9px; margin-top: 22px; }
-.profile-edit-field > span { color: var(--neutral-700); font-size: 13px; font-weight: 650; }
-.profile-edit-field em { margin-left: 4px; color: var(--brand-400); font-size: 10px; font-style: normal; font-weight: 500; }
-.profile-edit-field > span > small { margin-left: 5px; color: var(--neutral-400); font-size: 11px; font-weight: 400; }
-.profile-edit-field > input, .profile-edit-field > textarea {
-  width: 100%; border: 1px solid var(--neutral-150); border-radius: 12px;
-  background: white; padding: 13px 14px; color: var(--neutral-700); font: inherit; font-size: 14px;
+.profile-edit-avatar-section > div {
+  display: grid;
+  flex: 1;
 }
-.profile-edit-field > input { min-height: 46px; }
-.profile-edit-field > textarea { min-height: 96px; resize: vertical; line-height: 1.7; }
-.profile-edit-field input::placeholder, .profile-edit-field textarea::placeholder { color: var(--neutral-400); }
-.profile-edit-field > small { color: var(--neutral-400); font-size: 10px; line-height: 1.6; }
-.public-style-settings { margin-top: 25px; border: 1px solid var(--neutral-150); border-radius: 15px; background: white; }
-.public-style-settings > summary { display: flex; align-items: center; gap: 10px; list-style: none; padding: 17px 14px; cursor: pointer; }
-.public-style-settings > summary::-webkit-details-marker { display: none; }
-.public-style-settings summary > span { display: grid; flex: 1; gap: 7px; }
-.public-style-settings summary b { color: var(--neutral-700); font-size: 13px; }
-.public-style-settings summary em { margin-left: 4px; border-radius: 5px; background: var(--neutral-100); padding: 3px 5px; color: var(--clay-500); font-size: 9px; font-style: normal; font-weight: 500; }
-.public-style-settings summary small { color: var(--neutral-400); font-size: 10px; line-height: 1.5; }
-.public-style-settings summary > .icon { width: 15px; height: 15px; color: var(--neutral-400); transform: rotate(90deg); }
-.public-style-settings[open] summary > .icon { transform: rotate(-90deg); }
-.public-style-settings > div { display: grid; gap: 18px; border-top: 1px solid var(--neutral-100); padding: 16px 14px; }
-.public-style-settings p { margin: 0; color: var(--neutral-400); font-size: 11px; line-height: 1.8; }
-.copy-taste-button { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--brand-200); border-radius: 10px; background: var(--neutral-50); padding: 11px; color: var(--brand-500); font-size: 11px; }
-.copy-taste-button .icon { width: 14px; height: 14px; }
-.copy-taste-help { margin-top: -10px; color: var(--neutral-400); font-size: 10px; line-height: 1.7; }
-.activity-scope-picker { display: grid; gap: 9px; margin: 0; border: 0; padding: 0; }
-.activity-scope-picker legend { margin-bottom: 9px; padding: 0; color: var(--neutral-600); font-size: 12px; font-weight: 650; }
-.activity-scope-picker > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
-.activity-scope-picker label { min-width: 0; cursor: pointer; }
-.activity-scope-picker label > span { display: grid; min-height: 92px; align-content: center; justify-items: center; gap: 6px; border: 1px solid var(--neutral-150); border-radius: 13px; background: var(--neutral-0); padding: 9px 7px; box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-color) 3%, transparent); }
-.activity-scope-picker label > input:checked + span { border-color: var(--green-400); background: var(--neutral-100); box-shadow: 0 0 0 1px var(--green-400) inset; }
-.activity-scope-picker label .icon { width: 18px; height: 18px; color: var(--green-400); }
-.activity-scope-picker b { color: var(--neutral-700); font-size: 10px; text-align: center; }
-.activity-scope-picker small { color: var(--neutral-400); font-size: 9px; line-height: 1.5; text-align: center; }
-.activity-region-field { display: grid; gap: 9px; margin: 0; border: 0; padding: 0; }
-.activity-region-field > legend { margin-bottom: 2px; padding: 0; color: var(--neutral-600); font-size: 12px; font-weight: 650; }
-.activity-region-field > legend small { margin-left: 5px; color: var(--neutral-400); font-size: 10px; font-weight: 400; }
-.activity-region-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
-.region-picker-field { position: relative; display: grid; min-width: 0; gap: 6px; }
-.region-picker-field > span { overflow: hidden; color: var(--neutral-500); font-size: 10px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
-.region-picker-field.is-open { z-index: 20; }
-.region-picker-trigger { display: flex; width: 100%; min-width: 0; min-height: 44px; align-items: center; justify-content: space-between; gap: 4px; border: 1px solid var(--brand-100); border-radius: 12px; background: linear-gradient(180deg, var(--neutral-0), var(--neutral-25)); padding: 0 8px; color: var(--neutral-800); text-align: left; box-shadow: 0 2px 7px color-mix(in srgb, var(--shadow-color) 4%, transparent); }
-.region-picker-trigger > span { overflow: hidden; font-size: 11px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
-.region-picker-trigger > .icon { width: 13px; height: 13px; flex: none; color: var(--clay-500); transform: rotate(90deg); }
-.region-picker-trigger:disabled { border-color: var(--neutral-150); background: var(--neutral-25); color: var(--neutral-400); box-shadow: none; }
-.region-picker-trigger:disabled > .icon { color: var(--neutral-300); }
-.region-picker-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 25; display: grid; width: 250px; max-width: calc(100vw - 48px); max-height: 250px; gap: 3px; overflow-y: auto; border: 1px solid var(--brand-100); border-radius: 15px; background: var(--neutral-0); padding: 7px; box-shadow: 0 12px 30px color-mix(in srgb, var(--shadow-color) 16%, transparent); }
-.region-picker-field:nth-child(2) .region-picker-menu { left: -65px; }
-.region-picker-field:nth-child(3) .region-picker-menu { right: 0; left: auto; }
-.region-picker-menu > input { min-height: 38px; margin-bottom: 4px; border: 1px solid var(--brand-100); border-radius: 10px; background: var(--neutral-25); padding: 0 10px; color: var(--neutral-800); font: inherit; font-size: 12px; }
-.region-picker-menu > button { display: flex; min-height: 38px; align-items: center; justify-content: space-between; gap: 8px; border: 0; border-radius: 9px; background: transparent; padding: 7px 9px; color: var(--neutral-700); font-size: 12px; text-align: left; }
-.region-picker-menu > button:hover, .region-picker-menu > button[aria-selected="true"] { background: var(--brand-50); color: var(--brand-600); }
-.region-picker-menu > button .icon { width: 14px; height: 14px; flex: none; color: var(--brand-500); }
-.region-picker-menu > small { padding: 10px; color: var(--neutral-500); font-size: 11px; }
-.activity-region-field > small { color: var(--neutral-500); font-size: 10px; line-height: 1.5; }
-.taste-settings-panel { padding: 0 20px; }
-.profile-tag-groups { display: grid; gap: 22px; padding: 18px 4px; text-align: left; }
-.profile-tag-group { display: grid; gap: 10px; }
-.profile-tag-group h2 { margin: 0; color: var(--neutral-400); font-size: 11px; font-weight: 650; }
-.profile-tag-group > div { display: flex; flex-wrap: wrap; gap: 7px; }
-.profile-tag-group > div > span { border: 1px solid var(--neutral-150); border-radius: 16px; background: var(--neutral-25); padding: 7px 10px; color: var(--neutral-500); font-size: 11px; }
-.profile-tag-groups > p { margin: 0; padding: 24px 0; color: var(--slate-400); font-size: 12px; text-align: center; }
-.taste-settings-intro { padding: 10px 0 24px; text-align: center; }
-.taste-settings-intro > span { display: inline-grid; width: 45px; height: 45px; place-items: center; border-radius: 16px; background: var(--brand-100); color: var(--brand-400); }
-.taste-settings-intro h2 { margin: 13px 0 9px; color: var(--neutral-700); font-size: 23px; letter-spacing: -.8px; }
-.taste-settings-intro p { margin: 0; color: var(--neutral-400); font-size: 12px; line-height: 1.8; }
-.taste-settings-intro > small { display: inline-block; margin-top: 13px; border-radius: 20px; background: var(--neutral-100); padding: 7px 11px; color: var(--clay-500); font-size: 10px; }
-.taste-settings-block { padding: 22px 0; border-top: 1px solid var(--neutral-150); }
-.taste-settings-block:first-of-type { padding-top: 0; border-top: 0; }
-.taste-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 17px; }
-.taste-section-heading h2 { margin: 0; color: var(--neutral-700); font-size: 15px; letter-spacing: -.3px; }
-.taste-section-heading > span { color: var(--neutral-400); font-size: 10px; }
-.avoid-settings-block > p { margin: -7px 0 16px; color: var(--neutral-400); font-size: 11px; line-height: 1.7; }
-.food-focus-picker { min-width: 0; margin: 0; border: 0; padding: 0; }
-.food-focus-picker > legend { margin-bottom: 12px; padding: 0; color: var(--neutral-700); font-size: 13px; font-weight: 650; }
-.food-focus-picker > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.food-focus-picker label { min-width: 0; cursor: pointer; }
-.food-focus-picker label > span {
-  display: flex; min-height: 78px; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-  border: 1px solid var(--neutral-150); border-radius: 13px; background: white; color: var(--neutral-400);
+.profile-edit-field {
+  display: grid;
 }
-.food-focus-picker b { font-size: 12px; font-weight: 550; white-space: nowrap; }
-.food-focus-picker .icon { width: 22px; height: 22px; }
-.food-focus-picker input:checked + span { border-color: var(--brand-300); background: var(--neutral-100); color: var(--brand-500); box-shadow: inset 0 0 0 .5px var(--brand-300); }
-.food-focus-picker input:checked + span b { font-weight: 700; }
-.food-focus-picker input:focus-visible + span, .tag-request-category input:focus-visible + span { outline: 2px solid var(--brand-300); outline-offset: 3px; }
-.taste-tag-picker { --tag-accent: var(--brand-500); --tag-tint: var(--brand-50); display: grid; gap: 12px; }
-.taste-tag-picker > section { display: grid; gap: 13px; border: 1px solid var(--brand-100); border-radius: 15px; background: var(--neutral-0); padding: 13px; box-shadow: 0 3px 12px color-mix(in srgb, var(--shadow-color) 4%, transparent); }
-.taste-tag-group--cuisine { --tag-accent: var(--brand-500); --tag-tint: var(--brand-50); }
-.taste-tag-group--taste { --tag-accent: var(--brand-500); --tag-tint: var(--neutral-50); }
-.taste-tag-group--cafe { --tag-accent: var(--clay-500); --tag-tint: var(--brand-50); }
-.taste-tag-group--occasion { --tag-accent: var(--berry-400); --tag-tint: var(--neutral-100); }
-.taste-tag-group--visit { --tag-accent: var(--brand-500); --tag-tint: var(--neutral-100); }
-.taste-tag-group__header { display: flex; align-items: center; gap: 10px; }
-.taste-tag-group__icon { display: grid; width: 36px; height: 36px; flex: none; place-items: center; border-radius: 12px; background: var(--tag-tint); color: var(--tag-accent); }
-.taste-tag-group__icon .icon { width: 18px; height: 18px; }
-.taste-tag-group__titles { display: grid; flex: 1; gap: 3px; }
-.taste-tag-group__titles b { color: var(--neutral-800); font-size: 12px; font-weight: 700; }
-.taste-tag-group__titles small { color: var(--neutral-500); font-size: 9px; line-height: 1.4; }
-.taste-tag-group__count { display: flex; min-width: 46px; height: 35px; align-items: center; justify-content: center; border-radius: 11px; background: var(--neutral-50); color: var(--brand-600); font-size: 12px; font-weight: 700; white-space: nowrap; }
-.taste-tag-group__count i { color: var(--neutral-400); font-size: 9px; font-style: normal; font-weight: 500; }
-.taste-tag-options { display: flex; flex-wrap: wrap; gap: 7px; }
-.taste-tag-options button { display: inline-flex; min-height: 37px; align-items: center; gap: 7px; border: 1px solid var(--brand-100); border-radius: 11px; background: var(--neutral-25); padding: 8px 11px; color: var(--neutral-500); font-size: 11px; line-height: 1.2; transition: background .15s,border-color .15s,transform .15s; }
-.taste-tag-options button:hover:not(:disabled) { border-color: var(--brand-200); background: var(--brand-50); transform: translateY(-1px); }
-.taste-tag-options button.selected { border-color: var(--brand-500); background: var(--brand-50); color: var(--brand-600); font-weight: 650; }
-.taste-tag-options button .icon { width: 13px; height: 13px; color: var(--tag-accent); stroke-width: 2.2; }
-.taste-tag-options button:disabled { opacity: .42; }
-.taste-tag-group__compact-count { color: var(--neutral-500); font-size: 10px; text-align: right; }
-.taste-tag-options button:focus-visible { outline: 2px solid var(--tag-accent); outline-offset: 2px; }
+.profile-edit-field em {
+  font-style: normal;
+}
+.profile-edit-field > input,
+.profile-edit-field > textarea {
+  width: 100%;
+  font: inherit;
+}
+.profile-edit-field > textarea {
+  resize: vertical;
+}
 
-.tag-request-entry { display: flex; width: calc(100% - 40px); align-items: center; gap: 11px; margin: 21px 20px; border: 1px dashed var(--neutral-200); border-radius: 14px; background: var(--neutral-50); padding: 15px 13px; text-align: left; }
-.tag-request-entry-icon { display: grid; width: 35px; height: 35px; flex: none; place-items: center; border-radius: 12px; background: var(--neutral-150); color: var(--clay-400); }
-.tag-request-entry-icon > .icon { width: 18px; height: 18px; }
-.tag-request-entry > span:nth-child(2) { display: grid; flex: 1; gap: 5px; }
-.tag-request-entry b { color: var(--clay-600); font-size: 12px; }
-.tag-request-entry small { color: var(--clay-400); font-size: 10px; }
-.tag-request-entry > .icon { width: 14px; height: 14px; color: var(--clay-400); }
-.settings-save-bar { position: static; margin-top: auto; border-top: 1px solid var(--brand-100); background: var(--neutral-0); padding: 12px 20px 8px; }
-.settings-save-bar--profile { padding-top: 12px; }
-.profile-settings > form > .settings-panel:not([hidden]) { margin-bottom: 12px; }
-.settings-save-bar > button { min-height: 47px; border-radius: 14px; font-size: 14px; }
-@media (min-width: 700px) {
-  .screen-content:has(> .profile-settings) { min-height: 0; }
-  .profile-settings { min-height: calc(100dvh - 86px); }
+/* 공개 맛집 스타일(접고 펴는 카드) */
+.public-style-settings > summary {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
 }
-.tag-request-sheet { max-width: 390px; border: 0; border-radius: 22px; padding: 22px; }
-.tag-request-sheet > header h2 { color: var(--neutral-700); font-size: 20px; }
-.tag-request-lead { margin: 0; color: var(--neutral-400); font-size: 12px; line-height: 1.9; }
-.tag-request-form > .profile-edit-field { margin-top: 20px; }
-.tag-request-form > .primary-button { margin-top: 20px; border-radius: 13px; font-size: 13px; }
-.tag-request-category { display: grid; min-width: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 20px 0 0; border: 0; padding: 0; }
-.tag-request-category > legend { margin-bottom: 9px; padding: 0; color: var(--neutral-600); font-size: 12px; font-weight: 600; }
-.tag-request-category label { cursor: pointer; }
-.tag-request-category label > span { display: block; border: 1px solid var(--neutral-150); border-radius: 10px; padding: 11px; color: var(--neutral-400); font-size: 12px; text-align: center; }
-.tag-request-category input:checked + span { border-color: var(--brand-300); background: var(--neutral-100); color: var(--brand-500); font-weight: 650; }
-.tag-request-disclaimer { display: block; margin-top: 10px; color: var(--neutral-400); font-size: 9px; text-align: center; line-height: 1.6; }
-.tag-request-error { margin: 12px 0 0; border-radius: 9px; background: var(--brand-50); padding: 11px; color: var(--brand-600); font-size: 11px; line-height: 1.7; }
-.tag-request-history { margin-top: 24px; border-top: 1px solid var(--neutral-150); padding-top: 18px; }
-.tag-request-history > h3 { margin: 0 0 12px; color: var(--clay-600); font-size: 12px; }
-.tag-request-history > p { margin: 0; color: var(--neutral-400); font-size: 11px; line-height: 1.7; }
-.tag-request-history article { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; border-bottom: 1px solid var(--neutral-150); padding: 12px 0; }
-.tag-request-history article > div { display: grid; flex: 1; gap: 5px; }
-.tag-request-history b { color: var(--clay-600); font-size: 12px; }
-.tag-request-history small { color: var(--neutral-400); font-size: 9px; }
-.tag-request-history article p { flex-basis: 100%; margin: 3px 0 0; color: var(--clay-500); font-size: 11px; line-height: 1.7; }
-.tag-request-status { border-radius: 20px; background: var(--neutral-150); padding: 5px 8px; color: var(--amber-600); font-size: 9px; }
-.tag-request-status.approved { background: var(--neutral-100); color: var(--green-400); }
-.tag-request-status.rejected { background: var(--neutral-150); color: var(--clay-500); }
-.tag-request-success { padding: 15px 0 0; text-align: center; }
-.tag-request-success > span { display: inline-grid; width: 54px; height: 54px; place-items: center; border-radius: 20px; background: var(--neutral-150); color: var(--clay-400); }
-.tag-request-success h3 { margin: 18px 0 10px; color: var(--clay-700); font-size: 20px; }
-.tag-request-success p { color: var(--clay-500); font-size: 12px; line-height: 1.9; }
-.tag-request-success p b { color: var(--clay-400); }
-.tag-request-success > button { margin-top: 20px; border-radius: 13px; font-size: 13px; }
+.public-style-settings > summary::-webkit-details-marker {
+  display: none;
+}
+.public-style-settings summary > span {
+  display: grid;
+  flex: 1;
+}
+.public-style-settings summary em {
+  font-style: normal;
+}
+.public-style-settings summary > .icon {
+  transform: rotate(90deg);
+}
+.public-style-settings[open] summary > .icon {
+  transform: rotate(-90deg);
+}
+.public-style-settings > div {
+  display: grid;
+}
+.public-style-settings p {
+  margin: 0;
+}
+.copy-taste-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 분야·활동 범위 선택 카드 */
+.food-focus-picker,
+.activity-scope-picker,
+.activity-region-field {
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.food-focus-picker {
+  min-width: 0;
+}
+.activity-scope-picker,
+.activity-region-field {
+  display: grid;
+  gap: 9px;
+}
+.food-focus-picker > div,
+.activity-scope-picker > div,
+.activity-region-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.food-focus-picker label,
+.activity-scope-picker label {
+  min-width: 0;
+  cursor: pointer;
+}
+.food-focus-picker label > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.food-focus-picker b {
+  white-space: nowrap;
+}
+.activity-scope-picker label > span {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+}
+.activity-scope-picker b,
+.activity-scope-picker small {
+  text-align: center;
+}
+
+/* 활동 지역 고르기 */
+.region-picker-field {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+.region-picker-field > span,
+.region-picker-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.region-picker-field.is-open {
+  z-index: 20;
+}
+.region-picker-trigger {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  text-align: left;
+}
+.region-picker-trigger > .icon {
+  flex: none;
+  transform: rotate(90deg);
+}
+.region-picker-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 25;
+  display: grid;
+  width: 250px;
+  max-width: calc(100vw - 48px);
+  max-height: 250px;
+  gap: 3px;
+  overflow-y: auto;
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--shadow-color) 16%, transparent);
+}
+.region-picker-field:nth-child(2) .region-picker-menu {
+  left: -65px;
+}
+.region-picker-field:nth-child(3) .region-picker-menu {
+  right: 0;
+  left: auto;
+}
+.region-picker-menu > input {
+  margin-bottom: 4px;
+  font: inherit;
+}
+.region-picker-menu > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.region-picker-menu > button .icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--brand-500);
+}
+.region-picker-menu > small {
+  padding: 10px;
+}
+.activity-region-field > small {
+  line-height: 1.5;
+}
+
+/* 추천 취향 */
+.taste-settings-panel {
+  padding: 0 20px;
+}
+.taste-settings-intro {
+  text-align: center;
+}
+.taste-settings-intro > span {
+  display: inline-grid;
+  width: 45px;
+  height: 45px;
+  place-items: center;
+  border-radius: var(--radius-control);
+  background: var(--brand-100);
+  color: var(--brand-400);
+}
+.taste-settings-intro p {
+  margin: 0;
+}
+.taste-section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.taste-section-heading h2 {
+  margin: 0;
+}
+
+/* 취향 태그 고르기(프로필 편집·맛집 기록 공통). 화면별 겉모양은 a/forms.css, renewal/record.css가 덮습니다. */
+.taste-tag-picker {
+  --tag-accent: var(--brand-500);
+  --tag-tint: var(--brand-50);
+  display: grid;
+  gap: 12px;
+}
+.taste-tag-picker > section {
+  display: grid;
+  gap: 13px;
+  border: 1px solid var(--brand-100);
+  border-radius: var(--radius-md);
+  background: var(--neutral-0);
+  padding: 13px;
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--shadow-color) 4%, transparent);
+}
+.taste-tag-group--cuisine {
+  --tag-accent: var(--brand-500);
+  --tag-tint: var(--brand-50);
+}
+.taste-tag-group--taste {
+  --tag-accent: var(--brand-500);
+  --tag-tint: var(--neutral-50);
+}
+.taste-tag-group--cafe {
+  --tag-accent: var(--clay-500);
+  --tag-tint: var(--brand-50);
+}
+.taste-tag-group--occasion {
+  --tag-accent: var(--berry-400);
+  --tag-tint: var(--neutral-100);
+}
+.taste-tag-group--visit {
+  --tag-accent: var(--brand-500);
+  --tag-tint: var(--neutral-100);
+}
+.taste-tag-group__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.taste-tag-group__icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--tag-tint);
+  color: var(--tag-accent);
+}
+.taste-tag-group__icon .icon {
+  width: 18px;
+  height: 18px;
+}
+.taste-tag-group__titles {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+}
+.taste-tag-group__titles b {
+  color: var(--neutral-800);
+  font-size: 12px;
+  font-weight: 700;
+}
+.taste-tag-group__titles small {
+  color: var(--neutral-500);
+  font-size: 9px;
+  line-height: 1.4;
+}
+.taste-tag-group__count {
+  display: flex;
+  min-width: 46px;
+  height: 35px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-50);
+  color: var(--brand-600);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.taste-tag-group__count i {
+  color: var(--neutral-400);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 500;
+}
+.taste-tag-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.taste-tag-options button {
+  display: inline-flex;
+  min-height: 37px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--brand-100);
+  border-radius: var(--radius-sm);
+  background: var(--neutral-25);
+  padding: 8px 11px;
+  color: var(--neutral-500);
+  font-size: 11px;
+  line-height: 1.2;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.15s;
+}
+.taste-tag-options button:hover:not(:disabled) {
+  border-color: var(--brand-200);
+  background: var(--brand-50);
+  transform: translateY(-1px);
+}
+.taste-tag-options button.is-selected {
+  border-color: var(--brand-500);
+  background: var(--brand-50);
+  color: var(--brand-600);
+  font-weight: 650;
+}
+.taste-tag-options button:disabled {
+  opacity: 0.42;
+}
+.taste-tag-options button:focus-visible {
+  outline: 2px solid var(--tag-accent);
+  outline-offset: 2px;
+}
+
+/* 태그 제안 입구·저장 줄 */
+.tag-request-entry {
+  display: flex;
+  width: calc(100% - 40px);
+  align-items: center;
+  text-align: left;
+}
+.tag-request-entry-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+}
+.tag-request-entry > span:nth-child(2) {
+  display: grid;
+  flex: 1;
+}
+.settings-save-bar {
+  margin-top: auto;
+}
+@media (min-width: 700px) {
+  .screen-content:has(> .profile-settings) {
+    min-height: 0;
+  }
+  .profile-settings {
+    min-height: calc(100dvh - 86px);
+  }
+}
+
+/* 태그 제안 시트(프로필 편집·맛집 기록 공통) */
+.tag-request-sheet {
+  max-width: 390px;
+  border: 0;
+  border-radius: var(--radius-card);
+  padding: 22px;
+}
+.tag-request-sheet > header h2 {
+  color: var(--neutral-700);
+  font-size: 20px;
+}
+.tag-request-lead {
+  margin: 0;
+}
+.tag-request-form > .profile-edit-field,
+.tag-request-form > .primary-button {
+  margin-top: 20px;
+}
+.tag-request-category {
+  min-width: 0;
+  margin: 20px 0 0;
+  border: 0;
+  padding: 0;
+}
+.tag-request-category > legend {
+  padding: 0;
+}
+.tag-request-category label {
+  cursor: pointer;
+}
+.tag-request-category label > span {
+  text-align: center;
+}
+.tag-request-disclaimer {
+  display: block;
+  text-align: center;
+}
+.tag-request-error {
+  margin: 12px 0 0;
+}
+.tag-request-history > p {
+  margin: 0;
+}
+.tag-request-history article {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.tag-request-history article > div {
+  display: grid;
+  flex: 1;
+}
+.tag-request-history article p {
+  flex-basis: 100%;
+}
+.tag-request-success {
+  padding: 15px 0 0;
+  text-align: center;
+}
+.tag-request-success > span {
+  display: inline-grid;
+  place-items: center;
+}
+.tag-request-success > button {
+  margin-top: 20px;
+}

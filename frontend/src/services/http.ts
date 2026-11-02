@@ -1,7 +1,10 @@
 /** 맛다공 API 요청의 인증 헤더, JSON 처리, 오류 메시지, 로그인 만료 처리를 한곳에서 맞춥니다. */
+import { STORAGE_KEYS, readStorage, removeStorage } from "../utils/storage";
 
-export const ACCESS_TOKEN_KEY = "matdagong.auth.access-token";
-export const TOKEN_EXPIRY_KEY = "matdagong.auth.expires-at";
+/** 맛다공 API 주소의 앞부분입니다. services 모듈은 모두 이 값 하나를 씁니다. */
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const ACCESS_TOKEN_KEY = STORAGE_KEYS.accessToken;
+const TOKEN_EXPIRY_KEY = STORAGE_KEYS.tokenExpiry;
 /** 로그인 만료 직전에 화면이 입력 내용을 보관할 수 있도록 알리는 window 이벤트입니다. */
 export const SESSION_EXPIRING_EVENT = "matdagong:session-expiring";
 
@@ -33,7 +36,7 @@ export function isSessionExpiredError(error: unknown): error is SessionExpiredEr
 }
 
 let sessionExpiredHandler: (() => void) | null = null;
-let sessionExpiring = false;
+let isExpiring = false;
 
 /** main.tsx가 로그인 만료 시 실행할 단일 처리기를 등록합니다. 나중에 등록한 처리기가 이전 것을 대신합니다. */
 export function setSessionExpiredHandler(handler: () => void): void {
@@ -42,7 +45,7 @@ export function setSessionExpiredHandler(handler: () => void): void {
 
 /** 이미 재로그인을 시작했다면 화면은 새 오류 안내를 띄우지 않아도 됩니다. */
 export function isSessionExpiring(): boolean {
-  return sessionExpiring;
+  return isExpiring;
 }
 
 /** 로그인 만료 직전 알림을 구독합니다. 반환한 함수로 구독을 해제합니다. */
@@ -51,36 +54,21 @@ export function onSessionExpiring(listener: () => void): () => void {
   return () => window.removeEventListener(SESSION_EXPIRING_EVENT, listener);
 }
 
-function readStorage(key: string): string | null {
-  try {
-    return sessionStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function removeStorage(key: string): void {
-  try {
-    sessionStorage.removeItem(key);
-  } catch {
-    // 저장소를 쓸 수 없는 환경에서도 재로그인은 이어갑니다.
-  }
-}
-
 /** main.tsx가 로그인 직후 저장한 만료 시각을 기준으로 현재 토큰을 더 쓸 수 있는지 확인합니다. */
-export function isStoredTokenExpired(now = Date.now()): boolean {
-  const token = readStorage(ACCESS_TOKEN_KEY);
-  const expiresAt = Number(readStorage(TOKEN_EXPIRY_KEY));
+function isStoredTokenExpired(now = Date.now()): boolean {
+  const token = readStorage(ACCESS_TOKEN_KEY, "session");
+  const expiresAt = Number(readStorage(TOKEN_EXPIRY_KEY, "session"));
   if (!token || !Number.isFinite(expiresAt) || expiresAt <= 0) return true;
   return expiresAt - EXPIRY_SKEW_MS <= now;
 }
 
 /** 여러 요청이 동시에 401을 받아도 재로그인은 한 번만 시작합니다. */
-export function notifySessionExpired(): void {
-  if (sessionExpiring) return;
-  sessionExpiring = true;
-  removeStorage(ACCESS_TOKEN_KEY);
-  removeStorage(TOKEN_EXPIRY_KEY);
+function notifySessionExpired(): void {
+  if (isExpiring) return;
+  isExpiring = true;
+  // 저장소를 쓸 수 없는 환경에서도 재로그인은 이어갑니다.
+  removeStorage(ACCESS_TOKEN_KEY, "session");
+  removeStorage(TOKEN_EXPIRY_KEY, "session");
   if (sessionExpiredHandler) {
     sessionExpiredHandler();
     return;
@@ -92,10 +80,12 @@ export function notifySessionExpired(): void {
 async function responseError(response: Response, fallback: string): Promise<ApiError> {
   let detail = "";
   try {
-    const body = await response.text();
-    const problem = JSON.parse(body) as { detail?: unknown; message?: unknown } | null;
-    const candidate = problem?.detail ?? problem?.message;
-    if (typeof candidate === "string") detail = candidate.trim();
+    const problem: unknown = JSON.parse(await response.text());
+    if (problem && typeof problem === "object") {
+      const candidate =
+        ("detail" in problem ? problem.detail : undefined) ?? ("message" in problem ? problem.message : undefined);
+      if (typeof candidate === "string") detail = candidate.trim();
+    }
   } catch {
     // 프록시나 서버가 JSON이 아닌 오류 페이지를 반환해도 상태 코드는 알려줍니다.
   }
@@ -118,7 +108,7 @@ export async function apiRequest<T>(
   accessToken: string,
   { errorMessage = "요청을 처리하지 못했어요.", ...init }: ApiRequestOptions = {},
 ): Promise<T> {
-  if (sessionExpiring || isStoredTokenExpired()) {
+  if (isExpiring || isStoredTokenExpired()) {
     notifySessionExpired();
     throw new SessionExpiredError();
   }

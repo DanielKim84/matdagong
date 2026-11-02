@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
-import { Segmented, TopBar } from "../../components/ui";
+import PlaceThumb from "../../components/PlaceThumb";
+import { EmptyState, SectionHead, Segmented, TopBar } from "../../components/ui";
 import { dayKey, diaryEntries, entriesByDay, formatDay, sameMonth, WEEKDAYS, type DiaryEntry } from "./diary";
-import { DiaryEntryCard, MeThumb } from "./MeParts";
+import DiaryEntryCard from "./DiaryEntryCard";
 
 type View = "calendar" | "photo" | "list";
 
@@ -26,15 +27,15 @@ export default function DiaryScreen() {
   const undated = entries.filter((entry) => !entry.date);
 
   return (
-    <main className="r-screen r-me-diary-screen">
+    <main className="r-screen r-me-diary">
       <TopBar
         title="맛집 다이어리"
         fallback="my"
-        right={(
+        right={
           <button type="button" className="r-icon-button" onClick={() => go("register")} aria-label="새 기록 남기기">
             <Icon name="plus" />
           </button>
-        )}
+        }
       />
       <div className="r-me-body">
         <Segmented<View>
@@ -48,14 +49,13 @@ export default function DiaryScreen() {
           ]}
         />
         {entries.length === 0 ? (
-          <div className="r-card r-empty">
-            <span className="r-badge-icon"><Icon name="book" /></span>
-            <b>아직 기록이 없어요</b>
-            <p>다녀온 맛집을 기록하면 이곳에 사진 달력으로 쌓여요.</p>
-            <button type="button" className="r-button r-button--primary r-button--pill" onClick={() => go("register")}>
-              첫 기록 남기기
-            </button>
-          </div>
+          <EmptyState
+            icon="book"
+            title="아직 기록이 없어요"
+            message="다녀온 맛집을 기록하면 이곳에 사진 달력으로 쌓여요."
+            action={{ label: "첫 기록 남기기", onClick: () => go("register"), variant: "primary" }}
+            className="r-card r-me-empty"
+          />
         ) : view === "calendar" ? (
           <CalendarView
             cursor={cursor}
@@ -83,7 +83,7 @@ export default function DiaryScreen() {
                 onClick={() => go("place", entry.place.id)}
                 aria-label={`${entry.place.name}${entry.date ? `, ${formatDay(entry.date)}` : ""}`}
               >
-                <MeThumb place={entry.place} photo={entry.photo} />
+                <PlaceThumb place={entry.place} photo={entry.photo} className="r-me-photos__thumb" />
                 <span>{entry.place.name}</span>
               </button>
             ))}
@@ -122,8 +122,8 @@ function CalendarView({
   const leading = new Date(year, month, 1).getDay();
   const days = new Date(year, month + 1, 0).getDate();
   const monthEntries = entries.filter((entry) => entry.date && sameMonth(entry.date, year, month));
-  const selectedEntries = selected ? byDay.get(selected) ?? [] : [];
-  const selectedDate = selected ? selectedEntries[0]?.date ?? null : null;
+  const selectedEntries = selected ? (byDay.get(selected) ?? []) : [];
+  const selectedDate = selected ? (selectedEntries[0]?.date ?? null) : null;
 
   return (
     <>
@@ -131,23 +131,40 @@ function CalendarView({
         <button type="button" className="r-icon-button" onClick={() => onMonth(-1)} aria-label="지난달">
           <Icon name="back" />
         </button>
-        <b className="r-display" aria-live="polite">{year}년 {month + 1}월</b>
-        <button type="button" className="r-icon-button" onClick={() => onMonth(1)} aria-label="다음 달" disabled={isCurrentMonth}>
+        <b className="r-display" aria-live="polite">
+          {year}년 {month + 1}월
+        </b>
+        <button
+          type="button"
+          className="r-icon-button"
+          onClick={() => onMonth(1)}
+          aria-label="다음 달"
+          disabled={isCurrentMonth}
+        >
           <Icon name="chevron" />
         </button>
       </div>
       <div className="r-card r-me-calendar">
         <div className="r-me-calendar__weekdays" aria-hidden="true">
-          {WEEKDAYS.map((name) => <span key={name}>{name}</span>)}
+          {WEEKDAYS.map((name) => (
+            <span key={name}>{name}</span>
+          ))}
         </div>
         <div className="r-me-calendar__grid">
-          {Array.from({ length: leading }, (_, index) => <span key={`blank-${index}`} />)}
+          {Array.from({ length: leading }, (_, index) => (
+            <span key={`blank-${index}`} />
+          ))}
           {Array.from({ length: days }, (_, index) => {
             const date = new Date(year, month, index + 1);
             const key = dayKey(date);
             const dayEntries = byDay.get(key);
             const state = `${key === todayKey ? " is-today" : ""}${key === selected ? " is-selected" : ""}`;
-            if (!dayEntries) return <span key={key} className={`r-me-day${state}`}>{index + 1}</span>;
+            if (!dayEntries)
+              return (
+                <span key={key} className={`r-me-day${state}`}>
+                  {index + 1}
+                </span>
+              );
             return (
               <button
                 type="button"
@@ -157,7 +174,7 @@ function CalendarView({
                 aria-label={`${formatDay(date)} 기록 ${dayEntries.length}곳`}
                 onClick={() => onSelect(key)}
               >
-                <MeThumb place={dayEntries[0].place} photo={dayEntries[0].photo} />
+                <PlaceThumb place={dayEntries[0].place} photo={dayEntries[0].photo} className="r-me-day__photo" />
                 <span className="r-me-day__num">{index + 1}</span>
                 {dayEntries.length > 1 && <span className="r-me-day__count">{dayEntries.length}</span>}
               </button>
@@ -168,15 +185,18 @@ function CalendarView({
 
       {selectedDate ? (
         <section className="r-me-section">
-          <div className="r-section-head">
-            <h2>{formatDay(selectedDate)}</h2>
-            <button type="button" onClick={() => onSelect(selected ?? "")}>이달 기록 모두 보기</button>
-          </div>
-          {selectedEntries.map((entry) => <DiaryEntryCard key={entry.place.id} entry={entry} />)}
+          <SectionHead
+            title={formatDay(selectedDate)}
+            action="이달 기록 모두 보기"
+            onAction={() => onSelect(selected ?? "")}
+          />
+          {selectedEntries.map((entry) => (
+            <DiaryEntryCard key={entry.place.id} entry={entry} />
+          ))}
         </section>
       ) : (
         <section className="r-me-section">
-          <div className="r-section-head"><h2>{month + 1}월 기록 {monthEntries.length}곳</h2></div>
+          <SectionHead title={`${month + 1}월 기록 ${monthEntries.length}곳`} />
           {monthEntries.length ? (
             monthEntries.map((entry) => <DiaryEntryCard key={entry.place.id} entry={entry} />)
           ) : (
@@ -208,8 +228,10 @@ function ListView({ entries }: { entries: DiaryEntry[] }) {
     <>
       {groups.map((group) => (
         <section className="r-me-section" key={group.title}>
-          <div className="r-section-head"><h2>{group.title}</h2><span className="r-muted r-me-count">{group.items.length}곳</span></div>
-          {group.items.map((entry) => <DiaryEntryCard key={entry.place.id} entry={entry} showRelative />)}
+          <SectionHead title={group.title} meta={`${group.items.length}곳`} />
+          {group.items.map((entry) => (
+            <DiaryEntryCard key={entry.place.id} entry={entry} shouldShowRelative />
+          ))}
         </section>
       ))}
     </>

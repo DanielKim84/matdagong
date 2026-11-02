@@ -1,6 +1,7 @@
 import { useAppData } from "../../app/AppData";
 import Icon, { type IconName } from "../../components/Icon";
-import { TopBar } from "../../components/ui";
+import { EmptyState, SectionHead, TopBar } from "../../components/ui";
+import { formatMonthDay, formatNumber } from "../../utils/format";
 
 const PENDING_ACTIONS: { label: string; icon: IconName; tone: "amber" | "brand" }[] = [
   { label: "포인트 충전", icon: "plus", tone: "amber" },
@@ -15,7 +16,11 @@ export default function WalletScreen() {
   const { balance, history } = app.points;
 
   function notifyPending(label: string) {
-    app.actions.notify({ kind: "info", title: `${label}은 준비 중이에요`, message: "기능이 열리면 이곳에서 바로 이용할 수 있어요." });
+    app.actions.notify({
+      kind: "info",
+      title: `${label}은 준비 중이에요`,
+      message: "기능이 열리면 이곳에서 바로 이용할 수 있어요.",
+    });
   }
 
   return (
@@ -24,7 +29,9 @@ export default function WalletScreen() {
       <div className="r-me-body">
         <section className="r-card r-card--dark r-me-balance" aria-label="보유 포인트">
           <span>사용할 수 있는 포인트</span>
-          <b>{balance.toLocaleString("ko-KR")} <small>P</small></b>
+          <b>
+            {formatNumber(balance)} <small>P</small>
+          </b>
           <span>유료 구독자가 늘면 포인트가 쌓여요</span>
         </section>
 
@@ -36,7 +43,9 @@ export default function WalletScreen() {
               className={`r-card r-me-tile r-me-tile--${action.tone === "amber" ? "amber-icon" : "default"}`}
               onClick={() => notifyPending(action.label)}
             >
-              <span className="r-badge-icon r-me-tile__icon"><Icon name={action.icon} /></span>
+              <span className="r-badge-icon r-me-tile__icon">
+                <Icon name={action.icon} />
+              </span>
               <span className="r-me-tile__label">{action.label}</span>
               <small className="r-me-tile__caption">준비 중</small>
             </button>
@@ -44,10 +53,7 @@ export default function WalletScreen() {
         </div>
 
         <section className="r-me-section">
-          <div className="r-section-head">
-            <h2>내역</h2>
-            {history.length > 0 && <span className="r-muted r-me-count">{history.length}건</span>}
-          </div>
+          <SectionHead title="내역" meta={history.length > 0 && `${formatNumber(history.length)}건`} />
           {history.length ? (
             <div className="r-card r-me-list">
               {history.map((entry) => (
@@ -55,22 +61,24 @@ export default function WalletScreen() {
                   <span className="r-row__copy">
                     <b>{entry.title}</b>
                     <small>
-                      {new Date(entry.createdAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" })}
+                      {formatMonthDay(entry.createdAt)}
                       {entry.memo ? ` · ${entry.memo}` : ""}
                     </small>
                   </span>
                   <b className={`r-me-amount ${entry.amount > 0 ? "is-plus" : "is-minus"}`}>
-                    {entry.amount > 0 ? "+" : ""}{entry.amount.toLocaleString("ko-KR")}
+                    {entry.amount > 0 ? "+" : ""}
+                    {formatNumber(entry.amount)}
                   </b>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="r-card r-empty">
-              <span className="r-badge-icon"><Icon name="clock" /></span>
-              <b>아직 포인트 내역이 없어요</b>
-              <p>포인트가 쌓이거나 쓰이면 이곳에 기록돼요.</p>
-            </div>
+            <EmptyState
+              icon="clock"
+              title="아직 포인트 내역이 없어요"
+              message="포인트가 쌓이거나 쓰이면 이곳에 기록돼요."
+              className="r-card r-me-empty"
+            />
           )}
         </section>
       </div>

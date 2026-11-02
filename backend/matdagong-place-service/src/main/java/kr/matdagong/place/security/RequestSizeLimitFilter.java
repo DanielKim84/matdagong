@@ -8,10 +8,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.unit.DataSize;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,6 +25,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RequestSizeLimitFilter extends OncePerRequestFilter {
+    static final String TOO_LARGE = "요청 용량이 너무 커요.";
+    /** Spring MVC에 닿기 전에 끊으므로 PlaceExceptionHandler와 같은 ProblemDetail 모양을 직접 씁니다. */
+    private static final String TOO_LARGE_BODY =
+            """
+            {"type":"about:blank","title":"Content Too Large","status":413,"detail":"%s"}
+            """
+                    .formatted(TOO_LARGE)
+                    .strip();
+
     private final long maxBytes;
 
     public RequestSizeLimitFilter(@Value("${dagong.place.max-request-size:30MB}") DataSize maxRequestSize) {
@@ -33,7 +44,10 @@ public class RequestSizeLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         if (request.getContentLengthLong() > maxBytes) {
-            response.sendError(HttpStatus.CONTENT_TOO_LARGE.value(), "요청 용량이 너무 커요.");
+            response.setStatus(HttpStatus.CONTENT_TOO_LARGE.value());
+            response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            response.getWriter().write(TOO_LARGE_BODY);
             return;
         }
         chain.doFilter(new LimitedRequest(request, maxBytes), response);
@@ -101,10 +115,10 @@ public class RequestSizeLimitFilter extends OncePerRequestFilter {
         }
     }
 
-    /** 본문을 읽는 도중 한도를 넘었음을 알립니다. JSON 변환이 실패해 요청은 400으로 끝나고 나머지 본문은 읽지 않습니다. */
+    /** 본문을 읽는 도중 한도를 넘었음을 알립니다. 나머지 본문은 읽지 않고, PlaceExceptionHandler가 413으로 응답합니다. */
     public static final class RequestTooLargeException extends IOException {
         RequestTooLargeException() {
-            super("요청 용량이 너무 커요.");
+            super(TOO_LARGE);
         }
     }
 }

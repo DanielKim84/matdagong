@@ -6,7 +6,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/** 화면에 필요한 구독 상품, 맛객 프로필, 현재 구독 정보를 표현합니다. */
+/** 구독 상품, 구독 신청, 현재 구독·구독자 API의 요청·응답 자료형입니다. */
 public final class SubscriptionModels {
     private SubscriptionModels() {}
 
@@ -15,32 +15,19 @@ public final class SubscriptionModels {
         PAID
     }
 
-    public record TasterView(
-            String tasterId,
-            String tasterName,
-            String tag,
-            String avatar,
-            int avatarVariant,
-            String profileCoverUrl,
-            List<String> profileCoverUrls,
-            String tasterFocus,
-            String activityScope,
-            String activityRegion,
-            String note,
-            String intro,
-            int subscriberCount,
-            List<String> profileTags,
-            List<String> matchedTags,
-            /** 나와의 취향 일치율(0~100). 내 취향 태그 중 이 맛객의 프로필 태그와 겹치는 비율입니다. */
-            int matchScore) {}
-
     public record PaidPlan(int termMonths, BigDecimal priceAmount) {}
 
     public record PlanCatalog(String currency, boolean testMode, BigDecimal freePrice, List<PaidPlan> paidPlans) {}
 
+    /**
+     * 구독 신청입니다.
+     *
+     * @param termMonths 유료 구독 기간(개월)입니다. 무료 구독은 비워 둡니다.
+     * @param confirmFreeReplacement 이미 다른 맛객을 무료 구독 중일 때, 그 구독을 끝내고 바꾸는 데 동의했는지입니다.
+     */
     public record SubscribeRequest(
-            @NotNull UUID targetAccountId,
-            @NotNull SubscriptionType subscriptionType,
+            @NotNull(message = "구독할 맛객을 선택해 주세요.") UUID targetAccountId,
+            @NotNull(message = "구독 종류를 선택해 주세요.") SubscriptionType subscriptionType,
             Integer termMonths,
             boolean confirmFreeReplacement) {}
 
@@ -64,5 +51,6 @@ public final class SubscriptionModels {
             Instant startAt,
             Instant endAt) {}
 
+    /** replacedFreeNickname은 이번 신청으로 무료 구독이 끝난 이전 맛객의 닉네임입니다. 없으면 null입니다. */
     public record SubscribeResult(SubscriptionView subscription, String replacedFreeNickname) {}
 }

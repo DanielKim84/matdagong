@@ -2,7 +2,7 @@
 
 /* ── 화면 틀: 지도가 화면 전체를 채웁니다. ── */
 .r-discover {
-  /* 접힘 시트 = 제목 줄 + 떠 있는 하단 탭 자리 (DiscoverScreen 의 PEEK_HEIGHT 와 같은 값) */
+  /* 접힘 시트 = 제목 줄 + 떠 있는 하단 탭 자리 (useSheetHeights.ts의 PEEK_HEIGHT와 같은 값) */
   --r-discover-peek: calc(176px + env(safe-area-inset-bottom));
   position: relative;
   height: 100dvh;
@@ -40,7 +40,9 @@
   bottom: calc(var(--r-discover-peek) + 148px);
   left: auto;
   flex-direction: row-reverse;
-  transition: bottom 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s;
+  transition:
+    bottom 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.2s;
 }
 .r-discover[data-sheet="half"] .map-location {
   bottom: calc(var(--r-discover-half, 50%) + 12px);
@@ -68,7 +70,7 @@
 }
 .r-discover .map-location > small {
   max-width: 200px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   padding: 8px 10px;
   color: var(--color-muted);
@@ -237,7 +239,10 @@
   bottom: calc(var(--r-discover-peek) + 6px);
   left: 0;
   z-index: 4;
-  transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s,
+    visibility 0.2s;
 }
 .r-discover:not([data-sheet="peek"]) .r-discover__float {
   visibility: hidden;
@@ -272,7 +277,7 @@
   width: 100%;
   gap: 12px;
   border: 2px solid transparent;
-  border-radius: 22px;
+  border-radius: var(--radius-card);
   background: var(--color-surface);
   padding: 10px;
   color: var(--color-ink);
@@ -283,10 +288,10 @@
 .r-discover-card.is-focused {
   border-color: var(--color-primary);
 }
-.r-discover-card .r-discover-thumb {
+.r-discover-card__thumb {
   width: 96px;
   height: 96px;
-  border-radius: 16px;
+  border-radius: var(--radius-control);
 }
 .r-discover-card__copy {
   display: flex;
@@ -318,32 +323,13 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.r-discover-card--skeleton {
-  width: auto;
-  height: 120px;
+/* 처음 불러오는 동안 카드 자리(공용 Skeleton을 지도 위 흰 카드 모양으로) */
+.r-discover-float-skeleton {
   margin: 0 16px 14px;
-  animation: r-discover-pulse 1.3s ease-in-out infinite;
 }
-
-/* 사진과 사진이 없을 때의 자리 */
-.r-discover-thumb {
-  display: grid;
-  width: 64px;
-  height: 64px;
-  flex: none;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 14px;
-  background: var(--neutral-100);
-  object-fit: cover;
-}
-.r-discover-thumb--empty {
-  background: var(--brand-50);
-  color: var(--brand-400);
-}
-.r-discover-thumb--empty .icon {
-  width: 28px;
-  height: 28px;
+.r-discover-float-skeleton > .r-skeleton {
+  background: var(--color-surface);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--shadow-color) 14%, transparent);
 }
 
 /* 대표 맛객 한 줄 */
@@ -393,7 +379,7 @@
   height: var(--r-discover-peek);
   flex-direction: column;
   overflow: hidden;
-  border-radius: 28px 28px 0 0;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   background: var(--color-canvas);
   box-shadow: 0 -8px 24px color-mix(in srgb, var(--shadow-color) 12%, transparent);
   transition: height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -534,17 +520,17 @@
   flex-direction: column;
   gap: 6px;
   border: 0;
-  border-radius: 18px;
+  border-radius: var(--radius-control);
   background: var(--color-surface);
   padding: 8px 8px 12px;
   color: var(--color-ink);
   text-align: left;
   box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
 }
-.r-discover-mini .r-discover-thumb {
+.r-discover-mini__thumb {
   width: 100%;
   height: 104px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
 }
 .r-discover-mini > b {
   overflow: hidden;
@@ -600,7 +586,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   background: var(--color-surface);
   padding: 10px 12px 10px 10px;
   box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 6%, transparent);
@@ -617,7 +603,7 @@
   color: var(--color-ink);
   text-align: left;
 }
-.r-discover-row__main .r-discover-thumb {
+.r-discover-row__thumb {
   width: 76px;
   height: 76px;
 }
@@ -664,19 +650,20 @@
 .r-discover-row__mine {
   flex: none;
 }
-.r-discover-row--skeleton {
+/* 목록을 불러오는 동안 행 자리(공용 Skeleton을 목록 행 모양으로) */
+.r-discover-rows-skeleton {
+  gap: 10px;
+}
+.r-discover-rows-skeleton > .r-skeleton {
   height: 96px;
-  animation: r-discover-pulse 1.3s ease-in-out infinite;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 6%, transparent);
 }
 .r-discover-empty {
   padding: 22px 20px;
 }
 
-@keyframes r-discover-pulse {
-  50% {
-    opacity: 0.55;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .r-discover-sheet,
   .r-discover__float,

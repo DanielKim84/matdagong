@@ -41,10 +41,3 @@ body {
   color: var(--color-ink);
   background: var(--color-canvas);
 }
-
-button,
-input,
-select,
-textarea {
-  font-family: var(--font-body);
-}

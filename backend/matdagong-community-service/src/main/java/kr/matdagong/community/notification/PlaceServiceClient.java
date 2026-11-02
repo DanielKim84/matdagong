@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import kr.matdagong.common.http.RestClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
@@ -21,14 +20,16 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Component
 public class PlaceServiceClient {
+    private static final String RECORD_NOT_FOUND = "등록한 맛집 기록을 찾을 수 없습니다.";
+
     private final RestClient client;
 
     @Autowired
-    public PlaceServiceClient(@Value("${dagong.place-service.url}") String baseUrl) {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(Duration.ofSeconds(2));
-        requestFactory.setReadTimeout(Duration.ofSeconds(5));
-        this.client = RestClient.builder().baseUrl(baseUrl).requestFactory(requestFactory).build();
+    public PlaceServiceClient(
+            @Value("${dagong.place-service.url}") String baseUrl,
+            @Value("${dagong.place-service.connect-timeout:PT2S}") Duration connectTimeout,
+            @Value("${dagong.place-service.read-timeout:PT5S}") Duration readTimeout) {
+        this(RestClients.create(baseUrl, connectTimeout, readTimeout));
     }
 
     PlaceServiceClient(RestClient client) {
@@ -39,21 +40,21 @@ public class PlaceServiceClient {
     public RecordedPlace findOwnRecord(String accessToken, String placeId, UUID accountId) {
         PlaceResponse place = fetchPlace(accessToken, placeId);
         if (place == null || place.tasters() == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "등록한 맛집 기록을 찾을 수 없습니다.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, RECORD_NOT_FOUND);
         }
         String ownerId = accountId.toString();
         return place.tasters().stream()
                 .filter(taster -> ownerId.equals(taster.tasterId()))
                 .findFirst()
                 .map(taster -> new RecordedPlace(place.id(), place.name(), "PUBLIC".equals(taster.visibility())))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "등록한 맛집 기록을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, RECORD_NOT_FOUND));
     }
 
     private PlaceResponse fetchPlace(String accessToken, String placeId) {
         try {
             return client.get()
                     .uri("/api/v1/places/{placeId}", placeId)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .headers(headers -> headers.setBearerAuth(accessToken))
                     .retrieve()
                     .body(PlaceResponse.class);
         } catch (HttpClientErrorException.NotFound exception) {
@@ -63,8 +64,10 @@ public class PlaceServiceClient {
         }
     }
 
+    /** 장소 서비스에서 확인한 본인 기록입니다. publicRecord가 true일 때만 구독자에게 알립니다. */
     public record RecordedPlace(String placeId, String placeName, boolean publicRecord) {}
 
+    /** 장소 서비스 응답 중 이 확인에 필요한 값만 읽습니다. */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record PlaceResponse(String id, String name, List<Taster> tasters) {}
 

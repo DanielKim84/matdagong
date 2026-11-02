@@ -25,6 +25,21 @@ declare global {
   }
   interface MapOverlay {
     setMap(map: MapInstance | null): void;
+    setZIndex(zIndex: number): void;
+  }
+  /** Geocoder.coord2RegionCode 결과 한 줄. region_type은 "B"(법정동) 또는 "H"(행정동)입니다. */
+  interface KakaoRegion {
+    region_type: string;
+    region_1depth_name: string;
+    region_2depth_name: string;
+    region_3depth_name: string;
+  }
+  interface KakaoGeocoder {
+    coord2RegionCode(
+      longitude: number,
+      latitude: number,
+      callback: (result: KakaoRegion[], status: string) => void,
+    ): void;
   }
   interface KakaoPlaceResult {
     id: string;
@@ -53,11 +68,7 @@ declare global {
       LatLngBounds: new () => MapBounds;
       Size: new (width: number, height: number) => object;
       Point: new (x: number, y: number) => object;
-      MarkerImage: new (
-        src: string,
-        size: object,
-        options?: { offset?: object },
-      ) => object;
+      MarkerImage: new (src: string, size: object, options?: { offset?: object }) => object;
       Marker: new (options: {
         map: MapInstance;
         position: MapCoordinate;
@@ -80,6 +91,7 @@ declare global {
             options?: { size?: number; location?: MapCoordinate; radius?: number },
           ): void;
         };
+        Geocoder: new () => KakaoGeocoder;
       };
       event: {
         addListener(

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import type { MapKind, Place } from "../models/place";
 import { loadMapSdk } from "../services/kakao";
-import Icon from "./Icon";
-import { MARKER_SHELL_PATH, categoryMarkerHtml, type CategoryMarkerKind } from "./mapMarkerArt";
+import { MY_TASTER_ID, type MapKind, type Place } from "../models/place";
+import { errorMessage } from "../utils/errorMessage";
 import type { Coordinates } from "../utils/geo";
+import Icon from "./Icon";
+import { MARKER_SHELL_PATH, categoryMarkerHtml } from "./mapMarkerArt";
+
 type Props = {
   places: Place[];
   subscriptions: string[];
@@ -20,7 +22,7 @@ type Props = {
   fitToPlaces?: boolean;
 };
 
-type FocusableOverlay = MapOverlay & { setZIndex?: (zIndex: number) => void };
+const MAP_LOAD_ERROR = "지도를 불러오지 못했어요.";
 
 export default function MapCanvas({
   places,
@@ -50,7 +52,7 @@ export default function MapCanvas({
   const focusedRef = useRef(focusedPlaceId);
   focusedRef.current = focusedPlaceId;
   // 장소 ID별 개별 마커입니다. 강조 상태를 마커를 다시 만들지 않고 바꿀 때 씁니다.
-  const markers = useRef(new Map<string, { button: HTMLElement; overlay: FocusableOverlay }>());
+  const markers = useRef(new Map<string, { button: HTMLElement; overlay: MapOverlay }>());
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [position, setPosition] = useState<Coordinates | null>(null);
@@ -86,8 +88,8 @@ export default function MapCanvas({
         requestAnimationFrame(() => map.relayout());
         setReady(true);
       })
-      .catch((reason: Error) => {
-        if (active) setError(reason.message);
+      .catch((cause: unknown) => {
+        if (active) setError(errorMessage(cause, MAP_LOAD_ERROR));
       });
     return () => {
       active = false;
@@ -113,11 +115,11 @@ export default function MapCanvas({
     if (!ready || !map || !maps) return;
     const overlays: MapOverlay[] = [];
     const placeMarkers = markers.current;
-    const remember = (place: Place, button: HTMLElement, overlay: FocusableOverlay) => {
+    const remember = (place: Place, button: HTMLElement, overlay: MapOverlay) => {
       placeMarkers.set(place.id, { button, overlay });
       if (place.id === focusedRef.current) {
         button.classList.add("is-focused");
-        overlay.setZIndex?.(10);
+        overlay.setZIndex(10);
       }
     };
     // 가까이 볼 때는 개별 핀, 축소하면 격자 단위 묶음(광고 제외), 가장 넓게 볼 때는 마커를 숨깁니다.
@@ -125,16 +127,18 @@ export default function MapCanvas({
     if (zoomLevel >= 7) {
       const cellSize = 0.018 * 2 ** (zoomLevel - 7);
       const groups = new Map<string, { latitude: number; longitude: number; count: number }>();
-      places.filter((place) => !place.advertisement).forEach((place) => {
-        const row = Math.floor(place.latitude / cellSize);
-        const column = Math.floor(place.longitude / cellSize);
-        const key = `${row}:${column}`;
-        const group = groups.get(key) ?? { latitude: 0, longitude: 0, count: 0 };
-        group.latitude += place.latitude;
-        group.longitude += place.longitude;
-        group.count += 1;
-        groups.set(key, group);
-      });
+      places
+        .filter((place) => !place.advertisement)
+        .forEach((place) => {
+          const row = Math.floor(place.latitude / cellSize);
+          const column = Math.floor(place.longitude / cellSize);
+          const key = `${row}:${column}`;
+          const group = groups.get(key) ?? { latitude: 0, longitude: 0, count: 0 };
+          group.latitude += place.latitude;
+          group.longitude += place.longitude;
+          group.count += 1;
+          groups.set(key, group);
+        });
       groups.forEach((group) => {
         const center = new maps.LatLng(group.latitude / group.count, group.longitude / group.count);
         const button = document.createElement("button");
@@ -154,7 +158,7 @@ export default function MapCanvas({
     places.forEach((place) => {
       const subscribedTaster = place.tasters.find((taster) => subscriptions.includes(taster.tasterId));
       const matchedTaster = place.tasters.find((taster) => recommendedTasterIds.includes(taster.tasterId));
-      const fallbackTaster = place.tasters.find((taster) => taster.tasterId !== "me") ?? {
+      const fallbackTaster = place.tasters.find((taster) => taster.tasterId !== MY_TASTER_ID) ?? {
         tasterId: "sample-taster",
         tasterName: "맛객",
         tag: "",
@@ -163,36 +167,51 @@ export default function MapCanvas({
         note: "",
       };
       // 내 기록, 좋아요, 구독, 취향 일치 관계를 계정 데이터로 판단해 마커를 정확히 나눕니다.
-      const isMyRecord = place.visibility === "private"
-        || place.tasters.some((taster) => taster.tasterId === "me");
+      const isMyRecord =
+        place.visibility === "private" || place.tasters.some((taster) => taster.tasterId === MY_TASTER_ID);
       const kind: MapKind = isMyRecord
         ? "own"
         : liked.includes(place.id)
           ? "liked"
           : place.advertisement
-          ? "ad"
-          : subscribedTaster
-            ? subscribedTaster.avatar ? "subscribedPhoto" : "subscribed"
-          : place.tasters.some((taster) => recommendedTasterIds.includes(taster.tasterId))
+            ? "ad"
+            : subscribedTaster
+              ? subscribedTaster.avatar
+                ? "subscribedPhoto"
+                : "subscribed"
+              : place.tasters.some((taster) => recommendedTasterIds.includes(taster.tasterId))
+                ? "matched"
+                : "other";
+      const markerRole =
+        kind === "subscribed" || kind === "subscribedPhoto"
+          ? "subscribed"
+          : kind === "matched"
             ? "matched"
-            : "other";
-      const markerRole = kind === "subscribed" || kind === "subscribedPhoto"
-        ? "subscribed"
-        : kind === "matched" ? "matched" : kind === "other" ? "other" : kind === "own" ? "own" : null;
-      const markerTaster = markerRole === "subscribed"
-        ? subscribedTaster ?? fallbackTaster
-        : markerRole === "matched"
-          ? matchedTaster ?? fallbackTaster
-          : markerRole === "other"
-            ? place.tasters.find((taster) => taster.tasterId !== "me" && !subscriptions.includes(taster.tasterId)) ?? fallbackTaster
-            : markerRole === "own"
-              ? place.tasters.find((taster) => taster.tasterId === "me") ?? fallbackTaster
-            : undefined;
+            : kind === "other"
+              ? "other"
+              : kind === "own"
+                ? "own"
+                : null;
+      const markerTaster =
+        markerRole === "subscribed"
+          ? (subscribedTaster ?? fallbackTaster)
+          : markerRole === "matched"
+            ? (matchedTaster ?? fallbackTaster)
+            : markerRole === "other"
+              ? (place.tasters.find(
+                  (taster) => taster.tasterId !== MY_TASTER_ID && !subscriptions.includes(taster.tasterId),
+                ) ?? fallbackTaster)
+              : markerRole === "own"
+                ? (place.tasters.find((taster) => taster.tasterId === MY_TASTER_ID) ?? fallbackTaster)
+                : undefined;
       if (markerRole && markerTaster) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = `taster-map-marker taster-map-marker--${markerRole}`;
-        button.setAttribute("aria-label", `${markerRole === "own" ? "내가 등록한" : markerRole === "other" ? `구독하지 않은 ${markerTaster.tasterName} 맛객이 추천한` : `${markerTaster.tasterName} 맛객이 추천한`} ${place.name}`);
+        button.setAttribute(
+          "aria-label",
+          `${markerRole === "own" ? "내가 등록한" : markerRole === "other" ? `구독하지 않은 ${markerTaster.tasterName} 맛객이 추천한` : `${markerTaster.tasterName} 맛객이 추천한`} ${place.name}`,
+        );
         const shell = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         shell.setAttribute("class", "taster-map-marker-shell");
         shell.setAttribute("viewBox", "0 0 43 53");
@@ -211,7 +230,14 @@ export default function MapCanvas({
           face.append(image);
         } else {
           // 프로필 사진이 없을 때는 관계별 포즈가 있는 맛다공 캐릭터를 사용합니다.
-          const roleVariant = markerRole === "subscribed" ? 4 : markerRole === "matched" ? 7 : markerRole === "own" ? markerTaster.avatarVariant : 1;
+          const roleVariant =
+            markerRole === "subscribed"
+              ? 4
+              : markerRole === "matched"
+                ? 7
+                : markerRole === "own"
+                  ? markerTaster.avatarVariant
+                  : 1;
           const variant = Math.min(10, Math.max(1, roleVariant || markerTaster.avatarVariant || 1));
           const column = (variant - 1) % 5;
           const row = Math.floor((variant - 1) / 5);
@@ -253,7 +279,7 @@ export default function MapCanvas({
       button.type = "button";
       button.className = `map-category-marker map-category-marker--${kind}`;
       button.setAttribute("aria-label", `${kind} · ${place.name}`);
-      button.innerHTML = categoryMarkerHtml(kind as CategoryMarkerKind);
+      button.innerHTML = categoryMarkerHtml(kind);
       button.addEventListener("click", (event) => {
         event.stopPropagation();
         selectCallback.current(place);
@@ -278,9 +304,9 @@ export default function MapCanvas({
     const map = instance.current,
       maps = window.kakao?.maps;
     markers.current.forEach(({ button, overlay }, placeId) => {
-      const focused = placeId === focusedPlaceId;
-      button.classList.toggle("is-focused", focused);
-      overlay.setZIndex?.(focused ? 10 : 0);
+      const isFocused = placeId === focusedPlaceId;
+      button.classList.toggle("is-focused", isFocused);
+      overlay.setZIndex(isFocused ? 10 : 0);
     });
     if (!ready || !map || !maps || !focusedPlaceId) return;
     const place = placesRef.current.find((item) => item.id === focusedPlaceId);
@@ -317,10 +343,7 @@ export default function MapCanvas({
       content: '<span class="position-dot"></span>',
       yAnchor: 0.5,
     });
-    if (!selected)
-      map.setCenter(
-        new maps.LatLng(coordinates.latitude, coordinates.longitude),
-      );
+    if (!selected) map.setCenter(new maps.LatLng(coordinates.latitude, coordinates.longitude));
     return () => overlay.setMap(null);
   }, [ready, position, selected]);
 

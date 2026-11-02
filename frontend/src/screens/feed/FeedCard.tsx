@@ -1,26 +1,33 @@
+import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
-import { relativeTime } from "../../components/ui";
-import { NEW_BADGE_MS, openDirections, shortArea, type FeedRecord } from "./feedRecords";
+import PlaceThumb from "../../components/PlaceThumb";
+import { formatRelativeTime } from "../../utils/format";
+import { openDirections, sharePlace } from "../../utils/placeLinks";
+import { NEW_BADGE_MS, shortArea, type FeedRecord } from "./feedRecords";
 
 /** 피드 기록 카드: 작성자·시각 → 사진(장소 표시) → 추천 이유·태그 → 저장·길찾기·공유. */
-export default function FeedCard({
-  record,
-  liked,
-  onLike,
-  onShare,
-}: {
-  record: FeedRecord;
-  liked: boolean;
-  onLike: () => void;
-  onShare: () => void;
-}) {
+export default function FeedCard({ record }: { record: FeedRecord }) {
+  const { likedPlaceIds, actions } = useAppData();
   const { place, taster, author } = record;
-  const when = relativeTime(taster.recordedAt);
+  const isLiked = likedPlaceIds.includes(place.id);
+  const when = formatRelativeTime(taster.recordedAt);
   const isNew = record.time > 0 && Date.now() - record.time < NEW_BADGE_MS;
   const area = shortArea(place);
   const tags = (taster.tags ?? []).slice(0, 3);
+
+  async function share() {
+    const result = await sharePlace(place);
+    if (result === "copied")
+      actions.notify({
+        kind: "success",
+        title: "링크를 복사했어요",
+        message: `${place.name} 링크를 붙여 넣어 공유해 보세요.`,
+      });
+    else if (result === "failed")
+      actions.notify({ kind: "error", title: "공유하지 못했어요", message: "잠시 후 다시 시도해 주세요." });
+  }
 
   return (
     <article className="r-card r-feed-card">
@@ -36,16 +43,22 @@ export default function FeedCard({
       </header>
 
       {record.photo ? (
-        <button type="button" className="r-feed-card__photo" onClick={() => go("place", place.id)} aria-label={`${place.name} 맛집 보기`}>
+        <button
+          type="button"
+          className="r-feed-card__photo"
+          onClick={() => go("place", place.id)}
+          aria-label={`${place.name} 맛집 보기`}
+        >
           <img src={record.photo} alt="" loading="lazy" decoding="async" />
           <span className="r-feed-card__place-pill">
             <Icon name="pin" />
-            {place.name}{area ? ` · ${area}` : ""}
+            {place.name}
+            {area ? ` · ${area}` : ""}
           </span>
         </button>
       ) : (
         <button type="button" className="r-feed-card__place" onClick={() => go("place", place.id)}>
-          <span className="r-badge-icon"><Icon name={place.category.includes("카페") ? "coffee" : "fork"} /></span>
+          <PlaceThumb place={place} fallback="icon" />
           <span className="r-row__copy">
             <b>{place.name}</b>
             <small>{[place.category, area].filter(Boolean).join(" · ")}</small>
@@ -64,17 +77,33 @@ export default function FeedCard({
         {taster.note && <p className="r-feed-card__note">{taster.note}</p>}
         {tags.length > 0 && (
           <div className="r-tags">
-            {tags.map((tag) => <span className="r-tag" key={tag}>{tag}</span>)}
+            {tags.map((tag) => (
+              <span className="r-tag" key={tag}>
+                {tag}
+              </span>
+            ))}
           </div>
         )}
         <div className="r-feed-card__actions">
-          <button type="button" className={`r-feed-act${liked ? " is-on" : ""}`} aria-pressed={liked} onClick={onLike}>
-            <Icon name="heart" filled={liked} />{liked ? "저장됨" : "저장"}
+          <button
+            type="button"
+            className={`r-feed-act${isLiked ? " is-on" : ""}`}
+            aria-pressed={isLiked}
+            onClick={() => void actions.toggleLike(place.id)}
+          >
+            <Icon name="heart" filled={isLiked} />
+            {isLiked ? "저장됨" : "저장"}
           </button>
           <button type="button" className="r-feed-act" onClick={() => openDirections(place)}>
-            <Icon name="route" />길찾기
+            <Icon name="route" />
+            길찾기
           </button>
-          <button type="button" className="r-feed-act r-feed-act--icon" aria-label={`${place.name} 공유`} onClick={onShare}>
+          <button
+            type="button"
+            className="r-feed-act r-feed-act--icon"
+            aria-label={`${place.name} 공유`}
+            onClick={() => void share()}
+          >
             <Icon name="share" />
           </button>
         </div>

@@ -4,7 +4,7 @@ import static kr.matdagong.community.notification.NotificationModels.*;
 
 import jakarta.validation.Valid;
 import java.util.UUID;
-import kr.matdagong.community.security.AuthenticatedAccount;
+import kr.matdagong.common.security.AuthenticatedAccount;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -39,11 +39,11 @@ public class NotificationController {
     @PostMapping("/place-recorded")
     @ResponseStatus(HttpStatus.CREATED)
     public NotificationView placeRegistered(
-            @AuthenticationPrincipal Jwt jwt,
-            @Valid @RequestBody PlaceRegisteredRequest request) {
+            @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody PlaceRegisteredRequest request) {
         UUID accountId = AuthenticatedAccount.id(jwt);
         // 실제로 저장된 본인 기록만 알림으로 만들고, 장소 서비스 조회는 DB 트랜잭션 밖에서 끝냅니다.
-        PlaceServiceClient.RecordedPlace place = places.findOwnRecord(jwt.getTokenValue(), request.placeId(), accountId);
+        PlaceServiceClient.RecordedPlace place =
+                places.findOwnRecord(jwt.getTokenValue(), request.placeId(), accountId);
         return service.placeRegistered(accountId, place);
     }
 

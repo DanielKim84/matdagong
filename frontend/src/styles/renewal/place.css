@@ -4,72 +4,9 @@
   padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
 
-/* ── 떠 있는 뒤로·공유·저장 버튼 줄 (스크롤하면 바탕과 이름이 깔림) ── */
-.r-place-float {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  height: 0;
-}
-.r-place-float__bar {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-.r-place-float.is-scrolled .r-place-float__bar {
-  background: var(--color-canvas);
-  box-shadow: 0 1px 0 var(--color-line);
-}
-.r-place-float__title {
-  min-width: 0;
-  flex: 1;
-  overflow: hidden;
-  color: var(--color-ink);
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 400;
-  opacity: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
-}
-.r-place-float.is-scrolled .r-place-float__title {
-  opacity: 1;
-}
-.r-place-glass {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  flex: none;
-  place-items: center;
-  border: 0;
-  border-radius: 50%;
-  background: var(--color-surface);
-  padding: 0;
-  color: var(--color-ink);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 14%, transparent);
-  transition: box-shadow 0.2s ease;
-}
-.r-place-glass .icon {
-  width: 22px;
-  height: 22px;
-}
-.r-place-glass.is-liked {
+/* ── 떠 있는 상단 바(TopBar variant="float")의 저장 버튼 ── */
+.r-place-like.is-liked {
   color: var(--color-primary);
-}
-.r-place-float.is-scrolled .r-place-glass {
-  box-shadow: none;
-}
-.r-place-glass--dark {
-  background: color-mix(in srgb, var(--on-strong) 14%, transparent);
-  color: var(--on-strong);
-  box-shadow: none;
 }
 
 /* ── 큰 사진 / 위치 지도 ── */
@@ -158,7 +95,7 @@
   flex-direction: column;
   gap: 18px;
   margin-top: -28px;
-  border-radius: 28px 28px 0 0;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   background: var(--color-canvas);
   padding: 24px 20px 0;
 }
@@ -332,7 +269,7 @@
 }
 .r-place-note {
   margin: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-soft);
   padding: 12px 14px;
   color: var(--color-muted);
@@ -346,18 +283,17 @@
   flex-direction: column;
   gap: 10px;
 }
-.r-place-records__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+/* SectionHead를 상세 화면의 큰 제목 모양으로 씁니다. */
+.r-section-head.r-place-records__head {
   padding: 0 20px;
 }
 .r-place-records__head h2 {
-  margin: 0;
+  font-family: var(--font-display);
   font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0;
 }
-.r-place-records__head span {
-  font-size: 13px;
+.r-place-records__head .r-section-head__meta {
   font-weight: 700;
 }
 .r-place-records__track {
@@ -456,7 +392,7 @@
   height: 84px;
   overflow: hidden;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--neutral-100);
   padding: 0;
 }
@@ -523,31 +459,6 @@
   min-height: 44px;
   flex: 1 1 auto;
   padding: 0 14px;
-}
-.r-place-dots {
-  display: flex;
-  justify-content: center;
-}
-.r-place-dots button {
-  display: grid;
-  min-width: 18px;
-  height: 44px;
-  place-items: center;
-  border: 0;
-  background: none;
-  padding: 0 3px;
-}
-.r-place-dots span {
-  display: block;
-  width: 6px;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--neutral-200);
-  transition: width 0.2s ease;
-}
-.r-place-dots button[aria-selected="true"] span {
-  width: 20px;
-  background: var(--color-primary);
 }
 
 /* ── 추천 메뉴 모아 보기 ── */
@@ -729,6 +640,8 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
+  /* 가로 스와이프(hooks/useSwipe)를 브라우저가 가져가지 않게 합니다. */
+  touch-action: pan-y;
 }
 .r-place-viewer__track {
   display: flex;
@@ -747,9 +660,8 @@
   max-height: 100%;
   object-fit: contain;
 }
+.r-place-viewer__close,
 .r-place-viewer__nav {
-  position: absolute;
-  top: 50%;
   display: grid;
   width: 44px;
   height: 44px;
@@ -759,6 +671,17 @@
   background: color-mix(in srgb, var(--on-strong) 14%, transparent);
   padding: 0;
   color: var(--on-strong);
+}
+.r-place-viewer__close {
+  flex: none;
+}
+.r-place-viewer__close .icon {
+  width: 22px;
+  height: 22px;
+}
+.r-place-viewer__nav {
+  position: absolute;
+  top: 50%;
   transform: translateY(-50%);
 }
 .r-place-viewer__nav--prev {
@@ -836,43 +759,20 @@
   object-fit: cover;
 }
 
-/* ── 불러오는 중 ── */
+/* ── 불러오는 중: 공용 Skeleton(line 3개)을 큰 사진 + 글 두 줄 모양으로 ── */
 .r-place-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   padding: 8px 20px;
 }
-.r-place-skeleton span {
-  display: block;
-  border-radius: 14px;
-  background: var(--neutral-100);
-  animation: r-place-pulse 1.3s ease-in-out infinite;
-}
-.r-place-skeleton__hero {
+.r-place-skeleton .r-skeleton:first-child {
   height: 240px;
   border-radius: var(--radius-card);
 }
-.r-place-skeleton__line {
-  height: 22px;
-}
-.r-place-skeleton__line--short {
+.r-place-skeleton .r-skeleton:last-of-type {
   width: 55%;
-}
-@keyframes r-place-pulse {
-  50% {
-    opacity: 0.55;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .r-place-viewer__track,
-  .r-place-dots span,
-  .r-place-float__bar,
-  .r-place-float__title {
+  .r-place-viewer__track {
     transition: none;
-  }
-  .r-place-skeleton span {
-    animation: none;
   }
 }

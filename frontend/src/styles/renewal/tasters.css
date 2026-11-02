@@ -109,7 +109,9 @@
   white-space: nowrap;
 }
 .r-tasters-strip .avatar {
-  box-shadow: 0 0 0 2px var(--color-canvas), 0 0 0 4px var(--brand-300);
+  box-shadow:
+    0 0 0 2px var(--color-canvas),
+    0 0 0 4px var(--brand-300);
 }
 
 /* 취향 일치 카드 묶음 */
@@ -237,7 +239,7 @@
   align-items: center;
   gap: 12px;
   border: 1px dashed var(--neutral-300);
-  border-radius: 18px;
+  border-radius: var(--radius-control);
   background: none;
   padding: 14px;
   color: var(--color-ink);
@@ -251,7 +253,7 @@
   height: 40px;
   flex: none;
   place-items: center;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--amber-50);
   color: var(--amber-600);
 }
@@ -285,7 +287,7 @@
   color: var(--color-primary-strong);
   font-weight: 700;
 }
-.r-tasters-manage {
+.r-tasters-sub-row__manage {
   min-width: 56px;
   min-height: 44px;
   flex: none;
@@ -334,25 +336,25 @@
 .r-tasters-manage-sheet {
   gap: 16px;
 }
-.r-tasters-manage-head {
+.r-tasters-manage-sheet__head {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.r-tasters-manage-head > span {
+.r-tasters-manage-sheet__head > span {
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 2px;
 }
-.r-tasters-manage-head b {
+.r-tasters-manage-sheet__head b {
   font-size: 16px;
 }
-.r-tasters-manage-head small {
+.r-tasters-manage-sheet__head small {
   color: var(--color-muted);
   font-size: 13px;
 }
-.r-tasters-manage-term {
+.r-tasters-manage-sheet__term {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -360,22 +362,22 @@
   background: var(--color-surface-soft);
   padding: 14px 16px;
 }
-.r-tasters-manage-term span {
+.r-tasters-manage-sheet__term span {
   color: var(--color-muted);
   font-size: 12px;
   font-weight: 700;
 }
-.r-tasters-manage-term b {
+.r-tasters-manage-sheet__term b {
   color: var(--color-primary);
   font-family: var(--font-display);
   font-size: 24px;
   font-weight: 400;
 }
-.r-tasters-manage-term small {
+.r-tasters-manage-sheet__term small {
   color: var(--color-muted);
   font-size: 12px;
 }
-.r-tasters-manage-actions {
+.r-tasters-manage-sheet__actions {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -396,11 +398,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-.r-tasters-profile__cover > .r-icon-button {
-  position: absolute;
-  top: calc(12px + env(safe-area-inset-top));
-  left: 14px;
 }
 .r-tasters-profile__body {
   position: relative;
@@ -492,13 +489,13 @@
 .r-tasters-match__bar {
   height: 8px;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: var(--neutral-150);
 }
 .r-tasters-match__bar > i {
   display: block;
   height: 100%;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: var(--color-primary);
 }
 .r-tasters-match small {
@@ -531,14 +528,11 @@
   position: relative;
   height: 280px;
   overflow: hidden;
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   background: var(--color-surface-soft);
 }
 .r-tasters-records .r-row {
   align-items: flex-start;
-}
-.r-tasters-records .r-thumb {
-  display: block;
 }
 .r-tasters-records .r-row__copy {
   padding-top: 4px;
@@ -590,7 +584,7 @@
   justify-content: center;
   background: color-mix(in srgb, var(--shadow-color) 36%, transparent);
 }
-.r-tasters-offer__panel.sheet {
+.r-tasters-offer__panel {
   display: flex;
   width: min(var(--app-width), 100%);
   max-height: calc(100dvh - 40px);
@@ -598,7 +592,7 @@
   gap: 16px;
   overflow: auto;
   border: 0;
-  border-radius: 28px 28px 0 0;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   outline: 0;
   background: var(--color-canvas);
   padding: 0 20px calc(24px + env(safe-area-inset-bottom));
@@ -610,7 +604,7 @@
   height: 5px;
   flex: none;
   margin: 10px auto 0;
-  border-radius: 3px;
+  border-radius: var(--radius-pill);
   background: var(--neutral-200);
 }
 .r-tasters-offer__head {
@@ -718,7 +712,7 @@
   justify-content: center;
   gap: 2px;
   border: 2px solid transparent;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--neutral-100);
   padding: 4px 2px;
   color: var(--color-ink);

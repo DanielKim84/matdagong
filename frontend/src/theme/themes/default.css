@@ -115,7 +115,12 @@
   --font-body: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
   --font-display: "Jua", "Pretendard", "Noto Sans KR", sans-serif;
 
+  /* 반경: 아래에서 올라오는 시트·큰 카드(sheet) > 카드 > 입력·버튼 > 썸네일·배지(md) > 작은 칸(sm) > 아주 작은 표시(xs). 시즌 테마가 따로 정하지 않으면 이 값을 씁니다. */
   --radius-card: 22px;
   --radius-control: 16px;
+  --radius-sheet: 28px;
+  --radius-md: 14px;
+  --radius-sm: 12px;
+  --radius-xs: 4px;
   --radius-pill: 999px;
 }
