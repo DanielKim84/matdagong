@@ -17,10 +17,12 @@ export type PlacePhoto = {
   record: PlaceRecord;
   /** 메뉴 사진이면 "메뉴명 · 가격" */
   caption?: string;
+  /** 메뉴에 붙은 사진인지(대표·배경 사진과 구분) */
+  isMenu?: boolean;
+  /** 메뉴 사진이면 메뉴 이름과 가격(사진 크게 보기에서 크게 보여 줌) */
+  menuName?: string;
+  menuPrice?: number;
 };
-
-export type MenuSummary = { name: string; price?: number; photo?: string; count: number };
-export type CountSummary = { label: string; count: number };
 
 export function recordMenus(record: PlaceRecord): RecommendedMenu[] {
   return (record.menus ?? [])
@@ -68,7 +70,7 @@ export function placeRecords(
   );
 }
 
-/** 모든 기록의 사진과 메뉴 사진을 한 줄로 모읍니다. 같은 주소의 사진은 한 번만 넣습니다. */
+/** 기록(보통 고른 맛객 한 명)의 사진과 메뉴 사진을 한 줄로 모읍니다. 같은 주소의 사진은 한 번만 넣습니다. */
 export function collectPhotos(records: PlaceRecord[]): PlacePhoto[] {
   const seen = new Set<string>();
   const photos: PlacePhoto[] = [];
@@ -82,7 +84,14 @@ export function collectPhotos(records: PlaceRecord[]): PlacePhoto[] {
     (record.photos ?? []).forEach((src) => add({ src, record }));
     recordMenus(record).forEach((menu) => {
       if (menu.photo)
-        add({ src: menu.photo, record, caption: [menu.name, formatWon(menu.price)].filter(Boolean).join(" · ") });
+        add({
+          src: menu.photo,
+          record,
+          isMenu: true,
+          menuName: menu.name,
+          menuPrice: menu.price,
+          caption: [menu.name, formatWon(menu.price)].filter(Boolean).join(" · "),
+        });
     });
   });
   return photos;
@@ -92,40 +101,6 @@ export function photoIndexOf(photos: PlacePhoto[], src?: string): number {
   if (!src) return -1;
   const key = src.split(/[?#]/, 1)[0];
   return photos.findIndex((photo) => photo.src.split(/[?#]/, 1)[0] === key);
-}
-
-const menuKey = (name: string) => name.trim().replace(/\s+/g, " ").toLowerCase();
-
-/** 여러 맛객이 추천한 메뉴를 이름으로 묶어 추천 수가 많은 순으로 돌려줍니다. */
-export function summarizeMenus(records: PlaceRecord[]): MenuSummary[] {
-  const menus = new Map<string, MenuSummary>();
-  records.forEach((record) => {
-    const counted = new Set<string>();
-    recordMenus(record).forEach((menu) => {
-      const key = menuKey(menu.name);
-      const current = menus.get(key) ?? { name: menu.name.trim(), count: 0 };
-      if (!counted.has(key)) current.count += 1;
-      counted.add(key);
-      current.price ??= menu.price;
-      current.photo ??= menu.photo;
-      menus.set(key, current);
-    });
-  });
-  return [...menus.values()].sort((left, right) => right.count - left.count);
-}
-
-/** 기록마다 한 번씩 센 값(태그·방문 조건)을 많은 순으로 돌려줍니다. */
-export function countValues(
-  records: PlaceRecord[],
-  pick: (record: PlaceRecord) => readonly string[] | undefined,
-): CountSummary[] {
-  const counts = new Map<string, number>();
-  records.forEach((record) => {
-    new Set(pick(record) ?? []).forEach((value) => counts.set(value, (counts.get(value) ?? 0) + 1));
-  });
-  return [...counts.entries()]
-    .map(([label, count]) => ({ label, count }))
-    .sort((left, right) => right.count - left.count);
 }
 
 export function hasCoordinates(place: Pick<Place, "latitude" | "longitude">): boolean {

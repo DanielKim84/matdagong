@@ -4,6 +4,7 @@ import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
 import { useModalLock } from "../../hooks/useModalLock";
 import { useSwipe } from "../../hooks/useSwipe";
+import { formatWon } from "../../utils/format";
 import { wrapIndex } from "../../utils/pagination";
 import { avatarFallback, avatarSource } from "../../utils/profileMedia";
 import type { PlacePhoto } from "./placeRecords";
@@ -95,6 +96,13 @@ export default function PhotoViewer({
         )}
       </div>
       <footer className="r-place-viewer__bottom">
+        {photo.isMenu && photo.menuName && (
+          <div className="r-place-viewer__menu">
+            <span className="r-place-viewer__menu-kind">추천 메뉴</span>
+            <b>{photo.menuName}</b>
+            {photo.menuPrice != null && <strong>{formatWon(photo.menuPrice)}</strong>}
+          </div>
+        )}
         <div className="r-place-viewer__author">
           <Avatar
             src={avatarSource(photo.record.tasterId, photo.record.avatar)}
@@ -104,7 +112,7 @@ export default function PhotoViewer({
           />
           <div>
             <b>{photo.record.tasterName}</b>
-            {photo.caption && <span>{photo.caption}</span>}
+            <span>{photo.isMenu ? "메뉴 사진" : "방문 사진"}</span>
           </div>
         </div>
         {total > 1 && (

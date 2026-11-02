@@ -412,15 +412,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.r-thumb {
-  width: 64px;
-  height: 64px;
-  flex: none;
-  overflow: hidden;
-  border-radius: 14px;
-  background: var(--neutral-100);
-  object-fit: cover;
-}
 
 /* ── 빈 화면 ── */
 .r-empty {

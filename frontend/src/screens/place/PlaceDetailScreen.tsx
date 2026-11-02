@@ -1,8 +1,8 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
-import { EmptyState, Segmented, Skeleton, TopBar, type EmptyStateAction } from "../../components/ui";
+import { EmptyState, SectionHead, Skeleton, TopBar, type EmptyStateAction } from "../../components/ui";
 import { kakaoPlaceFromPlace } from "../../services/places";
 import { isMyTaster, type Place } from "../../models/place";
 import { sharePlace } from "../../utils/placeLinks";
@@ -10,22 +10,17 @@ import { STORAGE_KEYS, writeStorageJson } from "../../utils/storage";
 import PhotoViewer from "./PhotoViewer";
 import PlaceConversionSheet, { type ConversionKind } from "./PlaceConversionSheet";
 import PlaceHero from "./PlaceHero";
-import PlaceInfoTab from "./PlaceInfoTab";
-import PlaceMenusTab from "./PlaceMenusTab";
+import PlaceInfo from "./PlaceInfo";
 import PlaceOverview from "./PlaceOverview";
-import PlaceRecordCards from "./PlaceRecordCards";
-import PlaceVisitors from "./PlaceVisitors";
-import { collectPhotos, countValues, placeRecords } from "./placeRecords";
+import PlaceTasterPicker from "./PlaceTasterPicker";
+import PlaceTasterRecord from "./PlaceTasterRecord";
+import { collectPhotos, placeRecords } from "./placeRecords";
 import { useHeroScrolled } from "./useHeroScrolled";
 
-type Tab = "records" | "menus" | "info";
-const TABS: { value: Tab; label: string }[] = [
-  { value: "records", label: "기록" },
-  { value: "menus", label: "메뉴" },
-  { value: "info", label: "정보" },
-];
-
-/** 맛집 상세(#place/<id>). */
+/**
+ * 맛집 상세(#place/<id>). 가게 기본 정보(이름·주소·전화)는 모든 맛객이 함께 쓰고,
+ * 사진·추천 이유·메뉴·태그·매장 이용 정보는 고른 맛객 한 명의 것만 보여 줍니다(맛객끼리 섞지 않음).
+ */
 export default function PlaceDetailScreen() {
   const app = useAppData();
   const place = app.activePlace;
@@ -58,18 +53,27 @@ function PlaceDetail({ place }: { place: Place }) {
   const app = useAppData();
   const { actions } = app;
   const records = placeRecords(place, app.legacyOwnRecord, app.subscriptionIds);
-  const photos = collectPhotos(records);
-  const tagCounts = countValues(records, (record) => record.tags);
+  const [selectedId, setSelectedId] = useState(() => records[0]?.tasterId ?? "");
+  const selectedIndex = Math.max(
+    0,
+    records.findIndex((record) => record.tasterId === selectedId),
+  );
+  const selected = records[selectedIndex];
+  // 사진 보기는 대표 사진 다음에 메뉴 사진이 이어지는 순서입니다. 큰 사진에는 대표 사진만 보여 주고,
+  // 대표 사진이 없을 때만 메뉴 사진을 대신 씁니다.
+  const photos = selected ? collectPhotos([selected]) : [];
+  const mainPhotos = photos.filter((photo) => !photo.isMenu);
+  const heroPhotos = mainPhotos.length ? mainPhotos : photos;
+  const panelId = useId();
 
   const isLiked = app.likedPlaceIds.includes(place.id);
   const canConvertLikedToRecord = app.visitedLikedPlaceIds.includes(place.id);
   const hasOwnRecord = !!app.legacyOwnRecord || records.some(isMyTaster);
 
-  const [tab, setTab] = useState<Tab>("records");
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [conversionPrompt, setConversionPrompt] = useState<ConversionKind | null>(null);
   const heroEnd = useRef<HTMLDivElement>(null);
-  const tabsRef = useRef<HTMLDivElement>(null);
+  const recordsRef = useRef<HTMLElement>(null);
   // 큰 사진이 화면 밖으로 나가면 위쪽 버튼 줄에 바탕과 가게 이름을 깔아 줍니다.
   const isScrolled = useHeroScrolled(heroEnd);
 
@@ -99,9 +103,16 @@ function PlaceDetail({ place }: { place: Place }) {
     go("register", place.id);
   }
 
-  function showRecords() {
-    setTab("records");
-    tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  function selectTaster(tasterId: string) {
+    setSelectedId(tasterId);
+    setViewerIndex(null);
+  }
+
+  function selectByOffset(offset: number) {
+    const next = records[selectedIndex + offset];
+    if (!next) return;
+    selectTaster(next.tasterId);
+    recordsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   const recordAction = hasOwnRecord
@@ -135,7 +146,13 @@ function PlaceDetail({ place }: { place: Place }) {
         }
       />
 
-      <PlaceHero place={place} photos={photos} onOpenPhoto={setViewerIndex} />
+      <PlaceHero
+        key={selected?.tasterId ?? "none"}
+        place={place}
+        photos={heroPhotos}
+        caption={selected && heroPhotos.length > 0 ? `${selected.tasterName}님의 사진` : undefined}
+        onOpenPhoto={setViewerIndex}
+      />
       <div ref={heroEnd} aria-hidden="true" />
 
       <div className="r-place-body">
@@ -148,53 +165,55 @@ function PlaceDetail({ place }: { place: Place }) {
           onSave={save}
         />
 
-        {records.length > 0 && <PlaceVisitors place={place} records={records} onSelect={showRecords} />}
-
-        <div className="r-place-tabs" ref={tabsRef}>
-          <Segmented value={tab} options={TABS} onChange={setTab} label="맛집 상세 보기" />
-        </div>
-
-        {tab === "records" && (
-          <section className="r-place-section r-place-section--bleed" aria-label="맛객들의 기록">
-            {records.length > 0 ? (
-              <PlaceRecordCards
-                records={records}
+        <section className="r-place-section r-place-records" ref={recordsRef} aria-labelledby="place-records-title">
+          <SectionHead
+            title="맛객 기록"
+            titleId="place-records-title"
+            meta={records.length > 0 && `${records.length}명`}
+            className="r-place-records__head"
+          />
+          {records.length > 1 && (
+            <p className="r-place-records__hint">
+              맛객을 고르면 그 맛객이 남긴 사진·메뉴·태그·매장 정보를 볼 수 있어요.
+            </p>
+          )}
+          {selected ? (
+            <>
+              {records.length > 1 && (
+                <PlaceTasterPicker
+                  records={records}
+                  selectedId={selected.tasterId}
+                  panelId={panelId}
+                  onSelect={selectTaster}
+                />
+              )}
+              <PlaceTasterRecord
+                key={selected.tasterId}
+                record={selected}
+                panelId={panelId}
                 photos={photos}
                 onOpenPhoto={setViewerIndex}
+                onPrevious={selectedIndex > 0 ? () => selectByOffset(-1) : undefined}
+                onNext={selectedIndex < records.length - 1 ? () => selectByOffset(1) : undefined}
                 onEditOwn={editOwnRecord}
                 onOwnToLike={() => setConversionPrompt("like")}
               />
-            ) : (
-              <EmptyState
-                title="아직 남겨진 맛객 기록이 없어요"
-                message="다녀왔다면 첫 기록을 남겨 보세요."
-                action={{ label: recordAction.label, onClick: recordAction.run, variant: "primary" }}
-              />
-            )}
-            {tagCounts.length > 0 && (
-              <div className="r-place-summary">
-                <span className="r-label">이럴 때 좋아요</span>
-                <div className="r-tags">
-                  {tagCounts.map(({ label, count }) => (
-                    <span className="r-tag" key={label}>
-                      {label}
-                      {count > 1 && <em>· {count}</em>}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {isLiked && !canConvertLikedToRecord && !hasOwnRecord && (
-              <p className="r-place-note">
-                하트로 저장한 맛집은 방문 기록이 아니에요. 직접 다녀온 뒤 ‘내 기록 남기기’로 방문 기록을 남길 수 있어요.
-              </p>
-            )}
-          </section>
-        )}
+            </>
+          ) : (
+            <EmptyState
+              title="아직 남겨진 맛객 기록이 없어요"
+              message="다녀왔다면 첫 기록을 남겨 보세요."
+              action={{ label: recordAction.label, onClick: recordAction.run, variant: "primary" }}
+            />
+          )}
+          {isLiked && !canConvertLikedToRecord && !hasOwnRecord && (
+            <p className="r-place-note">
+              하트로 저장한 맛집은 방문 기록이 아니에요. 직접 다녀온 뒤 ‘내 기록 남기기’로 방문 기록을 남길 수 있어요.
+            </p>
+          )}
+        </section>
 
-        {tab === "menus" && <PlaceMenusTab records={records} photos={photos} onOpenPhoto={setViewerIndex} />}
-
-        {tab === "info" && <PlaceInfoTab place={place} records={records} />}
+        <PlaceInfo place={place} />
       </div>
 
       <div className="r-action-bar r-place-actionbar">

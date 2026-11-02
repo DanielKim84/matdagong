@@ -40,7 +40,7 @@ index.html → src/main.tsx → app/signIn.ts (로그인·가입 확인) → app
 | 폴더 | 경로(해시) | 화면 |
 | --- | --- | --- |
 | `discover/` | `#home`, `#map` | 발견: 지도 + 필터 칩 + 장소 카드 넘기기 + 끌어 올리는 목록 시트 |
-| `place/` | `#place/<id>` | 맛집 상세: 사진·지도, 빠른 동작, 맛객 기록 카드, 메뉴·정보 탭, 사진 보기 |
+| `place/` | `#place/<id>` | 맛집 상세: 공통 가게 정보 + 맛객 고르기(`PlaceTasterPicker`) + 고른 맛객의 기록(`PlaceTasterRecord`, 사진·메뉴·태그·매장 이용 정보), 사진 보기 |
 | `feed/` | `#feed`, `#notifications` | 피드(스토리·기록 카드), 알림 |
 | `record/` | `#register`, `#register/<id>` | 단계형 기록하기와 완료 화면. 단계마다 한 파일, 입력 상태는 역할별 훅(`useRecordPhotos` 등)을 `useRecordForm`이 묶음 |
 | `tasters/` | `#tasters`, `#profile/<id>`, `#subscriptions` | 맛객 탐색, 맛객 프로필, 구독 관리 |

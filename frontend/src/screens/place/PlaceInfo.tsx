@@ -2,16 +2,12 @@ import { useAppData } from "../../app/AppData";
 import Icon from "../../components/Icon";
 import type { Place } from "../../models/place";
 import { kakaoPlaceUrl } from "../../utils/placeLinks";
-import { countValues, type PlaceRecord } from "./placeRecords";
 
-/** 맛집 상세의 정보 탭. 주소·전화·카카오맵과 맛객들이 확인한 방문 정보를 보여 줍니다. */
-export default function PlaceInfoTab({ place, records }: { place: Place; records: PlaceRecord[] }) {
+/** 모든 맛객이 함께 보는 가게 기본 정보(주소·전화·카카오맵). 맛객이 직접 남긴 내용은 맛객 기록에서 보여 줍니다. */
+export default function PlaceInfo({ place }: { place: Place }) {
   const { actions } = useAppData();
   const phone = place.providerPhone?.trim();
   const altAddress = [place.roadAddress, place.lotAddress].find((address) => address && address !== place.address);
-  const conditionCounts = countValues(records, (record) => record.visitConditions);
-  // 맛객 기록에 방문 정보가 없을 때만 장소에 저장된 방문 정보를 보여 줍니다.
-  const placeConditions = conditionCounts.length ? [] : (place.visitConditions ?? []);
 
   const notify = (message: string, title = "맛다공에서 알려드려요") => actions.notify({ kind: "info", title, message });
 
@@ -25,8 +21,10 @@ export default function PlaceInfoTab({ place, records }: { place: Place; records
   }
 
   return (
-    <section className="r-place-section" aria-label="매장 정보">
-      <span className="r-label">매장 정보</span>
+    <section className="r-place-section" aria-labelledby="place-info-title">
+      <h2 className="r-place-section__title" id="place-info-title">
+        가게 정보
+      </h2>
       <div className="r-card r-place-info">
         <div className="r-place-info__row">
           <Icon name="pin" />
@@ -56,24 +54,6 @@ export default function PlaceInfoTab({ place, records }: { place: Place; records
           <Icon name="chevron" />
         </a>
       </div>
-
-      <span className="r-label">맛객들이 확인한 방문 정보</span>
-      {conditionCounts.length > 0 || placeConditions.length > 0 ? (
-        <div className="r-place-pills">
-          {conditionCounts.map(({ label, count }) => (
-            <span className="r-place-pill" key={label}>
-              {label} · {count}명
-            </span>
-          ))}
-          {placeConditions.map((condition) => (
-            <span className="r-place-pill" key={condition}>
-              {condition}
-            </span>
-          ))}
-        </div>
-      ) : (
-        <p className="r-place-note">아직 맛객들이 남긴 방문 정보가 없어요.</p>
-      )}
 
       <button
         type="button"

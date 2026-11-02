@@ -4,14 +4,17 @@ import { loadMapSdk } from "../../services/kakao";
 import type { Place } from "../../models/place";
 import { hasCoordinates, type PlacePhoto } from "./placeRecords";
 
-/** 상단 큰 사진. 사진이 없으면 가게 위치 지도를 보여 줍니다. */
+/** 상단 큰 사진(고른 맛객이 올린 사진). 사진이 없으면 가게 위치 지도를 보여 줍니다. */
 export default function PlaceHero({
   place,
   photos,
+  caption,
   onOpenPhoto,
 }: {
   place: Place;
   photos: PlacePhoto[];
+  /** 누구의 사진인지 왼쪽 아래에 보여 줄 문구 */
+  caption?: string;
   onOpenPhoto: (index: number) => void;
 }) {
   const track = useRef<HTMLDivElement>(null);
@@ -45,6 +48,7 @@ export default function PlaceHero({
           </button>
         ))}
       </div>
+      {caption && <span className="r-place-hero__caption">{caption}</span>}
       {photos.length > 1 && (
         <span className="r-place-hero__count" aria-hidden="true">
           {Math.min(index, photos.length - 1) + 1} / {photos.length}
