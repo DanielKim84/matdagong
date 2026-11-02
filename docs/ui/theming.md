@@ -9,19 +9,21 @@ frontend/src/theme/
 ├─ index.css          테마 패키지 진입점(main.tsx에서 가장 먼저 불러옴)
 ├─ base.css           테마와 무관한 의미 토큰(--color-ink, --color-primary …)과 기본 글꼴
 ├─ themes/
-│  ├─ default.css     기본 테마(A 시안 · 웜 다이어리)
+│  ├─ default.css     기본 테마(밝은 웜 톤)와 반경 토큰
 │  └─ halloween.css   할로윈 예시 테마
 ├─ themes.ts          테마 목록(이름, 상단 색, 제목 글꼴)과 기간 예약
 └─ applyTheme.ts      적용할 테마를 고르고 <html data-theme>에 반영
 ```
 
-A 시안 화면 모양은 테마 토큰만 쓰는 아래 파일에 있습니다. 시즌 테마는 이 파일들을 고치지 않고 토큰 값만 바꿉니다.
+화면 모양은 테마 토큰만 쓰는 아래 파일에 있습니다. 시즌 테마는 이 파일들을 고치지 않고 토큰 값만 바꿉니다.
 
-- `frontend/src/styles/design-a.css`: 제목 글꼴, 홈 상단, 맛집 상세, 맛객 프로필, 지도 상단
-- `frontend/src/styles/a/home-lists.css`: 홈 하단(배너·내 취향 맛객·인기 맛집 카드), 맛집 모음, 맛객 추천
-- `frontend/src/styles/a/my.css`: 마이, 구독 관리, 포인트, 알림, 설정
-- `frontend/src/styles/a/forms.css`: 맛집 등록, 빠른 기록, 프로필 편집, 취향 태그 선택, 태그 제안
-- `frontend/src/styles/a/overlays.css`: 공통 화면 헤더, 하단 시트, 확인창·안내창, 구독 안내 시트, 지도 목록, 서비스 소개, 첫 가입
+- `frontend/src/styles/renewal/ui.css`: 공통 부품(상단 바, 버튼, 칩, 카드, 빈 화면, 스켈레톤, 시트, 확인·안내창, 하단 탭)
+- `frontend/src/styles/renewal/<영역>.css`: 발견·맛집 상세·피드·기록·맛객·나·시작 화면
+- `frontend/src/styles/app.css`, `design-system.css`: 리뉴얼 전부터 쓰는 앱 틀·아바타·지도 마커 등 공통 규칙
+- `frontend/src/styles/profile-settings.css`, `photo-tag-detail.css`, `a/forms.css`: 프로필 편집, 취향 태그 선택, 태그 제안
+- `frontend/src/styles/auth-start.css`: 로그인 시작·오류 화면
+
+반경은 `--radius-xs`(4) · `--radius-sm`(12) · `--radius-md`(14) · `--radius-control`(16) · `--radius-card`(22) · `--radius-sheet`(28) · `--radius-pill` 토큰을 씁니다.
 
 ## 색 체계
 
@@ -66,6 +68,6 @@ A 시안 화면 모양은 테마 토큰만 쓰는 아래 파일에 있습니다.
 
 ## 지금 상태
 
-- 기본 테마: A 시안(웜 다이어리). 크림 바탕, 접근성 대비를 맞춘 코랄(`#cf3f25`), 허니 앰버, 제목 글꼴 Jua, 본문 글꼴 Pretendard.
+- 기본 테마: 밝은 웜 톤(리뉴얼 기준). 크림 바탕, 접근성 대비를 맞춘 코랄(`#cf3f25`), 허니 앰버, 제목 글꼴 Jua, 본문 글꼴 Pretendard.
 - 할로윈 테마: 예시로만 등록되어 있고 기간 예약은 비어 있습니다. `http://localhost:4845/?theme=halloween`으로 미리 볼 수 있습니다.
 - 음식 일러스트(`BrandAssets.tsx`의 SVG)와 사진은 테마와 관계없이 원래 색을 유지합니다.

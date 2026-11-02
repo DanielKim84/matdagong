@@ -10,6 +10,7 @@ C:\workspace\
 └─ dagong-matdagong/            # 맛다공 서비스 모노레포
    ├─ frontend/                 # React 사용자 화면
    └─ backend/
+      ├─ matdagong-common/      # 서비스 공통 코드(토큰 검증, 오류 응답, RestClient 등) — 실행 서버 아님
       ├─ matdagong-api-gateway/ # 프런트 요청의 단일 진입점
       ├─ matdagong-community-service/ # 맛객 프로필·취향·구독·포인트·알림
       └─ matdagong-place-service/     # 맛집·맛객별 기록·지도 조회
@@ -18,6 +19,8 @@ C:\workspace\
 Gradle 멀티프로젝트 모노레포 안에서 각 백엔드 모듈은 별도의 Spring Boot 서버로 실행합니다. 커뮤니티는 `profile`, `subscription` 같은 기능별 패키지로 나누고 컨트롤러가 HTTP 요청을, 서비스가 처리 규칙과 DB 작업을 맡습니다.
 
 ## 로컬 실행
+
+> 새 PC(집 PC 등)에서 처음부터 똑같이 맞출 때는 **[개발 환경 설정 통합 안내](docs/home-development-setup.md)** 하나만 따르면 됩니다. 공통 인증 서버 설정까지 포함합니다.
 
 IntelliJ에서 저장소 루트를 Gradle 프로젝트로 열고 다음 세 백엔드를 각각 실행합니다.
 
@@ -73,6 +76,9 @@ Gateway는 `/api/v1/users`, `/api/v1/tasters`, `/api/v1/taste-tags`, `/api/v1/su
 
 ## 화면과 도메인 문서
 
+- [개발 환경 설정 통합 안내 (다른 PC에서 똑같이 세팅)](docs/home-development-setup.md)
+- [코딩 스타일 (두 저장소 공통, 서식 도구와 규칙)](docs/coding-style.md)
+- [AI 작업 지침](AGENTS.md)
 - [프런트엔드 구조](docs/frontend-structure.md)
 - [도메인 및 API 경계](docs/api-boundaries.md)
 - [카카오 지도 설정](docs/kakao-map-setup.md)

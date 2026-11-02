@@ -6,6 +6,8 @@
   },
   "scripts": {
     "dev": "npm --prefix frontend run dev",
-    "build": "npm --prefix frontend run build"
+    "build": "npm --prefix frontend run build",
+    "format": "npm --prefix frontend run format",
+    "format:check": "npm --prefix frontend run format:check"
   }
 }
