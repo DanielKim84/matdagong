@@ -144,7 +144,7 @@ export default function MapCanvas({
         const button = document.createElement("button");
         button.type = "button";
         button.className = "map-cluster-marker";
-        button.setAttribute("aria-label", `광고를 제외한 맛집 ${group.count}곳`);
+        button.setAttribute("aria-label", `맛집 ${group.count}곳이 모인 곳`);
         button.textContent = String(group.count);
         button.addEventListener("click", (event) => {
           event.stopPropagation();
@@ -374,8 +374,11 @@ export default function MapCanvas({
         </div>
       )}
       <div className="map-location">
-        <button onClick={() => locate()}>
-          <Icon name="locate" />내 위치
+        <button type="button" onClick={() => locate()} aria-label="내 위치로 이동">
+          <Icon name="locate" />
+          <span className="map-location__label" aria-hidden="true">
+            내 위치
+          </span>
         </button>
         {locationMessage && <small role="status">{locationMessage}</small>}
       </div>

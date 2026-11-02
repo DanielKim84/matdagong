@@ -255,6 +255,8 @@ html.is-page-locked .screen-content {
 
 /* ── 지도 마커: 기호 마커(내 맛집·광고), 묶음 마커, 맛객 핀(지도와 BrandAssets의 미리 보기 공통) ── */
 .map-category-marker {
+  /* 안쪽 핀 모양·기호가 이 버튼 기준으로 자리 잡게 합니다(마커 안내 시트에서도 같은 모양). */
+  position: relative;
   display: grid;
   width: 43px;
   height: 53px;

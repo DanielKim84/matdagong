@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
+import Icon from "../../components/Icon";
 import MapCanvas from "../../components/MapCanvas";
 import { EmptyState, Skeleton, type EmptyStateProps } from "../../components/ui";
 import type { Place } from "../../models/place";
@@ -9,6 +10,7 @@ import DiscoverSearchPanel from "./DiscoverSearchPanel";
 import DiscoverSheet from "./DiscoverSheet";
 import DiscoverSheetList from "./DiscoverSheetList";
 import FilterSheet from "./FilterSheet";
+import MarkerGuideSheet from "./MarkerGuideSheet";
 import PlaceCarousel from "./PlaceCarousel";
 import {
   DEFAULT_FILTERS,
@@ -34,6 +36,7 @@ export default function DiscoverScreen() {
   const [bounds, setBounds] = useState<VisibleBounds | null>(null);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isMarkerGuideOpen, setIsMarkerGuideOpen] = useState(false);
   const root = useRef<HTMLElement>(null);
   const top = useRef<HTMLDivElement>(null);
   const { heights, style } = useSheetHeights(root, top);
@@ -127,11 +130,15 @@ export default function DiscoverScreen() {
         ref={top}
         device={device}
         filters={filters}
-        categories={categories}
         resultCount={filtered.length}
         onFiltersChange={changeFilters}
         onFilterOpen={() => setIsFilterOpen(true)}
       />
+
+      <button type="button" className="r-discover__guide-button" onClick={() => setIsMarkerGuideOpen(true)}>
+        <Icon name="pin" />
+        마커 안내
+      </button>
 
       <div className="r-discover__float" inert={sheet !== "peek"}>
         {fallbackView ? (
@@ -156,6 +163,8 @@ export default function DiscoverScreen() {
           <DiscoverSheetList places={rows} recentSubscribed={recentSubscribed} nearby={nearby} ctx={ctx} />
         )}
       </DiscoverSheet>
+
+      {isMarkerGuideOpen && <MarkerGuideSheet onClose={() => setIsMarkerGuideOpen(false)} />}
 
       {isFilterOpen && (
         <FilterSheet

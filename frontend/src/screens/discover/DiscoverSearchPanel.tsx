@@ -8,14 +8,15 @@ import { useRegionName } from "./useRegionName";
 
 // AI 추천은 비용 때문에 기능 플래그로 켤 때만 칩을 보여 줍니다.
 const IS_AI_PICK_ENABLED = import.meta.env.VITE_FEATURE_AI_PICK === "true";
-const QUICK_CATEGORY_LIMIT = 5;
 
-/** 지도 위에 떠 있는 검색창·알림 버튼·필터 칩과 불러오기 상태 줄입니다. */
+/**
+ * 지도 위에 떠 있는 검색창·알림 버튼·필터 칩과 불러오기 상태 줄입니다.
+ * 칩 줄에는 필터 버튼과 "누구의 기록"만 두고, 음식 종류·이럴 때·매장 정보는 필터 시트에서 고릅니다.
+ */
 export default function DiscoverSearchPanel({
   ref,
   device,
   filters,
-  categories,
   resultCount,
   onFiltersChange,
   onFilterOpen,
@@ -24,8 +25,6 @@ export default function DiscoverSearchPanel({
   ref: Ref<HTMLDivElement>;
   device: Coordinates | null;
   filters: DiscoverFilters;
-  /** 많이 쓰인 음식 종류(앞의 몇 개를 바로 고르는 칩으로 보여 줌) */
-  categories: string[];
   resultCount: number;
   onFiltersChange: (filters: DiscoverFilters) => void;
   onFilterOpen: () => void;
@@ -33,8 +32,6 @@ export default function DiscoverSearchPanel({
   const app = useAppData();
   const region = useRegionName(device);
   const detailCount = detailFilterCount(filters);
-  const quickCategories = categories.slice(0, QUICK_CATEGORY_LIMIT);
-  if (filters.category && !quickCategories.includes(filters.category)) quickCategories.unshift(filters.category);
 
   function openAiPick() {
     app.actions.notify({
@@ -98,18 +95,6 @@ export default function DiscoverSearchPanel({
             AI 추천
           </button>
         )}
-        {quickCategories.length > 0 && <span className="r-discover-chips__divider" aria-hidden="true" />}
-        {quickCategories.map((category) => (
-          <button
-            key={category}
-            type="button"
-            className={`r-chip ${filters.category === category ? "is-on" : ""}`}
-            aria-pressed={filters.category === category}
-            onClick={() => onFiltersChange({ ...filters, category: filters.category === category ? "" : category })}
-          >
-            {category}
-          </button>
-        ))}
       </div>
 
       {app.error && app.places.length > 0 ? (
