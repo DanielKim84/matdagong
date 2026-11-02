@@ -6,7 +6,7 @@ import { errorMessage } from "../utils/errorMessage";
 import type { Coordinates } from "../utils/geo";
 import { MyPositionMarker } from "./BrandAssets";
 import Icon from "./Icon";
-import { MARKER_SHELL_PATH, categoryMarkerHtml } from "./mapMarkerArt";
+import { LOCK_BADGE_SVG, MARKER_SHELL_PATH, categoryMarkerHtml } from "./mapMarkerArt";
 
 type Props = {
   places: Place[];
@@ -225,12 +225,15 @@ export default function MapCanvas({
                 ? (place.tasters.find((taster) => taster.tasterId === MY_TASTER_ID) ?? fallbackTaster)
                 : undefined;
       if (markerRole && markerTaster) {
+        // 내 기록 중 나만 보기는 같은 보라 핀에 자물쇠 표식으로 구분합니다.
+        const isPrivateOwn =
+          markerRole === "own" && (place.visibility === "private" || markerTaster.visibility === "PRIVATE");
         const button = document.createElement("button");
         button.type = "button";
-        button.className = `taster-map-marker taster-map-marker--${markerRole}`;
+        button.className = `taster-map-marker taster-map-marker--${markerRole}${isPrivateOwn ? " is-private" : ""}`;
         button.setAttribute(
           "aria-label",
-          `${markerRole === "own" ? "내가 등록한" : markerRole === "other" ? `구독하지 않은 ${markerTaster.tasterName} 맛객이 추천한` : `${markerTaster.tasterName} 맛객이 추천한`} ${place.name}`,
+          `${markerRole === "own" ? (isPrivateOwn ? "나만 보는 내 기록" : "내가 등록한") : markerRole === "other" ? `구독하지 않은 ${markerTaster.tasterName} 맛객이 추천한` : `${markerTaster.tasterName} 맛객이 추천한`} ${place.name}`,
         );
         const shell = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         shell.setAttribute("class", "taster-map-marker-shell");
@@ -277,7 +280,8 @@ export default function MapCanvas({
           const badge = document.createElement("span");
           badge.className = "taster-map-marker-badge";
           badge.setAttribute("aria-hidden", "true");
-          badge.textContent = markerRole === "subscribed" ? "♥" : markerRole === "own" ? "✓" : "✦";
+          if (isPrivateOwn) badge.innerHTML = LOCK_BADGE_SVG;
+          else badge.textContent = markerRole === "subscribed" ? "♥" : markerRole === "own" ? "✓" : "✦";
           button.append(badge);
         }
         button.addEventListener("click", (event) => {

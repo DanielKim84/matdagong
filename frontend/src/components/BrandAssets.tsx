@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Place } from "../models/place";
 import MascotArt from "./MascotArt";
-import { MARKER_SHELL_PATH } from "./mapMarkerArt";
+import { LOCK_BADGE_SVG, MARKER_SHELL_PATH } from "./mapMarkerArt";
 
 export function FoodPhoto({
   place,
@@ -124,11 +124,14 @@ export function TasterMapMarker({
   name = "맛객",
   variant,
   kind = "subscribed",
+  isPrivate = false,
 }: {
   src?: string | null;
   name?: string;
   variant?: number;
   kind?: "subscribed" | "other" | "matched" | "own";
+  /** 나만 보는 내 기록(kind="own")이면 체크 대신 자물쇠 표식을 붙입니다. */
+  isPrivate?: boolean;
 }) {
   const fallbackVariant = kind === "subscribed" ? 4 : kind === "matched" ? 7 : 1;
   return (
@@ -139,10 +142,18 @@ export function TasterMapMarker({
       <span className="taster-map-marker-face">
         <Avatar src={src} name={name} variant={variant ?? fallbackVariant} />
       </span>
-      {kind !== "other" && (
-        <i className={`taster-map-marker-badge taster-map-marker-badge--${kind}`} aria-hidden="true">
-          {kind === "subscribed" ? "♥" : kind === "own" ? "✓" : "✦"}
-        </i>
+      {kind === "own" && isPrivate ? (
+        <i
+          className="taster-map-marker-badge taster-map-marker-badge--own is-private"
+          aria-hidden="true"
+          dangerouslySetInnerHTML={{ __html: LOCK_BADGE_SVG }}
+        />
+      ) : (
+        kind !== "other" && (
+          <i className={`taster-map-marker-badge taster-map-marker-badge--${kind}`} aria-hidden="true">
+            {kind === "subscribed" ? "♥" : kind === "own" ? "✓" : "✦"}
+          </i>
+        )
       )}
     </span>
   );

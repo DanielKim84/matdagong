@@ -29,7 +29,8 @@ export const SCOPE_OPTIONS: { value: Scope; label: string; sheetLabel: string }[
   { value: "all", label: "전체", sheetLabel: "전체 맛객" },
   { value: "subscribed", label: "구독", sheetLabel: "구독한 맛객" },
   { value: "matched", label: "취향 맞는", sheetLabel: "취향 맞는 맛객" },
-  { value: "saved", label: "내 저장", sheetLabel: "내 저장" },
+  // 내 맛집 = 하트한 곳 + 내 공개 기록 + 나만 보는 기록
+  { value: "saved", label: "내 맛집", sheetLabel: "내 맛집(기록·하트)" },
 ];
 
 export const DISTANCE_OPTIONS: { value: DistanceLimit; label: string }[] = [

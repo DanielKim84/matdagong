@@ -529,6 +529,20 @@ html.is-page-locked .screen-content {
   background: var(--neutral-0);
   color: var(--berry-400);
 }
+/* 나만 보는 내 기록: 자물쇠 표식 */
+.taster-map-marker.is-private .taster-map-marker-badge,
+.taster-map-marker-badge.is-private {
+  top: -2px;
+  right: -2px;
+  width: 19px;
+  height: 19px;
+  background: var(--berry-600);
+  color: var(--neutral-0);
+}
+.taster-map-marker-badge svg {
+  width: 11px;
+  height: 11px;
+}
 
 /* 움직임 줄이기를 켠 사용자에게는 모든 애니메이션·전환을 끕니다. 화면 CSS보다 항상 우선해야 합니다. */
 @media (prefers-reduced-motion: reduce) {

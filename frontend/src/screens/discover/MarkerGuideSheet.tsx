@@ -5,11 +5,17 @@ import Sheet from "../../components/Sheet";
 
 type TasterMarkerKind = "subscribed" | "matched" | "other" | "own";
 
-const TASTER_MARKERS: { kind: TasterMarkerKind; title: string; description: string }[] = [
+const TASTER_MARKERS: { kind: TasterMarkerKind; isPrivate?: boolean; title: string; description: string }[] = [
   { kind: "subscribed", title: "구독 중인 맛객", description: "하트 표식이 붙은 코랄 핀이에요." },
   { kind: "matched", title: "취향이 맞는 맛객", description: "반짝이 표식이 붙은 초록 핀이에요." },
   { kind: "other", title: "다른 맛객", description: "아직 구독하지 않은 맛객의 기록이에요." },
-  { kind: "own", title: "내가 기록한 맛집", description: "체크 표식이 붙은 보라 핀이에요." },
+  { kind: "own", title: "내 기록 · 공개", description: "체크 표식이 붙은 보라 핀이에요. 다른 사람에게도 보여요." },
+  {
+    kind: "own",
+    isPrivate: true,
+    title: "내 기록 · 나만 보기",
+    description: "자물쇠 표식이 붙은 보라 핀이에요. 나에게만 보여요.",
+  },
 ];
 
 /** 발견 지도에 나오는 마커 종류를 한눈에 보여 주는 안내 시트입니다. 실제 지도와 같은 모양의 마커를 그립니다. */
@@ -21,9 +27,9 @@ export default function MarkerGuideSheet({ me, onClose }: { me?: MapMe; onClose:
       </p>
       <ul className="r-discover-guide__list">
         {TASTER_MARKERS.map((marker) => (
-          <li key={marker.kind} className="r-discover-guide__row">
+          <li key={marker.title} className="r-discover-guide__row">
             <span className="r-discover-guide__art">
-              <TasterMapMarker kind={marker.kind} name={marker.title} />
+              <TasterMapMarker kind={marker.kind} isPrivate={marker.isPrivate} name={marker.title} />
             </span>
             <span className="r-discover-guide__copy">
               <b>{marker.title}</b>
@@ -41,8 +47,8 @@ export default function MarkerGuideSheet({ me, onClose }: { me?: MapMe; onClose:
             />
           </span>
           <span className="r-discover-guide__copy">
-            <b>저장한 맛집</b>
-            <small>하트로 저장해 둔 맛집이에요.</small>
+            <b>하트한 맛집</b>
+            <small>하트를 눌러 저장한 다른 맛객의 맛집이에요. ‘내 맛집’ 필터를 켜면 내 기록과 함께 모아 봐요.</small>
           </span>
         </li>
         <li className="r-discover-guide__row">

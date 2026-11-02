@@ -11,6 +11,10 @@ import type { MapKind } from "../models/place";
  */
 export const MARKER_SHELL_PATH = "M21.5 47L16.24 37.71A18 18 0 1 1 26.76 37.71Z";
 
+/** 나만 보는 내 기록 핀의 표식(자물쇠)입니다. 체크 표식 대신 붙입니다. */
+export const LOCK_BADGE_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>';
+
 /** 맛객 얼굴 대신 기호로 표시하는 마커 종류입니다. 나머지 종류는 맛객 핀(TasterMapMarker 모양)으로 그립니다. */
 type CategoryMarkerKind = Extract<MapKind, "liked" | "ad">;
 
