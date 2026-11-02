@@ -3,6 +3,7 @@ package kr.matdagong.place.record;
 import static kr.matdagong.place.catalog.PlaceModels.*;
 import static kr.matdagong.place.record.PlaceRecordModels.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -117,6 +118,25 @@ public class PlaceRecordService {
                 jdbc.update("DELETE FROM restaurant_records WHERE place_id = ? AND account_id = ?", placeId, accountId);
         if (deleted == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "내가 등록한 맛집 기록을 찾을 수 없습니다.");
         likes.saveVisited(accountId, placeId);
+    }
+
+    /** 내 기록 여러 곳의 공개 범위를 한 번에 바꿉니다. 내 기록이 없는 장소는 건너뛰고, 바뀐 기록 수를 돌려줍니다. */
+    @Transactional
+    public int changeVisibility(UUID accountId, List<String> placeIds, RecordVisibility visibility) {
+        List<Object[]> targets = placeIds.stream()
+                .map(PlaceIdentifiers::uuidOrNull)
+                .filter(Objects::nonNull)
+                .distinct()
+                .map(placeId -> new Object[] {visibility.name(), placeId, accountId})
+                .toList();
+        if (targets.isEmpty()) return 0;
+        int[] counts = jdbc.batchUpdate(
+                """
+                UPDATE restaurant_records SET visibility = ?, upd_dt = now()
+                WHERE place_id = ? AND account_id = ?
+                """,
+                targets);
+        return Arrays.stream(counts).sum();
     }
 
     /** 새로 올린 사진(기존 사진 주소 제외)의 전체 용량을 저장 전에 확인합니다. 사진 형식도 여기서 함께 걸러집니다. */

@@ -80,6 +80,15 @@ public final class PlaceRecordModels {
             @Min(0) @Max(10_000_000) Integer price,
             @Size(max = MAX_PHOTO_CHARS) String photo) {}
 
+    /** 여러 내 기록의 공개 범위를 한 번에 바꿀 때 보냅니다. */
+    public record ChangeVisibilityRequest(
+            @NotEmpty(message = "바꿀 기록을 골라 주세요.") @Size(max = 100, message = "한 번에 100곳까지 바꿀 수 있어요.")
+                    List<@NotBlank @Size(max = PlaceIdentifiers.MAX_PLACE_ID_LENGTH) String> placeIds,
+            @NotNull(message = "공개 범위를 확인해 주세요.") RecordVisibility visibility) {}
+
+    /** changed는 실제로 바뀐 내 기록 수입니다. */
+    public record ChangeVisibilityResponse(int changed) {}
+
     /** visitedConfirmed는 사용자가 직접 방문했다고 확인했는지입니다. 확인하지 않으면 기록으로 바꾸지 않습니다. */
     public record LikeToRecordRequest(
             @NotBlank(message = "전환할 내 맛집을 확인해 주세요.")

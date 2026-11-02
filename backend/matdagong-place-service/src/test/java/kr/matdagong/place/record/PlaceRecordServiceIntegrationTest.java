@@ -195,6 +195,31 @@ class PlaceRecordServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
+    void 내_기록의_공개_범위만_한꺼번에_바뀌고_다른_사람_기록과_잘못된_ID는_건너뛴다() {
+        PlaceView created = service.createRecord(
+                FIRST,
+                FIRST_AUTHOR,
+                unverified("국밥집"),
+                request("국밥집", RecordVisibility.PRIVATE, List.of(), List.of(PNG)));
+        service.createRecord(
+                SECOND,
+                SECOND_AUTHOR,
+                unverified("국밥집"),
+                request("국밥집", RecordVisibility.PRIVATE, List.of(), List.of(PNG)));
+
+        int changed = service.changeVisibility(
+                FIRST, List.of(created.id(), created.id(), "p-001", "없는-ID"), RecordVisibility.PUBLIC);
+
+        assertThat(changed).isEqualTo(1);
+        assertThat(service.findMine(FIRST).get(0).tasters().get(0).visibility()).isEqualTo(RecordVisibility.PUBLIC);
+        assertThat(service.findMine(SECOND).get(0).tasters().get(0).visibility())
+                .isEqualTo(RecordVisibility.PRIVATE);
+        assertThat(places.findById(created.id(), SECOND).orElseThrow().tasters())
+                .extracting(TasterRecordView::tasterName)
+                .contains("첫맛객");
+    }
+
+    @Test
     void 이미지가_아닌_데이터는_사진으로_저장하지_않는다() {
         String notImage = "data:image/png;base64,AAAA";
 

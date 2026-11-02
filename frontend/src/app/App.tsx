@@ -5,6 +5,8 @@ import CollectionsScreen from "../screens/me/CollectionsScreen";
 import AccountSettingsScreen from "../screens/me/AccountSettingsScreen";
 import DiaryScreen from "../screens/me/DiaryScreen";
 import MeScreen from "../screens/me/MeScreen";
+import MyRecordsScreen from "../screens/me/MyRecordsScreen";
+import QuickDraftsScreen from "../screens/me/QuickDraftsScreen";
 import WalletScreen from "../screens/me/WalletScreen";
 import DiscoverScreen from "../screens/discover/DiscoverScreen";
 import FeedScreen from "../screens/feed/FeedScreen";
@@ -89,6 +91,8 @@ const SCREEN_VIEWS: Record<Screen, ComponentType<{ routeId: string }>> = {
   my: MeScreen,
   diary: DiaryScreen,
   wallet: WalletScreen,
+  "my-records": MyRecordsScreen,
+  drafts: QuickDraftsScreen,
   notifications: NotificationsScreen,
   settings: AccountSettingsScreen,
   intro: OnboardingScreen,
@@ -99,7 +103,7 @@ const SCREEN_VIEWS: Record<Screen, ComponentType<{ routeId: string }>> = {
 };
 
 /** 내 요약(기록·하트·최근 본 장소)을 다시 읽어야 하는 화면입니다. */
-const MY_SUMMARY_SCREENS: Screen[] = ["my", "recent", "saved", "liked"];
+const MY_SUMMARY_SCREENS: Screen[] = ["my", "recent", "saved", "liked", "my-records"];
 
 export default function App(props: Props) {
   return (

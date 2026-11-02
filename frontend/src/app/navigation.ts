@@ -21,6 +21,8 @@ const SCREENS: Screen[] = [
   "feed",
   "tasters",
   "wallet",
+  "my-records",
+  "drafts",
 ];
 
 function currentRoute(): { screen: Screen; id: string } {

@@ -167,7 +167,9 @@ export type Screen =
   | "recent"
   | "feed"
   | "tasters"
-  | "wallet";
+  | "wallet"
+  | "my-records"
+  | "drafts";
 
 /**
  * 장소의 대표 사진입니다. 고른 기록(대표 맛객)의 사진 → 그 장소의 다른 기록 사진 → 내 사진(useAppData().photoFor) 순서이고,

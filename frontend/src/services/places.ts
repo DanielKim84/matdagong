@@ -165,6 +165,18 @@ export function convertPlaceRecordToLike(accessToken: string, placeId: string): 
   return request(`/records/${encodeURIComponent(placeId)}/to-like`, accessToken, { method: "POST" });
 }
 
+/** 내 기록 여러 곳을 한 번에 공개하거나 나만 보기로 바꿉니다. changed는 실제로 바뀐 기록 수입니다. */
+export function changeRecordVisibility(
+  accessToken: string,
+  placeIds: string[],
+  visibility: "PUBLIC" | "PRIVATE",
+): Promise<{ changed: number }> {
+  return request("/records/visibility", accessToken, {
+    method: "PUT",
+    body: JSON.stringify({ placeIds, visibility }),
+  });
+}
+
 export function getLikedPlaceIds(accessToken: string): Promise<string[]> {
   return request("/likes", accessToken);
 }

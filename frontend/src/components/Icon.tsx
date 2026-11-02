@@ -28,7 +28,8 @@ export type IconName =
   | "sparkle"
   | "map"
   | "phone"
-  | "more";
+  | "more"
+  | "lock";
 const ICON_SHAPES: Record<IconName, string> = {
   home: "m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9",
   search: "M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0m-2 6 5 5",
@@ -62,6 +63,7 @@ const ICON_SHAPES: Record<IconName, string> = {
   phone:
     "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.4 2.8a2 2 0 0 1-.6 1.7L7.6 9.5a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 1.7-.6l2.8.4a2 2 0 0 1 1.7 1.9Z",
   more: "M5 12h.01M12 12h.01M19 12h.01",
+  lock: "M5 11h14v11H5V11Zm3 0V7a4 4 0 0 1 8 0v4m-4 4v3",
 };
 
 export default function Icon({ name, filled = false }: { name: IconName; filled?: boolean }) {

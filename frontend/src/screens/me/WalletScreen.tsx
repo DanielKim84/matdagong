@@ -3,14 +3,15 @@ import Icon, { type IconName } from "../../components/Icon";
 import { EmptyState, SectionHead, TopBar } from "../../components/ui";
 import { formatMonthDay, formatNumber } from "../../utils/format";
 
+// 포인트는 충전하지 않고 활동(유료 구독 수익 등)으로만 쌓입니다. 쌓인 포인트를 쓰는 방법들입니다.
 const PENDING_ACTIONS: { label: string; icon: IconName; tone: "amber" | "brand" }[] = [
-  { label: "포인트 충전", icon: "plus", tone: "amber" },
   { label: "정산 신청", icon: "check", tone: "brand" },
+  { label: "구독료로 쓰기", icon: "bookmark", tone: "amber" },
   { label: "상품권 교환", icon: "star", tone: "amber" },
   { label: "맛객 후원", icon: "heart", tone: "brand" },
 ];
 
-/** 포인트 지갑(#wallet): 잔액과 적립·사용 내역. 충전·정산·교환·후원은 준비 중입니다. */
+/** 포인트 지갑(#wallet): 잔액과 적립·사용 내역. 정산·구독료 결제·교환·후원은 준비 중입니다. */
 export default function WalletScreen() {
   const app = useAppData();
   const { balance, history } = app.points;
@@ -18,7 +19,7 @@ export default function WalletScreen() {
   function notifyPending(label: string) {
     app.actions.notify({
       kind: "info",
-      title: `${label}은 준비 중이에요`,
+      title: `${label} 기능은 준비 중이에요`,
       message: "기능이 열리면 이곳에서 바로 이용할 수 있어요.",
     });
   }
@@ -27,12 +28,12 @@ export default function WalletScreen() {
     <main className="r-screen r-me-wallet">
       <TopBar title="포인트 지갑" fallback="my" />
       <div className="r-me-body">
-        <section className="r-card r-card--dark r-me-balance" aria-label="보유 포인트">
+        <section className="r-card r-me-balance" aria-label="보유 포인트">
           <span>사용할 수 있는 포인트</span>
           <b>
             {formatNumber(balance)} <small>P</small>
           </b>
-          <span>유료 구독자가 늘면 포인트가 쌓여요</span>
+          <span>내 기록을 유료로 구독하는 사람이 늘면 포인트가 쌓여요</span>
         </section>
 
         <div className="r-me-tiles">

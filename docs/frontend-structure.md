@@ -43,8 +43,8 @@ index.html → src/main.tsx → app/signIn.ts (로그인·가입 확인) → app
 | `place/` | `#place/<id>` | 맛집 상세: 공통 가게 정보 + 맛객 고르기(`PlaceTasterPicker`) + 고른 맛객의 기록(`PlaceTasterRecord`, 사진·메뉴·태그·매장 이용 정보), 사진 보기 |
 | `feed/` | `#feed`, `#notifications` | 피드(스토리·기록 카드), 알림 |
 | `record/` | `#register`, `#register/<id>` | 단계형 기록하기와 완료 화면. 단계마다 한 파일, 입력 상태는 역할별 훅(`useRecordPhotos` 등)을 `useRecordForm`이 묶음 |
-| `tasters/` | `#tasters`, `#profile/<id>`, `#subscriptions` | 맛객 탐색, 맛객 프로필, 구독 관리 |
-| `me/` | `#my`, `#diary`, `#saved`·`#liked`·`#recent`, `#wallet`, `#settings` | 나 홈, 기록 일기(달력), 모음, 포인트 지갑, 계정 설정 |
+| `tasters/` | `#tasters`, `#profile/<id>`, `#subscriptions`(`/incoming`이면 나를 구독 탭) | 맛객 탐색, 맛객 프로필, 구독 관리 |
+| `me/` | `#my`, `#diary`, `#saved`·`#liked`·`#recent`, `#my-records/public|private`, `#drafts`, `#wallet`, `#settings` | 나 홈, 기록 일기(달력), 모음, 내 기록 공개 설정, 빠른 장소 기록, 포인트 지갑, 계정 설정 |
 | `onboarding/` | `#intro`, 가입 | 서비스 소개(`IntroScreen`), 가입 단계(`SignupScreen`: 닉네임 → 취향 → 맛객 추천) |
 | `profile-edit/` | `#profile-edit` | 프로필 편집 부품(공개 프로필, 사진·배경, 활동 지역, 취향). `screens/ProfileSettingsScreen.tsx`가 조립 |
 
@@ -54,7 +54,7 @@ index.html → src/main.tsx → app/signIn.ts (로그인·가입 확인) → app
 
 로그인은 `dagong-auth`를 사용합니다. 맛다공 가입 상태 확인·가입은 인증 서버(`/auth-api`)를, 나머지 API는 API Gateway(`/api`)를 거쳐 장소 서비스 또는 커뮤니티 서비스를 호출합니다. 모든 API 호출은 `services/http.ts`의 `apiRequest`를 거치며, 로그인이 만료되면 `app/signIn.ts`가 등록한 처리기가 현재 주소를 기억하고 다시 로그인합니다. 이때 등록 화면은 작성 중인 입력을 `registerDraft.ts`로 보관합니다.
 
-장소 목록에는 장소 서비스의 개발용 샘플 카탈로그(`p-001` 등)와 사용자가 등록한 장소가 함께 나옵니다. 장소 등록 기록·하트·최근 본 장소·빠른 장소 기록은 장소 서비스 DB에 계정별로 저장됩니다. 비공개 기록 사진은 서명된 `/media/...?exp=&sig=` 주소로 내려오므로 주소가 만료될 수 있습니다. 프로필·취향·구독·포인트·태그 제안·알림은 커뮤니티 API 및 DB에 저장됩니다. 실제 결제 처리는 연결되지 않았고 유료 구독은 개발용 완료 흐름입니다.
+장소 목록에는 장소 서비스의 개발용 샘플 카탈로그(`p-001` 등)와 사용자가 등록한 장소가 함께 나옵니다. 장소 등록 기록·하트·최근 본 장소·빠른 장소 기록은 장소 서비스 DB에 계정별로 저장됩니다. 비공개 기록 사진은 서명된 `/media/...?exp=&sig=` 주소로 내려오므로 주소가 만료될 수 있습니다. 프로필·취향·구독·포인트·태그 제안·알림은 커뮤니티 API 및 DB에 저장됩니다. 알림 수신 설정은 `GET`/`PUT /api/v1/notifications/settings`(`{ tasterNewPlace, newSubscriber, serviceNews }`)로 읽고 저장하며(커뮤니티 DB `user_notification_settings`, 행이 없으면 새 기록·새 구독자 켬, 소식 끔), 끈 종류의 알림은 서버가 만들지 않습니다. 내 기록 여러 곳의 공개 범위는 `PUT /api/v1/places/records/visibility`(`{ placeIds, visibility }`)로 한 번에 바꿉니다. 실제 결제 처리는 연결되지 않았고 유료 구독은 개발용 완료 흐름입니다.
 
 샘플 장소의 작성자는 `infra/postgres/dev/seed-community-test-users.sql`의 테스트 맛객(`20000000-0000-4000-8000-00000000000N`)과 같은 ID를 씁니다. `utils/profileMedia.ts`의 기본 사진·배경과 지도 화면의 샘플 장소 위치 이동(`p-\d+`)은 이 샘플 데이터를 위한 것입니다.
 

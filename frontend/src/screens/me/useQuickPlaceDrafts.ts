@@ -9,8 +9,6 @@ import {
 } from "../../services/places";
 import { errorMessage } from "../../utils/errorMessage";
 
-export type QuickPlaceDrafts = ReturnType<typeof useQuickPlaceDrafts>;
-
 /** 장소만 먼저 저장한 빠른 기록 목록. 내 활동이 바뀌면(MY_ACTIVITY_CHANGED_EVENT) 조용히 다시 불러옵니다. */
 export function useQuickPlaceDrafts() {
   const app = useAppData();

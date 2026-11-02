@@ -224,6 +224,107 @@
   font-size: 12px;
   font-weight: 800;
 }
+/* ── 나를 구독(유료는 금색으로 눈에 띄게) ── */
+.r-tasters-incoming-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.r-tasters-incoming-summary > .r-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.r-tasters-incoming-summary > .r-card > span:last-child {
+  display: flex;
+  flex-direction: column;
+}
+.r-tasters-incoming-summary small {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.r-tasters-incoming-summary b {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.r-tasters-incoming-summary b small {
+  margin-left: 2px;
+  font-size: 13px;
+}
+.r-tasters-incoming-summary__icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--neutral-100);
+  color: var(--color-muted);
+}
+.r-tasters-incoming-summary__icon .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-tasters-incoming-summary__paid {
+  background: linear-gradient(135deg, var(--amber-100), var(--amber-50));
+}
+.r-tasters-incoming-summary__paid .r-tasters-incoming-summary__icon {
+  background: var(--amber-400);
+  color: var(--neutral-0);
+}
+.r-tasters-incoming-summary__paid b {
+  color: var(--amber-800);
+}
+.r-tasters-incoming-summary .r-tasters-note {
+  grid-column: 1 / -1;
+}
+.r-tasters-incoming__avatar {
+  position: relative;
+  flex: none;
+}
+.r-tasters-incoming__avatar > i {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 2px solid var(--color-surface);
+  border-radius: 50%;
+  background: var(--amber-400);
+  color: var(--neutral-0);
+}
+.r-tasters-incoming__avatar > i .icon {
+  width: 11px;
+  height: 11px;
+}
+.r-tasters-incoming__name {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+.r-tasters-plan {
+  flex: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+.r-tasters-plan.is-paid {
+  border-color: var(--amber-400);
+  background: var(--amber-400);
+  color: var(--neutral-0);
+}
+.r-tasters-incoming.is-paid small {
+  color: var(--amber-800);
+}
 .r-tasters-since {
   flex: none;
   color: var(--color-muted);

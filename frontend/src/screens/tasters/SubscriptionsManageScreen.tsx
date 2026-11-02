@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { useAppData } from "../../app/AppData";
+import { go } from "../../app/navigation";
 import { Segmented, Skeleton, TopBar } from "../../components/ui";
 import { formatMonthDay } from "../../utils/format";
 import IncomingList from "./IncomingList";
@@ -7,13 +7,13 @@ import SubscribedList from "./SubscribedList";
 
 type Tab = "subscribed" | "incoming";
 
-/** 구독 관리(#subscriptions): 내가 구독한 맛객과 나를 구독한 사람. */
-export default function SubscriptionsManageScreen() {
+/** 구독 관리(#subscriptions, 나를 구독 탭은 #subscriptions/incoming): 내가 구독한 맛객과 나를 구독한 사람. */
+export default function SubscriptionsManageScreen({ routeId }: { routeId: string }) {
   const app = useAppData();
-  const [tab, setTab] = useState<Tab>("subscribed");
+  const tab: Tab = routeId === "incoming" ? "incoming" : "subscribed";
+  const setTab = (next: Tab) => go("subscriptions", next === "incoming" ? "incoming" : "", true);
   const freeCount = app.subscriptions.filter((item) => item.subscriptionType === "FREE").length;
   const paidCount = app.subscriptions.length - freeCount;
-  const paidIncomingCount = app.incomingSubscriptions.filter((item) => item.subscriptionType === "PAID").length;
   // 가장 먼저 끝나는 유료 구독을 요약 카드에 보여 줍니다.
   const nextEnd = app.subscriptions
     .flatMap((item) => (item.subscriptionType === "PAID" && item.endAt ? [item.endAt] : []))
@@ -63,12 +63,7 @@ export default function SubscriptionsManageScreen() {
             <SubscribedList />
           </>
         ) : (
-          <>
-            {app.incomingSubscriptions.length > 0 && (
-              <p className="r-tasters-note">유료 구독자 {paidIncomingCount}명 · 유료 구독이 늘면 포인트가 쌓여요.</p>
-            )}
-            <IncomingList />
-          </>
+          <IncomingList />
         )}
       </div>
     </main>

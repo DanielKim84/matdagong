@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -63,6 +64,14 @@ public class PlaceRecordController {
                 request.sourcePlaceId(),
                 request.record(),
                 request.visitedConfirmed());
+    }
+
+    /** 내 기록 여러 곳을 한 번에 공개하거나 나만 보기로 바꿉니다. */
+    @PutMapping("/visibility")
+    public ChangeVisibilityResponse changeVisibility(
+            @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody ChangeVisibilityRequest request) {
+        return new ChangeVisibilityResponse(
+                records.changeVisibility(AuthenticatedAccount.id(jwt), request.placeIds(), request.visibility()));
     }
 
     @PostMapping("/{placeId}/to-like")
