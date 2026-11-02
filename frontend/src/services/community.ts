@@ -5,6 +5,7 @@ import type {
   IncomingSubscription,
   MyProfile,
   NotificationFeed,
+  NotificationSettings,
   PlanCatalog,
   PointAccount,
   ProfileChanges,
@@ -184,6 +185,17 @@ export function createSubscription(
 
 export function getNotifications(accessToken: string): Promise<NotificationFeed> {
   return request("/notifications", accessToken);
+}
+
+export function getNotificationSettings(accessToken: string): Promise<NotificationSettings> {
+  return request("/notifications/settings", accessToken);
+}
+
+export function updateNotificationSettings(
+  accessToken: string,
+  settings: NotificationSettings,
+): Promise<NotificationSettings> {
+  return request("/notifications/settings", accessToken, { method: "PUT", body: JSON.stringify(settings) });
 }
 
 export function createPlaceRegisteredNotification(accessToken: string, placeId: string): Promise<UserNotification> {

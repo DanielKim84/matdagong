@@ -1,6 +1,7 @@
 package kr.matdagong.community.notification;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.List;
@@ -33,4 +34,13 @@ public final class NotificationModels {
             Instant readAt) {}
 
     public record NotificationFeed(List<NotificationView> items, int unreadCount) {}
+
+    /**
+     * 알림 수신 설정입니다. 구독 맛객의 새 기록(TASTER_NEW_PLACE)·새 구독자(NEW_SUBSCRIBER) 알림과 소식·이벤트 수신 동의를 켜고 끕니다.
+     * 본인 맛집 등록 완료 알림은 설정과 관계없이 보냅니다.
+     */
+    public record NotificationSettings(
+            @NotNull(message = "구독 맛객 새 기록 알림 설정을 확인해 주세요.") Boolean tasterNewPlace,
+            @NotNull(message = "새 구독자 알림 설정을 확인해 주세요.") Boolean newSubscriber,
+            @NotNull(message = "소식·이벤트 알림 설정을 확인해 주세요.") Boolean serviceNews) {}
 }

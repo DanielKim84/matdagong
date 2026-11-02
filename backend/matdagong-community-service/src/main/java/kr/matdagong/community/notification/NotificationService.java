@@ -14,13 +14,53 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 알림 스냅샷과 사용자별 읽음·삭제 상태를 관리합니다.
  * 알림은 서버 이벤트(맛집 기록 확인, 구독 신청)에서만 만들며, DB에 있는 SYSTEM_NOTICE 종류는 운영 공지용으로 남겨 둔 값입니다.
+ * 받는 사람이 끈 종류(구독 맛객 새 기록·새 구독자)는 만들지 않습니다(user_notification_settings, 행이 없으면 기본값).
  */
 @Service
 public class NotificationService {
+    private static final NotificationSettings DEFAULT_SETTINGS = new NotificationSettings(true, true, false);
+
     private final JdbcTemplate jdbc;
 
     public NotificationService(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
+    }
+
+    /** 저장한 설정이 없으면 기본값(구독 맛객 새 기록·새 구독자 켬, 소식·이벤트 끔)을 돌려줍니다. */
+    @Transactional(readOnly = true)
+    public NotificationSettings settings(UUID accountId) {
+        return jdbc.query(
+                """
+                SELECT notify_taster_new_place, notify_new_subscriber, notify_service_news
+                FROM user_notification_settings WHERE account_id = ?
+                """,
+                rs -> rs.next()
+                        ? new NotificationSettings(
+                                rs.getBoolean("notify_taster_new_place"),
+                                rs.getBoolean("notify_new_subscriber"),
+                                rs.getBoolean("notify_service_news"))
+                        : DEFAULT_SETTINGS,
+                accountId);
+    }
+
+    @Transactional
+    public NotificationSettings updateSettings(UUID accountId, NotificationSettings request) {
+        jdbc.update(
+                """
+                INSERT INTO user_notification_settings (
+                    account_id, notify_taster_new_place, notify_new_subscriber, notify_service_news
+                ) VALUES (?, ?, ?, ?)
+                ON CONFLICT (account_id) DO UPDATE SET
+                    notify_taster_new_place = EXCLUDED.notify_taster_new_place,
+                    notify_new_subscriber = EXCLUDED.notify_new_subscriber,
+                    notify_service_news = EXCLUDED.notify_service_news,
+                    upd_dt = now()
+                """,
+                accountId,
+                request.tasterNewPlace(),
+                request.newSubscriber(),
+                request.serviceNews());
+        return settings(accountId);
     }
 
     /** 보관 기간이 지난 알림은 조건으로 빼고 보여 줍니다. 실제 삭제는 매일 정리 작업과 알림을 만들 때 합니다. */
@@ -79,9 +119,12 @@ public class NotificationService {
                     JOIN user_subscription_history period
                       ON period.subscription_id = subscription.subscription_id
                      AND period.period_st = 'ACTIVE'
+                    LEFT JOIN user_notification_settings setting
+                      ON setting.account_id = subscription.subscriber_id
                     WHERE subscription.target_account_id = ?
                       AND subscription.subscription_st = 'ACTIVE'
                       AND (period.end_dt IS NULL OR period.end_dt > now())
+                      AND COALESCE(setting.notify_taster_new_place, TRUE)
                     """,
                     (rs, row) -> rs.getObject(1, UUID.class),
                     recipientId);
@@ -115,6 +158,7 @@ public class NotificationService {
     @Transactional
     public void newSubscriber(UUID recipientId, UUID subscriberId, String subscriberName, UUID eventId) {
         deleteExpired();
+        if (!settings(recipientId).newSubscriber()) return;
         jdbc.update(
                 """
                 INSERT INTO user_notifications (

@@ -2,7 +2,9 @@ import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
 import { useNotificationDialog } from "../../components/NotificationDialog";
-import { TopBar } from "../../components/ui";
+import { Skeleton, TopBar } from "../../components/ui";
+import type { NotificationSettings } from "../../models/community";
+import { useNotificationSettings } from "./useNotificationSettings";
 
 const PROVIDERS = [
   { key: "kakao", label: "카카오", mark: "K", isConnected: true },
@@ -10,17 +12,17 @@ const PROVIDERS = [
   { key: "apple", label: "Apple", mark: "A", isConnected: false },
 ] as const;
 
-// 알림 수신 설정 API가 아직 없어 지금 실제로 받는 상태를 보여 주기만 합니다.
-const NOTIFICATION_SETTINGS = [
-  { label: "구독 맛객의 새 기록", isOn: true },
-  { label: "새 구독자", isOn: true },
-  { label: "맛다공 소식·이벤트", isOn: false },
+const NOTIFICATION_OPTIONS: { key: keyof NotificationSettings; label: string; description: string }[] = [
+  { key: "tasterNewPlace", label: "구독 맛객의 새 기록", description: "구독한 맛객이 새 맛집을 공개하면 알려요" },
+  { key: "newSubscriber", label: "새 구독자", description: "누군가 나를 구독하면 알려요" },
+  { key: "serviceNews", label: "맛다공 소식·이벤트", description: "새 기능과 이벤트 소식을 받아요" },
 ];
 
 /** 설정(#settings): 계정 연결, 알림, 프로필, 앱 정보, 로그아웃. */
 export default function AccountSettingsScreen() {
   const app = useAppData();
   const { confirm } = useNotificationDialog();
+  const notificationSettings = useNotificationSettings();
 
   function notifyPending(title: string, message = "기능이 열리면 이곳에서 바로 설정할 수 있어요.") {
     app.actions.notify({ kind: "info", title, message });
@@ -77,26 +79,37 @@ export default function AccountSettingsScreen() {
             알림
           </h2>
           <div className="r-card r-me-list">
-            {NOTIFICATION_SETTINGS.map((item) => (
-              <div className="r-row r-me-setting" key={item.label}>
-                <span className="r-me-setting__label">{item.label}</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={item.isOn}
-                  aria-label={item.label}
-                  className={`r-me-switch ${item.isOn ? "is-on" : ""}`}
-                  onClick={() =>
-                    notifyPending(
-                      "알림 설정은 준비 중이에요",
-                      "지금은 구독 맛객의 새 기록과 새 구독자 알림을 모두 받아요.",
-                    )
-                  }
-                >
-                  <span />
-                </button>
-              </div>
-            ))}
+            {notificationSettings.settings ? (
+              NOTIFICATION_OPTIONS.map((option) => {
+                const isOn = notificationSettings.settings?.[option.key] ?? false;
+                return (
+                  <div className="r-row r-me-setting" key={option.key}>
+                    <span className="r-row__copy">
+                      <b>{option.label}</b>
+                      <small>{option.description}</small>
+                    </span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isOn}
+                      aria-label={option.label}
+                      aria-busy={notificationSettings.savingKey === option.key}
+                      disabled={!!notificationSettings.savingKey}
+                      className={`r-me-switch ${isOn ? "is-on" : ""}`}
+                      onClick={() => void notificationSettings.toggle(option.key)}
+                    >
+                      <span />
+                    </button>
+                  </div>
+                );
+              })
+            ) : notificationSettings.error ? (
+              <p className="r-row r-me-setting r-muted" role="alert">
+                {notificationSettings.error}
+              </p>
+            ) : (
+              <Skeleton shape="row" count={3} label="알림 설정을 불러오고 있어요…" />
+            )}
             <button type="button" className="r-row r-me-setting" onClick={() => go("notifications")}>
               <span className="r-me-setting__label">받은 알림 보기</span>
               <Icon name="chevron" />

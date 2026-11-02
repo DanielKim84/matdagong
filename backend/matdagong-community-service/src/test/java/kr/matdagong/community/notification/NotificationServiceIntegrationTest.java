@@ -20,7 +20,7 @@ class NotificationServiceIntegrationTest extends EmbeddedPostgresTestSupport {
 
     @BeforeEach
     void setUp() {
-        truncate("user_profiles, user_subscriptions, user_notifications");
+        truncate("user_profiles, user_subscriptions, user_notifications, user_notification_settings");
         jdbc.update("INSERT INTO user_profiles (account_id, nickname, avatar_variant) VALUES (?, '골목맛객', 1)", TASTER);
         jdbc.update(
                 "INSERT INTO user_profiles (account_id, nickname, avatar_variant) VALUES (?, '구독자', 1)", SUBSCRIBER);
@@ -44,6 +44,38 @@ class NotificationServiceIntegrationTest extends EmbeddedPostgresTestSupport {
             assertThat(item.message()).isEqualTo("골목맛객 맛객이 연남옥을(를) 등록했어요.");
             assertThat(item.targetId()).isEqualTo("p-001");
         });
+    }
+
+    @Test
+    void 알림_설정은_저장_전에는_기본값이고_바꾼_값을_돌려준다() {
+        assertThat(service.settings(SUBSCRIBER)).isEqualTo(new NotificationSettings(true, true, false));
+
+        service.updateSettings(SUBSCRIBER, new NotificationSettings(false, true, true));
+
+        assertThat(service.settings(SUBSCRIBER)).isEqualTo(new NotificationSettings(false, true, true));
+    }
+
+    @Test
+    void 구독_맛객_새_기록_알림을_끈_구독자에게는_알리지_않는다() {
+        service.updateSettings(SUBSCRIBER, new NotificationSettings(false, true, false));
+
+        service.placeRegistered(TASTER, new PlaceServiceClient.RecordedPlace("p-003", "연남옥", true));
+
+        assertThat(service.list(SUBSCRIBER).items()).isEmpty();
+        assertThat(service.list(TASTER).items())
+                .extracting(NotificationView::notificationType)
+                .contains(NotificationType.PLACE_RECORD_CREATED);
+    }
+
+    @Test
+    void 새_구독자_알림을_끄면_구독_알림을_만들지_않는다() {
+        service.updateSettings(TASTER, new NotificationSettings(true, false, false));
+
+        service.newSubscriber(TASTER, SUBSCRIBER, "구독자", UUID.randomUUID());
+
+        // 설정을 바꾸기 전 구독(setUp)으로 생긴 알림 하나만 남습니다.
+        assertThat(service.list(TASTER).items()).singleElement().satisfies(item -> assertThat(item.notificationType())
+                .isEqualTo(NotificationType.NEW_SUBSCRIBER));
     }
 
     @Test

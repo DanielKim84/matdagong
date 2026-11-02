@@ -30,6 +30,17 @@ public class NotificationController {
         this.places = places;
     }
 
+    @GetMapping("/settings")
+    public NotificationSettings settings(@AuthenticationPrincipal Jwt jwt) {
+        return service.settings(AuthenticatedAccount.id(jwt));
+    }
+
+    @PutMapping("/settings")
+    public NotificationSettings updateSettings(
+            @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody NotificationSettings request) {
+        return service.updateSettings(AuthenticatedAccount.id(jwt), request);
+    }
+
     @GetMapping
     public NotificationFeed list(@AuthenticationPrincipal Jwt jwt) {
         return service.list(AuthenticatedAccount.id(jwt));

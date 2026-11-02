@@ -51,6 +51,15 @@ export type UserNotification = {
   readAt: string | null;
 };
 export type NotificationFeed = { items: UserNotification[]; unreadCount: number };
+/** 알림 수신 설정. 본인 맛집 등록 완료 알림은 설정과 관계없이 받습니다. */
+export type NotificationSettings = {
+  /** 구독 중인 맛객의 새 공개 기록 */
+  tasterNewPlace: boolean;
+  /** 나를 새로 구독한 사람 */
+  newSubscriber: boolean;
+  /** 맛다공 소식·이벤트 */
+  serviceNews: boolean;
+};
 
 export type MyProfile = {
   accountId: string;
