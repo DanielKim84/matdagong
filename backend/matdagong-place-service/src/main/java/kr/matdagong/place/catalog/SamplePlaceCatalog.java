@@ -270,7 +270,7 @@ public class SamplePlaceCatalog {
                 tasters.length,
                 visitConditions(id),
                 false,
-                List.of(tasters));
+                SampleRecordDetails.enrich(id, visitedOn, List.of(tasters)));
     }
 
     /** 광고 탭과 광고 마커를 확인할 수 있도록 개발 목록에만 노출하는 샘플입니다. */
@@ -300,7 +300,7 @@ public class SamplePlaceCatalog {
                 tasters.length,
                 visitConditions(id),
                 true,
-                List.of(tasters));
+                SampleRecordDetails.enrich(id, visitedOn, List.of(tasters)));
     }
 
     // 개발 샘플에서 제외 조건 기능을 확인할 수 있도록 일부 장소에 방문 조건을 둡니다.
