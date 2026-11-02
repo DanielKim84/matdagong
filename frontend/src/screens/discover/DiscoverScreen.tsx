@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
-import MapCanvas from "../../components/MapCanvas";
+import MapCanvas, { type MapMe } from "../../components/MapCanvas";
 import { EmptyState, Skeleton, type EmptyStateProps } from "../../components/ui";
 import type { Place } from "../../models/place";
 import type { Coordinates } from "../../utils/geo";
@@ -15,6 +15,7 @@ import PlaceCarousel from "./PlaceCarousel";
 import {
   DEFAULT_FILTERS,
   detailFilterCount,
+  isInBounds,
   loadStoredState,
   saveStoredState,
   type DiscoverFilters,
@@ -34,12 +35,14 @@ export default function DiscoverScreen() {
   const [sort, setSort] = useState<SortOrder>(stored.sort);
   const [device, setDevice] = useState<Coordinates | null>(null);
   const [bounds, setBounds] = useState<VisibleBounds | null>(null);
+  const [regionBounds, setRegionBounds] = useState<VisibleBounds | null>(null);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isMarkerGuideOpen, setIsMarkerGuideOpen] = useState(false);
   const root = useRef<HTMLElement>(null);
   const top = useRef<HTMLDivElement>(null);
-  const { heights, style } = useSheetHeights(root, top);
+  const float = useRef<HTMLDivElement>(null);
+  const { heights, style } = useSheetHeights(root, top, float);
   const {
     ctx,
     filtered,
@@ -51,9 +54,14 @@ export default function DiscoverScreen() {
     tags,
     recommendedTasterIds,
     countMatches,
-  } = useDiscoverPlaces({ filters, sort, device, bounds, focusedId });
+  } = useDiscoverPlaces({ filters, sort, device, bounds, regionBounds, focusedId });
 
   useEffect(() => saveStoredState({ filters, sheet, sort }), [filters, sheet, sort]);
+
+  // 지도 위 내 위치는 내 기본 캐릭터(프로필의 캐릭터 번호)로 보여 줍니다.
+  const me: MapMe | undefined = app.myProfile
+    ? { name: app.myProfile.nickname, variant: app.myProfile.avatarVariant }
+    : undefined;
 
   const hasFilterChanges = filters.scope !== "all" || detailFilterCount(filters) > 0;
   const isFirstLoad = app.loading && !app.places.length;
@@ -66,6 +74,22 @@ export default function DiscoverScreen() {
     }
     setFocusedId(place.id);
     setSheet("peek");
+  }
+  function changeBounds(next: MapBounds, isFocusMove: boolean) {
+    const southWest = next.getSouthWest();
+    const northEast = next.getNorthEast();
+    const visible = {
+      south: southWest.getLat(),
+      west: southWest.getLng(),
+      north: northEast.getLat(),
+      east: northEast.getLng(),
+    };
+    setBounds(visible);
+    // 카드를 넘겨 지도가 따라간 경우가 아니면 새 지역으로 보고 카드를 다시 만듭니다. 고른 장소가 지역 밖이면 선택을 풉니다.
+    if (isFocusMove) return;
+    setRegionBounds(visible);
+    const focused = focusedId ? filtered.find((place) => place.id === focusedId) : undefined;
+    if (focused && !isInBounds(focused, visible)) setFocusedId(null);
   }
   function changeFilters(next: DiscoverFilters) {
     setFilters(next);
@@ -111,17 +135,9 @@ export default function DiscoverScreen() {
           liked={app.likedPlaceIds}
           recommendedTasterIds={recommendedTasterIds}
           focusedPlaceId={focusedId}
+          me={me}
           onPositionChange={setDevice}
-          onBoundsChange={(next) => {
-            const southWest = next.getSouthWest();
-            const northEast = next.getNorthEast();
-            setBounds({
-              south: southWest.getLat(),
-              west: southWest.getLng(),
-              north: northEast.getLat(),
-              east: northEast.getLng(),
-            });
-          }}
+          onBoundsChange={changeBounds}
           onSelect={selectFromMap}
         />
       </div>
@@ -140,13 +156,29 @@ export default function DiscoverScreen() {
         마커 안내
       </button>
 
-      <div className="r-discover__float" inert={sheet !== "peek"}>
+      <div ref={float} className="r-discover__float" inert={sheet !== "peek"}>
         {fallbackView ? (
           <div className="r-card r-discover__float-card">{fallbackView}</div>
         ) : isFirstLoad ? (
           <Skeleton shape="card" label="주변 맛집을 불러오고 있어요." className="r-discover-float-skeleton" />
+        ) : carousel.length ? (
+          // 지역이 바뀌면 처음 카드부터 다시 보여 줍니다.
+          <PlaceCarousel
+            key={JSON.stringify(regionBounds)}
+            places={carousel}
+            ctx={ctx}
+            focusedId={focusedId}
+            onFocus={setFocusedId}
+          />
         ) : (
-          <PlaceCarousel places={carousel} ctx={ctx} focusedId={focusedId} onFocus={setFocusedId} />
+          <div className="r-card r-discover__float-card">
+            <EmptyState
+              icon="pin"
+              title="이 지역엔 아직 맛객 기록이 없어요"
+              message="지도를 옮기거나 축소해서 주변을 둘러보세요."
+              className="r-discover-empty"
+            />
+          </div>
         )}
       </div>
 
@@ -164,7 +196,7 @@ export default function DiscoverScreen() {
         )}
       </DiscoverSheet>
 
-      {isMarkerGuideOpen && <MarkerGuideSheet onClose={() => setIsMarkerGuideOpen(false)} />}
+      {isMarkerGuideOpen && <MarkerGuideSheet me={me} onClose={() => setIsMarkerGuideOpen(false)} />}
 
       {isFilterOpen && (
         <FilterSheet

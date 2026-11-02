@@ -81,6 +81,7 @@ declare global {
         position: MapCoordinate;
         content: string | HTMLElement;
         yAnchor?: number;
+        zIndex?: number;
       }) => MapOverlay;
       services: {
         Status: { OK: string; ZERO_RESULT: string; ERROR: string };

@@ -29,12 +29,15 @@ export function useDiscoverPlaces({
   sort,
   device,
   bounds,
+  regionBounds,
   focusedId,
 }: {
   filters: DiscoverFilters;
   sort: SortOrder;
   device: Coordinates | null;
   bounds: VisibleBounds | null;
+  /** 카드 목록의 기준 지역. 사용자가 지도를 직접 옮겼을 때만 바뀝니다(카드 선택으로 지도가 따라갈 때는 그대로). */
+  regionBounds: VisibleBounds | null;
   focusedId: string | null;
 }) {
   const { subscriptionIds, likedPlaceIds, tasterById, places, privatePlaces, recommendedTasters } = useAppData();
@@ -61,8 +64,12 @@ export function useDiscoverPlaces({
   const categories = useMemo(() => topCategories(allPlaces), [allPlaces]);
   const tags = useMemo(() => topTags(allPlaces), [allPlaces]);
 
-  // 카드 순서는 지도 이동과 무관하게 유지해야 넘기는 동안 카드가 뒤섞이지 않습니다.
-  const carousel = sortPlaces(filtered, "priority", ctx).slice(0, CAROUSEL_LIMIT);
+  // 카드는 지금 보는 지역의 장소입니다. 카드를 넘길 때 지도가 따라가도 기준 지역은 그대로라 카드가 뒤섞이지 않습니다.
+  const carousel = sortPlaces(
+    filtered.filter((place) => isInBounds(place, regionBounds)),
+    "priority",
+    ctx,
+  ).slice(0, CAROUSEL_LIMIT);
   const focusedPlace = focusedId ? filtered.find((place) => place.id === focusedId) : undefined;
   if (focusedPlace && !carousel.includes(focusedPlace)) carousel.push(focusedPlace);
 

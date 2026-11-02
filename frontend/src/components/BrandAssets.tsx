@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Place } from "../models/place";
+import MascotArt from "./MascotArt";
 import { MARKER_SHELL_PATH } from "./mapMarkerArt";
 
 export function FoodPhoto({
@@ -102,6 +103,19 @@ export function ProfileCover({ src, className = "" }: { src: string; className?:
     );
   }
   return <img className={className} src={src} alt="" />;
+}
+
+/**
+ * 지도 위 내 위치 표시(내비게이션의 자동차 아이콘처럼). 틀 없이 내 캐릭터가 지도 위에 서 있고,
+ * 발밑의 파란 원이 실제 위치입니다(MapCanvas는 이 원의 가운데를 좌표에 맞춥니다).
+ */
+export function MyPositionMarker({ name = "나", variant = 1 }: { name?: string; variant?: number }) {
+  return (
+    <span className="my-position-marker" role="img" aria-label={`내 위치 · ${name}`}>
+      <span className="my-position-marker__ground" aria-hidden="true" />
+      <MascotArt pose={variant} className="my-position-marker__character" />
+    </span>
+  );
 }
 
 /** 지도 마커 안내에서 실제 지도(MapCanvas)와 같은 모양의 맛객 핀을 보여줍니다. */

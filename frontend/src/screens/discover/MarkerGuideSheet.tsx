@@ -1,4 +1,5 @@
-import { TasterMapMarker } from "../../components/BrandAssets";
+import { MyPositionMarker, TasterMapMarker } from "../../components/BrandAssets";
+import type { MapMe } from "../../components/MapCanvas";
 import { categoryMarkerHtml } from "../../components/mapMarkerArt";
 import Sheet from "../../components/Sheet";
 
@@ -12,7 +13,7 @@ const TASTER_MARKERS: { kind: TasterMarkerKind; title: string; description: stri
 ];
 
 /** 발견 지도에 나오는 마커 종류를 한눈에 보여 주는 안내 시트입니다. 실제 지도와 같은 모양의 마커를 그립니다. */
-export default function MarkerGuideSheet({ onClose }: { onClose: () => void }) {
+export default function MarkerGuideSheet({ me, onClose }: { me?: MapMe; onClose: () => void }) {
   return (
     <Sheet title="지도 마커 안내" onClose={onClose} className="r-discover-guide">
       <p className="r-discover-guide__intro">
@@ -57,11 +58,11 @@ export default function MarkerGuideSheet({ onClose }: { onClose: () => void }) {
         </li>
         <li className="r-discover-guide__row">
           <span className="r-discover-guide__art">
-            <span className="position-dot" aria-hidden="true" />
+            {me ? <MyPositionMarker {...me} /> : <span className="position-dot" aria-hidden="true" />}
           </span>
           <span className="r-discover-guide__copy">
             <b>내 위치</b>
-            <small>내 위치 버튼을 누르면 파란 점으로 보여요.</small>
+            <small>내 캐릭터가 서 있는 곳이에요. 발밑 파란 원이 실제 위치예요.</small>
           </span>
         </li>
       </ul>

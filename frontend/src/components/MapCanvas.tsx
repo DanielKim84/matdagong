@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { loadMapSdk } from "../services/kakao";
 import { MY_TASTER_ID, type MapKind, type Place } from "../models/place";
 import { errorMessage } from "../utils/errorMessage";
 import type { Coordinates } from "../utils/geo";
+import { MyPositionMarker } from "./BrandAssets";
 import Icon from "./Icon";
 import { MARKER_SHELL_PATH, categoryMarkerHtml } from "./mapMarkerArt";
 
@@ -12,7 +14,8 @@ type Props = {
   liked?: string[];
   recommendedTasterIds?: string[];
   onSelect: (place: Place) => void;
-  onBoundsChange?: (bounds: MapBounds) => void;
+  /** 지도가 멈출 때마다 보이는 범위를 알립니다. 강조 장소로 지도가 따라 움직인 경우 isFocusMove가 true입니다. */
+  onBoundsChange?: (bounds: MapBounds, isFocusMove: boolean) => void;
   onPick?: (position: Coordinates) => void;
   onPositionChange?: (position: Coordinates) => void;
   selected?: Coordinates | null;
@@ -20,9 +23,15 @@ type Props = {
   focusedPlaceId?: string | null;
   /** 처음 그릴 때 받은 장소가 모두 보이도록 지도 범위를 맞춥니다(맛객 프로필 지도). */
   fitToPlaces?: boolean;
+  /** 내 위치를 파란 점 대신 내 캐릭터로 보여 줄 때 넘깁니다(발견 화면). */
+  me?: MapMe;
 };
 
+export type MapMe = { name: string; variant: number };
+
 const MAP_LOAD_ERROR = "지도를 불러오지 못했어요.";
+// 내 위치 마커(높이 72px)에서 발밑 원의 가운데(위에서 64px)를 좌표에 맞춥니다. app.css의 .my-position-marker와 같은 값입니다.
+const MY_MARKER_Y_ANCHOR = 64 / 72;
 
 export default function MapCanvas({
   places,
@@ -36,6 +45,7 @@ export default function MapCanvas({
   selected,
   focusedPlaceId = null,
   fitToPlaces = false,
+  me,
 }: Props) {
   const element = useRef<HTMLDivElement>(null);
   const instance = useRef<MapInstance | null>(null);
@@ -53,11 +63,17 @@ export default function MapCanvas({
   focusedRef.current = focusedPlaceId;
   // 장소 ID별 개별 마커입니다. 강조 상태를 마커를 다시 만들지 않고 바꿀 때 씁니다.
   const markers = useRef(new Map<string, { button: HTMLElement; overlay: MapOverlay }>());
+  // 강조 장소로 지도를 옮기는 중인지. 이때의 범위 변경은 사용자가 지역을 바꾼 것이 아니라고 알립니다.
+  const isFocusMove = useRef(false);
+  const focusMoveTimer = useRef<number | undefined>(undefined);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [position, setPosition] = useState<Coordinates | null>(null);
   const [locationMessage, setLocationMessage] = useState("");
   const [zoomLevel, setZoomLevel] = useState(5);
+  // 내 위치 마커를 React로 그려 넣을 자리입니다. 지도 SDK가 이 요소를 오버레이로 붙입니다.
+  const [meNode] = useState(() => document.createElement("div"));
+  const hasMe = !!me;
 
   useEffect(() => {
     let active = true;
@@ -75,8 +91,11 @@ export default function MapCanvas({
         map.setZoomable(true);
         instance.current = map;
         maps.event.addListener(map, "idle", () => {
-          boundsCallback.current?.(map.getBounds());
+          boundsCallback.current?.(map.getBounds(), isFocusMove.current);
           setZoomLevel(map.getLevel());
+        });
+        maps.event.addListener(map, "dragstart", () => {
+          isFocusMove.current = false;
         });
         maps.event.addListener(map, "click", (event) => {
           if (event)
@@ -94,6 +113,7 @@ export default function MapCanvas({
     return () => {
       active = false;
       instance.current = null;
+      window.clearTimeout(focusMoveTimer.current);
     };
   }, []);
 
@@ -311,6 +331,10 @@ export default function MapCanvas({
     if (!ready || !map || !maps || !focusedPlaceId) return;
     const place = placesRef.current.find((item) => item.id === focusedPlaceId);
     if (!place) return;
+    // 옮기는 동안 idle이 여러 번 올 수 있어 잠시 동안(또는 사용자가 지도를 끌 때까지) 표시를 유지합니다.
+    isFocusMove.current = true;
+    window.clearTimeout(focusMoveTimer.current);
+    focusMoveTimer.current = window.setTimeout(() => (isFocusMove.current = false), 1000);
     if (map.getLevel() >= 7) map.setLevel(5);
     const center = new maps.LatLng(place.latitude, place.longitude);
     map.panTo(center);
@@ -337,15 +361,18 @@ export default function MapCanvas({
       maps = window.kakao?.maps;
     const coordinates = selected ?? position;
     if (!ready || !map || !maps || !coordinates) return;
+    // 고른 지점(기록하기)은 점으로, 내 위치는 넘겨받은 캐릭터로 보여 줍니다. 발밑 원의 가운데가 좌표입니다.
+    const showsMe = hasMe && !selected;
     const overlay = new maps.CustomOverlay({
       map,
       position: new maps.LatLng(coordinates.latitude, coordinates.longitude),
-      content: '<span class="position-dot"></span>',
-      yAnchor: 0.5,
+      content: showsMe ? meNode : '<span class="position-dot"></span>',
+      yAnchor: showsMe ? MY_MARKER_Y_ANCHOR : 0.5,
+      zIndex: showsMe ? 20 : 0,
     });
     if (!selected) map.setCenter(new maps.LatLng(coordinates.latitude, coordinates.longitude));
     return () => overlay.setMap(null);
-  }, [ready, position, selected]);
+  }, [ready, position, selected, hasMe, meNode]);
 
   function locate(showStatus = true) {
     if (!navigator.geolocation) {
@@ -382,6 +409,7 @@ export default function MapCanvas({
         </button>
         {locationMessage && <small role="status">{locationMessage}</small>}
       </div>
+      {me && createPortal(<MyPositionMarker {...me} />, meNode)}
     </>
   );
 }

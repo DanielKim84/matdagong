@@ -4,6 +4,8 @@
 .r-discover {
   /* 접힘 시트 = 제목 줄 + 떠 있는 하단 탭 자리 (useSheetHeights.ts의 PEEK_HEIGHT와 같은 값) */
   --r-discover-peek: calc(176px + env(safe-area-inset-bottom));
+  /* 지도 버튼(내 위치·마커 안내)을 둘 높이: 떠 있는 장소 카드 바로 위. 카드 높이는 useSheetHeights가 재서 넣습니다. */
+  --r-discover-map-controls: calc(var(--r-discover-peek) + 6px + var(--r-discover-float, 150px) + 10px);
   position: relative;
   height: 100dvh;
   overflow: hidden;
@@ -37,7 +39,7 @@
 .r-discover .map-location {
   top: auto;
   right: 16px;
-  bottom: calc(var(--r-discover-peek) + 148px);
+  bottom: var(--r-discover-map-controls);
   left: auto;
   flex-direction: row-reverse;
   transition:
@@ -83,10 +85,10 @@
   box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 12%, transparent);
 }
 
-/* 마커 안내 버튼: 내 위치 버튼과 같은 높이의 왼쪽에 둡니다. */
+/* 마커 안내 버튼: 내 위치 버튼(48px)과 가운데를 맞춰 왼쪽에 둡니다. */
 .r-discover__guide-button {
   position: absolute;
-  bottom: calc(var(--r-discover-peek) + 152px);
+  bottom: calc(var(--r-discover-map-controls) + 4px);
   left: 16px;
   z-index: 3;
   display: inline-flex;
@@ -150,6 +152,9 @@
   height: 56px;
   flex: none;
   place-items: center;
+}
+.r-discover-guide__art .my-position-marker {
+  transform: scale(0.8);
 }
 .r-discover-guide__copy {
   display: flex;
