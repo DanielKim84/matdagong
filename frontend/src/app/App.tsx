@@ -1,109 +1,42 @@
-import { useCallback, useEffect, useState, type ComponentType } from "react";
+/**
+ * 로그인한 앱의 뿌리입니다. 서버 상태를 모아 useAppData()로 화면에 넘기고, 주소(#화면)에 맞는 화면과 하단 탭을 그립니다.
+ * 상태 묶음은 같은 폴더의 훅(useCommunity, useMyPlaces, usePlaceSearch …)이 맡습니다.
+ */
+import { useCallback, useEffect, useState } from "react";
 import { NotificationDialogProvider, useNotificationDialog } from "../components/NotificationDialog";
 import TabBar, { tabForScreen } from "../components/TabBar";
-import CollectionsScreen from "../screens/me/CollectionsScreen";
-import AccountSettingsScreen from "../screens/me/AccountSettingsScreen";
-import DiaryScreen from "../screens/me/DiaryScreen";
-import MeScreen from "../screens/me/MeScreen";
-import MyRecordsScreen from "../screens/me/MyRecordsScreen";
-import QuickDraftsScreen from "../screens/me/QuickDraftsScreen";
-import WalletScreen from "../screens/me/WalletScreen";
-import DiscoverScreen from "../screens/discover/DiscoverScreen";
-import FeedScreen from "../screens/feed/FeedScreen";
-import NotificationsScreen from "../screens/feed/NotificationsScreen";
-import OnboardingScreen from "../screens/onboarding/OnboardingScreen";
-import PlaceDetailScreen from "../screens/place/PlaceDetailScreen";
-import RecordScreen from "../screens/record/RecordScreen";
-import SubscriptionsManageScreen from "../screens/tasters/SubscriptionsManageScreen";
-import TasterProfileScreen from "../screens/tasters/TasterProfileScreen";
-import TastersScreen from "../screens/tasters/TastersScreen";
 import SubscriptionOfferSheet from "../screens/SubscriptionOfferSheet";
-import {
-  cancelSubscription,
-  createPlaceRegisteredNotification,
-  createTagRequest,
-  ensureMyProfile,
-  getIncomingSubscriptions,
-  getMyTagRequests,
-  getPoints,
-  getSubscriptions,
-  getTasteTags,
-  getTasters,
-  saveMyProfile,
-} from "../services/community";
 import { isSessionExpiring } from "../services/http";
 import {
-  MY_ACTIVITY_CHANGED_EVENT,
-  convertLikedPlaceToRecord,
-  convertPlaceRecordToLike,
-  createPlaceRecord,
-  getLikedPlaceIds,
-  getMyPlaceRecords,
   getPlace,
-  getPlaces,
   getRecentPlaces,
-  getVisitedLikedPlaceIds,
-  kakaoPlaceFromPlace,
+  getVisitProofPlaceIds,
   rememberRecentPlace,
-  setPlaceLiked,
+  saveWishPlace as requestWishPlace,
 } from "../services/places";
-import type {
-  ActiveSubscription,
-  IncomingSubscription,
-  MyProfile,
-  PointAccount,
-  ProfileChanges,
-  TagRequestInput,
-  TasteTag,
-} from "../models/community";
-import { MY_TASTER_ID, type NewPlace, type Place, type Screen, type Taster } from "../models/place";
+import { MY_TASTER_ID, type Place, type Taster } from "../models/place";
 import { accountIdFromAccessToken } from "../utils/accessToken";
-import { errorMessage } from "../utils/errorMessage";
-import { STORAGE_KEYS, writeStorageJson } from "../utils/storage";
 import { accountRole } from "./accountRole";
-import { AppDataContext, type AppData, type AppNotice, type NoticeKind } from "./AppData";
+import { AppDataContext, RETRY_LATER_MESSAGE, type AppData, type AppNotice, type NoticeKind } from "./AppData";
 import { enrichPlaces } from "./enrichPlaces";
-import { go, useRoute } from "./navigation";
-import ProfileEditRoute from "./ProfileEditRoute";
+import LikeChoiceSheet from "./LikeChoiceSheet";
+import { useRoute } from "./navigation";
+import { recordActions } from "./recordActions";
+import { SCREEN_VIEWS } from "./screenViews";
+import { useCommunity } from "./useCommunity";
 import { useLegacyMigration } from "./useLegacyMigration";
+import { useLikeChoice } from "./useLikeChoice";
+import { useMyPlaces } from "./useMyPlaces";
 import { useNotifications } from "./useNotifications";
+import { useSignedInDeviceCheck } from "./useSignedInDeviceCheck";
+import { usePlaceSearch } from "./usePlaceSearch";
 
-type Props = { accessToken: string; displayName: string; onLogout: () => void };
+type Props = { accessToken: string; displayName: string; loginProviders: string[]; onLogout: () => void };
 
-const EMPTY_POINTS: PointAccount = { balance: 0, history: [] };
-const RETRY_LATER = "잠시 후 다시 시도해 주세요.";
 const NOTICE_TONES = { info: "info", success: "success", error: "danger" } as const satisfies Record<
   NoticeKind,
   string
 >;
-
-/** 주소(#화면)별로 그릴 화면입니다. 모음 화면(saved·liked·recent)은 CollectionsScreen 하나가 주소를 보고 나눠 그립니다. */
-const SCREEN_VIEWS: Record<Screen, ComponentType<{ routeId: string }>> = {
-  home: DiscoverScreen,
-  map: DiscoverScreen,
-  feed: FeedScreen,
-  register: RecordScreen,
-  place: PlaceDetailScreen,
-  profile: TasterProfileScreen,
-  tasters: TastersScreen,
-  "taster-recommendations": TastersScreen,
-  subscriptions: SubscriptionsManageScreen,
-  my: MeScreen,
-  diary: DiaryScreen,
-  wallet: WalletScreen,
-  "my-records": MyRecordsScreen,
-  drafts: QuickDraftsScreen,
-  notifications: NotificationsScreen,
-  settings: AccountSettingsScreen,
-  intro: OnboardingScreen,
-  "profile-edit": ProfileEditRoute,
-  saved: CollectionsScreen,
-  liked: CollectionsScreen,
-  recent: CollectionsScreen,
-};
-
-/** 내 요약(기록·하트·최근 본 장소)을 다시 읽어야 하는 화면입니다. */
-const MY_SUMMARY_SCREENS: Screen[] = ["my", "recent", "saved", "liked", "my-records"];
 
 export default function App(props: Props) {
   return (
@@ -113,27 +46,12 @@ export default function App(props: Props) {
   );
 }
 
-function AppContent({ accessToken, displayName, onLogout }: Props) {
-  const { alert, confirm } = useNotificationDialog();
+function AppContent({ accessToken, displayName, loginProviders, onLogout }: Props) {
+  const { alert } = useNotificationDialog();
   const authenticatedAccountId = accountIdFromAccessToken(accessToken);
   const route = useRoute();
-  const [communityTasters, setCommunityTasters] = useState<Taster[]>([]);
-  const [myProfile, setMyProfile] = useState<MyProfile | null>(null);
-  const [tasteTags, setTasteTags] = useState<TasteTag[]>([]);
-  const [subscriptions, setSubscriptions] = useState<ActiveSubscription[]>([]);
-  const [incomingSubscriptions, setIncomingSubscriptions] = useState<IncomingSubscription[]>([]);
-  const [points, setPoints] = useState<PointAccount>(EMPTY_POINTS);
   const [subscriptionTarget, setSubscriptionTarget] = useState<Taster | null>(null);
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [myPlaceRecords, setMyPlaceRecords] = useState<Place[]>([]);
-  const [recentPlaces, setRecentPlaces] = useState<Place[]>([]);
-  const [likedPlaceIds, setLikedPlaceIds] = useState<string[]>([]);
-  const [visitedLikedPlaceIds, setVisitedLikedPlaceIds] = useState<string[]>([]);
   const [detail, setDetail] = useState<Place | null>(null);
-  const [query, setQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [retryCount, setRetryCount] = useState(0);
 
   const notify = useCallback(
     (notice: AppNotice) => {
@@ -143,147 +61,40 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
     },
     [alert],
   );
-  const setMyPlaceState = useCallback((records: Place[], likedIds: string[], visitedLikedIds: string[]) => {
-    setMyPlaceRecords(records);
-    setLikedPlaceIds(likedIds);
-    setVisitedLikedPlaceIds(visitedLikedIds);
-  }, []);
   const notifications = useNotifications(accessToken, route.screen, notify);
+  useSignedInDeviceCheck(accessToken);
+  const community = useCommunity(accessToken, displayName, notify);
+  const { myProfile, refreshCommunity, reloadTasters } = community;
+  const search = usePlaceSearch(accessToken, route.screen);
+  const { setPlaces } = search;
+  const myPlaces = useMyPlaces({ accessToken, screen: route.screen, notify, setPlaces, refreshCommunity });
+  const {
+    setMyPlaceRecords,
+    setRecentPlaces,
+    setLikedPlaceIds,
+    setVisitedLikedPlaceIds,
+    setDislikedPlaceIds,
+    setVisitProofPlaceIds,
+  } = myPlaces;
   const { legacyRegistered, legacyStillLocal } = useLegacyMigration(accessToken, myProfile?.accountId, {
     setRecentPlaces,
-    setMyPlaceState,
+    setMyPlaceState: myPlaces.setMyPlaceState,
     notify,
   });
-  const requestTag = useCallback((input: TagRequestInput) => createTagRequest(accessToken, input), [accessToken]);
-  const loadTagRequests = useCallback(() => getMyTagRequests(accessToken), [accessToken]);
   /** 장소 응답의 작성자가 나인지 확인합니다. 프로필 응답 전에도 JWT subject로 알아봅니다. */
   const isMyTasterId = (tasterId: string) =>
     tasterId === MY_TASTER_ID || tasterId === authenticatedAccountId || tasterId === myProfile?.accountId;
 
-  const refreshCommunity = useCallback(async () => {
-    const profile = await ensureMyProfile(accessToken, displayName);
-    setMyProfile(profile);
-    // 부가 API 하나가 새 버전으로 아직 배포되지 않았어도 맛객과 태그 로드는 계속합니다.
-    const results = await Promise.allSettled([
-      getTasters(accessToken),
-      getSubscriptions(accessToken),
-      getTasteTags(accessToken),
-      getIncomingSubscriptions(accessToken),
-      getPoints(accessToken),
-    ]);
-    const [tastersResult, subscriptionsResult, tasteTagsResult, incomingResult, pointsResult] = results;
-    if (tastersResult.status === "rejected") throw tastersResult.reason;
-    setCommunityTasters(tastersResult.value);
-    setSubscriptions(subscriptionsResult.status === "fulfilled" ? subscriptionsResult.value : []);
-    setTasteTags(tasteTagsResult.status === "fulfilled" ? tasteTagsResult.value : []);
-    setIncomingSubscriptions(incomingResult.status === "fulfilled" ? incomingResult.value : []);
-    setPoints(pointsResult.status === "fulfilled" ? pointsResult.value : EMPTY_POINTS);
-    const unavailable = results.find((result) => result.status === "rejected");
-    if (unavailable?.status === "rejected") {
-      notify({
-        kind: "error",
-        title: "일부 정보를 불러오지 못했어요",
-        message: errorMessage(unavailable.reason, RETRY_LATER),
-      });
-    }
-  }, [accessToken, displayName, notify]);
-
-  useEffect(() => {
-    refreshCommunity().catch((cause: unknown) =>
-      notify({ kind: "error", title: "서비스 정보를 불러오지 못했어요", message: errorMessage(cause, RETRY_LATER) }),
-    );
-  }, [refreshCommunity, notify]);
-
-  const refreshMySummary = useCallback(async () => {
-    const [records, likedIds, visitedLikedIds, recent, placeList] = await Promise.allSettled([
-      getMyPlaceRecords(accessToken),
-      getLikedPlaceIds(accessToken),
-      getVisitedLikedPlaceIds(accessToken),
-      getRecentPlaces(accessToken),
-      getPlaces(accessToken, ""),
-    ]);
-    if (records.status === "fulfilled") setMyPlaceRecords(records.value);
-    if (likedIds.status === "fulfilled") setLikedPlaceIds(likedIds.value);
-    if (visitedLikedIds.status === "fulfilled") setVisitedLikedPlaceIds(visitedLikedIds.value);
-    if (recent.status === "fulfilled") setRecentPlaces(recent.value);
-    if (placeList.status === "fulfilled") setPlaces(placeList.value);
-    await refreshCommunity();
-  }, [accessToken, refreshCommunity]);
-
-  useEffect(() => {
-    if (MY_SUMMARY_SCREENS.includes(route.screen)) void refreshMySummary().catch(() => {});
-    const refreshAfterActivityChange = () => void refreshMySummary().catch(() => {});
-    window.addEventListener(MY_ACTIVITY_CHANGED_EVENT, refreshAfterActivityChange);
-    return () => window.removeEventListener(MY_ACTIVITY_CHANGED_EVENT, refreshAfterActivityChange);
-  }, [route.screen, refreshMySummary]);
-
-  useEffect(() => {
-    // 지도 검색 입력은 짧게 모아서 보내고, 화면 이동이나 새 검색이 오면 이전 요청을 취소합니다.
-    const controller = new AbortController();
-    setIsLoading(true);
-    const timeout = window.setTimeout(
-      () => {
-        getPlaces(accessToken, query.trim(), controller.signal)
-          .then((result) => {
-            setPlaces(result);
-            setError("");
-          })
-          .catch((cause: unknown) => {
-            if (!controller.signal.aborted) setError(errorMessage(cause, "맛집을 불러오지 못했어요."));
-          })
-          .finally(() => {
-            if (!controller.signal.aborted) setIsLoading(false);
-          });
-      },
-      query ? 250 : 0,
-    );
-    return () => {
-      controller.abort();
-      window.clearTimeout(timeout);
-    };
-  }, [query, retryCount, accessToken]);
-
-  useEffect(() => {
-    let active = true;
-    Promise.all([getMyPlaceRecords(accessToken), getLikedPlaceIds(accessToken), getVisitedLikedPlaceIds(accessToken)])
-      .then(([records, likedIds, visitedLikedIds]) => {
-        if (active) setMyPlaceState(records, likedIds, visitedLikedIds);
-      })
-      .catch((cause: unknown) => {
-        if (active)
-          notify({
-            kind: "error",
-            title: "내 맛집 기록을 불러오지 못했어요",
-            message: errorMessage(cause, RETRY_LATER),
-          });
-      });
-    return () => {
-      active = false;
-    };
-  }, [accessToken, setMyPlaceState, notify]);
-
-  useEffect(() => {
-    let active = true;
-    getRecentPlaces(accessToken)
-      .then((items) => {
-        if (active) setRecentPlaces(items);
-      })
-      .catch((cause: unknown) => {
-        if (active)
-          notify({
-            kind: "error",
-            title: "최근 본 맛집을 불러오지 못했어요",
-            message: errorMessage(cause, RETRY_LATER),
-          });
-      });
-    return () => {
-      active = false;
-    };
-  }, [accessToken, notify]);
-
-  useEffect(() => {
-    if (route.screen !== "map") setQuery("");
-  }, [route.screen]);
+  /**
+   * 하트·기록이 바뀌면 같은 맛집을 둔 맛객 신뢰 %와 가게에 들른 근거가 달라지므로 그 둘만 다시 받습니다.
+   * 실패해도 다음 새로고침에 맞춰집니다.
+   */
+  const refreshTasters = useCallback(() => {
+    reloadTasters();
+    getVisitProofPlaceIds(accessToken)
+      .then(setVisitProofPlaceIds)
+      .catch(() => {});
+  }, [accessToken, reloadTasters, setVisitProofPlaceIds]);
 
   useEffect(() => {
     let active = true;
@@ -300,22 +111,21 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
   }, [route.screen, route.id, accessToken]);
 
   const views = enrichPlaces({
-    places,
-    myPlaceRecords,
-    recentPlaces,
+    places: search.places,
+    myPlaceRecords: myPlaces.myPlaceRecords,
+    recentPlaces: myPlaces.recentPlaces,
     detail,
     routeId: route.id,
     legacyRegistered,
     legacyStillLocal,
-    communityTasters,
-    subscriptions,
-    incomingSubscriptions,
+    communityTasters: community.communityTasters,
+    subscriptions: community.subscriptions,
+    incomingSubscriptions: community.incomingSubscriptions,
     myProfile,
     displayName,
-    query,
+    query: search.query,
     isMyTasterId,
   });
-  const currentFreeSubscription = subscriptions.find((subscription) => subscription.subscriptionType === "FREE");
 
   const hasActivePlace = !!views.activePlace;
   useEffect(() => {
@@ -332,162 +142,53 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
     return () => {
       active = false;
     };
-  }, [route.screen, route.id, hasActivePlace, accessToken]);
+  }, [route.screen, route.id, hasActivePlace, accessToken, setRecentPlaces]);
 
-  async function toggleLike(id: string) {
-    const wasLiked = likedPlaceIds.includes(id);
-    if (wasLiked) {
-      const placeName = places.find((place) => place.id === id)?.name ?? "이 맛집";
-      const isAccepted = await confirm({
-        title: "내 맛집에서 삭제할까요?",
-        message: `‘${placeName}’을 내 맛집 목록에서 삭제할까요?`,
-        confirmLabel: "삭제할게요",
-        tone: "danger",
-      });
-      if (!isAccepted) return;
-    }
-    const isAlreadyRegistered = myPlaceRecords.some(
-      (place) => place.id === id && place.tasters.some((taster) => isMyTasterId(taster.tasterId)),
-    );
-    if (!wasLiked && isAlreadyRegistered) {
-      notify({
-        kind: "info",
-        title: "이미 내가 등록한 맛집이에요",
-        message: "내 맛집으로 바꾸려면 맛집 상세에서 ‘내 맛집으로 변경’을 선택해 주세요.",
-      });
-      return;
-    }
-    try {
-      await setPlaceLiked(accessToken, id, !wasLiked);
-      setLikedPlaceIds((current) => (wasLiked ? current.filter((item) => item !== id) : [id, ...current]));
-      if (wasLiked) setVisitedLikedPlaceIds((current) => current.filter((item) => item !== id));
-      notify({
-        kind: "success",
-        title: wasLiked ? "내 맛집에서 삭제했어요" : "내 맛집에 추가했어요",
-        message: wasLiked ? "저장해 둔 맛집에서 제외했어요." : "내 맛집에서 다시 볼 수 있어요.",
-      });
-    } catch (cause) {
-      notify({ kind: "error", title: "내 맛집을 변경하지 못했어요", message: errorMessage(cause, RETRY_LATER) });
-    }
-  }
+  const likeChoice = useLikeChoice({
+    accessToken,
+    likedPlaceIds: myPlaces.likedPlaceIds,
+    visitedLikedPlaceIds: myPlaces.visitedLikedPlaceIds,
+    visitProofPlaceIds: myPlaces.visitProofPlaceIds,
+    setLikedPlaceIds,
+    setVisitedLikedPlaceIds,
+    setDislikedPlaceIds,
+    placeNameOf: (id) =>
+      [...views.places, ...views.recentPlaces, detail].find((place) => place?.id === id)?.name ?? "이 맛집",
+    isOwnRecord: (id) =>
+      myPlaces.myPlaceRecords.some(
+        (place) => place.id === id && place.tasters.some((taster) => isMyTasterId(taster.tasterId)),
+      ),
+    notify,
+    onTrustChanged: refreshTasters,
+  });
 
-  /** 기록을 저장하고 저장된 장소를 돌려줍니다. stayOnScreen이면 새 기록 저장 뒤 상세로 옮기지 않고 호출한 화면이 완료 화면을 그립니다. */
-  async function register(
-    place: NewPlace,
-    convertFromPlaceId?: string,
-    visitedConfirmed = false,
-    stayOnScreen = false,
-  ): Promise<Place> {
-    // 등록 화면 주소에 기록 ID가 있으면(#register/<id>) 기존 기록 수정입니다.
-    const isEditing = route.screen === "register" && !!route.id;
-    try {
-      if (convertFromPlaceId && !visitedConfirmed) {
-        throw new Error("직접 방문을 확인한 뒤 등록해 주세요.");
-      }
-      const created = convertFromPlaceId
-        ? await convertLikedPlaceToRecord(accessToken, convertFromPlaceId, place)
-        : await createPlaceRecord(accessToken, place);
-      // 수정은 새 알림을 만들지 않으므로 알림 저장 실패로 보지 않습니다.
-      let isNotificationSaved = isEditing;
-      if (!isEditing) {
-        try {
-          notifications.add(await createPlaceRegisteredNotification(accessToken, created.id));
-          isNotificationSaved = true;
-        } catch {
-          isNotificationSaved = false;
-        }
-      }
-      if (convertFromPlaceId) {
-        setLikedPlaceIds((current) => current.filter((item) => item !== convertFromPlaceId));
-        setVisitedLikedPlaceIds((current) => current.filter((item) => item !== convertFromPlaceId));
-      }
-      setMyPlaceRecords((current) => [created, ...current.filter((item) => item.id !== created.id)]);
-      if (place.visibility === "public")
-        setPlaces((current) => [created, ...current.filter((item) => item.id !== created.id)]);
-      setDetail(created);
-      if (isEditing) setRetryCount((current) => current + 1);
-      const shouldStay = stayOnScreen && !isEditing;
-      if (!shouldStay) {
-        // 등록 완료 상세에서 뒤로 가면 등록 폼 대신 지도로 돌아가도록 경로를 정리합니다.
-        go("map", "", true);
-        go("place", created.id);
-      }
-      if (!shouldStay || !isNotificationSaved)
-        notify(
-          isNotificationSaved
-            ? {
-                kind: "success",
-                title: isEditing ? "맛집 내용을 수정했어요" : "맛집을 등록했어요",
-                message: isEditing ? "변경한 내용을 저장했어요." : "맛객 기록과 알림을 저장했어요.",
-              }
-            : {
-                kind: "error",
-                title: "맛집은 등록했지만 알림 저장에 실패했어요",
-                message: "맛집 기록은 저장됐어요. 알림함에는 다시 표시되지 않을 수 있어요.",
-              },
-        );
-      return created;
-    } catch (cause) {
-      notify({
-        kind: "error",
-        title: isEditing ? "맛집 내용을 수정하지 못했어요" : "맛집을 등록하지 못했어요",
-        message: errorMessage(cause, RETRY_LATER),
-      });
-      throw cause;
-    }
-  }
+  const records = recordActions({
+    accessToken,
+    route,
+    query: search.query,
+    notify,
+    addNotification: notifications.add,
+    refreshTasters,
+    retryPlaces: search.retry,
+    setPlaces,
+    setDetail,
+    setMyPlaceRecords,
+    setLikedPlaceIds,
+    setVisitedLikedPlaceIds,
+    setDislikedPlaceIds,
+  });
 
-  /** 하트로 저장한 맛집을 방문 기록으로 바꾸도록 등록 화면에 장소를 넘깁니다. 카카오 장소 ID가 없으면 이름으로 다시 검색하게 합니다. */
-  function startRecordConversion(place: Place) {
-    writeStorageJson(
-      STORAGE_KEYS.likeConversionHandoff,
-      { sourcePlaceId: place.id, place: kakaoPlaceFromPlace(place), searchName: place.name },
-      "session",
-    );
-    go("register");
-  }
-
-  async function convertRecordToLike(place: Place) {
-    try {
-      await convertPlaceRecordToLike(accessToken, place.id);
-      const withoutMyRecord = (item: Place): Place => {
-        const ownRecord = item.tasters.find((taster) => isMyTasterId(taster.tasterId));
-        return {
-          ...item,
-          tasters: item.tasters.filter((taster) => !isMyTasterId(taster.tasterId)),
-          recordCount: Math.max(0, item.recordCount - (ownRecord?.visibility === "PUBLIC" ? 1 : 0)),
-        };
-      };
-      setMyPlaceRecords((current) => current.filter((item) => item.id !== place.id));
-      setPlaces((current) => current.map((item) => (item.id === place.id ? withoutMyRecord(item) : item)));
-      setLikedPlaceIds((current) => (current.includes(place.id) ? current : [place.id, ...current]));
-      setVisitedLikedPlaceIds((current) => (current.includes(place.id) ? current : [place.id, ...current]));
-      setDetail(withoutMyRecord(place));
-      // 변경은 서버에서 이미 완료됐으므로, 새 목록 조회가 잠시 실패해도 성공 상태를 유지합니다.
-      const [records, placeList, likedIds, refreshedPlace, visitedLikedIds] = await Promise.allSettled([
-        getMyPlaceRecords(accessToken),
-        getPlaces(accessToken, query.trim()),
-        getLikedPlaceIds(accessToken),
-        getPlace(accessToken, place.id),
-        getVisitedLikedPlaceIds(accessToken),
-      ]);
-      if (records.status === "fulfilled") setMyPlaceRecords(records.value);
-      if (placeList.status === "fulfilled") setPlaces(placeList.value);
-      if (likedIds.status === "fulfilled") setLikedPlaceIds(likedIds.value);
-      if (refreshedPlace.status === "fulfilled") setDetail(refreshedPlace.value);
-      // 기록을 내 맛집으로 바꾼 것 자체가 방문했다는 뜻입니다. 함께 진행 중이던 조회가
-      // 방금 저장된 방문 표시보다 먼저 돌아와도 이 장소의 방문 표시는 남겨 둡니다.
-      if (visitedLikedIds.status === "fulfilled") {
-        setVisitedLikedPlaceIds((current) => [...new Set([...current, ...visitedLikedIds.value, place.id])]);
-      }
-      notify({
-        kind: "success",
-        title: "내 맛집으로 변경했어요",
-        message: "직접 작성한 기록을 삭제하고 내 맛집에 저장했어요.",
-      });
-    } catch (cause) {
-      notify({ kind: "error", title: "내 맛집으로 변경하지 못했어요", message: errorMessage(cause, RETRY_LATER) });
+  /**
+   * 카카오에서 고른 가게를 가볼 곳으로 저장하고, 지도 목록과 하트 상태에 바로 넣습니다.
+   * 내 기록이 있는 가게는 서버가 하트하지 않으므로 하트 목록에도 넣지 않습니다.
+   */
+  async function saveWishPlace(result: KakaoPlaceResult): Promise<Place> {
+    const saved = await requestWishPlace(accessToken, result);
+    setPlaces((list) => [...list.filter((place) => place.id !== saved.id), saved]);
+    if (!saved.tasters.some((taster) => isMyTasterId(taster.tasterId))) {
+      setLikedPlaceIds((ids) => (ids.includes(saved.id) ? ids : [...ids, saved.id]));
     }
+    return saved;
   }
 
   function openSubscription(tasterId: string) {
@@ -495,50 +196,17 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
     // API 응답보다 장소 목록이 먼저 도착해도 유효한 샘플 계정의 구독을 막지 않습니다.
     const target = views.tasters.find((taster) => taster.tasterId === tasterId);
     if (!target) {
-      notify({ kind: "info", title: "맛객 정보를 확인할 수 없어요", message: RETRY_LATER });
+      notify({ kind: "info", title: "맛객 정보를 확인할 수 없어요", message: RETRY_LATER_MESSAGE });
       return;
     }
     if (views.subscriptionIds.includes(tasterId)) return;
     setSubscriptionTarget(target);
   }
 
-  /** 맛객 프로필과 구독 목록의 구독 취소가 같은 안내와 새로고침을 쓰도록 한곳에서 처리합니다. */
-  async function cancelSubscriptionById(subscriptionId: string) {
-    try {
-      await cancelSubscription(accessToken, subscriptionId);
-      setSubscriptions(await getSubscriptions(accessToken));
-      notify({ kind: "success", title: "구독을 취소했어요", message: "언제든 다시 구독할 수 있어요." });
-    } catch (cause) {
-      notify({ kind: "error", title: "구독을 취소하지 못했어요", message: errorMessage(cause, RETRY_LATER) });
-    }
-  }
-
-  async function cancelTasterSubscription(tasterId: string) {
-    const subscription = subscriptions.find((item) => item.targetAccountId === tasterId);
-    if (subscription) await cancelSubscriptionById(subscription.subscriptionId);
-  }
-
-  async function saveProfile(changes: ProfileChanges) {
-    // 부가 맛객 목록을 새로 읽지 못해도 저장된 프로필은 화면 상태에 즉시 반영합니다.
-    setMyProfile(await saveMyProfile(accessToken, changes));
-    let isRefreshFailed = false;
-    try {
-      await refreshCommunity();
-    } catch {
-      isRefreshFailed = true;
-    }
-    notify({
-      kind: "success",
-      title: "변경 내용을 저장했어요",
-      message: isRefreshFailed
-        ? "프로필과 취향은 저장됐어요. 다른 화면 정보는 잠시 후 다시 불러와요."
-        : "프로필과 추천 취향에 반영했어요.",
-    });
-  }
-
   const appData: AppData = {
     accessToken,
     displayName,
+    loginProviders,
     myProfile,
     nickname: myProfile?.nickname ?? displayName,
     accountRole: accountRole(accessToken, views.hasPublicRecord),
@@ -546,51 +214,58 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
     privatePlaces: views.privatePlaces,
     myRecords: views.myRecords,
     recentPlaces: views.recentPlaces,
-    likedPlaceIds,
-    visitedLikedPlaceIds,
+    likedPlaceIds: myPlaces.likedPlaceIds,
+    visitedLikedPlaceIds: myPlaces.visitedLikedPlaceIds,
+    dislikedPlaceIds: myPlaces.dislikedPlaceIds,
+    visitProofPlaceIds: myPlaces.visitProofPlaceIds,
     activePlace: views.activePlace,
     legacyOwnRecord: views.legacyOwnRecord,
     editablePlace: views.editablePlace,
-    subscriptions,
+    subscriptions: community.subscriptions,
     subscriptionIds: views.subscriptionIds,
-    currentFreeSubscription,
-    incomingSubscriptions,
-    points,
+    currentFreeSubscription: community.subscriptions.find((subscription) => subscription.subscriptionType === "FREE"),
+    incomingSubscriptions: community.incomingSubscriptions,
+    points: community.points,
+    reportedTasterIds: community.reportedTasterIds,
     tasters: views.tasters,
     tasterById: views.tasterById,
     recommendedTasters: views.recommendedTasters,
-    tasteTags,
+    tasteTags: community.tasteTags,
     subscriptionTarget,
     notificationFeed: notifications.feed,
     notificationLoading: notifications.isLoading,
     notificationError: notifications.error,
     unread: notifications.feed.unreadCount > 0,
-    loading: isLoading,
-    error,
-    query,
-    setQuery,
+    loading: search.isLoading,
+    error: search.error,
+    query: search.query,
+    setQuery: search.setQuery,
     isMyTasterId,
     photoFor: views.photoFor,
     actions: {
-      retry: () => setRetryCount((current) => current + 1),
+      retry: search.retry,
       notify,
-      toggleLike,
+      chooseLike: likeChoice.chooseLike,
+      saveWishPlace,
+      undoDislike: likeChoice.undoDislike,
       openSubscription,
       closeSubscription: () => setSubscriptionTarget(null),
-      cancelSubscriptionById,
-      cancelTasterSubscription,
-      register,
-      startRecordConversion,
-      convertRecordToLike,
+      cancelSubscriptionById: community.cancelSubscriptionById,
+      cancelTasterSubscription: community.cancelTasterSubscription,
+      reportTaster: community.reportTaster,
+      register: records.register,
+      startRecordConversion: records.startRecordConversion,
+      changeOwnRecordVisibility: records.changeOwnRecordVisibility,
+      deleteOwnRecord: records.deleteOwnRecord,
       refreshCommunity,
       refreshNotifications: notifications.refresh,
       markNotificationRead: notifications.markRead,
       markAllNotificationsRead: notifications.markAllRead,
       deleteNotification: notifications.remove,
       deleteAllNotifications: notifications.removeAll,
-      requestTag,
-      loadTagRequests,
-      saveProfile,
+      requestTag: community.requestTag,
+      loadTagRequests: community.loadTagRequests,
+      saveProfile: community.saveProfile,
       logout: onLogout,
     },
   };
@@ -607,6 +282,9 @@ function AppContent({ accessToken, displayName, onLogout }: Props) {
         </div>
         {activeTab && <TabBar active={activeTab} />}
         {subscriptionTarget && <SubscriptionOfferSheet />}
+        {likeChoice.prompt && (
+          <LikeChoiceSheet prompt={likeChoice.prompt} onChoose={likeChoice.choose} onClose={likeChoice.close} />
+        )}
       </div>
     </AppDataContext.Provider>
   );

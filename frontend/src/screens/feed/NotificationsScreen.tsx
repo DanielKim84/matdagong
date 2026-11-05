@@ -11,6 +11,9 @@ import { DAY_MS, formatRelativeTime, parseTime } from "../../utils/format";
 
 type NotificationGroup = { label: string; items: UserNotification[] };
 
+/** 오늘을 빼고 이만큼 앞의 날까지를 "이번 주"로 묶습니다. */
+const THIS_WEEK_PAST_DAYS = 6;
+
 /** 오늘 / 이번 주 / 이전 으로 묶습니다. 서버가 준 순서는 그대로 둡니다. */
 function groupByDate(items: UserNotification[]): NotificationGroup[] {
   const startOfToday = new Date();
@@ -23,7 +26,7 @@ function groupByDate(items: UserNotification[]): NotificationGroup[] {
   ];
   for (const item of items) {
     const time = parseTime(item.createdAt);
-    if (time === null || time < today - 6 * DAY_MS) groups[2].items.push(item);
+    if (time === null || time < today - THIS_WEEK_PAST_DAYS * DAY_MS) groups[2].items.push(item);
     else if (time >= today) groups[0].items.push(item);
     else groups[1].items.push(item);
   }
@@ -38,13 +41,13 @@ function describeKind(item: UserNotification): { icon: IconName; tone: "brand" |
   return { icon: "fork", tone: "brand" };
 }
 
-/** 예전 알림 화면과 같은 이동 규칙: 장소 알림은 맛집 상세, 구독자 알림은 나 탭. */
+/** 알림을 누르면 갈 곳: 장소 알림은 맛집 상세, 구독자 알림은 구독 관리의 나를 구독 탭. 갈 곳이 없으면 null입니다. */
 function resolveTarget(item: UserNotification): (() => void) | null {
   if (item.targetType === "PLACE" && item.targetId) {
     const id = item.targetId;
     return () => go("place", id);
   }
-  if (item.targetType === "MY_SUBSCRIBERS") return () => go("my");
+  if (item.targetType === "MY_SUBSCRIBERS") return () => go("subscriptions", "incoming");
   return null;
 }
 
@@ -168,7 +171,7 @@ export default function NotificationsScreen() {
                 </ul>
               </section>
             ))}
-            {/* 확인 창은 actions.deleteAllNotifications가 띄웁니다(App). */}
+            {/* 확인 창은 actions.deleteAllNotifications가 띄웁니다. */}
             <button
               type="button"
               className="r-text-button r-feed-noti__delete-all"

@@ -128,19 +128,34 @@
   font-size: 14px;
   line-height: 1.6;
 }
+/* 맛객 기록 · 내 기록 · 그 밖에 묶음마다 작은 제목과 흰 카드로 나눕니다(필터 시트와 같은 카드 모양). */
+.r-discover-guide__group + .r-discover-guide__group {
+  margin-top: 16px;
+}
+.r-discover .r-discover-guide__group-title {
+  margin: 0 4px 8px;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 800;
+}
 .r-discover-guide__list {
   display: flex;
   flex-direction: column;
   margin: 0;
-  padding: 0;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 2px 14px;
   list-style: none;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 5%, transparent);
 }
 .r-discover-guide__row {
   display: flex;
   min-height: 64px;
   align-items: center;
   gap: 14px;
-  border-bottom: 1px solid var(--neutral-150);
+  border-bottom: 1px solid var(--neutral-100);
   padding: 8px 0;
 }
 .r-discover-guide__row:last-child {
@@ -520,26 +535,28 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* 추천순 · 가까운 순 두 칸 선택. 바깥 여백까지 합쳐 누르는 높이 44px입니다. */
 .r-discover-sheet__sort {
   display: inline-flex;
-  min-height: 44px;
   flex: none;
-  align-items: center;
-  gap: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-100);
+  padding: 3px;
+}
+.r-discover-sheet__sort > button {
+  min-height: 38px;
   border: 0;
+  border-radius: var(--radius-pill);
   background: none;
-  padding: 0 0 0 8px;
+  padding: 0 11px;
   color: var(--color-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
-.r-discover-sheet__sort:disabled {
-  cursor: default;
-  opacity: 1;
-}
-.r-discover-sheet__sort .icon {
-  width: 16px;
-  height: 16px;
+.r-discover-sheet__sort > button.is-on {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--shadow-color) 12%, transparent);
 }
 .r-discover-sheet__body {
   display: flex;
@@ -659,60 +676,7 @@
   font-size: 11px;
 }
 
-/* 장소 목록 행 */
-.r-discover-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.r-discover-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
-  padding: 10px 12px 10px 10px;
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 6%, transparent);
-}
-.r-discover-row__main {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  align-items: center;
-  gap: 12px;
-  border: 0;
-  background: none;
-  padding: 0;
-  color: var(--color-ink);
-  text-align: left;
-}
-.r-discover-row__thumb {
-  width: 76px;
-  height: 76px;
-}
-.r-discover-row__copy {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  gap: 4px;
-}
-.r-discover-row__copy > b {
-  overflow: hidden;
-  font-size: 15px;
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.r-discover-row__copy > small {
-  overflow: hidden;
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* 장소 목록 행의 오른쪽 하트·내 기록 표시. 카드 모양은 공용 PlaceCard(ui.css)입니다. */
 .r-discover-row__save {
   display: grid;
   width: 44px;
@@ -764,43 +728,138 @@
 .r-discover-filter__groups {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 12px;
 }
+/* 묶음마다 흰 카드로 나눠, 크림 바탕 위에서 어디까지가 한 조건인지 바로 보이게 합니다. */
 .r-discover-filter__group {
   min-width: 0;
   margin: 0;
-  border: 0;
-  padding: 0;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 14px 14px 16px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 5%, transparent);
 }
-.r-discover-filter__group > legend {
-  margin-bottom: 10px;
+.r-discover-filter__legend {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  float: left;
+  margin-bottom: 12px;
   padding: 0;
   color: var(--color-ink);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
 }
-.r-discover-filter__note {
-  margin: 8px 0 0;
+.r-discover-filter__legend + * {
+  clear: both;
+}
+.r-discover-filter__icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+}
+.r-discover-filter__icon .icon {
+  width: 16px;
+  height: 16px;
+}
+.r-discover-filter__icon--brand {
+  background: var(--brand-50);
+  color: var(--brand-500);
+}
+.r-discover-filter__icon--blue {
+  background: var(--blue-50);
+  color: var(--blue-500);
+}
+.r-discover-filter__icon--amber {
+  background: var(--amber-50);
+  color: var(--amber-600);
+}
+.r-discover-filter__icon--green {
+  background: var(--green-50);
+  color: var(--green-600);
+}
+.r-discover-filter__icon--berry {
+  background: var(--berry-50);
+  color: var(--berry-500);
+}
+.r-discover-filter__count {
+  margin-left: auto;
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  padding: 3px 9px;
+  color: var(--on-strong);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+/* 카드 안 칩은 바탕과 겹치지 않게 연한 회색 바탕으로 둡니다. 고른 칩은 공통 먹색 그대로입니다. */
+.r-discover-filter__group .r-chip:not(.is-on) {
+  border-color: transparent;
+  background: var(--neutral-50);
+}
+.r-discover-filter__radius {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.r-discover-filter__radius-option {
+  display: flex;
+  min-height: 58px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--neutral-50);
+  color: var(--color-ink);
+}
+.r-discover-filter__radius-option b {
+  font-size: 15px;
+}
+.r-discover-filter__radius-option small {
   color: var(--color-muted);
-  font-size: 13px;
+  font-size: 11px;
+}
+.r-discover-filter__radius-option.is-on {
+  border-color: var(--blue-500);
+  background: var(--blue-50);
+  color: var(--blue-700);
+}
+.r-discover-filter__note {
+  margin: 10px 0 0;
+  color: var(--color-muted);
+  font-size: 12px;
   line-height: 1.5;
 }
-.r-discover-filter__group > legend + .r-discover-filter__note {
+.r-discover-filter__legend + .r-discover-filter__note {
   margin-top: 0;
 }
-/* 조건이 많아 시트가 길어져도 적용 버튼은 아래에 붙어 있습니다. */
+/*
+ * 조건이 많아 시트가 길어져도 적용 버튼은 아래에 붙어 있습니다. 시트 좌우·아래 여백(.r-sheet)까지 덮어
+ * 스크롤한 내용이 버튼 줄 밑으로 비치지 않게 하고, 위쪽 구분선과 옅은 그림자로 목록과 나눕니다.
+ */
 .r-discover-filter__actions {
   position: sticky;
-  bottom: 0;
+  /* 브라우저는 시트 안쪽 여백 위에서 멈추게 하므로, 그 여백만큼 내려 시트 바닥에 붙입니다. */
+  bottom: calc(-24px - env(safe-area-inset-bottom));
   display: flex;
   gap: 10px;
-  margin-top: 24px;
+  margin: 16px -20px calc(-24px - env(safe-area-inset-bottom));
+  border-top: 1px solid var(--neutral-100);
   background: var(--color-canvas);
-  padding-top: 12px;
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom));
+  box-shadow: 0 -6px 16px color-mix(in srgb, var(--shadow-color) 6%, transparent);
 }
 .r-discover-filter__actions > .r-button--secondary {
   flex: none;
-  padding: 0 18px;
+  gap: 4px;
+  padding: 0 16px;
 }
 .r-discover-filter__actions > .r-button--primary {
   flex: 1;

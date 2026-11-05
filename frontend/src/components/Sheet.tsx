@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { useNotificationPageLock } from "./NotificationDialog";
+import { usePageScrollLock } from "../hooks/usePageScrollLock";
 import Icon from "./Icon";
 
 const FOCUSABLE = "button,input,textarea,select,a[href]";
@@ -30,7 +30,7 @@ export default function Sheet({
   const panel = useRef<HTMLElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
-  useNotificationPageLock(true);
+  usePageScrollLock(true);
   useEffect(() => {
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     panel.current?.focus({ preventScroll: true });

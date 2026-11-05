@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
 import { useSwipe } from "../../hooks/useSwipe";
 import { CleanMapVisual, EarningsVisual, NoisyReviewsVisual, PromiseVisual, TrustVisual } from "./IntroVisuals";
@@ -41,7 +40,7 @@ const SLIDES: Slide[] = [
         가 볼수록 <mark>믿음</mark>이 쌓여요
       </>,
     ],
-    body: "취향 %로 찾고, 그 맛객의 맛집을 직접 다녀오며 확인하세요. 경험으로 쌓이는 신뢰를 위해 맛객도 한 곳 한 곳 신중하게 올려요.",
+    body: "취향 %로 찾고, 그 맛객의 맛집에 다녀와 입맛에 맞았는지 하트로 남기세요. 같은 맛집에서 입맛이 맞을수록 서로의 신뢰 %가 올라, 맛객도 한 곳 한 곳 신중하게 올려요.",
     visual: <TrustVisual />,
     tone: "green",
   },
@@ -87,21 +86,20 @@ const SLIDES: Slide[] = [
 ];
 
 /** 첫 실행(계정별 한 번)과 설정의 "맛다공 앱 소개"에서 보는 서비스 소개. 넘겨 보거나 건너뛰고 시작합니다. */
-export default function IntroScreen({ onComplete }: { onComplete?: () => void }) {
+export default function IntroScreen({ onComplete }: { onComplete: () => void }) {
   const [index, setIndex] = useState(0);
-  const finish = () => (onComplete ? onComplete() : go("home"));
   const isLast = index === SLIDES.length - 1;
   const move = (step: number) => setIndex((current) => Math.min(SLIDES.length - 1, Math.max(0, current + step)));
   const swipe = useSwipe({ onLeft: () => move(1), onRight: () => move(-1) });
 
   // 키보드 좌우 화살표로도 넘깁니다.
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const moveByArrow = (event: KeyboardEvent) => {
       if (event.key === "ArrowRight") move(1);
       if (event.key === "ArrowLeft") move(-1);
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", moveByArrow);
+    return () => window.removeEventListener("keydown", moveByArrow);
   }, []);
 
   const slide = SLIDES[index];
@@ -122,7 +120,7 @@ export default function IntroScreen({ onComplete }: { onComplete?: () => void })
         <div className="r-intro__bar">
           <span className="r-intro__brand r-display">맛다공</span>
           {!isLast && (
-            <button type="button" className="r-onboarding-skip" onClick={finish}>
+            <button type="button" className="r-onboarding-skip" onClick={onComplete}>
               건너뛰기
             </button>
           )}
@@ -167,7 +165,7 @@ export default function IntroScreen({ onComplete }: { onComplete?: () => void })
         <button
           type="button"
           className="r-button r-button--primary r-button--block"
-          onClick={() => (isLast ? finish() : move(1))}
+          onClick={() => (isLast ? onComplete() : move(1))}
         >
           {isLast ? "맛다공 시작하기" : "다음"}
         </button>

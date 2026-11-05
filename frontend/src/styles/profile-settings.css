@@ -357,134 +357,37 @@
   margin: 0;
 }
 
-/* 취향 태그 고르기(프로필 편집·맛집 기록 공통). 화면별 겉모양은 a/forms.css, renewal/record.css가 덮습니다. */
+/*
+ * 취향 태그 고르기(TasteTagPicker, 프로필 편집·맛집 기록 공통)의 뼈대입니다.
+ * 색·크기·간격은 design-system.css와 화면별 a/forms.css, renewal/record.css가 정합니다.
+ */
 .taste-tag-picker {
-  --tag-accent: var(--brand-500);
-  --tag-tint: var(--brand-50);
   display: grid;
-  gap: 12px;
 }
 .taste-tag-picker > section {
   display: grid;
-  gap: 13px;
-  border: 1px solid var(--brand-100);
-  border-radius: var(--radius-md);
-  background: var(--neutral-0);
-  padding: 13px;
-  box-shadow: 0 3px 12px color-mix(in srgb, var(--shadow-color) 4%, transparent);
-}
-.taste-tag-group--cuisine {
-  --tag-accent: var(--brand-500);
-  --tag-tint: var(--brand-50);
-}
-.taste-tag-group--taste {
-  --tag-accent: var(--brand-500);
-  --tag-tint: var(--neutral-50);
-}
-.taste-tag-group--cafe {
-  --tag-accent: var(--clay-500);
-  --tag-tint: var(--brand-50);
-}
-.taste-tag-group--occasion {
-  --tag-accent: var(--berry-400);
-  --tag-tint: var(--neutral-100);
-}
-.taste-tag-group--visit {
-  --tag-accent: var(--brand-500);
-  --tag-tint: var(--neutral-100);
 }
 .taste-tag-group__header {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 .taste-tag-group__icon {
   display: grid;
-  width: 36px;
-  height: 36px;
   flex: none;
   place-items: center;
-  border-radius: var(--radius-sm);
-  background: var(--tag-tint);
-  color: var(--tag-accent);
-}
-.taste-tag-group__icon .icon {
-  width: 18px;
-  height: 18px;
 }
 .taste-tag-group__titles {
   display: grid;
   flex: 1;
-  gap: 3px;
-}
-.taste-tag-group__titles b {
-  color: var(--neutral-800);
-  font-size: 12px;
-  font-weight: 700;
-}
-.taste-tag-group__titles small {
-  color: var(--neutral-500);
-  font-size: 9px;
-  line-height: 1.4;
-}
-.taste-tag-group__count {
-  display: flex;
-  min-width: 46px;
-  height: 35px;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: var(--neutral-50);
-  color: var(--brand-600);
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.taste-tag-group__count i {
-  color: var(--neutral-400);
-  font-size: 9px;
-  font-style: normal;
-  font-weight: 500;
 }
 .taste-tag-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
 }
 .taste-tag-options button {
   display: inline-flex;
-  min-height: 37px;
   align-items: center;
-  gap: 7px;
-  border: 1px solid var(--brand-100);
-  border-radius: var(--radius-sm);
-  background: var(--neutral-25);
-  padding: 8px 11px;
-  color: var(--neutral-500);
-  font-size: 11px;
   line-height: 1.2;
-  transition:
-    background 0.15s,
-    border-color 0.15s,
-    transform 0.15s;
-}
-.taste-tag-options button:hover:not(:disabled) {
-  border-color: var(--brand-200);
-  background: var(--brand-50);
-  transform: translateY(-1px);
-}
-.taste-tag-options button.is-selected {
-  border-color: var(--brand-500);
-  background: var(--brand-50);
-  color: var(--brand-600);
-  font-weight: 650;
-}
-.taste-tag-options button:disabled {
-  opacity: 0.42;
-}
-.taste-tag-options button:focus-visible {
-  outline: 2px solid var(--tag-accent);
-  outline-offset: 2px;
 }
 
 /* 태그 제안 입구·저장 줄 */

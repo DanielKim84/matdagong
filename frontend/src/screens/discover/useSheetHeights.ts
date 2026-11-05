@@ -3,6 +3,10 @@ import type { SheetState } from "./discoverModel";
 
 // 접힘 시트는 제목 줄(72px)과 떠 있는 하단 탭 자리(탭 82px + 여백 22px)를 더한 높이입니다. discover.css의 --r-discover-peek와 같은 값입니다.
 const PEEK_HEIGHT = 176;
+/** 중간 시트는 화면 높이의 절반입니다. */
+const HALF_HEIGHT_RATIO = 0.5;
+/** 펼친 시트 위와 상단 검색 영역 사이에 남기는 틈(px) */
+const FULL_TOP_GAP_PX = 8;
 
 /**
  * 목록 시트의 접힘·중간·펼침 높이를 화면과 상단 검색 영역 크기에 맞춰 계산합니다.
@@ -36,8 +40,8 @@ export function useSheetHeights(
 
   const heights: Record<SheetState, number> = {
     peek: PEEK_HEIGHT,
-    half: Math.round(size.height * 0.5),
-    full: Math.max(PEEK_HEIGHT, size.height - size.top - 8),
+    half: Math.round(size.height * HALF_HEIGHT_RATIO),
+    full: Math.max(PEEK_HEIGHT, size.height - size.top - FULL_TOP_GAP_PX),
   };
   // 측정 전에는 CSS 기본값(비율)을 씁니다.
   const style: CSSProperties = size.height

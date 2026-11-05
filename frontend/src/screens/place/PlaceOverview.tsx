@@ -3,21 +3,21 @@ import type { Place } from "../../models/place";
 import { kakaoPlaceUrl, openDirections } from "../../utils/placeLinks";
 import { hasCoordinates } from "./placeRecords";
 
-/** 맛집 이름·분류·주소와 길찾기·저장·전화·기록 빠른 동작 줄입니다. */
+/**
+ * 맛집 이름·분류·주소와 길찾기·전화 버튼입니다. 저장(하트)과 기록 남기기·수정은 아래 고정 버튼 줄에만 둡니다
+ * (같은 동작 버튼을 한 화면에 여러 번 두지 않음).
+ */
 export default function PlaceOverview({
   place,
   isLiked,
+  isVisitedLike,
   hasOwnRecord,
-  saveLabel,
-  recordAction,
-  onSave,
 }: {
   place: Place;
   isLiked: boolean;
+  /** 하트가 다녀왔어요(입맛에 맞았어요)인지. 아니면 가볼 곳입니다. */
+  isVisitedLike: boolean;
   hasOwnRecord: boolean;
-  saveLabel: string;
-  recordAction: { short: string; run: () => void };
-  onSave: () => void;
 }) {
   const phone = place.providerPhone?.trim();
 
@@ -28,8 +28,10 @@ export default function PlaceOverview({
         <div className="r-place-pills">
           {place.category && <span className="r-place-pill">{place.category}</span>}
           {place.visibility === "private" && <span className="r-place-pill">비공개 기록</span>}
-          {hasOwnRecord && <span className="r-place-pill is-accent">내가 다녀온 곳</span>}
-          {!hasOwnRecord && isLiked && <span className="r-place-pill is-accent">내 맛집</span>}
+          {hasOwnRecord && <span className="r-place-pill is-mine">내가 다녀온 곳</span>}
+          {!hasOwnRecord && isLiked && (
+            <span className="r-place-pill is-mine">{isVisitedLike ? "다녀온 곳" : "가볼 곳"}</span>
+          )}
         </div>
         {place.address && (
           <p className="r-place-address">
@@ -42,51 +44,27 @@ export default function PlaceOverview({
         )}
       </header>
 
-      <nav className="r-place-quick" aria-label="빠른 동작">
+      <nav className="r-place-quick" aria-label="가게 연결">
         <button
           type="button"
           className="r-place-quick__item"
           onClick={() => openDirections(place)}
           disabled={!hasCoordinates(place)}
         >
-          <span className="r-place-quick__icon is-primary">
-            <Icon name="route" />
-          </span>
+          <Icon name="route" />
           길찾기
-        </button>
-        <button
-          type="button"
-          className={`r-place-quick__item ${isLiked ? "is-on" : ""}`}
-          onClick={onSave}
-          aria-pressed={isLiked}
-          aria-label={saveLabel}
-        >
-          <span className="r-place-quick__icon">
-            <Icon name="heart" filled={isLiked} />
-          </span>
-          {isLiked ? "저장됨" : "저장"}
         </button>
         {phone ? (
           <a className="r-place-quick__item" href={`tel:${phone}`} aria-label={`전화 걸기 ${phone}`}>
-            <span className="r-place-quick__icon">
-              <Icon name="phone" />
-            </span>
-            전화
+            <Icon name="phone" />
+            전화하기
           </a>
         ) : (
           <button type="button" className="r-place-quick__item" disabled aria-label="전화번호 정보 없음">
-            <span className="r-place-quick__icon">
-              <Icon name="phone" />
-            </span>
-            전화
+            <Icon name="phone" />
+            전화번호 없음
           </button>
         )}
-        <button type="button" className="r-place-quick__item" onClick={recordAction.run}>
-          <span className="r-place-quick__icon">
-            <Icon name="book" />
-          </span>
-          {recordAction.short}
-        </button>
       </nav>
     </>
   );

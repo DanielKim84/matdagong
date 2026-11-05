@@ -1,3 +1,4 @@
+/** 프로필 편집의 사진·배경 파일 검사와 저장된 배경 주소 읽기입니다. */
 import type { MyProfile } from "../../models/community";
 
 export const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";

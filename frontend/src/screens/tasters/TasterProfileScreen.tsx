@@ -1,18 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go, useRoute } from "../../app/navigation";
-import { Avatar, ProfileCover } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
-import { EmptyState, TopBar } from "../../components/ui";
+import { EmptyState, Segmented, TopBar } from "../../components/ui";
 import type { Taster } from "../../models/place";
 import { formatNumber, formatRelativeTime } from "../../utils/format";
-import { avatarFallback, avatarSource } from "../../utils/profileMedia";
 import ProfileActionBar from "./ProfileActionBar";
+import ProfileCoverGallery from "./ProfileCoverGallery";
 import TasteGroups from "./TasteGroups";
+import TasteMatchCard from "./TasteMatchCard";
 import TasterRecords from "./TasterRecords";
+import TasterReportButton from "./TasterReportButton";
 import {
   activityLabel,
-  coverOf,
+  coversOf,
   focusLabel,
   introOf,
   planLabel,
@@ -20,6 +21,8 @@ import {
   tagsOf,
   tasterFromProfile,
 } from "./tasterData";
+import TasterAvatar from "../../components/TasterAvatar";
+import { useScrolledPast } from "../../hooks/useScrolledPast";
 
 type Tab = "map" | "list" | "taste";
 
@@ -28,9 +31,6 @@ const PROFILE_TABS: { value: Tab; label: string }[] = [
   { value: "list", label: "기록 목록" },
   { value: "taste", label: "취향" },
 ];
-
-/** 위쪽 바 높이. 커버가 이 선 위로 다 올라가면 바에 바탕과 이름을 깝니다. */
-const TOP_BAR_HEIGHT = 64;
 
 /** 맛객 프로필(#profile/<accountId>): 취향 일치, 통계, 맛집 지도와 기록 목록. */
 export default function TasterProfileScreen() {
@@ -70,19 +70,9 @@ export default function TasterProfileScreen() {
 function Profile({ taster, isOwn }: { taster: Taster; isOwn: boolean }) {
   const app = useAppData();
   const [tab, setTab] = useState<Tab>("map");
-  const [isScrolled, setIsScrolled] = useState(false);
   const coverRef = useRef<HTMLDivElement>(null);
-
-  // 커버 사진이 화면 위로 지나가면 떠 있는 바에 바탕과 맛객 이름을 깔아 줍니다.
-  useEffect(() => {
-    const target = coverRef.current;
-    if (!target || typeof IntersectionObserver === "undefined") return;
-    const observer = new IntersectionObserver(([entry]) => setIsScrolled(!entry.isIntersecting), {
-      rootMargin: `-${TOP_BAR_HEIGHT}px 0px 0px 0px`,
-    });
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, []);
+  // 배경 사진이 화면 위로 지나가면 떠 있는 바에 바탕과 맛객 이름을 깔아 줍니다.
+  const isScrolled = useScrolledPast(coverRef);
 
   // 내 프로필은 비공개 기록까지, 다른 맛객은 공개 기록만 보여 줍니다.
   const records = isOwn
@@ -97,19 +87,34 @@ function Profile({ taster, isOwn }: { taster: Taster; isOwn: boolean }) {
   return (
     <main className="r-screen r-tasters-profile">
       <TopBar title={taster.tasterName} fallback="tasters" variant="float" isScrolled={isScrolled} />
-      <div className="r-tasters-profile__cover" ref={coverRef}>
-        <ProfileCover src={coverOf(taster)} />
-      </div>
+      <ProfileCoverGallery covers={coversOf(taster)} ref={coverRef} />
 
       <div className="r-tasters-profile__body">
-        <div className="r-tasters-profile__head">
-          <Avatar
-            className="r-tasters-avatar r-tasters-avatar--xl"
-            src={avatarSource(taster.tasterId, taster.avatar)}
-            fallbackSrc={avatarFallback(taster.tasterId, taster.avatar)}
-            name={taster.tasterName}
-            variant={taster.avatarVariant}
-          />
+        <section className="r-card r-tasters-hero" aria-label={`${taster.tasterName} 소개`}>
+          <TasterAvatar taster={taster} className="r-tasters-avatar r-tasters-avatar--hero" />
+          <h1 className="r-display">{taster.tasterName}</h1>
+          <p className="r-tasters-hero__intro">{introOf(taster)}</p>
+          {(area || focus || subscription) && (
+            <div className="r-tasters-hero__chips">
+              {area && (
+                <span className="r-tasters-hero__chip">
+                  <Icon name="pin" />
+                  {area}
+                </span>
+              )}
+              {focus && (
+                <span className="r-tasters-hero__chip">
+                  <Icon name={taster.tasterFocus === "CAFE_DESSERT" ? "coffee" : "fork"} />
+                  {focus}
+                </span>
+              )}
+              {subscription && (
+                <span className={`r-tasters-plan ${subscription.subscriptionType === "FREE" ? "is-free" : ""}`}>
+                  구독 중 · {planLabel(subscription)}
+                </span>
+              )}
+            </div>
+          )}
           <dl className="r-tasters-stats">
             <div>
               <dt>기록</dt>
@@ -124,77 +129,33 @@ function Profile({ taster, isOwn }: { taster: Taster; isOwn: boolean }) {
               <dd>{formatRelativeTime(latest) || "-"}</dd>
             </div>
           </dl>
-        </div>
+        </section>
 
-        <div className="r-tasters-profile__intro">
-          <h1 className="r-display">{taster.tasterName}</h1>
-          <p>{introOf(taster)}</p>
-          {(area || focus) && (
-            <span className="r-tasters-profile__meta">
-              {area && (
-                <span>
-                  <Icon name="pin" />
-                  {area}
-                </span>
-              )}
-              {focus && (
-                <span>
-                  <Icon name={taster.tasterFocus === "CAFE_DESSERT" ? "coffee" : "fork"} />
-                  {focus}
-                </span>
-              )}
-            </span>
-          )}
-          {subscription && (
-            <span className={`r-tasters-plan ${subscription.subscriptionType === "FREE" ? "is-free" : ""}`}>
-              구독 중 · {planLabel(subscription)}
-            </span>
-          )}
-        </div>
+        {!isOwn && (taster.matchScore != null || taster.trustScore != null) && <TasteMatchCard taster={taster} />}
 
-        {!isOwn && taster.matchScore != null && (
-          <section className="r-card r-tasters-match" aria-label="나와 취향 일치">
-            <div className="r-tasters-match__top">
-              <b>나와 취향</b>
-              <strong>{taster.matchScore}%</strong>
-            </div>
-            <div
-              className="r-tasters-match__bar"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={taster.matchScore}
-              aria-label="취향 일치율"
-            >
-              <i style={{ width: `${Math.min(100, Math.max(0, taster.matchScore))}%` }} />
-            </div>
-            {matched.length ? (
-              <div className="r-tags">
-                {matched.map((tag) => (
-                  <span key={tag} className="r-tag">
-                    {tag} ✓
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <small className="r-muted">아직 겹치는 취향 태그가 없어요.</small>
-            )}
-          </section>
-        )}
-
-        <div className="r-tasters-tabs" role="tablist" aria-label="맛객 기록 보기">
-          {PROFILE_TABS.map(({ value, label }) => (
-            <button key={value} type="button" role="tab" aria-selected={tab === value} onClick={() => setTab(value)}>
-              {label}
-              {value === "list" && records.length > 0 ? ` ${records.length}` : ""}
-            </button>
-          ))}
-        </div>
+        <Segmented<Tab>
+          label="맛객 기록 보기"
+          value={tab}
+          onChange={setTab}
+          options={PROFILE_TABS.map(({ value, label }) => ({
+            value,
+            label: value === "list" && records.length > 0 ? `${label} ${records.length}` : label,
+          }))}
+        />
 
         {tab === "taste" ? (
-          <TasteGroups tags={tagsOf(taster)} matched={matched} />
+          // 내 프로필은 나와 비교할 대상이 아니므로 "나와 같아요" 표시를 두지 않습니다.
+          <TasteGroups tags={tagsOf(taster)} matched={isOwn ? undefined : matched} />
         ) : (
-          <TasterRecords records={records} view={tab} isOwn={isOwn} />
+          <TasterRecords taster={taster} records={records} view={tab} isOwn={isOwn} />
+        )}
+
+        {!isOwn && (
+          <TasterReportButton
+            tasterId={taster.tasterId}
+            tasterName={taster.tasterName}
+            className="r-tasters-profile__report"
+          />
         )}
       </div>
 

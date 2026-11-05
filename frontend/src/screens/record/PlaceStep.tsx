@@ -5,6 +5,7 @@ import { formatDistance, shortCategory } from "../../utils/format";
 import { distanceMeters, kakaoPlaceCoordinates } from "../../utils/geo";
 import RecordStepTitle from "./RecordStepTitle";
 import type { RecordForm } from "./useRecordForm";
+import { VISIT_RADIUS_LABEL } from "../../models/place";
 
 /** 검색어와 겹치는 부분을 강조합니다. */
 function Highlight({ text, query }: { text: string; query: string }) {
@@ -121,7 +122,7 @@ export default function PlaceStep({ form }: { form: RecordForm }) {
           {form.hasSearched && !form.isSearchingPlaces && !form.placeResults.length && (
             <EmptyState
               className="r-record-empty"
-              title={`1km 안에서 ‘${query}’을(를) 찾지 못했어요`}
+              title={`${VISIT_RADIUS_LABEL} 안에서 ‘${query}’을(를) 찾지 못했어요`}
               message="가게 근처에서 다시 검색하거나, 이름을 조금 다르게 적어 보세요."
             />
           )}

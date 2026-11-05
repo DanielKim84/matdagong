@@ -1,5 +1,6 @@
 import type { FoodFocus, TasteTag } from "./community";
 
+/** 취향 태그 묶음(음식 종류·맛·카페·방문 스타일·피할 조건)의 이름·순서·선택 한도입니다. */
 export type TasteTagGroup = TasteTag["tagGroup"];
 
 const GROUPS_BY_FOCUS: Record<FoodFocus, TasteTagGroup[]> = {
@@ -36,7 +37,7 @@ export const PROFILE_TASTE_TAG_GROUP_LABELS: Record<TasteTagGroup, string> = {
   VISIT: "매장 이용",
 };
 
-export type TasteTagGroupInfo = { id: TasteTagGroup; label: string; hint: string; limit: number };
+type TasteTagGroupInfo = { id: TasteTagGroup; label: string; hint: string; limit: number };
 
 /**
  * 취향 태그 묶음의 표시 순서·이름·안내·선택 한도입니다. 가입 취향 단계(TasteChips)와 프로필 편집(TasteTagPicker)이
@@ -49,8 +50,3 @@ export const TASTE_TAG_GROUPS: readonly TasteTagGroupInfo[] = [
   { id: "OCCASION", label: TASTE_TAG_GROUP_LABELS.OCCASION, hint: "함께 가거나 즐기는 상황을 골라요.", limit: 10 },
   { id: "VISIT", label: TASTE_TAG_GROUP_LABELS.VISIT, hint: "이 조건이 있는 장소를 추천에서 빼요.", limit: 5 },
 ];
-
-/** 묶음별 선택 한도입니다. */
-export function tasteTagLimit(group: TasteTagGroup): number {
-  return TASTE_TAG_GROUPS.find((item) => item.id === group)?.limit ?? 0;
-}

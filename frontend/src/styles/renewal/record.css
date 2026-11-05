@@ -89,7 +89,6 @@
   align-self: flex-start;
   padding: 0 4px;
 }
-/* 빠른 기록 시트(components/QuickPlaceSheet)가 아직 쓰는 이름입니다. 그쪽이 .r-text-button으로 바뀌면 지웁니다. */
 .r-record-error {
   margin: 0;
   border-radius: var(--radius-control);
@@ -736,7 +735,7 @@
   margin-top: 0;
 }
 .r-record-option.is-on {
-  border-color: var(--color-primary);
+  border-color: var(--color-ink);
 }
 .r-record-option:focus-within {
   outline: 2px solid var(--brand-300);
@@ -770,20 +769,17 @@
   height: 16px;
 }
 .r-record-option.is-on .r-record-option__mark {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
+  border-color: var(--color-ink);
+  background: var(--color-ink);
   color: var(--on-strong);
 }
 
 /* ── 5단계 · 확인 ── */
-.r-record-preview,
-.r-record-done__card {
+.r-record-preview {
   overflow: hidden;
 }
 .r-record-preview > img,
-.r-record-done__card > img,
-.r-record-preview__empty,
-.r-record-done__placeholder {
+.r-record-preview__empty {
   display: grid;
   width: 100%;
   height: 160px;
@@ -792,24 +788,20 @@
   color: var(--color-subtle);
   object-fit: cover;
 }
-.r-record-preview__empty .icon,
-.r-record-done__placeholder .icon {
+.r-record-preview__empty .icon {
   width: 32px;
   height: 32px;
 }
-.r-record-preview > div,
-.r-record-done__card > div {
+.r-record-preview > div {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 14px 16px 16px;
 }
-.r-record-preview b,
-.r-record-done__card b {
+.r-record-preview b {
   font-size: 16px;
 }
-.r-record-preview .r-display,
-.r-record-done__card .r-display {
+.r-record-preview .r-display {
   font-size: 18px;
   line-height: 1.4;
 }
@@ -861,59 +853,117 @@
 }
 
 /* ── 저장 완료 ── */
+/* 저장 완료: 위쪽은 은은한 코랄 빛만 깔고(경계선 없이), 문구는 단어 단위로 줄을 바꿉니다. */
 .r-record-done {
-  position: relative;
   display: flex;
+  min-height: 100dvh;
   flex-direction: column;
-  overflow: hidden;
-  padding: 0 24px calc(28px + env(safe-area-inset-bottom));
+  gap: 22px;
+  background: radial-gradient(120% 52% at 50% 0%, var(--brand-100) 0%, transparent 100%), var(--color-canvas);
+  padding: calc(40px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
 }
-.r-record-done__hero {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 340px;
-  border-radius: 0 0 48px 48px;
-  background: var(--brand-100);
-}
-.r-record-done__mascot {
-  position: relative;
-  display: block;
-  width: 180px;
-  height: 180px;
-  margin: 48px auto 0;
-}
-.r-record-done__body {
-  position: relative;
+/* 위·아래 여백을 나눠 가져 키 큰 화면에서도 내용이 가운데쯤 옵니다. 버튼은 맨 아래에 둡니다. */
+.r-record-done__top {
   display: flex;
-  flex: 1;
+  margin-top: auto;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  margin-top: 16px;
+  gap: 10px;
   text-align: center;
 }
-.r-record-done__body h1 {
-  margin: 0;
-  font-size: 30px;
+.r-record-done__mascot {
+  display: grid;
+  width: 148px;
+  height: 148px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--brand-500) 14%, transparent);
 }
-.r-record-done__body > p {
+.r-record-done__mascot .r-mascot {
+  width: 124px;
+  height: 124px;
+}
+.r-record-done__top h1 {
+  margin: 6px 0 0;
+  font-size: 28px;
+}
+.r-record-done__status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.r-record-done__status p {
   margin: 0;
+  color: var(--neutral-700);
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.5;
+  text-wrap: balance;
+  word-break: keep-all;
 }
+.r-record-done__badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  background: var(--neutral-100);
+  padding: 0 12px;
+  color: var(--neutral-800);
+  font-size: 13px;
+  font-weight: 800;
+}
+.r-record-done__badge.is-public {
+  background: var(--brand-500);
+  color: var(--on-strong);
+}
+.r-record-done__badge .icon {
+  width: 14px;
+  height: 14px;
+}
+/* 방금 남긴 기록 요약: 사진은 왼쪽 작은 칸, 오른쪽에 가게 이름·한 줄 평·태그 */
 .r-record-done__card {
-  width: 100%;
-  margin-top: 6px;
-  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px;
+}
+.r-record-done__card > img {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  border-radius: var(--radius-md);
+  background: var(--neutral-100);
+  object-fit: cover;
+}
+.r-record-done__card > div {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+}
+.r-record-done__card b {
+  overflow: hidden;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-record-done__card .r-display {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 1.45;
+  word-break: keep-all;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 .r-record-done__actions {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 24px;
+  margin-top: auto;
 }
 
 /* ── 시트(방문 확인·빠른 저장) ── */

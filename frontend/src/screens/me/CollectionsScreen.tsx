@@ -63,7 +63,7 @@ export default function CollectionsScreen() {
                 key={place.id}
                 place={place}
                 liked={app.likedPlaceIds.includes(place.id)}
-                onLike={() => void app.actions.toggleLike(place.id)}
+                onLike={() => void app.actions.chooseLike(place.id)}
                 photo={app.photoFor(place.id)}
               />
             ))}

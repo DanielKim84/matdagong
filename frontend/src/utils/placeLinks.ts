@@ -1,7 +1,11 @@
+/** 맛집을 밖으로 여는 주소(카카오맵 장소·길찾기)와 이 앱의 상세 주소 공유입니다. */
 import type { Place } from "../models/place";
 
+// 길찾기 출발지는 오래 기다리지 않고(5초), 1분 안에 얻은 위치면 그대로 씁니다.
+const ORIGIN_LOCATION_OPTIONS: PositionOptions = { timeout: 5000, maximumAge: 60_000 };
+
 /** 이 앱에서 장소 상세(#place/<id>)를 여는 주소입니다. 공유·복사에 씁니다. */
-export function placeUrl(place: Pick<Place, "id">): string {
+function placeUrl(place: Pick<Place, "id">): string {
   return `${window.location.origin}${window.location.pathname}#place/${encodeURIComponent(place.id)}`;
 }
 
@@ -23,13 +27,13 @@ export function openDirections(place: Pick<Place, "name" | "latitude" | "longitu
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => openRoute(coords),
       () => openRoute(),
-      { timeout: 5000, maximumAge: 60000 },
+      ORIGIN_LOCATION_OPTIONS,
     );
   } else openRoute();
 }
 
 /** shared: 공유 창으로 보냄, copied: 링크 복사, cancelled: 사용자가 공유 창을 닫음, failed: 둘 다 못 함 */
-export type ShareResult = "shared" | "copied" | "cancelled" | "failed";
+type ShareResult = "shared" | "copied" | "cancelled" | "failed";
 
 /** 장소 링크를 공유하거나(지원 기기) 복사합니다. 결과에 맞는 안내는 부르는 화면이 띄웁니다. */
 export async function sharePlace(place: Pick<Place, "id" | "name">): Promise<ShareResult> {

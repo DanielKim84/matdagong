@@ -1,15 +1,18 @@
+import { useState } from "react";
 import { useAppData } from "../../app/AppData";
 import Icon from "../../components/Icon";
 import type { Place } from "../../models/place";
 import { kakaoPlaceUrl } from "../../utils/placeLinks";
+import PlaceReportSheet from "./PlaceReportSheet";
 
 /** 모든 맛객이 함께 보는 가게 기본 정보(주소·전화·카카오맵). 맛객이 직접 남긴 내용은 맛객 기록에서 보여 줍니다. */
 export default function PlaceInfo({ place }: { place: Place }) {
   const { actions } = useAppData();
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const phone = place.providerPhone?.trim();
   const altAddress = [place.roadAddress, place.lotAddress].find((address) => address && address !== place.address);
 
-  const notify = (message: string, title = "맛다공에서 알려드려요") => actions.notify({ kind: "info", title, message });
+  const notify = (message: string) => actions.notify({ kind: "info", title: "맛다공에서 알려드려요", message });
 
   async function copyAddress() {
     try {
@@ -55,13 +58,10 @@ export default function PlaceInfo({ place }: { place: Place }) {
         </a>
       </div>
 
-      <button
-        type="button"
-        className="r-place-report"
-        onClick={() => notify("잘못된 정보 제보는 준비 중이에요.", "준비 중인 기능이에요")}
-      >
+      <button type="button" className="r-place-report" onClick={() => setIsReportOpen(true)}>
         잘못된 정보 알려주기
       </button>
+      {isReportOpen && <PlaceReportSheet place={place} onClose={() => setIsReportOpen(false)} />}
     </section>
   );
 }

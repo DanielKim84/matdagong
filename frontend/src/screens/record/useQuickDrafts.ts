@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ApiError } from "../../services/http";
 import { getQuickPlaceDrafts, saveQuickPlaceDraft, type QuickPlaceDraft } from "../../services/places";
 import { readLegacyQuickDraftPlaces, removeLegacyQuickDrafts } from "./recordHandoff";
 
@@ -10,10 +11,12 @@ async function migrateLegacyQuickDrafts(accessToken: string) {
   const places = readLegacyQuickDraftPlaces();
   if (!places) return;
   try {
-    await Promise.all(places.map((place) => saveQuickPlaceDraft(accessToken, place)));
+    // 예전 데이터에는 저장할 때의 기기 위치가 없어, 서버가 위치를 확인할 수 없다고(400) 하면 옮기지 않고 정리합니다.
+    await Promise.all(places.map((place) => saveQuickPlaceDraft(accessToken, place, null)));
     removeLegacyQuickDrafts();
-  } catch {
-    // 전송에 실패하면 브라우저 임시 데이터를 보존해 다음 진입 때 다시 시도합니다.
+  } catch (cause) {
+    // 그 밖의 실패(네트워크 등)는 브라우저 임시 데이터를 보존해 다음 진입 때 다시 시도합니다.
+    if (cause instanceof ApiError && cause.status === 400) removeLegacyQuickDrafts();
   }
 }
 

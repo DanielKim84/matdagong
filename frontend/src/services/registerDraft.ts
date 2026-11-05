@@ -1,9 +1,8 @@
-import { STORAGE_KEYS, readStorage, removeStorage, writeStorage } from "../utils/storage";
-
 /**
  * 맛집 등록 화면에서 로그인이 만료됐을 때 작성 중이던 입력을 탭 저장소(sessionStorage)에 잠시 보관합니다.
  * 재로그인 뒤 등록 화면으로 돌아오면 한 번 복원하고 지웁니다.
  */
+import { STORAGE_KEYS, readStorage, removeStorage, stringList, writeStorage } from "../utils/storage";
 
 const REGISTER_DRAFT_KEY = STORAGE_KEYS.registerDraft;
 const REGISTER_DRAFT_VERSION = 1;
@@ -12,8 +11,11 @@ const REGISTER_DRAFT_TTL_MS = 6 * 60 * 60 * 1000;
 // 재로그인에 필요한 state/verifier/토큰을 쓸 공간을 남겨 두지 못하면 사진 없이 저장합니다.
 const STORAGE_HEADROOM_PROBE_KEY = STORAGE_KEYS.registerDraftProbe;
 const STORAGE_HEADROOM_BYTES = 16 * 1024;
+// 복원할 때 받는 최대 개수입니다. 기록 화면(screens/record/recordModel.ts)의 MAX_MENUS·MAX_PHOTOS와 같은 값입니다.
+const MAX_RESTORED_MENUS = 5;
+const MAX_RESTORED_PHOTOS = 10;
 
-export type RegisterDraftMenu = { name: string; price: string; photo?: string };
+type RegisterDraftMenu = { name: string; price: string; photo?: string };
 
 export type RegisterDraftForm = {
   /** 수정 중인 맛집 ID입니다. 새 등록이면 null입니다. */
@@ -43,9 +45,9 @@ type StoredRegisterDraft = RegisterDraftForm & {
   photosOmitted: boolean;
 };
 
-export type RestoredRegisterDraft = { form: RegisterDraftForm; photosOmitted: boolean };
+type RestoredRegisterDraft = { form: RegisterDraftForm; photosOmitted: boolean };
 
-export type RegisterDraftSaveResult = "saved" | "saved-without-photos" | "failed";
+type RegisterDraftSaveResult = "saved" | "saved-without-photos" | "failed";
 
 /** 사용자가 이번에 새로 고른 사진은 data URL이고, 이미 저장된 사진은 /media/... 주소입니다. */
 function isNewPhoto(source: string): boolean {
@@ -117,12 +119,12 @@ function isRestorablePhoto(value: unknown): value is string {
   );
 }
 
-function stringList(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-}
-
 function stringOrNull(value: unknown): string | null {
   return typeof value === "string" && value ? value : null;
+}
+
+function stringOrEmpty(value: unknown): string {
+  return typeof value === "string" ? value : "";
 }
 
 function parseSelectedPlace(value: unknown): KakaoPlaceResult | null {
@@ -138,13 +140,13 @@ function parseSelectedPlace(value: unknown): KakaoPlaceResult | null {
   return {
     id: place.id,
     place_name: place.place_name,
-    category_name: typeof place.category_name === "string" ? place.category_name : "",
-    phone: typeof place.phone === "string" ? place.phone : "",
-    address_name: typeof place.address_name === "string" ? place.address_name : "",
-    road_address_name: typeof place.road_address_name === "string" ? place.road_address_name : "",
+    category_name: stringOrEmpty(place.category_name),
+    phone: stringOrEmpty(place.phone),
+    address_name: stringOrEmpty(place.address_name),
+    road_address_name: stringOrEmpty(place.road_address_name),
     x: place.x,
     y: place.y,
-    place_url: typeof place.place_url === "string" ? place.place_url : "",
+    place_url: stringOrEmpty(place.place_url),
   };
 }
 
@@ -185,10 +187,10 @@ export function readRegisterDraft(accountId: string | null, editPlaceId: string 
         .filter(
           (menu): menu is RegisterDraftMenu => !!menu && typeof menu === "object" && typeof menu.name === "string",
         )
-        .slice(0, 5)
+        .slice(0, MAX_RESTORED_MENUS)
         .map((menu) => ({
           name: menu.name,
-          price: typeof menu.price === "string" ? menu.price : "",
+          price: stringOrEmpty(menu.price),
           ...(isRestorablePhoto(menu.photo) ? { photo: menu.photo } : {}),
         }))
     : [];
@@ -198,20 +200,20 @@ export function readRegisterDraft(accountId: string | null, editPlaceId: string 
     form: {
       editPlaceId,
       selectedPlace: parseSelectedPlace(value.selectedPlace),
-      name: typeof value.name === "string" ? value.name : "",
-      address: typeof value.address === "string" ? value.address : "",
+      name: stringOrEmpty(value.name),
+      address: stringOrEmpty(value.address),
       coordinates,
-      reason: typeof value.reason === "string" ? value.reason : "",
+      reason: stringOrEmpty(value.reason),
       menus: menus.length ? menus : [{ name: "", price: "" }],
       tags: stringList(value.tags),
       visitConditions: stringList(value.visitConditions),
       foodKind: value.foodKind === "CAFE_DESSERT" ? "CAFE_DESSERT" : "RESTAURANT",
       visibility: value.visibility === "public" ? "public" : "private",
-      photos: (Array.isArray(value.photos) ? value.photos.filter(isRestorablePhoto) : []).slice(0, 10),
+      photos: (Array.isArray(value.photos) ? value.photos.filter(isRestorablePhoto) : []).slice(0, MAX_RESTORED_PHOTOS),
       convertFromPlaceId: stringOrNull(value.convertFromPlaceId),
       visitedConfirmed: value.visitedConfirmed === true,
       conversionNeedsPlaceSearch: value.conversionNeedsPlaceSearch === true,
-      conversionSearchName: typeof value.conversionSearchName === "string" ? value.conversionSearchName : "",
+      conversionSearchName: stringOrEmpty(value.conversionSearchName),
       activeDraftId: stringOrNull(value.activeDraftId),
     },
   };

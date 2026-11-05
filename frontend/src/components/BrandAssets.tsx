@@ -1,23 +1,17 @@
+/** 맛다공 그림 자산(음식 예시 사진, 맛객 아바타·배경, 지도 위 내 위치·맛객 핀 미리 보기)입니다. */
 import { useState } from "react";
 import type { Place } from "../models/place";
-import MascotArt from "./MascotArt";
-import { LOCK_BADGE_SVG, MARKER_SHELL_PATH } from "./mapMarkerArt";
+import { demoAvatarNumber } from "../utils/profileMedia";
+import { stableHash } from "../utils/stableHash";
+import MascotArt, { CHARACTER_SHEET, characterViewBox } from "./MascotArt";
+import { LOCK_BADGE_SVG, MARKER_SHELL_PATH, TRUST_BADGE_SVG } from "./mapMarkerArt";
 
-export function FoodPhoto({
-  place,
-  index = 0,
-  className = "",
-}: {
-  place?: Pick<Place, "id" | "category">;
-  index?: number;
-  className?: string;
-}) {
-  // 등록 사진이 없는 더미 장소도 화면이 비지 않도록 네 장의 음식 시안 중 하나를 보여줍니다.
-  const stableIndex = place ? [...place.id].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 0) : index;
-  const cell = ((stableIndex % 4) + 4) % 4;
+/** 등록 사진이 없는 장소도 화면이 비지 않도록 네 장의 음식 시안 중 하나를 장소 ID로 고정해 보여줍니다. */
+export function FoodPhoto({ place }: { place: Pick<Place, "id"> }) {
+  const cell = stableHash(place.id) % 4;
   return (
     <svg
-      className={`food-photo ${className}`}
+      className="food-photo"
       viewBox="0 0 512 512"
       preserveAspectRatio="xMidYMid slice"
       role="img"
@@ -34,6 +28,7 @@ export function FoodPhoto({
   );
 }
 
+/** 맛객 프로필 사진입니다. 사진이 없으면 variant번 기본 캐릭터, 샘플 계정(demo-avatar:N)은 샘플 사진을 그립니다. */
 export function Avatar({
   className = "",
   src,
@@ -48,13 +43,10 @@ export function Avatar({
   variant?: number;
 }) {
   const [failedImage, setFailedImage] = useState<string | null>(null);
-  const selectedVariant = Math.min(10, Math.max(1, Math.trunc(variant || 1)));
-  const column = (selectedVariant - 1) % 5;
-  const row = Math.floor((selectedVariant - 1) / 5);
   // 오래된 업로드 URL이 사라졌으면 맛객별 기본 이미지로 바꿔 깨진 이미지 표시를 막습니다.
   const displayedSrc = src && failedImage === src ? fallbackSrc : src;
-  const demoPhoto = displayedSrc?.match(/^demo-avatar:(\d)$/);
-  const demoCell = demoPhoto ? Number(demoPhoto[1]) - 1 : -1;
+  const demoNumber = demoAvatarNumber(displayedSrc);
+  const demoCell = demoNumber ? demoNumber - 1 : -1;
   return (
     <span className={`avatar ${className}`} role="img" aria-label={`${name} 프로필`}>
       {demoCell >= 0 ? (
@@ -71,11 +63,11 @@ export function Avatar({
       ) : (
         <svg
           className="brand-art avatar-character"
-          viewBox={`${column * 396.6} ${row * 396.5} 396.6 396.5`}
+          viewBox={characterViewBox(variant || 1)}
           preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
         >
-          <image href="/assets/avatars/matdagong-characters-v1.png" width="1983" height="793" />
+          <image href={CHARACTER_SHEET.url} width={CHARACTER_SHEET.width} height={CHARACTER_SHEET.height} />
         </svg>
       )}
     </span>
@@ -120,40 +112,49 @@ export function MyPositionMarker({ name = "나", variant = 1 }: { name?: string;
 
 /** 지도 마커 안내에서 실제 지도(MapCanvas)와 같은 모양의 맛객 핀을 보여줍니다. */
 export function TasterMapMarker({
-  src,
   name = "맛객",
-  variant,
   kind = "subscribed",
   isPrivate = false,
+  isTrusted = false,
 }: {
-  src?: string | null;
   name?: string;
-  variant?: number;
-  kind?: "subscribed" | "other" | "matched" | "own";
+  kind?: "subscribed" | "other" | "own";
   /** 나만 보는 내 기록(kind="own")이면 체크 대신 자물쇠 표식을 붙입니다. */
   isPrivate?: boolean;
+  /**
+   * 믿고 가는 맛객 표식(지도 마커와 같은 모양). 구독 중이면 하트 자리에 같은 색 별을 넣고,
+   * 구독하지 않은 맛객이면 오른쪽 위에 주황 바탕 별을 붙입니다.
+   */
+  isTrusted?: boolean;
 }) {
-  const fallbackVariant = kind === "subscribed" ? 4 : kind === "matched" ? 7 : 1;
+  const variant = kind === "subscribed" ? 4 : 1;
   return (
     <span className={`taster-map-marker-preview taster-map-marker--${kind}`} aria-label={name}>
       <svg className="taster-map-marker-shell" viewBox="0 0 43 53" aria-hidden="true">
         <path d={MARKER_SHELL_PATH} />
       </svg>
       <span className="taster-map-marker-face">
-        <Avatar src={src} name={name} variant={variant ?? fallbackVariant} />
+        <Avatar name={name} variant={variant} />
       </span>
-      {kind === "own" && isPrivate ? (
+      {(kind === "own" && isPrivate) || (kind === "subscribed" && isTrusted) ? (
         <i
-          className="taster-map-marker-badge taster-map-marker-badge--own is-private"
+          className={`taster-map-marker-badge taster-map-marker-badge--${kind}${isPrivate ? " is-private" : ""}`}
           aria-hidden="true"
-          dangerouslySetInnerHTML={{ __html: LOCK_BADGE_SVG }}
+          dangerouslySetInnerHTML={{ __html: isPrivate ? LOCK_BADGE_SVG : TRUST_BADGE_SVG }}
         />
       ) : (
         kind !== "other" && (
           <i className={`taster-map-marker-badge taster-map-marker-badge--${kind}`} aria-hidden="true">
-            {kind === "subscribed" ? "♥" : kind === "own" ? "✓" : "✦"}
+            {kind === "subscribed" ? "♥" : "✓"}
           </i>
         )
+      )}
+      {isTrusted && kind === "other" && (
+        <span
+          className="taster-map-marker-trust"
+          aria-hidden="true"
+          dangerouslySetInnerHTML={{ __html: TRUST_BADGE_SVG }}
+        />
       )}
     </span>
   );

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAppData } from "../../app/AppData";
-import type { NotificationSettings } from "../../models/community";
 import { getNotificationSettings, updateNotificationSettings } from "../../services/community";
+import type { NotificationSettings } from "../../models/community";
 import { errorMessage } from "../../utils/errorMessage";
 
 /** 알림 수신 설정. 스위치를 누르면 바로 바꿔 보여 주고 저장하며, 저장에 실패하면 이전 값으로 되돌립니다. */

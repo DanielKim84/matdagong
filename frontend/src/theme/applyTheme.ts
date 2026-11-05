@@ -1,3 +1,4 @@
+/** 앱 시작 때 적용할 테마를 골라 문서(data-theme, theme-color, 테마 글꼴)에 반영합니다. */
 import { STORAGE_KEYS, readStorage, removeStorage, writeStorage } from "../utils/storage";
 import {
   DEFAULT_THEME_ID,
@@ -22,7 +23,7 @@ function koreanDate(now: Date): string {
   }).format(now);
 }
 
-export function scheduledTheme(now: Date, schedule: readonly ThemeSchedule[] = THEME_SCHEDULE): string | undefined {
+function scheduledTheme(now: Date, schedule: readonly ThemeSchedule[] = THEME_SCHEDULE): string | undefined {
   const today = koreanDate(now);
   return schedule.find((entry) => entry.start <= today && today < entry.end && findTheme(entry.theme))?.theme;
 }
@@ -40,7 +41,7 @@ function previewTheme(): string | undefined {
 }
 
 /** 미리 보기 → 배포 설정(VITE_APP_THEME) → 기간 예약 → 기본 테마 순서로 적용할 테마를 고릅니다. */
-export function resolveTheme(now = new Date()): ThemeDefinition {
+function resolveTheme(now = new Date()): ThemeDefinition {
   const id = previewTheme() ?? findTheme(import.meta.env.VITE_APP_THEME)?.id ?? scheduledTheme(now) ?? DEFAULT_THEME_ID;
   // 기본 테마는 THEMES 맨 앞에 항상 등록되어 있습니다.
   return findTheme(id) ?? THEMES[0];

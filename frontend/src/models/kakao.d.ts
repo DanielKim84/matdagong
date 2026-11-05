@@ -1,3 +1,4 @@
+/** 카카오 지도 SDK(window.kakao) 중 이 앱이 쓰는 부분만 적은 전역 타입입니다. */
 export {};
 declare global {
   interface MapCoordinate {

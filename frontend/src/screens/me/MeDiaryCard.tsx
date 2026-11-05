@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { go } from "../../app/navigation";
 import PlaceThumb from "../../components/PlaceThumb";
-import { dayKey, entriesByDay, sameMonth, WEEKDAYS, type DiaryEntry } from "./diary";
+import { dayKey, entriesByDay, isSameMonth, WEEKDAYS, type DiaryEntry } from "./diary";
 
 /** 나 탭의 다이어리 카드: 이번 달 기록 수, 이번 주 한 줄 달력, 지난달과 비교. */
 export default function MeDiaryCard({ entries }: { entries: DiaryEntry[] }) {
@@ -10,9 +10,9 @@ export default function MeDiaryCard({ entries }: { entries: DiaryEntry[] }) {
   const year = today.getFullYear();
   const month = today.getMonth();
   const lastMonth = new Date(year, month - 1, 1);
-  const thisMonthCount = entries.filter((entry) => entry.date && sameMonth(entry.date, year, month)).length;
+  const thisMonthCount = entries.filter((entry) => entry.date && isSameMonth(entry.date, year, month)).length;
   const lastMonthCount = entries.filter(
-    (entry) => entry.date && sameMonth(entry.date, lastMonth.getFullYear(), lastMonth.getMonth()),
+    (entry) => entry.date && isSameMonth(entry.date, lastMonth.getFullYear(), lastMonth.getMonth()),
   ).length;
   const monthDiff = thisMonthCount - lastMonthCount;
   // 이번 주(일~토)를 한 줄 달력으로 보여 줍니다.

@@ -40,11 +40,6 @@
   height: 52px;
   border: 3px solid var(--color-surface);
 }
-.r-tasters-avatar--xl.avatar {
-  width: 88px;
-  height: 88px;
-  border: 4px solid var(--color-canvas);
-}
 
 /* 검색 */
 .r-tasters-search {
@@ -202,6 +197,18 @@
   margin: 0 -20px;
   padding: 0 20px;
 }
+/*
+ * 추천 탭의 공통 범위 칩 한 줄. 아래 취향 맞는 맛객·맛객 둘러보기가 모두 이 칩을 따르므로,
+ * 내려 봐도 무엇으로 거른 목록인지 보이게 위쪽 바(60px) 바로 아래에 붙여 둡니다.
+ */
+.r-tasters-scope {
+  position: sticky;
+  top: 60px;
+  z-index: 10;
+  margin: -6px -20px 0;
+  background: var(--color-canvas);
+  padding: 6px 20px 8px;
+}
 .r-tasters-chips--small {
   margin-top: -4px;
 }
@@ -217,12 +224,6 @@
 }
 .r-tasters-list .r-row {
   min-height: 72px;
-}
-.r-tasters-state {
-  flex: none;
-  color: var(--color-primary);
-  font-size: 12px;
-  font-weight: 800;
 }
 /* ── 나를 구독(유료는 금색으로 눈에 띄게) ── */
 .r-tasters-incoming-summary {
@@ -401,11 +402,15 @@
   font-weight: 700;
 }
 
+/* 구독 요약: 밝은 디자인 원칙에 맞춰 연한 코랄 바탕에 진한 글씨로 둡니다. */
 .r-tasters-summary {
   display: flex;
   align-items: center;
   gap: 14px;
+  border: 1px solid var(--brand-100);
+  background: var(--brand-50);
   padding: 16px;
+  box-shadow: none;
 }
 .r-tasters-summary__copy {
   display: flex;
@@ -415,20 +420,21 @@
   gap: 4px;
 }
 .r-tasters-summary__copy small {
-  color: var(--neutral-200);
+  color: var(--color-muted);
   font-size: 13px;
 }
 .r-tasters-summary__copy b {
+  color: var(--color-ink);
   font-size: 16px;
 }
 .r-tasters-summary__link {
   min-height: 36px;
   flex: none;
-  border: 0;
+  border: 1px solid var(--brand-200);
   border-radius: var(--radius-pill);
   background: var(--color-surface);
   padding: 0 14px;
-  color: var(--color-ink);
+  color: var(--brand-700);
   font-size: 13px;
   font-weight: 700;
 }
@@ -488,84 +494,140 @@
 .r-tasters-profile {
   padding-bottom: calc(110px + env(safe-area-inset-bottom));
 }
+/* 배경 사진: 프로필 편집에서 올릴 때와 같은 3:2 비율. 아래쪽은 바탕색으로 자연스럽게 이어 카드가 떠 보이게 합니다. */
 .r-tasters-profile__cover {
   position: relative;
-  height: 180px;
+  aspect-ratio: 3 / 2;
+  max-height: 360px;
   overflow: hidden;
   background: var(--neutral-100);
+  touch-action: pan-y;
 }
-.r-tasters-profile__cover > svg,
-.r-tasters-profile__cover > img {
+.r-tasters-profile__cover::after {
+  position: absolute;
+  inset: auto 0 0;
+  height: 96px;
+  background: linear-gradient(to bottom, transparent, var(--color-canvas));
+  content: "";
+  pointer-events: none;
+}
+.r-tasters-profile__cover-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.28s ease-out;
+}
+.r-tasters-profile__cover-track > svg,
+.r-tasters-profile__cover-track > img {
   width: 100%;
   height: 100%;
+  flex: none;
   object-fit: cover;
+}
+.r-tasters-profile__cover-dots {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 66px;
+  left: 0;
 }
 .r-tasters-profile__body {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: -44px;
-  padding: 0 20px;
-}
-.r-tasters-profile__head {
-  display: flex;
-  align-items: flex-end;
   gap: 14px;
+  margin-top: -72px;
+  padding: 0 16px;
 }
-.r-tasters-stats {
+/* 배경 위로 올라온 소개 카드. 큰 프로필 사진이 카드 위쪽에 걸쳐 있고 내용은 가운데 정렬입니다. */
+.r-tasters-hero {
+  position: relative;
   display: flex;
-  flex: 1;
-  gap: 18px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 52px;
+  padding: 66px 18px 18px;
+  text-align: center;
+}
+.r-tasters-avatar--hero.avatar {
+  position: absolute;
+  top: -52px;
+  left: 50%;
+  width: 108px;
+  height: 108px;
+  border: 5px solid var(--color-surface);
+  transform: translateX(-50%);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--shadow-color) 14%, transparent);
+}
+.r-tasters-hero h1 {
   margin: 0;
-  padding-bottom: 4px;
+  font-size: 28px;
+}
+.r-tasters-hero__intro {
+  max-width: 320px;
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.r-tasters-hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.r-tasters-hero__chip {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-50);
+  padding: 0 10px;
+  color: var(--neutral-700);
+  font-size: 12px;
+  font-weight: 700;
+}
+.r-tasters-hero__chip .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--color-primary);
+}
+.r-tasters-hero .r-tasters-plan {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 12px;
+}
+/* 기록 · 구독자 · 최근 기록: 세 칸을 나눠 크게 */
+.r-tasters-stats {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 8px 0 0;
+  border-top: 1px solid var(--neutral-100);
+  padding-top: 14px;
 }
 .r-tasters-stats > div {
   display: flex;
   flex-direction: column-reverse;
+  gap: 2px;
+}
+.r-tasters-stats > div + div {
+  border-left: 1px solid var(--neutral-100);
 }
 .r-tasters-stats dt {
   color: var(--color-muted);
   font-size: 12px;
+  font-weight: 700;
 }
 .r-tasters-stats dd {
   margin: 0;
-  font-size: 18px;
-  font-weight: 800;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 22px;
   white-space: nowrap;
-}
-.r-tasters-profile__intro {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-.r-tasters-profile__intro h1 {
-  margin: 0;
-  font-size: 26px;
-}
-.r-tasters-profile__intro p {
-  margin: 0;
-  color: var(--neutral-700);
-  font-size: 14px;
-  line-height: 1.55;
-}
-.r-tasters-profile__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  color: var(--color-muted);
-  font-size: 13px;
-  font-weight: 600;
-}
-.r-tasters-profile__meta > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.r-tasters-profile__meta .icon {
-  width: 15px;
-  height: 15px;
 }
 
 .r-tasters-match {
@@ -602,63 +664,117 @@
 .r-tasters-match small {
   font-size: 12px;
 }
-
-.r-tasters-tabs {
+/* 같은 맛집 경험으로 쌓인 신뢰: 취향 % 위에 따로 묶고, 믿고 가는 맛객이면 노란 바탕으로 눈에 띄게 합니다. */
+.r-tasters-match__trust {
   display: flex;
-  gap: 20px;
-  border-bottom: 1px solid var(--neutral-200);
+  flex-direction: column;
+  gap: 8px;
+  margin: -4px -6px 4px;
+  border-radius: var(--radius-md);
+  background: var(--green-50);
+  padding: 10px 12px;
 }
-.r-tasters-tabs > button {
-  min-height: 44px;
-  margin-bottom: -1px;
-  border: 0;
-  border-bottom: 3px solid transparent;
-  background: none;
-  padding: 0;
-  color: var(--color-muted);
-  font-size: 15px;
-  font-weight: 600;
+.r-tasters-match__trust.is-trusted {
+  background: var(--amber-50);
 }
-.r-tasters-tabs > button[aria-selected="true"] {
-  border-bottom-color: var(--color-primary);
-  color: var(--color-ink);
+.r-tasters-match__trust .r-tasters-match__top {
+  align-items: center;
+  gap: 8px;
+}
+.r-tasters-match__trust .r-tasters-match__top strong {
+  margin-left: auto;
+  color: var(--green-700);
+}
+.r-tasters-match__trust.is-trusted .r-tasters-match__top strong {
+  color: var(--amber-800);
+}
+.r-tasters-match__level {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-0);
+  padding: 2px 8px;
+  color: var(--amber-900);
+  font-size: 12px;
   font-weight: 800;
 }
+.r-tasters-match__level .icon {
+  width: 12px;
+  height: 12px;
+  color: var(--amber-500);
+}
+.r-tasters-match__level--different {
+  color: var(--color-muted);
+}
+.r-tasters-match__bar--trust > i {
+  background: var(--green-500);
+}
+.is-trusted .r-tasters-match__bar--trust > i {
+  background: var(--amber-400);
+}
 
+/* 맛집 지도: 이 맛객이 기록한 곳 전체가 들어오게 맞춘 지도를 흰 카드 안에 */
+.r-tasters-map-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+.r-tasters-map-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 2px;
+}
+.r-tasters-map-card__head b {
+  font-size: 15px;
+}
+.r-tasters-map-card__head small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+/* 내 주변 · 전체 · 시·도별 칩: 한 줄로 옆으로 넘깁니다. 카드 안이라 고르지 않은 칩은 연한 바탕입니다. */
+.r-tasters-map-card__scopes {
+  margin: 0 -14px;
+  overflow-x: auto;
+  padding: 0 14px;
+  scrollbar-width: none;
+}
+.r-tasters-map-card__scopes .r-chip {
+  height: 34px;
+  padding: 0 13px;
+  font-size: 13px;
+}
+.r-tasters-map-card__scopes .r-chip:not(.is-on) {
+  border-color: transparent;
+  background: var(--neutral-50);
+}
 .r-tasters-map {
   position: relative;
-  height: 280px;
+  height: 300px;
   overflow: hidden;
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-md);
   background: var(--color-surface-soft);
 }
-.r-tasters-records .r-row {
-  align-items: flex-start;
-}
-.r-tasters-records .r-row__copy {
-  padding-top: 4px;
-}
-.r-tasters-records__note {
-  display: -webkit-box;
-  white-space: normal;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-.r-row__copy small.r-tasters-records__note {
-  color: var(--neutral-700);
-  line-height: 1.45;
-  white-space: normal;
-}
 
+/* 취향 탭: 묶음별 태그는 공용 TagGroupList(.r-tag-group). 위쪽 안내 줄의 "나와 같아요" 배지만 .r-tag--mine */
 .r-tasters-taste {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
-.r-tasters-taste h2 {
-  margin: 0 0 8px;
-  font-size: 14px;
-  font-weight: 800;
+.r-tasters-taste__legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0 4px;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.r-tasters-taste__legend .r-tag {
+  flex: none;
 }
 
 .r-tasters-support.r-button {
@@ -752,8 +868,8 @@
   box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
 }
 .r-tasters-offer__option.is-on {
-  border-color: var(--color-primary);
-  background: var(--brand-50);
+  border-color: var(--color-ink);
+  background: var(--color-surface);
   box-shadow: none;
 }
 .r-tasters-offer__option > strong {
@@ -784,7 +900,7 @@
   background: var(--color-surface);
 }
 .r-tasters-offer__option.is-on .r-tasters-offer__radio {
-  border: 6px solid var(--color-primary);
+  border: 6px solid var(--color-ink);
 }
 .r-tasters-offer__copy {
   display: flex;
@@ -821,7 +937,7 @@
   font-weight: 800;
 }
 .r-tasters-offer__plans > button.is-on {
-  border-color: var(--color-primary);
+  border-color: var(--color-ink);
   background: var(--color-surface);
 }
 .r-tasters-offer__plans small {
@@ -886,4 +1002,9 @@
   color: var(--color-danger);
   font-size: 13px;
   font-weight: 600;
+}
+
+/* 맛객 프로필 맨 아래 신고하기(하단 고정 버튼 줄에 가리지 않게 본문 끝에 둡니다) */
+.r-tasters-profile__report {
+  align-self: center;
 }

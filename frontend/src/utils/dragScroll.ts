@@ -5,11 +5,22 @@
  * - 칩 줄처럼 자석 정렬이 없는 목록: 놓은 뒤에도 끌던 속도로 조금 더 미끄러지다 멈춥니다.
  * 끌어 넘긴 직후의 클릭은 막아서 카드를 넘기다가 상세로 이동하지 않게 합니다.
  */
+/** 이만큼(px) 움직여야 클릭이 아니라 끌기로 봅니다. */
 const DRAG_THRESHOLD = 6;
 /** 이만큼 끌거나(px) 이 속도 이상으로 튕기면(px/ms) 다음 카드로 넘깁니다. */
 const PAGE_DISTANCE = 36;
 const PAGE_VELOCITY = 0.35;
 const PAGE_DURATION_MS = 380;
+/** 놓는 순간의 속도는 이전 속도와 방금 움직임을 이 비율로 섞습니다(최근 움직임에 무게). */
+const VELOCITY_SMOOTHING = 0.6;
+/** 놓기 직전 이 시간(ms)보다 오래 멈춰 있었으면 튕긴 것이 아니라고 봅니다. */
+const RELEASE_IDLE_MS = 80;
+/** 자석 정렬 없는 목록은 이 속도(px/ms)보다 빠르게 놓았을 때만 미끄러집니다. */
+const COAST_START_VELOCITY = 0.05;
+/** 미끄러질 때 한 프레임(약 16ms)마다 남는 속도 비율과, 멈추는 속도(px/ms)입니다. */
+const COAST_FRICTION_PER_FRAME = 0.94;
+const FRAME_MS = 16;
+const COAST_STOP_VELOCITY = 0.02;
 
 function horizontalScroller(target: EventTarget | null): HTMLElement | null {
   let element = target instanceof Element ? target : null;
@@ -46,8 +57,8 @@ export function installMouseDragScroll() {
     element: HTMLElement;
     startX: number;
     startLeft: number;
-    snaps: boolean;
-    moved: boolean;
+    isSnapping: boolean;
+    hasMoved: boolean;
     lastX: number;
     lastTime: number;
     velocity: number;
@@ -69,8 +80,8 @@ export function installMouseDragScroll() {
   // 정해진 위치까지 감속 곡선으로 옮긴 뒤 자석 정렬을 되돌립니다.
   const glideTo = (element: HTMLElement, target: number) => {
     const from = element.scrollLeft;
-    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (reduce || Math.abs(target - from) < 1) {
+    const isReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (isReducedMotion || Math.abs(target - from) < 1) {
       element.scrollLeft = target;
       restore(element);
       return;
@@ -98,8 +109,8 @@ export function installMouseDragScroll() {
       const dt = now - last;
       last = now;
       element.scrollLeft -= speed * dt;
-      speed *= 0.94 ** (dt / 16);
-      if (Math.abs(speed) > 0.02) animation = requestAnimationFrame(step);
+      speed *= COAST_FRICTION_PER_FRAME ** (dt / FRAME_MS);
+      if (Math.abs(speed) > COAST_STOP_VELOCITY) animation = requestAnimationFrame(step);
       else {
         animatingElement = null;
         restore(element);
@@ -118,8 +129,8 @@ export function installMouseDragScroll() {
       element,
       startX: event.clientX,
       startLeft: element.scrollLeft,
-      snaps: getComputedStyle(element).scrollSnapType !== "none",
-      moved: false,
+      isSnapping: getComputedStyle(element).scrollSnapType !== "none",
+      hasMoved: false,
       lastX: event.clientX,
       lastTime: event.timeStamp,
       velocity: 0,
@@ -129,9 +140,9 @@ export function installMouseDragScroll() {
   document.addEventListener("pointermove", (event) => {
     if (!drag) return;
     const dx = event.clientX - drag.startX;
-    if (!drag.moved) {
+    if (!drag.hasMoved) {
       if (Math.abs(dx) < DRAG_THRESHOLD) return;
-      drag.moved = true;
+      drag.hasMoved = true;
       // 끄는 동안은 자석 정렬을 끄고 손가락처럼 바로 따라오게 합니다.
       drag.element.style.scrollSnapType = "none";
       drag.element.style.scrollBehavior = "auto";
@@ -141,7 +152,7 @@ export function installMouseDragScroll() {
     if (dt > 0) {
       // 최근 움직임에 더 무게를 두어 놓는 순간의 속도를 구합니다.
       const instant = (event.clientX - drag.lastX) / dt;
-      drag.velocity = drag.velocity * 0.6 + instant * 0.4;
+      drag.velocity = drag.velocity * VELOCITY_SMOOTHING + instant * (1 - VELOCITY_SMOOTHING);
     }
     drag.lastX = event.clientX;
     drag.lastTime = event.timeStamp;
@@ -150,13 +161,13 @@ export function installMouseDragScroll() {
 
   const finish = (event: PointerEvent) => {
     if (!drag) return;
-    const { element, moved, snaps, startLeft, startX } = drag;
+    const { element, hasMoved, isSnapping, startLeft, startX } = drag;
     // 한동안 멈춰 있다가 놓으면 튕긴 것이 아니므로 속도를 버립니다.
-    const velocity = event.timeStamp - drag.lastTime > 80 ? 0 : drag.velocity;
+    const velocity = event.timeStamp - drag.lastTime > RELEASE_IDLE_MS ? 0 : drag.velocity;
     drag = null;
-    if (!moved) return;
+    if (!hasMoved) return;
 
-    if (snaps) {
+    if (isSnapping) {
       const positions = snapPositions(element);
       const current = positions.reduce(
         (best, position) => (Math.abs(position - startLeft) < Math.abs(best - startLeft) ? position : best),
@@ -176,7 +187,7 @@ export function installMouseDragScroll() {
             : 0;
       const target = positions[Math.min(positions.length - 1, Math.max(0, index + direction))];
       glideTo(element, target);
-    } else if (Math.abs(velocity) > 0.05) {
+    } else if (Math.abs(velocity) > COAST_START_VELOCITY) {
       coast(element, velocity);
     } else {
       restore(element);

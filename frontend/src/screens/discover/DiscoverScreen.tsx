@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
-import MapCanvas, { type MapMe } from "../../components/MapCanvas";
+import MapCanvas, { type FitRequest, type MapMe, type RadiusView } from "../../components/MapCanvas";
 import { EmptyState, Skeleton, type EmptyStateProps } from "../../components/ui";
 import type { Place } from "../../models/place";
 import type { Coordinates } from "../../utils/geo";
@@ -16,17 +16,19 @@ import {
   DEFAULT_FILTERS,
   detailFilterCount,
   isInBounds,
-  loadStoredState,
-  saveStoredState,
   type DiscoverFilters,
   type SheetState,
   type SortOrder,
   type VisibleBounds,
 } from "./discoverModel";
+import { loadStoredState, saveStoredState } from "./discoverStorage";
 import { useDiscoverPlaces } from "./useDiscoverPlaces";
 import { useSheetHeights } from "./useSheetHeights";
 
-/** 발견 탭(앱 첫 화면): 화면 가득 지도, 넘기는 장소 카드, 끌어 올리는 목록 시트. */
+/**
+ * 발견 탭(앱 첫 화면): 화면 가득 지도, 넘기는 장소 카드, 끌어 올리는 목록 시트.
+ * 새 맛집을 찾는 곳이라 다른 맛객(구독·구독 안 한)의 기록만 보여 주고, 내 기록·하트한 곳은 내 지도 탭에서 봅니다.
+ */
 export default function DiscoverScreen() {
   const app = useAppData();
   const [stored] = useState(loadStoredState);
@@ -37,26 +39,34 @@ export default function DiscoverScreen() {
   const [bounds, setBounds] = useState<VisibleBounds | null>(null);
   const [regionBounds, setRegionBounds] = useState<VisibleBounds | null>(null);
   const [focusedId, setFocusedId] = useState<string | null>(null);
+  // 필터 시트에서 고른 반경입니다. 같은 반경을 다시 골라도 지도가 다시 맞춰지도록 요청마다 번호를 바꿉니다.
+  const [radiusView, setRadiusView] = useState<RadiusView | null>(null);
+  // 검색 결과가 모두 보이게 지도를 맞추는 요청입니다. 검색 결과가 지금 보는 지역 밖에 있어도 바로 찾을 수 있게 합니다.
+  const [searchFit, setSearchFit] = useState<FitRequest | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isMarkerGuideOpen, setIsMarkerGuideOpen] = useState(false);
   const root = useRef<HTMLElement>(null);
   const top = useRef<HTMLDivElement>(null);
   const float = useRef<HTMLDivElement>(null);
   const { heights, style } = useSheetHeights(root, top, float);
-  const {
-    ctx,
-    filtered,
-    carousel,
-    rows,
-    recentSubscribed,
-    nearby,
-    categories,
-    tags,
-    recommendedTasterIds,
-    countMatches,
-  } = useDiscoverPlaces({ filters, sort, device, bounds, regionBounds, focusedId });
+  const { ctx, filtered, carousel, rows, recentSubscribed, categories, tags, countMatches } = useDiscoverPlaces({
+    filters,
+    sort,
+    device,
+    bounds,
+    regionBounds,
+    focusedId,
+  });
 
   useEffect(() => saveStoredState({ filters, sheet, sort }), [filters, sheet, sort]);
+
+  // 검색 응답이 도착해 결과가 바뀔 때마다 한 번 맞춥니다. 응답을 기다리는 동안의 이전 목록으로는 옮기지 않습니다.
+  const searchResultKey = app.query.trim() && !app.loading ? filtered.map((place) => place.id).join(",") : "";
+  useEffect(() => {
+    if (!searchResultKey) return;
+    setFocusedId(null);
+    setSearchFit((current) => ({ places: filtered, requestId: (current?.requestId ?? 0) + 1 }));
+  }, [searchResultKey]);
 
   // 지도 위 내 위치는 내 기본 캐릭터(프로필의 캐릭터 번호)로 보여 줍니다.
   const me: MapMe | undefined = app.myProfile
@@ -132,9 +142,9 @@ export default function DiscoverScreen() {
         <MapCanvas
           places={filtered}
           subscriptions={app.subscriptionIds}
-          liked={app.likedPlaceIds}
-          recommendedTasterIds={recommendedTasterIds}
           focusedPlaceId={focusedId}
+          radiusView={radiusView}
+          fitRequest={searchFit}
           me={me}
           onPositionChange={setDevice}
           onBoundsChange={changeBounds}
@@ -191,9 +201,7 @@ export default function DiscoverScreen() {
         canSortByDistance={!!device}
         onSortChange={setSort}
       >
-        {fallbackView ?? (
-          <DiscoverSheetList places={rows} recentSubscribed={recentSubscribed} nearby={nearby} ctx={ctx} />
-        )}
+        {fallbackView ?? <DiscoverSheetList places={rows} recentSubscribed={recentSubscribed} ctx={ctx} />}
       </DiscoverSheet>
 
       {isMarkerGuideOpen && <MarkerGuideSheet me={me} onClose={() => setIsMarkerGuideOpen(false)} />}
@@ -205,8 +213,9 @@ export default function DiscoverScreen() {
           tags={tags}
           hasPosition={!!device}
           countMatches={countMatches}
-          onApply={(next) => {
+          onApply={(next, radius) => {
             changeFilters(next);
+            if (radius) setRadiusView((current) => ({ meters: radius, requestId: (current?.requestId ?? 0) + 1 }));
             setIsFilterOpen(false);
           }}
           onClose={() => setIsFilterOpen(false)}

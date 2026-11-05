@@ -1,8 +1,8 @@
 import { isMyTaster, type Place } from "../../models/place";
 import type { Coordinates } from "../../utils/geo";
-import { REASON_MAX, isSameKakaoPlace, type RecordStep } from "./recordModel";
+import { REASON_MAX, REASON_MIN, isSameKakaoPlace, type RecordStep } from "./recordModel";
 
-export type RecordCheckInput = {
+type RecordCheckInput = {
   isEditing: boolean;
   places: Place[];
   selectedPlace: KakaoPlaceResult | null;
@@ -26,7 +26,7 @@ export function recordStepError(step: RecordStep, input: RecordCheckInput): stri
     if (input.photoCount === 0) return "맛집 사진을 한 장 이상 등록해 주세요.";
   }
   if (step === "story") {
-    if (input.reason.trim().length < 5) return "추천 이유를 5글자 이상 남겨주세요.";
+    if (input.reason.trim().length < REASON_MIN) return `추천 이유를 ${REASON_MIN}글자 이상 남겨주세요.`;
     if (input.reason.length > REASON_MAX) return `추천 이유는 ${REASON_MAX}자까지 남길 수 있어요.`;
   }
   return "";

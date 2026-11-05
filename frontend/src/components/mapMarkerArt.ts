@@ -1,5 +1,3 @@
-import type { MapKind } from "../models/place";
-
 /**
  * 지도 마커(MapCanvas)와 맛객 핀(BrandAssets의 TasterMapMarker)이 같은 모양을 쓰도록 SVG 원본을 한곳에 둡니다.
  * 지도 마커는 카카오 CustomOverlay에 DOM으로 넣으므로 React 요소 대신 문자열로 보관합니다.
@@ -15,22 +13,22 @@ export const MARKER_SHELL_PATH = "M21.5 47L16.24 37.71A18 18 0 1 1 26.76 37.71Z"
 export const LOCK_BADGE_SVG =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>';
 
-/** 맛객 얼굴 대신 기호로 표시하는 마커 종류입니다. 나머지 종류는 맛객 핀(TasterMapMarker 모양)으로 그립니다. */
-type CategoryMarkerKind = Extract<MapKind, "liked" | "ad">;
+/** 믿고 가는 맛객 핀의 별 그림입니다. 구독 중이면 하트 표식 안에, 아니면 주황 바탕 표식(.taster-map-marker-trust) 안에 넣습니다. */
+export const TRUST_BADGE_SVG =
+  '<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z"/></svg>';
 
-/** 기호 마커의 안쪽 아이콘입니다. */
-const CATEGORY_MARKER_GLYPHS: Record<CategoryMarkerKind, string> = {
+/** 기호 마커(내 지도)의 종류입니다. 가볼 곳(하트), 다녀온 곳(체크), 검색해 고른 가게(점)입니다. */
+export type SymbolMarkerKind = "liked" | "visited" | "search";
+
+/** 기호 마커 안쪽 아이콘입니다. 하트와 점은 채우고, 체크는 선으로 그립니다(app.css의 마커 규칙). */
+const SYMBOL_GLYPHS: Record<SymbolMarkerKind, string> = {
   liked:
     '<svg viewBox="0 0 24 24"><path d="M20.8 8.8c0 4.1-8.8 10-8.8 10s-8.8-5.9-8.8-10A4.8 4.8 0 0 1 12 6.2a4.8 4.8 0 0 1 8.8 2.6Z"/></svg>',
-  ad: '<svg viewBox="0 0 24 24"><path d="M3 10h18v10H3zM2 10l2-6h16l2 6M6 4v6m4-6v6m4-6v6m4-6v6M9 14h6v6H9z"/></svg>',
+  visited: '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  search: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg>',
 };
 
-function isCategoryMarkerKind(kind: MapKind): kind is CategoryMarkerKind {
-  return kind in CATEGORY_MARKER_GLYPHS;
-}
-
-/** 기호 마커 버튼 안에 넣을 HTML입니다. 맛객 사진을 찾지 못한 다른 종류는 기호 없이 핀 바탕만 그립니다. */
-export function categoryMarkerHtml(kind: MapKind): string {
-  const glyph = isCategoryMarkerKind(kind) ? CATEGORY_MARKER_GLYPHS[kind] : "";
-  return `<svg class="map-category-marker-shell" viewBox="0 0 43 53" aria-hidden="true"><path d="${MARKER_SHELL_PATH}"/></svg><span class="map-category-marker-glyph" aria-hidden="true">${glyph}</span>`;
+/** 기호 마커 버튼 안에 넣을 HTML입니다. 지도와 마커 안내 시트가 같이 씁니다. */
+export function symbolMarkerHtml(kind: SymbolMarkerKind): string {
+  return `<svg class="map-category-marker-shell" viewBox="0 0 43 53" aria-hidden="true"><path d="${MARKER_SHELL_PATH}"/></svg><span class="map-category-marker-glyph" aria-hidden="true">${SYMBOL_GLYPHS[kind]}</span>`;
 }

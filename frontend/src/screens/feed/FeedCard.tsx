@@ -1,11 +1,16 @@
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import { Avatar } from "../../components/BrandAssets";
+import HashTag from "../../components/HashTag";
 import Icon from "../../components/Icon";
 import PlaceThumb from "../../components/PlaceThumb";
+import TasteScore from "../../components/TasteScore";
 import { formatRelativeTime } from "../../utils/format";
 import { openDirections, sharePlace } from "../../utils/placeLinks";
 import { NEW_BADGE_MS, shortArea, type FeedRecord } from "./feedRecords";
+
+/** 카드 한 장에 보여 줄 취향 태그 수 */
+const CARD_TAG_LIMIT = 3;
 
 /** 피드 기록 카드: 작성자·시각 → 사진(장소 표시) → 추천 이유·태그 → 저장·길찾기·공유. */
 export default function FeedCard({ record }: { record: FeedRecord }) {
@@ -15,7 +20,7 @@ export default function FeedCard({ record }: { record: FeedRecord }) {
   const when = formatRelativeTime(taster.recordedAt);
   const isNew = record.time > 0 && Date.now() - record.time < NEW_BADGE_MS;
   const area = shortArea(place);
-  const tags = (taster.tags ?? []).slice(0, 3);
+  const tags = (taster.tags ?? []).slice(0, CARD_TAG_LIMIT);
 
   async function share() {
     const result = await sharePlace(place);
@@ -39,7 +44,7 @@ export default function FeedCard({ record }: { record: FeedRecord }) {
             <small>{[when, isNew ? "새 기록" : ""].filter(Boolean).join(" · ") || "기록"}</small>
           </span>
         </button>
-        {(author.matchScore ?? 0) > 0 && <span className="r-match">취향 {author.matchScore}%</span>}
+        <TasteScore taster={author} />
       </header>
 
       {record.photo ? (
@@ -78,9 +83,7 @@ export default function FeedCard({ record }: { record: FeedRecord }) {
         {tags.length > 0 && (
           <div className="r-tags">
             {tags.map((tag) => (
-              <span className="r-tag" key={tag}>
-                {tag}
-              </span>
+              <HashTag key={tag} tag={tag} size="sm" />
             ))}
           </div>
         )}
@@ -89,7 +92,7 @@ export default function FeedCard({ record }: { record: FeedRecord }) {
             type="button"
             className={`r-feed-act${isLiked ? " is-on" : ""}`}
             aria-pressed={isLiked}
-            onClick={() => void actions.toggleLike(place.id)}
+            onClick={() => void actions.chooseLike(place.id)}
           >
             <Icon name="heart" filled={isLiked} />
             {isLiked ? "저장됨" : "저장"}

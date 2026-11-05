@@ -1,3 +1,4 @@
+/** 좌표 자료형과 거리 계산입니다. */
 export type Coordinates = { latitude: number; longitude: number };
 
 const EARTH_RADIUS_METERS = 6_371_000;

@@ -1,0 +1,148 @@
+/* 내 지도(MyMapScreen). 지도·검색창·칩·마커 안내 버튼은 발견 화면(discover.css의 r-discover 규칙)을 같이 씁니다. */
+.r-mymap {
+  /* 아래 영역 = 떠 있는 하단 탭(68px + 아래 여백 14px)과 그 위 간격 */
+  --r-mymap-bottom: calc(96px + env(safe-area-inset-bottom));
+  /* 지도 버튼(내 위치·마커 안내)은 기록하기 버튼 줄 위에 둡니다. 카드가 열리면 카드 높이만큼 더 올립니다. */
+  --r-discover-map-controls: calc(var(--r-mymap-bottom) + 60px);
+}
+.r-mymap[data-card="open"] {
+  --r-discover-map-controls: calc(var(--r-mymap-bottom) + 280px);
+}
+
+.r-mymap-search {
+  padding: 0 16px;
+}
+.r-mymap-search__submit {
+  min-height: 40px;
+  flex: none;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 0 14px;
+  color: var(--on-strong);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 800;
+}
+.r-mymap-search__submit:disabled {
+  opacity: 0.6;
+}
+.r-mymap-search__results {
+  display: flex;
+  max-height: 46dvh;
+  flex-direction: column;
+  margin-top: 8px;
+  overflow-y: auto;
+  padding: 6px;
+}
+.r-mymap-search__results ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-mymap-search__results li + li {
+  border-top: 1px solid var(--color-line);
+}
+.r-mymap-search__results li > button {
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  border: 0;
+  background: none;
+  padding: 8px 10px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-mymap-search__results li > button b {
+  font-size: 15px;
+}
+.r-mymap-search__results li > button small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-mymap-search__close {
+  align-self: center;
+}
+.r-mymap-search__message {
+  margin: 8px 0 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  padding: 10px 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+.r-mymap-search__results .r-mymap-search__message {
+  margin: 0;
+  background: none;
+}
+
+/* 아래쪽 영역: 기록하기 버튼(오른쪽)과 가게 카드 */
+.r-mymap__bottom {
+  position: absolute;
+  right: 16px;
+  bottom: var(--r-mymap-bottom);
+  left: 16px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+.r-mymap__bottom > * {
+  pointer-events: auto;
+}
+.r-mymap__empty {
+  width: 100%;
+}
+
+.r-mymap-card {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+.r-mymap-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.r-mymap-card__head h2 {
+  margin: 6px 0 4px;
+  color: var(--color-ink);
+  font-size: 20px;
+  font-weight: 400;
+}
+.r-mymap-card__head p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+.r-mymap-card__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 4px;
+  margin: -6px -8px 0;
+}
+.r-mymap-card__links > .r-text-button {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.r-mymap-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

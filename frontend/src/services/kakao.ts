@@ -1,4 +1,8 @@
+/** 카카오 지도 SDK 불러오기와 카카오 장소 검색입니다. SDK는 한 번만 불러와 지도와 검색이 함께 씁니다. */
 let sdkPromise: Promise<void> | undefined;
+
+// 장소 검색 한 번에 받을 결과 수입니다.
+const SEARCH_RESULT_SIZE = 8;
 
 export function loadMapSdk() {
   if (sdkPromise) return sdkPromise;
@@ -45,7 +49,7 @@ export async function searchKakaoPlaces(
         else reject(new Error("장소 검색에 실패했어요. 잠시 후 다시 시도해 주세요."));
       },
       {
-        size: 8,
+        size: SEARCH_RESULT_SIZE,
         ...(center
           ? {
               location: new maps.LatLng(center.latitude, center.longitude),

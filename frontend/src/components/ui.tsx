@@ -1,10 +1,11 @@
+/** 화면들이 함께 쓰는 작은 공통 부품(상단 바, 알림 버튼, 탭 전환, 섹션 제목, 빈 화면, 불러오는 중)입니다. */
 import type { ReactNode } from "react";
 import { useAppData } from "../app/AppData";
 import { back, go } from "../app/navigation";
 import type { Screen } from "../models/place";
 import Icon, { type IconName } from "./Icon";
 
-export type TopBarProps = {
+type TopBarProps = {
   title: string;
   /** 탭 첫 화면이면 뒤로 버튼 없이 큰 제목을 씁니다. */
   root?: boolean;
@@ -16,7 +17,7 @@ export type TopBarProps = {
   isScrolled?: boolean;
 };
 
-/** 리뉴얼 화면의 상단 바입니다. */
+/** 화면 상단 바(뒤로 버튼 + 제목 + 오른쪽 칸)입니다. */
 export function TopBar({
   title,
   root = false,
@@ -103,7 +104,7 @@ export function Segmented<T extends string>({
   );
 }
 
-export type SectionHeadProps = {
+type SectionHeadProps = {
   title: ReactNode;
   /** 오른쪽 글자 버튼 이름. onAction과 함께 줍니다. */
   action?: string;

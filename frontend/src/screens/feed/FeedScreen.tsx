@@ -3,17 +3,28 @@ import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
+import TasteScore from "../../components/TasteScore";
+import TasterAvatar from "../../components/TasterAvatar";
 import { EmptyState, NotificationButton, Segmented, Skeleton, TopBar } from "../../components/ui";
 import { avatarSource } from "../../utils/profileMedia";
 import FeedCard from "./FeedCard";
-import { FRESH_WINDOW_MS, collectFeedRecords, readStorySeen, writeStorySeen, type StoryGroup } from "./feedRecords";
+import {
+  STORY_WINDOW_DAYS,
+  addSeen,
+  collectFeedRecords,
+  readStorySeen,
+  storyRecords,
+  writeStorySeen,
+  type StoryGroup,
+  type StorySeen,
+} from "./feedRecords";
 import StoryViewer from "./StoryViewer";
 
 type FeedTab = "subscribed" | "all";
 
 const PAGE_SIZE = 10;
-/** 스토리 한 사람분에 담는 최근 기록 수 */
-const STORY_LIMIT = 10;
+/** 구독이 없을 때 보여 줄 추천 맛객 수 */
+const EMPTY_PICK_LIMIT = 3;
 
 /** 피드 탭: 구독한 맛객 스토리 줄과 맛객들의 최신 기록 카드. */
 export default function FeedScreen() {
@@ -21,7 +32,7 @@ export default function FeedScreen() {
   const { places, tasterById, isMyTasterId, subscriptions, actions } = app;
   const [tab, setTab] = useState<FeedTab>("subscribed");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [seen, setSeen] = useState<Record<string, number>>(readStorySeen);
+  const [seen, setSeen] = useState<StorySeen>(readStorySeen);
   // 스토리를 여는 순간의 묶음을 고정해 둡니다(보는 중에 링 순서가 바뀌어도 위치가 흔들리지 않게).
   const [story, setStory] = useState<{ groups: StoryGroup[]; start: number } | null>(null);
 
@@ -35,39 +46,37 @@ export default function FeedScreen() {
   }, [allRecords, subscriptions]);
   const records = tab === "subscribed" ? subscribedRecords : allRecords;
 
-  // 구독한 맛객마다 스토리 묶음을 만들고, 안 본 새 기록이 있는 사람을 앞에 둡니다.
+  // 구독한 맛객마다 스토리 묶음을 만들고, 안 본 최근 기록이 있는 사람을 앞에 둡니다.
   const storyGroups = useMemo(() => {
-    const now = Date.now();
     const groups: StoryGroup[] = subscriptions.map((subscription) => {
       const id = subscription.targetAccountId;
       const profile = tasterById.get(id);
-      const groupRecords = subscribedRecords.filter((record) => record.author.id === id).slice(0, STORY_LIMIT);
-      const first = groupRecords[0];
-      const latest = first?.time ?? 0;
+      const tasterRecords = subscribedRecords.filter((record) => record.author.id === id);
+      const story = storyRecords(tasterRecords, seen[id]);
+      const first = tasterRecords[0];
       return {
         tasterId: id,
         name: first?.author.name || profile?.tasterName || subscription.targetNickname || "맛객",
         avatar: first?.author.avatar ?? avatarSource(id, profile?.avatar),
         fallbackAvatar: first?.author.fallbackAvatar,
         variant: first?.author.variant ?? profile?.avatarVariant ?? 1,
-        records: groupRecords,
-        isFresh: latest > 0 && now - latest < FRESH_WINDOW_MS && latest > (seen[id] ?? 0),
+        ...story,
       };
     });
+    const latestOf = (group: StoryGroup) => Math.max(0, ...group.records.map((record) => record.time));
     return groups.sort(
       (left, right) =>
-        Number(right.isFresh) - Number(left.isFresh) ||
-        (right.records[0]?.time ?? 0) - (left.records[0]?.time ?? 0) ||
+        Number(right.unseenCount > 0) - Number(left.unseenCount > 0) ||
+        latestOf(right) - latestOf(left) ||
         right.records.length - left.records.length,
     );
   }, [subscriptions, subscribedRecords, tasterById, seen]);
   const playableGroups = useMemo(() => storyGroups.filter((group) => group.records.length > 0), [storyGroups]);
 
-  const markSeen = useCallback((tasterId: string, time: number) => {
+  const markSeen = useCallback((tasterId: string, recordKey: string) => {
     setSeen((current) => {
-      if ((current[tasterId] ?? 0) >= time) return current;
-      const next = { ...current, [tasterId]: time };
-      writeStorySeen(next);
+      const next = addSeen(current, tasterId, recordKey);
+      if (next !== current) writeStorySeen(next);
       return next;
     });
   }, []);
@@ -94,12 +103,13 @@ export default function FeedScreen() {
         </button>
         {storyGroups.map((group) => {
           const playableIndex = playableGroups.indexOf(group);
+          const isFresh = group.unseenCount > 0;
           return (
             <button
               type="button"
               key={group.tasterId}
-              className={`r-feed-story-chip${group.isFresh ? " is-fresh" : ""}`}
-              aria-label={`${group.name}${group.isFresh ? ", 새 기록 있음" : ""}${playableIndex < 0 ? ", 프로필 보기" : ", 스토리 보기"}`}
+              className={`r-feed-story-chip${isFresh ? " is-fresh" : ""}`}
+              aria-label={`${group.name}${isFresh ? `, 안 본 새 기록 ${group.unseenCount}개` : `, 최근 ${STORY_WINDOW_DAYS}일 새 기록 없음`}${playableIndex < 0 ? ", 기록 없음, 프로필 보기" : ", 스토리 보기"}`}
               onClick={() =>
                 playableIndex >= 0
                   ? setStory({ groups: playableGroups, start: playableIndex })
@@ -113,6 +123,11 @@ export default function FeedScreen() {
                   name={group.name}
                   variant={group.variant}
                 />
+                {isFresh && (
+                  <em className="r-feed-story-chip__count" aria-hidden="true">
+                    {group.unseenCount}
+                  </em>
+                )}
               </span>
               <small>{group.name}</small>
             </button>
@@ -183,7 +198,7 @@ export default function FeedScreen() {
 
 /** 구독한 맛객이 없을 때: 취향이 맞는 맛객을 보여 주고 맛객 탭으로 안내합니다. */
 function EmptySubscriptions({ onShowAll }: { onShowAll: () => void }) {
-  const picks = useAppData().recommendedTasters.slice(0, 3);
+  const picks = useAppData().recommendedTasters.slice(0, EMPTY_PICK_LIMIT);
   return (
     <div className="r-card r-feed-empty">
       <EmptyState
@@ -206,16 +221,12 @@ function EmptySubscriptions({ onShowAll }: { onShowAll: () => void }) {
               key={taster.tasterId}
               onClick={() => go("profile", taster.tasterId)}
             >
-              <Avatar
-                src={avatarSource(taster.tasterId, taster.avatar)}
-                name={taster.tasterName}
-                variant={taster.avatarVariant}
-              />
+              <TasterAvatar taster={taster} />
               <span className="r-row__copy">
                 <b>{taster.tasterName}</b>
                 <small>{taster.intro || taster.activityRegion || taster.tag || "맛객"}</small>
               </span>
-              {(taster.matchScore ?? 0) > 0 && <span className="r-match">취향 {taster.matchScore}%</span>}
+              <TasteScore taster={taster} />
             </button>
           ))}
         </div>

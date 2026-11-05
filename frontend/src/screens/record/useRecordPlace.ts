@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { useAppData } from "../../app/AppData";
-import type { Place } from "../../models/place";
 import { kakaoPlaceFromPlace, kakaoPlaceFromQuickDraft, type QuickPlaceDraft } from "../../services/places";
 import { clearRegisterDraft, type RegisterDraftForm } from "../../services/registerDraft";
+import { VISIT_RADIUS_LABEL, type Place } from "../../models/place";
 import { distanceMeters, kakaoPlaceCoordinates, type Coordinates } from "../../utils/geo";
-import { hasPlaceHandoff, takeLikeConversionHandoff, takeQuickPlaceHandoff } from "./recordHandoff";
+import {
+  hasPlaceHandoff,
+  takeLikeConversionHandoff,
+  takePlaceDetailHandoff,
+  takeQuickPlaceHandoff,
+} from "./recordHandoff";
 import { NEARBY_RADIUS_METERS, isSameKakaoPlace } from "./recordModel";
 import { useCurrentLocation } from "./useCurrentLocation";
 import { usePlaceSearch } from "./usePlaceSearch";
@@ -39,6 +44,8 @@ export function useRecordPlace({
   const [convertFromPlaceId, setConvertFromPlaceId] = useState<string | null>(() => draft?.convertFromPlaceId ?? null);
   const [isVisitConfirmed, setIsVisitConfirmed] = useState(() => draft?.visitedConfirmed ?? false);
   const [isVisitPromptOpen, setIsVisitPromptOpen] = useState(false);
+  // 다른 화면이 가게를 정해 넘겼으면 장소 단계를 건너뛰고 사진·메뉴부터 시작합니다.
+  const [shouldSkipPlaceStep, setShouldSkipPlaceStep] = useState(false);
   const [shouldSearchConversionPlace, setShouldSearchConversionPlace] = useState(
     () => draft?.conversionNeedsPlaceSearch ?? false,
   );
@@ -70,6 +77,7 @@ export function useRecordPlace({
     if (conversion && "place" in conversion) {
       choosePlace(conversion.place, true, true);
       setConvertFromPlaceId(conversion.sourcePlaceId);
+      setShouldSkipPlaceStep(true);
       return;
     }
     if (conversion) {
@@ -79,18 +87,36 @@ export function useRecordPlace({
       search.setPlaceSearch(conversion.searchName);
       return;
     }
-    // 빠른 기록에서 넘어온 장소는 임시 목록 조회와 관계없이 즉시 채웁니다.
+    // 맛집 상세에서 넘어온 가게: 상세가 다녀온 근거를 확인한 뒤에만 넘기므로 바로 사진·메뉴부터 시작합니다.
+    const detail = takePlaceDetailHandoff();
+    if (detail) {
+      choosePlace(detail.place, true, true);
+      setShouldSkipPlaceStep(true);
+      return;
+    }
+    // 빠른 기록에서 넘어온 장소는 그 가게에서 저장한 것이라 바로 사진·메뉴부터 시작합니다.
     const quickPlace = takeQuickPlaceHandoff();
     if (quickPlace) {
       choosePlace(quickPlace, true);
       setActiveDraftId(quickPlace.id);
+      setShouldSkipPlaceStep(true);
     }
   }, []);
 
-  /** 장소를 고릅니다. 임시 저장·다른 화면에서 넘어온 장소(isFromDraft)는 거리 확인을 건너뜁니다. */
-  function choosePlace(result: KakaoPlaceResult, isFromDraft = false, isVisitAlreadyConfirmed = false): boolean {
-    if (!isFromDraft && (!location || distanceMeters(location, kakaoPlaceCoordinates(result)) > NEARBY_RADIUS_METERS)) {
-      setError("현재 위치에서 1km 안에 있는 장소만 등록할 수 있어요.");
+  /**
+   * 장소를 고릅니다. 임시 저장·다른 화면에서 넘어온 장소와 하트 전환으로 찾는 장소는 이미 다녀온 근거가 있어
+   * 거리 확인을 건너뜁니다(shouldSkipDistanceCheck).
+   */
+  function choosePlace(
+    result: KakaoPlaceResult,
+    shouldSkipDistanceCheck = false,
+    isVisitAlreadyConfirmed = false,
+  ): boolean {
+    if (
+      !shouldSkipDistanceCheck &&
+      (!location || distanceMeters(location, kakaoPlaceCoordinates(result)) > NEARBY_RADIUS_METERS)
+    ) {
+      setError(`현재 위치에서 ${VISIT_RADIUS_LABEL} 안에 있는 장소만 등록할 수 있어요.`);
       return false;
     }
     const likedPlace = places.find((place) => likedPlaceIds.includes(place.id) && isSameKakaoPlace(place, result.id));
@@ -170,6 +196,7 @@ export function useRecordPlace({
     conversionSearchName,
     isVisitConfirmed,
     isVisitPromptOpen,
+    shouldSkipPlaceStep,
     confirmVisit,
     cancelLikedPlaceRegistration,
   };

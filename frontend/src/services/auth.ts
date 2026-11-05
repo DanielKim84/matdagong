@@ -3,15 +3,18 @@
  * 가입 상태 조회는 401을 "다시 인증"으로 다뤄야 하므로 apiRequest(401이면 재로그인 시작) 대신 fetch를 씁니다.
  */
 import { STORAGE_KEYS, readStorage, removeStorage, writeStorage } from "../utils/storage";
-import { apiRequest } from "./http";
+import { apiRequest, isStoredTokenExpired } from "./http";
 
 const AUTH_API_BASE_URL = "/auth-api";
 const TOKEN_ENDPOINT = "/oauth2/token";
+const MEMBERSHIP_URL = `${AUTH_API_BASE_URL}/api/v1/matdagong/membership`;
 
 export type MembershipStatus = {
   registered: boolean;
   displayName: string;
   email: string | null;
+  /** 이 계정에 연결된 소셜 제공자 코드(KAKAO, NAVER). 이전 인증 서버는 보내지 않습니다. */
+  loginProviders?: string[];
 };
 
 /** 인가 코드를 access token으로 바꿉니다. 받은 토큰은 탭 저장소에 보관합니다. */
@@ -55,11 +58,9 @@ export async function exchangeAuthorizationCode({
   }
 }
 
-/** 탭에 보관한 access token입니다. 없거나 만료됐으면 null입니다. */
+/** 탭에 보관한 access token입니다. 없거나 만료(직전)면 null입니다. 기준은 요청 때와 같은 isStoredTokenExpired입니다. */
 export function readStoredAccessToken(): string | null {
-  const accessToken = readStorage(STORAGE_KEYS.accessToken, "session");
-  const expiresAt = Number(readStorage(STORAGE_KEYS.tokenExpiry, "session"));
-  return accessToken && expiresAt > Date.now() ? accessToken : null;
+  return isStoredTokenExpired() ? null : readStorage(STORAGE_KEYS.accessToken, "session");
 }
 
 export function clearStoredAccessToken(): void {
@@ -69,10 +70,10 @@ export function clearStoredAccessToken(): void {
 
 /** 저장된 access token이 맛다공 가입 상태인지 인증 서버에서 확인합니다. */
 export async function getMembership(accessToken: string): Promise<MembershipStatus | "reauthenticate"> {
-  const response = await fetch(`${AUTH_API_BASE_URL}/api/v1/matdagong/membership`, {
+  const response = await fetch(MEMBERSHIP_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  // 토큰이 거부되거나 DB가 초기화돼 SSO 세션만 남았다면 Kakao 인증부터 다시 받습니다.
+  // 토큰이 거부되거나 DB가 초기화돼 SSO 세션만 남았다면 소셜 로그인부터 다시 받습니다.
   if (response.status === 401 || response.status === 404) return "reauthenticate";
   const membership: unknown = response.ok ? await response.json() : null;
   if (!isMembershipStatus(membership)) {
@@ -97,17 +98,30 @@ export function registerMembership(
   accessToken: string,
   { displayName, email }: { displayName: string; email: string | null },
 ): Promise<void> {
-  return apiRequest<void>(`${AUTH_API_BASE_URL}/api/v1/matdagong/membership`, accessToken, {
+  return apiRequest<void>(MEMBERSHIP_URL, accessToken, {
     method: "POST",
     body: JSON.stringify({ displayName, email }),
     errorMessage: "가입을 완료하지 못했어요. 다시 시도해 주세요.",
   });
 }
 
-/** 공통 서버의 로그인 세션을 끊습니다. 서버에 닿지 못해도 호출한 쪽은 로그인을 다시 시작할 수 있도록 실패를 던지지 않습니다. */
-export async function clearServerSession(): Promise<void> {
+/** 맛다공 가입을 취소합니다(탈퇴). 공통 계정은 남아 다시 가입할 수 있습니다. */
+export function cancelMembership(accessToken: string): Promise<void> {
+  return apiRequest<void>(MEMBERSHIP_URL, accessToken, {
+    method: "DELETE",
+    errorMessage: "맛다공 가입 정보를 지우지 못했어요.",
+  });
+}
+
+/**
+ * 공통 서버의 로그인 세션을 끊습니다. 서버에 닿지 못해도 호출한 쪽은 로그인을 다시 시작할 수 있도록 실패를 던지지 않습니다.
+ * endDeviceLogin은 사용자가 직접 로그아웃할 때 true로, 이 기기의 맛다공 로그인 기록까지 지워 다른 기기에서 로그인할 때
+ * 이 기기를 로그아웃할지 묻지 않게 합니다. 토큰 만료로 다시 로그인할 때는 같은 브라우저 다른 탭을 위해 넘기지 않습니다.
+ */
+export async function clearServerSession({ endDeviceLogin = false }: { endDeviceLogin?: boolean } = {}): Promise<void> {
   try {
-    await fetch(`${AUTH_API_BASE_URL}/auth/session/clear`, { method: "POST" });
+    const query = endDeviceLogin ? "?endDeviceLogin=true" : "";
+    await fetch(`${AUTH_API_BASE_URL}/auth/session/clear${query}`, { method: "POST" });
   } catch {
     // 서버에 닿지 못해도 현재 탭의 인증 정보는 지우고 로그인을 다시 시작합니다.
   }

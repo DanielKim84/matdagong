@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import StepProgress from "../../components/StepProgress";
 
 export const MAX_DISPLAY_NAME_LENGTH = 12;
+const MAX_EMAIL_LENGTH = 320;
 
 /** 가입 1단계: 닉네임과 연락용 이메일(선택)을 받습니다. 다음 단계로 넘어갈 때 입력값을 onSubmit으로 넘깁니다. */
 export default function SignupNameStep({
@@ -29,7 +30,7 @@ export default function SignupNameStep({
         <div className="r-onboarding-signup__content">
           <StepProgress step={1} total={3} label="가입 진행" className="r-onboarding-progress" />
           <header className="r-onboarding-heading">
-            <span className="r-label">카카오 인증 완료</span>
+            <span className="r-label">로그인 완료</span>
             <h1 className="r-display">
               맛다공에서 쓸<br />
               이름을 알려 주세요
@@ -59,7 +60,7 @@ export default function SignupNameStep({
             <input
               id="signup-email"
               type="email"
-              maxLength={320}
+              maxLength={MAX_EMAIL_LENGTH}
               autoComplete="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}

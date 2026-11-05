@@ -3,19 +3,19 @@ import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
 import { EmptyState, SectionHead, Skeleton, TopBar, type EmptyStateAction } from "../../components/ui";
+import { useScrolledPast } from "../../hooks/useScrolledPast";
 import { kakaoPlaceFromPlace } from "../../services/places";
-import { isMyTaster, type Place } from "../../models/place";
+import { VISIT_RADIUS_LABEL, isMyTaster, type Place } from "../../models/place";
 import { sharePlace } from "../../utils/placeLinks";
 import { STORAGE_KEYS, writeStorageJson } from "../../utils/storage";
 import PhotoViewer from "./PhotoViewer";
-import PlaceConversionSheet, { type ConversionKind } from "./PlaceConversionSheet";
+import PlaceConversionSheet from "./PlaceConversionSheet";
 import PlaceHero from "./PlaceHero";
 import PlaceInfo from "./PlaceInfo";
 import PlaceOverview from "./PlaceOverview";
 import PlaceTasterPicker from "./PlaceTasterPicker";
 import PlaceTasterRecord from "./PlaceTasterRecord";
 import { collectPhotos, placeRecords } from "./placeRecords";
-import { useHeroScrolled } from "./useHeroScrolled";
 
 /**
  * 맛집 상세(#place/<id>). 가게 기본 정보(이름·주소·전화)는 모든 맛객이 함께 쓰고,
@@ -68,14 +68,15 @@ function PlaceDetail({ place }: { place: Place }) {
 
   const isLiked = app.likedPlaceIds.includes(place.id);
   const canConvertLikedToRecord = app.visitedLikedPlaceIds.includes(place.id);
+  const isDisliked = app.dislikedPlaceIds.includes(place.id);
   const hasOwnRecord = !!app.legacyOwnRecord || records.some(isMyTaster);
 
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
-  const [conversionPrompt, setConversionPrompt] = useState<ConversionKind | null>(null);
+  const [isConversionOpen, setIsConversionOpen] = useState(false);
   const heroEnd = useRef<HTMLDivElement>(null);
   const recordsRef = useRef<HTMLElement>(null);
   // 큰 사진이 화면 밖으로 나가면 위쪽 버튼 줄에 바탕과 가게 이름을 깔아 줍니다.
-  const isScrolled = useHeroScrolled(heroEnd);
+  const isScrolled = useScrolledPast(heroEnd);
 
   const notify = (message: string) => actions.notify({ kind: "info", title: "맛다공에서 알려드려요", message });
 
@@ -85,17 +86,22 @@ function PlaceDetail({ place }: { place: Place }) {
     else if (result === "failed") notify("주소창의 링크를 복사해 공유해 주세요.");
   }
 
-  function save() {
-    // 직접 쓴 기록이 있는 맛집은 하트가 '내 맛집으로 변경'이 됩니다(기록 삭제를 동반하므로 한 번 더 묻습니다).
-    if (hasOwnRecord) setConversionPrompt("like");
-    else void actions.toggleLike(place.id);
-  }
-
+  /**
+   * 다녀온 근거(빠른 저장, 입맛에 맞았던 하트, 별로였던 곳)가 있으면 이 가게를 채운 채 기록하기의 사진·메뉴 단계부터 엽니다.
+   * 근거가 없으면 기록 화면에 들어가지 않고, 직접 다녀온 곳만 기록할 수 있다고 알립니다.
+   */
   function startNewRecord() {
-    const selected = kakaoPlaceFromPlace(place);
-    // 저장소를 못 쓰면 등록 화면에서 장소를 다시 고릅니다.
-    if (selected) writeStorageJson(STORAGE_KEYS.quickPlaceHandoff, selected, "session");
-    else notify("기록 화면에서 이 가게를 검색해 선택해 주세요.");
+    const hasVisitProof = app.visitProofPlaceIds.includes(place.id) || app.visitedLikedPlaceIds.includes(place.id);
+    const kakaoPlace = kakaoPlaceFromPlace(place);
+    if (!hasVisitProof || !kakaoPlace) {
+      actions.notify({
+        kind: "info",
+        title: "직접 다녀온 곳만 기록할 수 있어요",
+        message: `가게에 들렀을 때 ‘빠른 저장’을 해 두거나, 기록하기에서 지금 위치 ${VISIT_RADIUS_LABEL} 안의 가게를 골라 기록해 주세요.`,
+      });
+      return;
+    }
+    writeStorageJson(STORAGE_KEYS.placeDetailHandoff, { place: kakaoPlace }, "session");
     go("register");
   }
 
@@ -116,11 +122,10 @@ function PlaceDetail({ place }: { place: Place }) {
   }
 
   const recordAction = hasOwnRecord
-    ? { label: "내 기록 수정", short: "기록 수정", run: editOwnRecord }
+    ? { label: "내 기록 수정", run: editOwnRecord }
     : isLiked && canConvertLikedToRecord
-      ? { label: "방문 기록으로 바꾸기", short: "기록하기", run: () => setConversionPrompt("record") }
-      : { label: "내 기록 남기기", short: "기록하기", run: startNewRecord };
-  const saveLabel = hasOwnRecord ? "내 맛집으로 변경" : isLiked ? "내 맛집에서 삭제" : "내 맛집에 저장";
+      ? { label: "방문 기록으로 바꾸기", run: () => setIsConversionOpen(true) }
+      : { label: "내 기록 남기기", run: startNewRecord };
 
   return (
     <main className="r-screen r-place">
@@ -129,20 +134,9 @@ function PlaceDetail({ place }: { place: Place }) {
         title={place.name}
         isScrolled={isScrolled}
         right={
-          <>
-            <button type="button" className="r-icon-button r-icon-button--float" onClick={share} aria-label="맛집 공유">
-              <Icon name="share" />
-            </button>
-            <button
-              type="button"
-              className={`r-icon-button r-icon-button--float r-place-like ${isLiked ? "is-liked" : ""}`}
-              onClick={save}
-              aria-label={saveLabel}
-              aria-pressed={isLiked}
-            >
-              <Icon name="heart" filled={isLiked} />
-            </button>
-          </>
+          <button type="button" className="r-icon-button r-icon-button--float" onClick={share} aria-label="맛집 공유">
+            <Icon name="share" />
+          </button>
         }
       />
 
@@ -159,10 +153,8 @@ function PlaceDetail({ place }: { place: Place }) {
         <PlaceOverview
           place={place}
           isLiked={isLiked}
+          isVisitedLike={canConvertLikedToRecord}
           hasOwnRecord={hasOwnRecord}
-          saveLabel={saveLabel}
-          recordAction={recordAction}
-          onSave={save}
         />
 
         <section className="r-place-section r-place-records" ref={recordsRef} aria-labelledby="place-records-title">
@@ -190,25 +182,47 @@ function PlaceDetail({ place }: { place: Place }) {
               <PlaceTasterRecord
                 key={selected.tasterId}
                 record={selected}
+                placeId={place.id}
                 panelId={panelId}
                 photos={photos}
                 onOpenPhoto={setViewerIndex}
                 onPrevious={selectedIndex > 0 ? () => selectByOffset(-1) : undefined}
                 onNext={selectedIndex < records.length - 1 ? () => selectByOffset(1) : undefined}
-                onEditOwn={editOwnRecord}
-                onOwnToLike={() => setConversionPrompt("like")}
+                onChangeOwnVisibility={(visibility) => void actions.changeOwnRecordVisibility(place, visibility)}
+                // 서버에 내 기록이 있을 때만 지울 수 있습니다(이 브라우저에만 남은 이전 기록은 제외).
+                onDeleteOwn={place.tasters.some(isMyTaster) ? () => actions.deleteOwnRecord(place) : undefined}
               />
             </>
           ) : (
+            // 기록 없이 하트만 남은 곳(가볼 곳으로 저장했거나, 기록했던 맛객이 기록을 내린 곳)도 무엇인지 알 수 있게 안내합니다.
             <EmptyState
-              title="아직 남겨진 맛객 기록이 없어요"
-              message="다녀왔다면 첫 기록을 남겨 보세요."
+              title={
+                canConvertLikedToRecord
+                  ? "다녀온 곳으로 저장했어요 · 아직 기록 없음"
+                  : isLiked
+                    ? "가볼 곳으로 저장한 곳이에요"
+                    : "아직 남겨진 맛객 기록이 없어요"
+              }
+              message={
+                canConvertLikedToRecord
+                  ? "사진과 추천 이유를 남기면 내 기록이 돼요. 기록했던 맛객이 기록을 내렸다면 가게 정보만 보여요."
+                  : "지금 볼 수 있는 맛객 기록이 없어요. 아직 아무도 기록하지 않았거나, 기록했던 맛객이 기록을 내린 곳이에요. 가게 정보는 아래에서 볼 수 있어요."
+              }
               action={{ label: recordAction.label, onClick: recordAction.run, variant: "primary" }}
             />
           )}
-          {isLiked && !canConvertLikedToRecord && !hasOwnRecord && (
+          {selected && isLiked && !canConvertLikedToRecord && !hasOwnRecord && (
             <p className="r-place-note">
-              하트로 저장한 맛집은 방문 기록이 아니에요. 직접 다녀온 뒤 ‘내 기록 남기기’로 방문 기록을 남길 수 있어요.
+              가 보고 싶은 곳으로 저장했어요. 다녀왔다면 ‘내 기록 남기기’로 기록하거나, 가게에서 빠른 저장을 한 뒤
+              하트를 다시 눌러 입맛에 맞았는지 고를 수 있어요.
+            </p>
+          )}
+          {isDisliked && !isLiked && !hasOwnRecord && (
+            <p className="r-place-note r-place-note--disliked">
+              다녀왔는데 별로였던 곳으로 남겼어요. 이 맛집을 기록한 맛객과의 신뢰에 반영돼요.
+              <button type="button" className="r-text-button" onClick={() => void actions.undoDislike(place.id)}>
+                되돌리기
+              </button>
             </p>
           )}
         </section>
@@ -216,16 +230,19 @@ function PlaceDetail({ place }: { place: Place }) {
         <PlaceInfo place={place} />
       </div>
 
+      {/* 화면의 동작은 한 번씩만 둡니다. 내 기록이 있는 곳은 이미 내 맛집이라 하트를 빼고 수정만 둡니다(공개 범위는 기록 카드에서). */}
       <div className="r-action-bar r-place-actionbar">
-        <button
-          type="button"
-          className={`r-button r-button--secondary r-place-actionbar__save ${isLiked ? "is-liked" : ""}`}
-          onClick={save}
-          aria-label={saveLabel}
-          aria-pressed={isLiked}
-        >
-          <Icon name="heart" filled={isLiked} />
-        </button>
+        {!hasOwnRecord && (
+          <button
+            type="button"
+            className={`r-button r-button--secondary r-place-actionbar__save ${isLiked ? "is-liked" : ""}`}
+            onClick={() => void actions.chooseLike(place.id)}
+            aria-label={isLiked ? "가볼 곳·다녀온 곳 저장 바꾸기" : "가볼 곳에 저장"}
+            aria-pressed={isLiked}
+          >
+            <Icon name="heart" filled={isLiked} />
+          </button>
+        )}
         <button type="button" className="r-button r-button--primary r-place-actionbar__main" onClick={recordAction.run}>
           <Icon name={hasOwnRecord ? "book" : "plus"} />
           {recordAction.label}
@@ -241,9 +258,7 @@ function PlaceDetail({ place }: { place: Place }) {
         />
       )}
 
-      {conversionPrompt && (
-        <PlaceConversionSheet place={place} kind={conversionPrompt} onClose={() => setConversionPrompt(null)} />
-      )}
+      {isConversionOpen && <PlaceConversionSheet place={place} onClose={() => setIsConversionOpen(false)} />}
     </main>
   );
 }

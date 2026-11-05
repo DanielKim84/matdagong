@@ -9,14 +9,11 @@ export default function PlaceTile({
   liked,
   onLike,
   photo,
-  meta,
 }: {
   place: Place;
   liked: boolean;
   onLike: () => void;
   photo?: string;
-  /** 사진 아래 작은 글씨(예: "어제 봄"). 없으면 추천 맛객 수를 보여 줍니다. */
-  meta?: string;
 }) {
   return (
     <article className="r-card r-me-place">
@@ -27,7 +24,7 @@ export default function PlaceTile({
         <span className="r-me-place__copy">
           <b>{place.name}</b>
           <small>{[place.category, place.address].filter(Boolean).join(" · ")}</small>
-          <em>{meta ?? `추천한 맛객 ${place.recordCount}명`}</em>
+          <em>추천한 맛객 {place.recordCount}명</em>
         </span>
       </button>
       <button

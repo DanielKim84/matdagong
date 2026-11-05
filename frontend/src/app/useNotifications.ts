@@ -11,7 +11,7 @@ import {
 import type { NotificationFeed, UserNotification } from "../models/community";
 import type { Screen } from "../models/place";
 import { errorMessage } from "../utils/errorMessage";
-import type { AppNotice } from "./AppData";
+import { RETRY_LATER_MESSAGE, type AppNotice } from "./AppData";
 
 const REFRESH_INTERVAL_MS = 60_000;
 const EMPTY_FEED: NotificationFeed = { items: [], unreadCount: 0 };
@@ -33,9 +33,9 @@ export function useNotifications(accessToken: string, screen: Screen, notify: (n
   const pendingRequest = useRef<Promise<NotificationFeed | null> | null>(null);
 
   const refresh = useCallback(
-    async (showLoading = false) => {
+    async (shouldShowLoading = false) => {
       if (pendingRequest.current) return pendingRequest.current;
-      if (showLoading) setIsLoading(true);
+      if (shouldShowLoading) setIsLoading(true);
       const request = (async () => {
         try {
           const nextFeed = await getNotifications(accessToken);
@@ -102,7 +102,7 @@ export function useNotifications(accessToken: string, screen: Screen, notify: (n
     void request
       .then(() => refresh())
       .catch((cause: unknown) =>
-        notify({ kind: "error", title: failureTitle, message: errorMessage(cause, "잠시 후 다시 시도해 주세요.") }),
+        notify({ kind: "error", title: failureTitle, message: errorMessage(cause, RETRY_LATER_MESSAGE) }),
       );
   }
 

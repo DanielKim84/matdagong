@@ -1,3 +1,4 @@
+/** 화면 곳곳에서 쓰는 선 아이콘(24×24, 선 굵기 1.65)입니다. 아이콘 모양은 ICON_SHAPES에 이름별로 둡니다. */
 export type IconName =
   | "home"
   | "search"
@@ -14,7 +15,6 @@ export type IconName =
   | "clock"
   | "star"
   | "settings"
-  | "list"
   | "filter"
   | "locate"
   | "camera"
@@ -28,8 +28,8 @@ export type IconName =
   | "sparkle"
   | "map"
   | "phone"
-  | "more"
   | "lock";
+
 const ICON_SHAPES: Record<IconName, string> = {
   home: "m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9",
   search: "M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0m-2 6 5 5",
@@ -46,7 +46,6 @@ const ICON_SHAPES: Record<IconName, string> = {
   clock: "M12 7v5l4 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
   star: "m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z",
   settings: "m9 3-1 3-3 1-2 4 2 2v4l3 1 2 3h4l2-3 3-1v-4l2-2-2-4-3-1-1-3H9ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
-  list: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
   filter: "M4 6h16M4 18h16M8 3v6M16 15v6",
   locate: "M12 1v5M12 18v5M1 12h5M18 12h5M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0",
   camera: "M8 5 10 2h4l2 3h5v16H3V5h5ZM16 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
@@ -62,7 +61,6 @@ const ICON_SHAPES: Record<IconName, string> = {
   map: "M3 6.5 9 3l6 3 6-3v14.5L15 21l-6-3-6 3V6.5ZM9 3v15m6-12v15",
   phone:
     "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.4 2.8a2 2 0 0 1-.6 1.7L7.6 9.5a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 1.7-.6l2.8.4a2 2 0 0 1 1.7 1.9Z",
-  more: "M5 12h.01M12 12h.01M19 12h.01",
   lock: "M5 11h14v11H5V11Zm3 0V7a4 4 0 0 1 8 0v4m-4 4v3",
 };
 

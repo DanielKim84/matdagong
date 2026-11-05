@@ -38,7 +38,7 @@ export default function SubscriptionsManageScreen({ routeId }: { routeId: string
         ) : tab === "subscribed" ? (
           <>
             {app.subscriptions.length > 0 && (
-              <section className="r-card r-card--dark r-tasters-summary">
+              <section className="r-card r-tasters-summary">
                 <span className="r-tasters-summary__copy">
                   <small>
                     무료 구독 {freeCount}명 · 유료 {paidCount}명

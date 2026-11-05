@@ -13,6 +13,7 @@ const VISIBILITY_OPTIONS: { value: NewPlace["visibility"]; title: string; text: 
 /** 4단계 · 한 줄 추천·자세한 이야기와 공개 범위 */
 export default function StoryStep({ form }: { form: RecordForm }) {
   const [isDetailOpen, setIsDetailOpen] = useState(() => !!form.detail);
+  // 저장할 때 "한 줄 추천 + 줄바꿈(1자) + 자세한 이야기"를 한 필드로 합치므로, 합친 길이가 REASON_MAX를 넘지 않게 남은 만큼만 받습니다.
   const detailMax = Math.max(0, REASON_MAX - 1 - form.headline.trim().length);
   return (
     <section className="r-record-step" aria-label="추천 이유와 공개 범위">

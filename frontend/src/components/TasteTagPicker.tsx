@@ -40,7 +40,7 @@ export default function TasteTagPicker({
         if (!tags.length) return null;
         const selectedCount = tags.filter((tag) => value.includes(tag.name)).length;
         return (
-          <section key={group.id} className={`taste-tag-group taste-tag-group--${group.id.toLowerCase()}`}>
+          <section key={group.id} className="taste-tag-group">
             <header className="taste-tag-group__header">
               <span className="taste-tag-group__icon">
                 <Icon name={TASTE_TAG_GROUP_ICONS[group.id]} />

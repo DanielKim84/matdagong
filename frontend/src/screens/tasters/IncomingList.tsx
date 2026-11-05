@@ -1,10 +1,9 @@
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
-import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
 import { EmptyState } from "../../components/ui";
 import { formatMonthDay, formatRelativeTime } from "../../utils/format";
-import { avatarFallback, avatarSource } from "../../utils/profileMedia";
+import TasterAvatar from "../../components/TasterAvatar";
 import { daysLeft } from "./tasterData";
 
 /**
@@ -63,21 +62,26 @@ export default function IncomingList() {
           const known = app.tasterById.get(subscription.subscriberAccountId);
           const avatar = subscription.avatar ?? known?.avatar;
           const isPaid = subscription.subscriptionType === "PAID";
-          const left = daysLeft(subscription.endAt);
+          const remainingDays = daysLeft(subscription.endAt);
           const period = isPaid
-            ? [subscription.endAt && `${formatMonthDay(subscription.endAt)}까지`, left !== null && `D-${left}`]
+            ? [
+                subscription.endAt && `${formatMonthDay(subscription.endAt)}까지`,
+                remainingDays !== null && `D-${remainingDays}`,
+              ]
                 .filter(Boolean)
                 .join(" · ")
             : "기간 제한 없음";
           const content = (
             <>
               <span className="r-tasters-incoming__avatar">
-                <Avatar
+                <TasterAvatar
                   className="r-tasters-avatar r-tasters-avatar--md"
-                  src={avatarSource(subscription.subscriberAccountId, avatar)}
-                  fallbackSrc={avatarFallback(subscription.subscriberAccountId, avatar)}
-                  name={subscription.subscriberNickname}
-                  variant={subscription.avatarVariant}
+                  taster={{
+                    tasterId: subscription.subscriberAccountId,
+                    tasterName: subscription.subscriberNickname,
+                    avatar,
+                    avatarVariant: subscription.avatarVariant,
+                  }}
                 />
                 {isPaid && (
                   <i aria-hidden="true">

@@ -1,15 +1,21 @@
+import { useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
 import { useNotificationDialog } from "../../components/NotificationDialog";
 import { Skeleton, TopBar } from "../../components/ui";
+import { cancelMembership } from "../../services/auth";
+import { deleteMyCommunityData } from "../../services/community";
+import { deleteMyPlaceData } from "../../services/places";
 import type { NotificationSettings } from "../../models/community";
+import { errorMessage } from "../../utils/errorMessage";
 import { useNotificationSettings } from "./useNotificationSettings";
 
+// code는 인증 서버가 알려 주는 소셜 제공자 코드입니다. Apple은 앱 출시 뒤 붙일 예정입니다.
 const PROVIDERS = [
-  { key: "kakao", label: "카카오", mark: "K", isConnected: true },
-  { key: "naver", label: "네이버", mark: "N", isConnected: false },
-  { key: "apple", label: "Apple", mark: "A", isConnected: false },
+  { key: "kakao", code: "KAKAO", label: "카카오", mark: "K", isReady: true },
+  { key: "naver", code: "NAVER", label: "네이버", mark: "N", isReady: true },
+  { key: "apple", code: "APPLE", label: "Apple", mark: "A", isReady: false },
 ] as const;
 
 const NOTIFICATION_OPTIONS: { key: keyof NotificationSettings; label: string; description: string }[] = [
@@ -18,24 +24,62 @@ const NOTIFICATION_OPTIONS: { key: keyof NotificationSettings; label: string; de
   { key: "serviceNews", label: "맛다공 소식·이벤트", description: "새 기능과 이벤트 소식을 받아요" },
 ];
 
-/** 설정(#settings): 계정 연결, 알림, 프로필, 앱 정보, 로그아웃. */
+/** 설정(#settings): 계정 연결, 알림, 프로필, 앱 정보, 로그아웃, 탈퇴. */
 export default function AccountSettingsScreen() {
   const app = useAppData();
   const { confirm } = useNotificationDialog();
   const notificationSettings = useNotificationSettings();
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   function notifyPending(title: string, message = "기능이 열리면 이곳에서 바로 설정할 수 있어요.") {
     app.actions.notify({ kind: "info", title, message });
   }
 
+  // 이전 인증 서버처럼 제공자를 알려 주지 않으면 카카오 하나로 봅니다(그때는 카카오만 있었음).
+  const connectedCodes: readonly string[] = app.loginProviders.length > 0 ? app.loginProviders : ["KAKAO"];
+  const connectedLabel = PROVIDERS.filter((provider) => connectedCodes.includes(provider.code))
+    .map((provider) => provider.label)
+    .join("·");
+
   async function logout() {
     const isConfirmed = await confirm({
       title: "로그아웃할까요?",
-      message: "다시 이용하려면 카카오로 로그인해 주세요.",
+      message: `다시 이용하려면 ${connectedLabel}로 로그인해 주세요.`,
       confirmLabel: "로그아웃",
       tone: "warning",
     });
     if (isConfirmed) app.actions.logout();
+  }
+
+  /**
+   * 맛다공 탈퇴: 장소 서비스 → 커뮤니티 서비스 → 공통 로그인의 맛다공 가입 정보 순서로 지운 뒤 로그아웃합니다.
+   * 세 곳 모두 이미 지운 것을 다시 지워도 괜찮게 만들어, 중간에 실패하면 같은 버튼으로 다시 시도하면 됩니다.
+   * 공통 계정(소셜 연결)은 다른 다공 서비스가 함께 쓰므로 남깁니다.
+   */
+  async function withdraw() {
+    const isConfirmed = await confirm({
+      title: "맛다공을 탈퇴할까요?",
+      message: "남긴 기록과 사진, 프로필, 구독, 알림이 모두 지워지고 되돌릴 수 없어요.",
+      detail: { label: "함께 지워지는 것", value: "맛집 기록·사진·하트, 프로필·취향, 구독·구독자, 알림, 포인트 내역" },
+      confirmLabel: "탈퇴할게요",
+      tone: "danger",
+    });
+    if (!isConfirmed || isWithdrawing) return;
+    setIsWithdrawing(true);
+    try {
+      await deleteMyPlaceData(app.accessToken);
+      await deleteMyCommunityData(app.accessToken);
+      await cancelMembership(app.accessToken);
+    } catch (cause) {
+      setIsWithdrawing(false);
+      app.actions.notify({
+        kind: "error",
+        title: "탈퇴를 마치지 못했어요",
+        message: errorMessage(cause, "잠시 뒤 다시 시도해 주세요. 이미 지운 정보는 다시 지워도 괜찮아요."),
+      });
+      return;
+    }
+    app.actions.logout();
   }
 
   return (
@@ -53,8 +97,11 @@ export default function AccountSettingsScreen() {
                   {provider.mark}
                 </span>
                 <span className="r-me-setting__label">{provider.label}</span>
-                {provider.isConnected ? (
+                {connectedCodes.includes(provider.code) ? (
                   <span className="r-me-setting__state is-ok">연결됨</span>
+                ) : provider.isReady ? (
+                  // 한 계정에 다른 소셜 계정을 더 잇는 기능은 아직 없어, 다른 제공자로 로그인하면 새 계정이 됩니다.
+                  <small className="r-me-setting__state">연결 안 됨</small>
                 ) : (
                   <button
                     type="button"
@@ -62,7 +109,7 @@ export default function AccountSettingsScreen() {
                     onClick={() =>
                       notifyPending(
                         `${provider.label} 연결은 준비 중이에요`,
-                        "지금은 카카오 계정으로만 로그인할 수 있어요.",
+                        "지금은 카카오나 네이버 계정으로 로그인할 수 있어요.",
                       )
                     }
                   >
@@ -142,21 +189,23 @@ export default function AccountSettingsScreen() {
               <span className="r-me-setting__label">맛다공 앱 소개</span>
               <Icon name="chevron" />
             </button>
-            <button
-              type="button"
-              className="r-row r-me-setting"
-              onClick={() =>
-                notifyPending("이용약관 화면은 준비 중이에요", "약관이 확정되면 이곳에서 확인할 수 있어요.")
-              }
-            >
-              <span className="r-me-setting__label">이용약관 · 개인정보 처리방침</span>
-              <small className="r-me-setting__state">준비 중</small>
+            <button type="button" className="r-row r-me-setting" onClick={() => go("policy", "terms")}>
+              <span className="r-me-setting__label">이용약관</span>
+              <Icon name="chevron" />
+            </button>
+            <button type="button" className="r-row r-me-setting" onClick={() => go("policy", "privacy")}>
+              <span className="r-me-setting__label">개인정보 처리방침</span>
+              <Icon name="chevron" />
             </button>
             <button type="button" className="r-row r-me-setting" onClick={() => void logout()}>
               <span className="r-me-setting__label is-danger">로그아웃</span>
             </button>
           </div>
         </section>
+        {/* 탈퇴는 되돌릴 수 없어 목록 밖 아래에 작은 글자 버튼으로 둡니다. */}
+        <button type="button" className="r-me-withdraw" onClick={() => void withdraw()} disabled={isWithdrawing}>
+          {isWithdrawing ? "탈퇴 처리 중…" : "맛다공 탈퇴"}
+        </button>
       </div>
     </main>
   );

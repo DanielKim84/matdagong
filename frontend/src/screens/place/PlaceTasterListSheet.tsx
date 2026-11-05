@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { useAppData } from "../../app/AppData";
-import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
 import Sheet from "../../components/Sheet";
 import { Segmented } from "../../components/ui";
-import { isMyTaster } from "../../models/place";
+import { compareByTrust } from "../../models/trust";
 import { formatMonthDay, parseTime } from "../../utils/format";
-import { avatarFallback, avatarSource } from "../../utils/profileMedia";
-import { recordMenus, type PlaceRecord } from "./placeRecords";
+import TasterAvatar from "../../components/TasterAvatar";
+import { recordBadge, recordMenus, type PlaceRecord } from "./placeRecords";
 
 type SortOrder = "recommended" | "match" | "recent";
 
 const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
   { value: "recommended", label: "추천순" },
-  { value: "match", label: "취향 높은 순" },
+  { value: "match", label: "신뢰·취향 순" },
   { value: "recent", label: "최근 기록 순" },
 ];
 
@@ -21,11 +20,11 @@ const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
 const SEARCH_MIN_COUNT = 10;
 
 function sortRecords(records: PlaceRecord[], order: SortOrder): PlaceRecord[] {
-  // 추천순은 상세 화면이 정한 순서(내 기록 → 구독 → 취향 점수) 그대로입니다.
+  // 추천순은 상세 화면이 정한 순서(내 기록 → 구독 → 신뢰·취향 점수) 그대로입니다.
   if (order === "recommended") return records;
   return [...records].sort((left, right) =>
     order === "match"
-      ? (right.matchScore ?? 0) - (left.matchScore ?? 0)
+      ? compareByTrust(left, right)
       : (parseTime(right.recordedAt) ?? 0) - (parseTime(left.recordedAt) ?? 0),
   );
 }
@@ -78,13 +77,7 @@ export default function PlaceTasterListSheet({
         <ul className="r-place-taster-sheet__list">
           {shown.map((record) => {
             const isSelected = record.tasterId === selectedId;
-            const badge = isMyTaster(record)
-              ? "내 기록"
-              : subscriptionIds.includes(record.tasterId)
-                ? "구독 중"
-                : record.matchScore
-                  ? `취향 ${record.matchScore}%`
-                  : "";
+            const badge = recordBadge(record, subscriptionIds);
             const recordedOn = formatMonthDay(record.recordedAt);
             const summary = [
               recordedOn && `${recordedOn} 기록`,
@@ -101,12 +94,7 @@ export default function PlaceTasterListSheet({
                   aria-current={isSelected}
                   onClick={() => select(record.tasterId)}
                 >
-                  <Avatar
-                    src={avatarSource(record.tasterId, record.avatar)}
-                    fallbackSrc={avatarFallback(record.tasterId, record.avatar)}
-                    name={record.tasterName}
-                    variant={record.avatarVariant}
-                  />
+                  <TasterAvatar taster={record} />
                   <span className="r-place-taster-sheet__copy">
                     <span className="r-place-taster-sheet__name">
                       <b>{record.tasterName}</b>

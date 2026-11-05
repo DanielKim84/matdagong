@@ -6,6 +6,22 @@ import { placePhoto, type Place } from "../../models/place";
 import { leadTaster, placeSummary, type PlaceContext } from "./discoverModel";
 import TasterLine from "./TasterLine";
 
+/** 넘기기가 이만큼 멈춰 있으면 끝난 것으로 봅니다(ms). */
+const SETTLE_DELAY_MS = 140;
+/** 소수점 스크롤 값 때문에 끝까지 넘겨도 몇 px 모자랄 수 있어, 이만큼 안이면 마지막 카드로 봅니다(px). */
+const END_TOLERANCE_PX = 2;
+/** 이미 이만큼 가까이 있으면 다시 넘기지 않습니다(px). */
+const SCROLL_TOLERANCE_PX = 4;
+
+function cardElements(list: HTMLElement): HTMLElement[] {
+  return [...list.querySelectorAll<HTMLElement>("[data-place-id]")];
+}
+
+/** 카드를 왼쪽에 맞춰 멈추는 기준(CSS scroll-padding-left) */
+function scrollPaddingLeft(list: HTMLElement): number {
+  return parseFloat(getComputedStyle(list).scrollPaddingLeft) || 0;
+}
+
 /**
  * 지도 아래에서 가로로 넘기는 장소 카드입니다. 카드를 넘겨 멈춘 카드가 선택되고(지도 핀 강조),
  * 지도에서 핀을 고르면 그 카드로 넘어갑니다. 카드를 누르면 맛집 상세로 갑니다.
@@ -33,10 +49,10 @@ export default function PlaceCarousel({
     settle.current = window.setTimeout(() => {
       const element = list.current;
       if (!element) return;
-      const cards = [...element.querySelectorAll<HTMLElement>("[data-place-id]")];
+      const cards = cardElements(element);
       if (!cards.length) return;
-      const padding = parseFloat(getComputedStyle(element).scrollPaddingLeft) || 0;
-      const isAtEnd = element.scrollLeft >= element.scrollWidth - element.clientWidth - 2;
+      const padding = scrollPaddingLeft(element);
+      const isAtEnd = element.scrollLeft >= element.scrollWidth - element.clientWidth - END_TOLERANCE_PX;
       const nearest = isAtEnd
         ? cards[cards.length - 1]
         : cards.reduce((best, card) =>
@@ -47,7 +63,7 @@ export default function PlaceCarousel({
           );
       const id = nearest.dataset.placeId;
       if (id) focusCallback.current(id);
-    }, 140);
+    }, SETTLE_DELAY_MS);
   }
   useEffect(() => () => window.clearTimeout(settle.current), []);
 
@@ -55,13 +71,10 @@ export default function PlaceCarousel({
   useEffect(() => {
     const element = list.current;
     if (!element || !focusedId) return;
-    const card = [...element.querySelectorAll<HTMLElement>("[data-place-id]")].find(
-      (item) => item.dataset.placeId === focusedId,
-    );
+    const card = cardElements(element).find((item) => item.dataset.placeId === focusedId);
     if (!card) return;
-    const padding = parseFloat(getComputedStyle(element).scrollPaddingLeft) || 0;
-    const target = Math.min(card.offsetLeft - padding, element.scrollWidth - element.clientWidth);
-    if (Math.abs(element.scrollLeft - target) < 4) return;
+    const target = Math.min(card.offsetLeft - scrollPaddingLeft(element), element.scrollWidth - element.clientWidth);
+    if (Math.abs(element.scrollLeft - target) < SCROLL_TOLERANCE_PX) return;
     const shouldReduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     element.scrollTo({ left: target, behavior: shouldReduceMotion ? "auto" : "smooth" });
   }, [focusedId]);

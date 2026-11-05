@@ -3,6 +3,7 @@ import { getPlaces } from "../../services/places";
 import type { Taster } from "../../models/place";
 import { accountIdFromAccessToken } from "../../utils/accessToken";
 
+/** 가입 3단계(SignupMatchStep)의 맛객 카드 한 장: 맛객과 그 맛객의 기록 사진 */
 export type Match = { taster: Taster; photos: string[] };
 /** 가입 단계에서 서버 목록(취향 태그, 추천 맛객)을 받는 상태입니다. */
 export type LoadState = "loading" | "ready" | "error";

@@ -1,3 +1,4 @@
+/** 앱 진입점입니다. 테마·전역 스타일을 적용하고 로그인 상태를 확인한 뒤 앱을 그립니다. */
 import { beginSignIn, clearPendingSignIn, completeSignIn, rememberReturnHash, restartSignIn } from "./app/signIn";
 import { renderMatdagong, showSignInError, showStartupStatus } from "./app/startupView";
 import { clearStoredAccessToken, getMembership, readStoredAccessToken } from "./services/auth";

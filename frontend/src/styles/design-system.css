@@ -1,51 +1,10 @@
 /*
- * 취향 태그 고르기(TasteTagPicker), 프로필 설정, 태그 제안 시트의 공통 색입니다.
- * 기본 모양은 profile-settings.css에 있고, 이 파일이 그 뒤에서 색과 선택 상태를 맞춥니다.
- * 화면별 겉모양은 a/forms.css(프로필 설정), renewal/record.css(맛집 기록)가 더 덮습니다.
+ * 취향 태그 고르기(TasteTagPicker)와 프로필 설정·태그 제안 시트에서 a/forms.css가 덮지 않는 공통 모양입니다.
+ * 뼈대는 profile-settings.css, 화면별 겉모양은 a/forms.css(프로필 설정·태그 제안), renewal/record.css(맛집 기록)가 정합니다.
+ * 이 파일은 profile-settings.css 뒤, a/forms.css 앞에 불러옵니다(main.tsx).
  */
 
-/* ── 취향 태그 묶음: 묶음마다 아이콘 색만 다르게 하고, 선택 상태와 터치 크기는 공유합니다. ── */
-.taste-tag-picker {
-  --tag-accent: var(--color-primary);
-  --tag-tint: var(--color-primary-soft);
-}
-.taste-tag-picker > section {
-  border-color: var(--color-line);
-  background: var(--color-surface);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--shadow-color) 4%, transparent);
-}
-.taste-tag-group__icon {
-  background: var(--tag-tint);
-  color: var(--tag-accent);
-}
-.taste-tag-group--cuisine {
-  --tag-accent: var(--brand-500);
-  --tag-tint: var(--brand-50);
-}
-.taste-tag-group--taste {
-  --tag-accent: var(--brand-500);
-  --tag-tint: var(--neutral-50);
-}
-.taste-tag-group--cafe {
-  --tag-accent: var(--clay-500);
-  --tag-tint: var(--brand-50);
-}
-.taste-tag-group--occasion {
-  --tag-accent: var(--berry-400);
-  --tag-tint: var(--neutral-100);
-}
-.taste-tag-group--visit {
-  --tag-accent: var(--brand-500);
-  --tag-tint: var(--neutral-100);
-}
-.taste-tag-group__titles b {
-  color: var(--color-ink);
-}
-.taste-tag-group__titles small {
-  color: var(--color-muted);
-}
-
-/* 태그 선택 수는 등록과 공개 프로필, 추천 취향에서 같은 색과 형태로 표시합니다. */
+/* 태그 선택 수. 프로필 설정은 a/forms.css가 숫자만 남기고, 맛집 기록은 이 테두리 모양을 그대로 씁니다. */
 .taste-tag-picker .taste-tag-group__count {
   display: flex;
   min-width: 58px;
@@ -122,70 +81,11 @@
   align-items: center;
   gap: 2px;
 }
-.taste-tag-label > i {
-  color: var(--brand-500);
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 800;
-}
 
-/* ── 설정·프로필·제안 화면: 크림 표면에 토마토색 동작을 함께 씁니다. ── */
-.settings-save-bar {
-  border-color: var(--color-line);
-  background: var(--neutral-0);
-}
-.profile-edit-field > span,
-.profile-edit-avatar-section b,
-.public-style-settings summary b,
-.taste-settings-intro h2,
-.taste-section-heading h2,
-.tag-request-sheet > header h2 {
-  color: var(--color-ink);
-}
-.profile-edit-avatar-button > span:last-child {
-  background: var(--color-primary);
-  color: var(--on-strong);
-}
-.activity-scope-picker label > span,
-.food-focus-picker label > span,
-.tag-request-category label > span {
-  border-color: var(--color-line);
-  background: var(--color-surface);
-}
-.activity-scope-picker label > input:checked + span,
-.food-focus-picker input:checked + span,
-.tag-request-category input:checked + span {
-  border-color: var(--color-primary);
-  background: var(--color-primary-soft);
-  color: var(--color-primary-strong);
-  box-shadow: inset 0 0 0 1px var(--color-primary);
-}
+/* ── 프로필 설정 ── */
 .copy-taste-notice {
   display: block;
-  margin: 8px 0 12px;
-  border-radius: 10px;
-  background: var(--neutral-100);
-  padding: 9px 11px;
-  color: var(--green-600);
-  font-size: 11px;
   line-height: 1.5;
-}
-.taste-settings-intro > span {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-}
-.taste-settings-intro p,
-.taste-section-heading > span,
-.avoid-settings-block > p,
-.profile-edit-field > small,
-.profile-edit-avatar-section small,
-.public-style-settings summary small,
-.public-style-settings p,
-.copy-taste-help,
-.activity-scope-picker small,
-.activity-region-picker label > span,
-.activity-region-field > small {
-  color: var(--color-muted);
 }
 .profile-settings {
   color: var(--color-ink);
@@ -203,8 +103,6 @@
   color: var(--color-muted);
 }
 .activity-region-picker .region-picker-trigger {
-  border-color: var(--color-line);
-  color: var(--color-ink);
   font-family: inherit;
 }
 
@@ -249,44 +147,13 @@
   height: 10px;
 }
 
-/* 제안 내역을 불러오지 못했을 때의 안내 줄입니다. */
+/* 제안 내역을 불러오지 못했을 때의 안내 줄입니다. 글자 색·크기는 a/forms.css가 정합니다. */
 .proposal-history-empty {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  color: var(--color-muted);
-  font-size: 11px;
 }
 .proposal-history-empty button {
   flex: none;
-  border: 1px solid var(--color-line);
-  border-radius: 9px;
-  background: var(--neutral-0);
-  padding: 6px 8px;
-  color: var(--color-primary-strong);
-  font-size: 10px;
-  font-weight: 700;
-}
-
-/* ── 프로필 설정 안의 태그 묶음 색. 칩·묶음 겉모양은 a/forms.css가 정합니다. ── */
-.profile-settings .taste-tag-group {
-  --tag-accent: var(--brand-600);
-  --tag-tint: var(--brand-50);
-}
-.profile-settings .taste-tag-group--cuisine {
-  --tag-accent: var(--brand-500);
-  --tag-tint: var(--brand-50);
-}
-.profile-settings .taste-tag-group--taste {
-  --tag-accent: var(--brand-600);
-  --tag-tint: var(--brand-50);
-}
-.profile-settings .taste-tag-group--cafe {
-  --tag-accent: var(--clay-500);
-  --tag-tint: var(--neutral-100);
-}
-.profile-settings .taste-tag-group--occasion {
-  --tag-accent: var(--brand-600);
-  --tag-tint: var(--brand-50);
 }

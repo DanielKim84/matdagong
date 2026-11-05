@@ -1,3 +1,7 @@
+/**
+ * 앱 시작 단계 화면입니다. React를 그리기 전 상태 안내·오류는 DOM으로 직접 만들고,
+ * 로그인 확인이 끝나면 가입 여부에 따라 소개 → 가입 → 앱 순서로 그립니다.
+ */
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import IntroScreen from "../screens/onboarding/IntroScreen";
@@ -7,11 +11,6 @@ import { accountIdFromAccessToken } from "../utils/accessToken";
 import { onboardingCompletedKey, readStorage, writeStorage } from "../utils/storage";
 import App from "./App";
 import { logout, readReturnHash } from "./signIn";
-
-/**
- * 앱 시작 단계 화면입니다. React를 그리기 전 상태 안내·오류는 DOM으로 직접 만들고,
- * 로그인 확인이 끝나면 가입 여부에 따라 소개 → 가입 → 앱 순서로 그립니다.
- */
 
 function startupPanel(className: string, ...children: HTMLElement[]): void {
   const root = document.getElementById("root");
@@ -48,7 +47,12 @@ export function renderMatdagong(root: HTMLElement, accessToken: string, membersh
   const renderApp = () =>
     reactRoot.render(
       <StrictMode>
-        <App accessToken={accessToken} displayName={membership.displayName} onLogout={() => void logout()} />
+        <App
+          accessToken={accessToken}
+          displayName={membership.displayName}
+          loginProviders={membership.loginProviders ?? []}
+          onLogout={() => void logout()}
+        />
       </StrictMode>,
     );
   if (membership.registered) {

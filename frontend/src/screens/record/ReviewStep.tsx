@@ -1,12 +1,16 @@
+import HashTag from "../../components/HashTag";
 import Icon from "../../components/Icon";
-import type { RecordStep } from "./recordModel";
+import { summaryHeadline, type RecordStep } from "./recordModel";
 import RecordStepTitle from "./RecordStepTitle";
 import type { RecordForm } from "./useRecordForm";
+
+/** 미리 보기 카드에 보여 줄 태그 수 */
+const PREVIEW_TAG_LIMIT = 4;
 
 /** 5단계 · 저장 전 확인. 항목마다 해당 단계로 돌아가 고칠 수 있습니다. */
 export default function ReviewStep({ form, onEdit }: { form: RecordForm; onEdit: (step: RecordStep) => void }) {
   const menuNames = form.menus.map((item) => item.name.trim()).filter(Boolean);
-  const headline = form.headline.trim() || form.reason.split("\n")[0];
+  const headline = summaryHeadline(form.headline, form.reason);
   const rows: { step: RecordStep; label: string; value: string }[] = [
     ...(form.steps.includes("place")
       ? [{ step: "place" as const, label: "장소", value: form.name || "선택 안 함" }]
@@ -41,10 +45,8 @@ export default function ReviewStep({ form, onEdit }: { form: RecordForm; onEdit:
           {form.detail.trim() && form.headline.trim() && <p>{form.detail.trim()}</p>}
           {form.tags.length > 0 && (
             <div className="r-tags">
-              {form.tags.slice(0, 4).map((tag) => (
-                <span className="r-tag" key={tag}>
-                  {tag}
-                </span>
+              {form.tags.slice(0, PREVIEW_TAG_LIMIT).map((tag) => (
+                <HashTag key={tag} tag={tag} size="sm" />
               ))}
             </div>
           )}

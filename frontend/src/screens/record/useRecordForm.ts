@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAppData } from "../../app/AppData";
-import { isMyTaster, type Place } from "../../models/place";
 import { isSessionExpiredError } from "../../services/http";
 import { clearRegisterDraft, type RegisterDraftForm } from "../../services/registerDraft";
+import { isMyTaster, type Place } from "../../models/place";
 import { accountIdFromAccessToken } from "../../utils/accessToken";
 import { errorMessage } from "../../utils/errorMessage";
 import { EDIT_RECORD_STEPS, NEW_RECORD_STEPS, VALIDATED_STEPS, type RecordStep } from "./recordModel";
@@ -16,7 +16,7 @@ import { useRecordStory } from "./useRecordStory";
 import { useRecordTaste } from "./useRecordTaste";
 import { useRestoredDraft } from "./useRestoredDraft";
 
-export type RecordSubmitResult = { isSaved: true; placeId: string } | { isSaved: false; step?: RecordStep };
+type RecordSubmitResult = { isSaved: true; placeId: string } | { isSaved: false; step?: RecordStep };
 
 /**
  * 기록하기(새 기록·수정)의 입력 상태를 모읍니다. 장소·사진·메뉴·취향·추천 이유는 각 훅이 맡고,
@@ -113,6 +113,7 @@ export function useRecordForm({ editPlace, editPlaceId }: { editPlace?: Place; e
       photos: photoForm.photos,
       visibility: storyForm.visibility,
     });
+    newPlace.deviceLocation = placeForm.location;
     setIsSaving(true);
     setError("");
     try {

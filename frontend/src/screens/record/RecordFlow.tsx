@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { back } from "../../app/navigation";
 import Icon from "../../components/Icon";
@@ -10,11 +10,14 @@ import TasteTagRequestSheet from "../TasteTagRequestSheet";
 import MediaStep from "./MediaStep";
 import PlaceStep from "./PlaceStep";
 import type { RecordDoneInfo } from "./RecordDone";
-import type { RecordStep } from "./recordModel";
+import { summaryHeadline, type RecordStep } from "./recordModel";
 import ReviewStep from "./ReviewStep";
 import StoryStep from "./StoryStep";
 import TasteStep from "./TasteStep";
 import { useRecordForm } from "./useRecordForm";
+
+/** 저장 완료 화면의 기록 요약에 보여 줄 태그 수 */
+const DONE_TAG_LIMIT = 3;
 
 const NEXT_LABELS: Record<RecordStep, string> = {
   place: "다음 · 사진과 메뉴",
@@ -43,6 +46,16 @@ export default function RecordFlow({
   const step = steps[Math.min(index, steps.length - 1)];
   const isFirst = index === 0;
   const isLast = step === "review";
+
+  // 맛집 상세·빠른 기록이 가게를 정해 넘겼으면 사진·메뉴 단계부터 시작합니다.
+  useEffect(() => {
+    if (form.shouldSkipPlaceStep && steps[0] === "place") setIndex(1);
+  }, [form.shouldSkipPlaceStep, steps]);
+  // 방문 확인에서 '다른 장소 고르기'로 가게를 비우면 장소 단계로 돌아갑니다.
+  const hasSelectedPlace = !!form.selectedPlace;
+  useEffect(() => {
+    if (!hasSelectedPlace && steps[0] === "place") setIndex(0);
+  }, [hasSelectedPlace, steps]);
 
   function moveTo(nextIndex: number, shouldKeepError = false) {
     setIndex(Math.max(0, Math.min(nextIndex, steps.length - 1)));
@@ -81,9 +94,9 @@ export default function RecordFlow({
   async function save() {
     const info = {
       name: form.name,
-      headline: form.headline.trim() || form.reason.split("\n")[0] || "",
+      headline: summaryHeadline(form.headline, form.reason),
       photo: form.photos[0],
-      tags: form.tags.slice(0, 3),
+      tags: form.tags.slice(0, DONE_TAG_LIMIT),
       visibility: form.visibility,
     };
     const result = await form.submit();
@@ -132,7 +145,7 @@ export default function RecordFlow({
               </span>
             )}
             <b>{form.name}</b>
-            {form.isEditing && <span className="r-tag r-tag--neutral">수정 중</span>}
+            {form.isEditing && <span className="r-tag">수정 중</span>}
           </div>
         )}
 

@@ -4,11 +4,6 @@
   padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
 
-/* ── 떠 있는 상단 바(TopBar variant="float")의 저장 버튼 ── */
-.r-place-like.is-liked {
-  color: var(--color-primary);
-}
-
 /* ── 큰 사진 / 위치 지도 ── */
 .r-place-hero {
   position: relative;
@@ -148,10 +143,11 @@
   font-size: 13px;
   font-weight: 600;
 }
-.r-place-pill.is-accent {
-  border-color: var(--brand-100);
-  background: var(--brand-50);
-  color: var(--brand-700);
+/* 나와의 관계(내가 다녀온 곳·내 맛집): 공용 관계 배지(.r-tag--mine)와 같은 코랄 채움 */
+.r-place-pill.is-mine {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--on-strong);
 }
 .r-place-address {
   display: flex;
@@ -182,52 +178,43 @@
   font-weight: 700;
 }
 
-/* 빠른 동작 줄 */
+/* 길찾기 · 전화: 주소 아래 나란히 놓은 두 개의 넓은 흰 버튼(아이콘 + 글자). 저장·기록은 아래 고정 버튼 줄에만 있습니다. */
 .r-place-quick {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 .r-place-quick__item {
   display: flex;
-  min-height: 76px;
-  flex-direction: column;
+  min-height: 50px;
   align-items: center;
-  gap: 6px;
-  border: 0;
-  background: none;
-  padding: 0;
-  color: var(--neutral-700);
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 700;
-  text-decoration: none;
-}
-.r-place-quick__icon {
-  display: grid;
-  width: 52px;
-  height: 52px;
-  place-items: center;
-  border-radius: 50%;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--radius-control);
   background: var(--color-surface);
+  padding: 0 12px;
   color: var(--color-ink);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-color) 6%, transparent);
 }
-.r-place-quick__icon .icon {
-  width: 22px;
-  height: 22px;
-}
-.r-place-quick__icon.is-primary {
-  background: var(--color-primary);
-  color: var(--on-strong);
-}
-.r-place-quick__item.is-on .r-place-quick__icon {
+.r-place-quick__item .icon {
+  width: 20px;
+  height: 20px;
   color: var(--color-primary);
 }
 .r-place-quick__item:disabled {
-  opacity: 0.45;
+  color: var(--color-muted);
+  box-shadow: none;
+}
+.r-place-quick__item:disabled .icon {
+  color: var(--color-subtle);
 }
 
-/* 다녀간 맛객 요약 */
+/* 본문 섹션 틀과 기록 아래 안내 문구(저장한 곳·별로였던 곳) */
 .r-place-section {
   display: flex;
   flex-direction: column;
@@ -241,6 +228,13 @@
   color: var(--color-muted);
   font-size: 13px;
   line-height: 1.6;
+}
+.r-place-note--disliked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 /* ── 섹션 제목(맛객 기록, 가게 정보) ── */
@@ -297,7 +291,7 @@
   box-shadow: 0 0 0 2px var(--color-canvas);
 }
 .r-place-picker__item.is-selected .avatar {
-  border-color: var(--color-primary);
+  border-color: var(--color-ink);
 }
 .r-place-picker__item b {
   max-width: 100%;
@@ -336,6 +330,9 @@
   color: var(--color-primary);
   font-size: 11px;
   font-weight: 700;
+}
+.r-place-picker__item small.is-trusted {
+  color: var(--amber-800);
 }
 
 /* ── 전체 맛객 목록 시트 ── */
@@ -394,7 +391,7 @@
   height: 46px;
 }
 .r-place-taster-sheet__row.is-selected .avatar {
-  box-shadow: 0 0 0 2px var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-ink);
 }
 .r-place-taster-sheet__row > .icon {
   width: 20px;
@@ -463,15 +460,21 @@
   /* 옆으로 밀어 다음 맛객으로 넘길 때 세로 스크롤만 브라우저에 맡깁니다. */
   touch-action: pan-y;
 }
+/*
+ * 한 맛객의 기록은 한 카드로 둡니다(옆으로 밀면 카드째 다음 맛객으로 바뀜). 대신 추천 메뉴·이런 곳이에요는
+ * 얇은 구분선과 같은 먹색 제목으로 나눠 카드 안에서 단락이 보이게 합니다. 강조색(코랄)은 관계·동작에만 씁니다.
+ */
 .r-place-record__part {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  border-top: 1px solid var(--neutral-100);
+  padding-top: 14px;
 }
 .r-place-record__part h3 {
   margin: 0;
-  color: var(--color-primary);
-  font-size: 13px;
+  color: var(--color-ink);
+  font-size: 14px;
   font-weight: 800;
 }
 .r-place-record__head {
@@ -516,16 +519,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.r-place-badge {
-  flex: none;
-  border-radius: var(--radius-pill);
-  background: var(--brand-50);
-  padding: 4px 10px;
-  color: var(--color-primary);
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-}
 .r-place-record__note {
   margin: 0;
   color: var(--color-ink);
@@ -535,92 +528,103 @@
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
-.r-place-record__photos {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-}
-.r-place-record__photos button {
-  position: relative;
-  height: 84px;
-  overflow: hidden;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--neutral-100);
-  padding: 0;
-}
-.r-place-record__photos img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.r-place-record__photos span {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: color-mix(in srgb, var(--neutral-900) 50%, transparent);
-  color: var(--on-strong);
-  font-size: 15px;
-  font-weight: 800;
-}
+/*
+ * 추천 메뉴: 아래 "이런 곳이에요" 묶음 카드와 같은 흰 카드(테두리·그림자) 하나에 메뉴를 한 줄씩 얇은 선으로 나눠 둡니다.
+ * 사진 옆에 메뉴 이름과 금액을 붙여 두 줄로 읽히게 하고, 그 묶음을 사진 높이 가운데에 맞춥니다.
+ */
 .r-place-record__menus {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   margin: 0;
-  padding: 0;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 4px 14px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 5%, transparent);
   list-style: none;
+}
+.r-place-record__menus li + li {
+  border-top: 1px solid var(--neutral-100);
 }
 .r-place-record__menus li > button,
 .r-place-record__menus li > div {
   display: flex;
   width: 100%;
-  min-height: 52px;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   border: 0;
   background: none;
-  padding: 0;
+  padding: 10px 0;
   color: var(--color-ink);
   font-family: var(--font-body);
-  font-size: 14px;
-}
-.r-place-record__menus li > button {
-  min-height: 44px;
-}
-.r-place-record__menus span {
-  min-width: 0;
-  flex: 1;
-  font-weight: 600;
   text-align: left;
 }
-.r-place-record__menus b {
-  font-weight: 700;
-  white-space: nowrap;
+.r-place-record__menus li > button {
+  cursor: pointer;
 }
-/* 맛객이 메뉴마다 올린 사진. 없으면 같은 자리에 빈 칸을 두어 줄이 가지런합니다. */
 .r-place-record__menus .r-place-record__menu-photo {
   display: grid;
-  width: 52px;
-  height: 52px;
+  width: 72px;
+  height: 72px;
   flex: none;
   place-items: center;
   border-radius: var(--radius-sm);
   background: var(--neutral-100);
   object-fit: cover;
 }
+/* 사진 없는 메뉴도 같은 크기 칸을 두어 이름이 같은 줄에서 시작합니다. */
 .r-place-record__menus .r-place-record__menu-photo.is-empty {
-  color: var(--neutral-300);
+  background: var(--amber-50);
+  color: var(--amber-600);
 }
 .r-place-record__menus .r-place-record__menu-photo .icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
+}
+.r-place-record__menu-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+.r-place-record__menu-text span {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+.r-place-record__menu-text b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 800;
 }
 .r-place-record__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+/* 내 기록 지우기: 되돌릴 수 없는 동작이라 큰 버튼 대신 아래에 작은 글자 버튼으로 둡니다. */
+.r-place-record__delete {
+  width: 100%;
+  border: 0;
+  background: none;
+  padding: 6px 0 0;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.r-place-record__delete:hover {
+  color: var(--brand-700);
+}
+/* 다른 맛객 기록 신고하기는 버튼 줄 아래 오른쪽에 작게 둡니다. */
+.r-place-record__report {
+  width: 100%;
+  text-align: right;
 }
 .r-place-record__actions .r-button {
   min-height: 44px;
@@ -705,7 +709,7 @@
   flex: 1;
 }
 
-/* 방문 기록 ↔ 내 맛집 전환 확인 */
+/* 하트를 방문 기록으로 바꿀지 묻는 시트(PlaceConversionSheet) */
 .r-place-sheet p {
   margin: 0 0 18px;
   color: var(--color-muted);

@@ -1,3 +1,4 @@
+/** 프로필 편집의 주 활동 지역(시·도 → 시·군·구 → 읍·면·동) 선택값 계산입니다. 서버에는 한 문자열로 저장합니다. */
 import type { RegionData } from "../../models/region";
 
 export type RegionSelection = { sido: string; district: string; dong: string };
@@ -75,7 +76,7 @@ export function isIncompleteRegion({ sido, district, dong }: RegionSelection): b
   return Boolean(sido || district || dong) && (!sido || !district || !dong);
 }
 
-/** 기존 API 호환을 위해 저장할 때 한 문자열로 합칩니다. */
+/** 서버는 활동 지역을 한 문자열로 받으므로 저장할 때 합칩니다. */
 export function joinRegionSelection({ sido, district, dong }: RegionSelection): string {
   return [sido, district && district !== DIRECT_DISTRICT ? district : "", dong].filter(Boolean).join(" ");
 }

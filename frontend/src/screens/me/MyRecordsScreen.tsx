@@ -6,7 +6,8 @@ import PlaceThumb from "../../components/PlaceThumb";
 import { EmptyState, Segmented, Skeleton, TopBar } from "../../components/ui";
 import { MY_ACTIVITY_CHANGED_EVENT, changeRecordVisibility } from "../../services/places";
 import { errorMessage } from "../../utils/errorMessage";
-import { diaryEntries, formatDay } from "./diary";
+import { formatDay } from "./diary";
+import { useDiaryEntries } from "./useDiaryEntries";
 
 type Tab = "public" | "private";
 
@@ -22,13 +23,10 @@ export default function MyRecordsScreen({ routeId }: { routeId: string }) {
   // 저장 직후 목록을 다시 불러오기 전까지 바뀐 공개 범위를 먼저 반영합니다.
   const [changed, setChanged] = useState<Record<string, boolean>>({});
 
+  const savedEntries = useDiaryEntries();
   const entries = useMemo(
-    () =>
-      diaryEntries(app.myRecords, app.isMyTasterId, app.photoFor).map((entry) => ({
-        ...entry,
-        isPublic: changed[entry.place.id] ?? entry.isPublic,
-      })),
-    [app.myRecords, app.isMyTasterId, app.photoFor, changed],
+    () => savedEntries.map((entry) => ({ ...entry, isPublic: changed[entry.place.id] ?? entry.isPublic })),
+    [savedEntries, changed],
   );
   const publicEntries = entries.filter((entry) => entry.isPublic);
   const privateEntries = entries.filter((entry) => !entry.isPublic);
@@ -36,7 +34,7 @@ export default function MyRecordsScreen({ routeId }: { routeId: string }) {
   const shownIds = shown.map((entry) => entry.place.id);
   const selectedShown = selected.filter((id) => shownIds.includes(id));
   const isAllSelected = shown.length > 0 && selectedShown.length === shown.length;
-  const nextIsPublic = tab === "private";
+  const shouldMakePublic = tab === "private";
 
   function changeTab(next: Tab) {
     setSelected([]);
@@ -52,17 +50,21 @@ export default function MyRecordsScreen({ routeId }: { routeId: string }) {
     if (!selectedShown.length || isSaving) return;
     setIsSaving(true);
     try {
-      const result = await changeRecordVisibility(app.accessToken, selectedShown, nextIsPublic ? "PUBLIC" : "PRIVATE");
+      const result = await changeRecordVisibility(
+        app.accessToken,
+        selectedShown,
+        shouldMakePublic ? "PUBLIC" : "PRIVATE",
+      );
       setChanged((current) => ({
         ...current,
-        ...Object.fromEntries(selectedShown.map((id) => [id, nextIsPublic])),
+        ...Object.fromEntries(selectedShown.map((id) => [id, shouldMakePublic])),
       }));
       setSelected([]);
       window.dispatchEvent(new Event(MY_ACTIVITY_CHANGED_EVENT));
       app.actions.notify({
         kind: "success",
-        title: nextIsPublic ? `${result.changed}곳을 공개했어요` : `${result.changed}곳을 나만 보기로 바꿨어요`,
-        message: nextIsPublic
+        title: shouldMakePublic ? `${result.changed}곳을 공개했어요` : `${result.changed}곳을 나만 보기로 바꿨어요`,
+        message: shouldMakePublic
           ? "이제 다른 사람의 지도와 피드에도 보여요."
           : "이제 나에게만 보이고, 다른 사람의 지도와 피드에서는 빠져요.",
       });
@@ -184,10 +186,10 @@ export default function MyRecordsScreen({ routeId }: { routeId: string }) {
             onClick={() => void applyChange()}
             disabled={isSaving}
           >
-            <Icon name={nextIsPublic ? "user" : "lock"} />
+            <Icon name={shouldMakePublic ? "user" : "lock"} />
             {isSaving
               ? "바꾸는 중…"
-              : nextIsPublic
+              : shouldMakePublic
                 ? `${selectedShown.length}곳 공개하기`
                 : `${selectedShown.length}곳 나만 보기로`}
           </button>

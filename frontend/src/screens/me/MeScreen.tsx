@@ -1,13 +1,12 @@
-import { useMemo } from "react";
 import { useAppData, type AccountRole } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
 import { SectionHead, TopBar } from "../../components/ui";
 import { formatNumber } from "../../utils/format";
-import { diaryEntries } from "./diary";
 import MeDiaryCard from "./MeDiaryCard";
 import MeTile from "./MeTile";
+import { useDiaryEntries } from "./useDiaryEntries";
 import { useQuickPlaceDrafts } from "./useQuickPlaceDrafts";
 
 const ROLE_LABEL: Record<AccountRole, string> = {
@@ -22,10 +21,7 @@ export default function MeScreen() {
   const app = useAppData();
   const quickDrafts = useQuickPlaceDrafts();
 
-  const entries = useMemo(
-    () => diaryEntries(app.myRecords, app.isMyTasterId, app.photoFor),
-    [app.myRecords, app.isMyTasterId, app.photoFor],
-  );
+  const entries = useDiaryEntries();
   const publicCount = entries.filter((entry) => entry.isPublic).length;
   const paidCount = app.incomingSubscriptions.filter((item) => item.subscriptionType === "PAID").length;
   const freeCount = app.incomingSubscriptions.length - paidCount;
@@ -42,6 +38,12 @@ export default function MeScreen() {
           </button>
         }
       />
+      {app.myProfile?.hiddenByReports && (
+        <p className="r-me-hidden-notice" role="status">
+          <b>신고가 쌓여 내 프로필이 임시로 가려졌어요.</b>
+          다른 맛객에게 내 프로필과 기록이 보이지 않고, 새 기록을 남길 수 없어요. 운영팀이 확인한 뒤 다시 알려 드릴게요.
+        </p>
+      )}
       <section className="r-me-profile" aria-label="내 프로필">
         <button
           type="button"

@@ -63,6 +63,27 @@
 .r-feed-story-chip.is-fresh .r-feed-story-chip__ring {
   background: var(--color-primary);
 }
+/* 안 본 최근 기록 수(링 오른쪽 아래) */
+.r-feed-story-chip__ring {
+  position: relative;
+}
+.r-feed-story-chip__count {
+  position: absolute;
+  right: -3px;
+  bottom: -2px;
+  display: grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 2px solid var(--color-canvas);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 0 5px;
+  color: var(--on-strong);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
 .r-feed-story-chip__ring .avatar {
   width: 100%;
   height: 100%;
@@ -302,6 +323,23 @@
   inset: 0;
   width: 100%;
   height: 100%;
+}
+/* 흐린 바탕: 사진 전체를 둔 뒤 남는 위아래(가로 사진)·양옆을 같은 사진의 색으로 채웁니다. 가장자리가 흐려 비지 않게 조금 키웁니다. */
+.r-feed-story__backdrop {
+  position: absolute;
+  inset: -40px;
+  width: calc(100% + 80px);
+  height: calc(100% + 80px);
+  object-fit: cover;
+  filter: blur(28px) saturate(1.1);
+  opacity: 0.85;
+}
+.r-feed-story__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 .r-feed-story__media .r-place-thumb {
   border-radius: 0;

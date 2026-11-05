@@ -1,6 +1,6 @@
 import Icon from "./Icon";
 
-export type StepProgressProps = {
+type StepProgressProps = {
   /** 지금 단계(1부터) */
   step: number;
   total: number;

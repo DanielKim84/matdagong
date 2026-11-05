@@ -5,6 +5,7 @@ import { distanceMeters, kakaoPlaceCoordinates, type Coordinates } from "../../u
 import { NEARBY_RADIUS_METERS } from "./recordModel";
 
 const SEARCH_DELAY_MS = 450;
+const SEARCH_MIN_LENGTH = 2;
 
 /** 현재 위치 1km 안의 카카오 장소를 이름·주소로 찾습니다. 입력을 멈추면 자동으로 찾습니다. */
 export function usePlaceSearch({
@@ -25,7 +26,7 @@ export function usePlaceSearch({
 
   async function findPlaces(keyword = placeSearch, isQuiet = false) {
     const query = keyword.trim();
-    if (query.length < 2) {
+    if (query.length < SEARCH_MIN_LENGTH) {
       if (!isQuiet) setError("가게 이름이나 주소를 두 글자 이상 입력해 주세요.");
       return;
     }
@@ -67,7 +68,7 @@ export function usePlaceSearch({
 
   // 위치가 없거나 이미 장소를 골랐으면 검색하지 않습니다.
   useEffect(() => {
-    if (selectedPlace || !location || placeSearch.trim().length < 2) return;
+    if (selectedPlace || !location || placeSearch.trim().length < SEARCH_MIN_LENGTH) return;
     const timer = window.setTimeout(() => void findPlaces(placeSearch, true), SEARCH_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, [placeSearch, location, selectedPlace]);

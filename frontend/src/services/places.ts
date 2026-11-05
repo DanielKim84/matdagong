@@ -1,8 +1,12 @@
+/** 장소 서비스(맛집 목록·내 기록·빠른 저장·하트·별로였던 곳) API 요청입니다. */
 import type { NewPlace, Place } from "../models/place";
+import type { Coordinates } from "../utils/geo";
 import { API_BASE_URL, apiRequest, type ApiRequestOptions } from "./http";
 
 /** 빠른 장소 기록처럼 마이 화면 숫자가 바뀌는 저장을 마친 뒤 window에 알리는 이벤트입니다. */
 export const MY_ACTIVITY_CHANGED_EVENT = "matdagong:my-activity-changed";
+/** 장소 정보 제공처 코드입니다. 지금은 카카오만 씁니다. */
+const KAKAO_PROVIDER_CODE = "KAKAO";
 
 export type QuickPlaceDraft = {
   providerCode: string;
@@ -18,7 +22,7 @@ export type QuickPlaceDraft = {
   lotAddress: string | null;
   savedAt: string;
 };
-export type QuickPlaceDuplicate = { alreadyRegistered: boolean; alreadySaved: boolean; placeName: string | null };
+type QuickPlaceDuplicate = { alreadyRegistered: boolean; alreadySaved: boolean; placeName: string | null };
 
 /** 빠른 장소 기록을 등록 화면이 쓰는 카카오 검색 결과 형식으로 바꿉니다. */
 export function kakaoPlaceFromQuickDraft(draft: QuickPlaceDraft): KakaoPlaceResult {
@@ -88,15 +92,20 @@ export function getQuickPlaceDrafts(accessToken: string): Promise<QuickPlaceDraf
 }
 
 export function checkQuickPlaceDuplicate(accessToken: string, place: KakaoPlaceResult): Promise<QuickPlaceDuplicate> {
-  const params = new URLSearchParams({ providerCode: "KAKAO", providerPlaceId: place.id });
+  const params = new URLSearchParams({ providerCode: KAKAO_PROVIDER_CODE, providerPlaceId: place.id });
   return request(`/drafts/check?${params.toString()}`, accessToken);
 }
 
-export function saveQuickPlaceDraft(accessToken: string, place: KakaoPlaceResult): Promise<QuickPlaceDraft> {
+/** 가게에서 빠른 저장을 합니다. deviceLocation은 지금 기기 위치로, 장소 서비스가 가게와 1km 안인지 다시 확인합니다. */
+export function saveQuickPlaceDraft(
+  accessToken: string,
+  place: KakaoPlaceResult,
+  deviceLocation: Coordinates | null,
+): Promise<QuickPlaceDraft> {
   return request("/drafts", accessToken, {
     method: "POST",
     body: JSON.stringify({
-      providerCode: "KAKAO",
+      providerCode: KAKAO_PROVIDER_CODE,
       providerPlaceId: place.id,
       placeName: place.place_name,
       category: place.category_name,
@@ -107,14 +116,39 @@ export function saveQuickPlaceDraft(accessToken: string, place: KakaoPlaceResult
       longitude: Number(place.x),
       providerPhone: place.phone || null,
       providerUrl: place.place_url || null,
+      deviceLocation,
     }),
+  });
+}
+
+/**
+ * 카카오에서 검색한 가게를 가볼 곳(가 보고 싶어요 하트)으로 저장합니다. 지역·방문과 상관없이 저장되고, 저장된 가게를 돌려줍니다.
+ * 이미 하트했거나 내 기록이 있는 가게면 하트는 그대로 둡니다.
+ */
+export function saveWishPlace(accessToken: string, place: KakaoPlaceResult): Promise<Place> {
+  return request("/wishes", accessToken, {
+    method: "POST",
+    body: JSON.stringify({
+      providerCode: KAKAO_PROVIDER_CODE,
+      providerPlaceId: place.id,
+      placeName: place.place_name,
+      category: place.category_name || "음식점",
+      address: place.road_address_name || place.address_name,
+      roadAddress: place.road_address_name || null,
+      lotAddress: place.address_name || null,
+      latitude: Number(place.y),
+      longitude: Number(place.x),
+      providerPhone: place.phone || null,
+      providerUrl: place.place_url || null,
+    }),
+    errorMessage: "가볼 곳으로 저장하지 못했어요.",
   });
 }
 
 export function deleteQuickPlaceDraft(
   accessToken: string,
   providerPlaceId: string,
-  providerCode = "KAKAO",
+  providerCode = KAKAO_PROVIDER_CODE,
 ): Promise<void> {
   return request(
     `/drafts/${encodeURIComponent(providerPlaceId)}?providerCode=${encodeURIComponent(providerCode)}`,
@@ -126,7 +160,7 @@ export function deleteQuickPlaceDraft(
 /** 새 기록 등록과 하트→기록 전환이 같은 기록 본문(CreatePlaceRecordRequest)을 보내도록 화면 입력을 바꿉니다. */
 function placeRecordBody(place: NewPlace) {
   return {
-    providerCode: place.providerCode ?? "KAKAO",
+    providerCode: place.providerCode ?? KAKAO_PROVIDER_CODE,
     providerPlaceId: place.providerPlaceId,
     placeName: place.name,
     category: place.category ?? "음식점",
@@ -144,6 +178,7 @@ function placeRecordBody(place: NewPlace) {
     tagGroups: place.tagGroups ?? {},
     visitConditions: place.visitConditions,
     photos: place.photos,
+    deviceLocation: place.deviceLocation ?? null,
   };
 }
 
@@ -161,10 +196,6 @@ export function convertLikedPlaceToRecord(accessToken: string, sourcePlaceId: st
   });
 }
 
-export function convertPlaceRecordToLike(accessToken: string, placeId: string): Promise<void> {
-  return request(`/records/${encodeURIComponent(placeId)}/to-like`, accessToken, { method: "POST" });
-}
-
 /** 내 기록 여러 곳을 한 번에 공개하거나 나만 보기로 바꿉니다. changed는 실제로 바뀐 기록 수입니다. */
 export function changeRecordVisibility(
   accessToken: string,
@@ -177,18 +208,69 @@ export function changeRecordVisibility(
   });
 }
 
+/** 이 장소의 내 기록을 지웁니다. 사진·메뉴·태그까지 함께 지워지고 되돌릴 수 없습니다. */
+export function deleteMyPlaceRecord(accessToken: string, placeId: string): Promise<void> {
+  return request(`/records/${encodeURIComponent(placeId)}`, accessToken, {
+    method: "DELETE",
+    errorMessage: "기록을 지우지 못했어요.",
+  });
+}
+
+/** 맛집 정보 제보 이유입니다. 장소 서비스 PlaceReportReason과 같습니다. */
+export type PlaceReportReason = "CLOSED" | "WRONG_NAME" | "WRONG_ADDRESS" | "WRONG_PHONE" | "WRONG_LOCATION" | "OTHER";
+
+/** 맛집 기본 정보 오류·폐업을 알립니다. duplicate는 확인 전인 같은 제보가 이미 있었다는 뜻입니다. */
+export function reportPlace(
+  accessToken: string,
+  placeId: string,
+  reason: PlaceReportReason,
+  memo: string,
+): Promise<{ reportId: string; duplicate: boolean }> {
+  return request(`/${encodeURIComponent(placeId)}/reports`, accessToken, {
+    method: "POST",
+    body: JSON.stringify({ reason, memo: memo.trim() || null }),
+    errorMessage: "제보를 보내지 못했어요.",
+  });
+}
+
+/** 맛다공 탈퇴: 장소 서비스에 남은 내 기록·하트·최근 본 장소·빠른 기록·제보를 모두 지웁니다. */
+export function deleteMyPlaceData(accessToken: string): Promise<void> {
+  return request("/me", accessToken, { method: "DELETE", errorMessage: "내 맛집 기록을 지우지 못했어요." });
+}
+
 export function getLikedPlaceIds(accessToken: string): Promise<string[]> {
   return request("/likes", accessToken);
 }
 
-/** 기록에서 하트로 옮긴 내 방문 장소만 다시 기록 전환할 수 있습니다. */
+/** 직접 다녀온 하트(입맛에 맞았던 곳, 기록에서 옮긴 곳)입니다. 이 장소만 방문 확인 없이 기록으로 바꿀 수 있습니다. */
 export function getVisitedLikedPlaceIds(accessToken: string): Promise<string[]> {
   return request("/likes/visited", accessToken);
 }
 
-export function setPlaceLiked(accessToken: string, placeId: string, liked: boolean): Promise<void> {
+/** visited가 true면 '다녀왔는데 입맛에 맞았어요', false면 '가 보고 싶어요'로 저장합니다. */
+export function setPlaceLiked(accessToken: string, placeId: string, liked: boolean, visited = false): Promise<void> {
   return request(`/${encodeURIComponent(placeId)}/like`, accessToken, {
     method: "PUT",
-    body: JSON.stringify({ liked }),
+    body: JSON.stringify({ liked, visited }),
+  });
+}
+
+/**
+ * 그 가게에 들른 근거(빠른 저장, 기록을 옮긴 하트, 별로였던 곳)가 있는 장소입니다.
+ * 이 장소만 하트에서 '입맛에 맞았어요'·'별로였어요'를 고를 수 있습니다(내 기록이 있는 곳은 하트를 쓰지 않음).
+ */
+export function getVisitProofPlaceIds(accessToken: string): Promise<string[]> {
+  return request("/visit-proofs", accessToken);
+}
+
+/** 다녀왔지만 별로였던 곳입니다. 지도·내 맛집에는 보이지 않고 맛객 신뢰에만 반영됩니다. */
+export function getDislikedPlaceIds(accessToken: string): Promise<string[]> {
+  return request("/dislikes", accessToken);
+}
+
+export function setPlaceDisliked(accessToken: string, placeId: string, disliked: boolean): Promise<void> {
+  return request(`/${encodeURIComponent(placeId)}/dislike`, accessToken, {
+    method: "PUT",
+    body: JSON.stringify({ disliked }),
   });
 }

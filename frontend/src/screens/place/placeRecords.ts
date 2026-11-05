@@ -6,7 +6,11 @@ import {
   type RecommendedMenu,
   type Taster,
 } from "../../models/place";
+import { TASTE_TAG_GROUP_LABELS, type TasteTagGroup } from "../../models/tasteTags";
+import { compareByTrust, isTrustedTaster, tasteScoreLabel } from "../../models/trust";
 import { formatWon } from "../../utils/format";
+
+/** 맛집 상세(PlaceDetailScreen)와 그 하위 부품이 쓰는 맛객 기록 정렬·표시·사진 모으기 계산입니다. */
 
 /** 맛집 상세에서 다루는 맛객 기록 한 건입니다. 내 기록은 tasterId가 MY_TASTER_ID입니다. */
 export type PlaceRecord = Taster;
@@ -30,9 +34,30 @@ export function recordMenus(record: PlaceRecord): RecommendedMenu[] {
     .filter((menu) => menu.name?.trim());
 }
 
+/** 맛집 상세에서 취향 태그를 묶어 보여 줄 순서입니다. 묶음을 모르는 옛 태그는 저장 기본값처럼 맛과 메뉴로 봅니다. */
+const RECORD_TAG_GROUPS: readonly TasteTagGroup[] = ["CUISINE", "TASTE", "CAFE", "OCCASION"];
+
+type RecordTagGroup = { key: string; label: string; tags: string[] };
+
+/** 한 맛객의 취향 태그를 음식 종류·맛과 메뉴·카페와 디저트·방문 스타일로, 매장 이용 정보는 따로 한 줄로 묶습니다. */
+export function recordTagGroups(record: PlaceRecord): RecordTagGroup[] {
+  const tags = record.tags ?? [];
+  const groupOf = (tag: string) => {
+    const group = record.tagGroups?.[tag] as TasteTagGroup | undefined;
+    return group && RECORD_TAG_GROUPS.includes(group) ? group : "TASTE";
+  };
+  const groups: RecordTagGroup[] = RECORD_TAG_GROUPS.map((group) => ({
+    key: group,
+    label: TASTE_TAG_GROUP_LABELS[group],
+    tags: tags.filter((tag) => groupOf(tag) === group),
+  }));
+  groups.push({ key: "VISIT", label: "매장 이용", tags: [...(record.visitConditions ?? [])] });
+  return groups.filter((group) => group.tags.length > 0);
+}
+
 /**
  * 장소의 맛객 기록에 이 브라우저에만 남은 이전 내 기록을 더하고 정렬합니다.
- * 내 기록 → 구독 중인 맛객 → 취향 점수 → 구독자 수 → 이름 순입니다.
+ * 내 기록 → 구독 중인 맛객 → 신뢰·취향 점수(compareByTrust) → 구독자 수 → 이름 순입니다.
  */
 export function placeRecords(
   place: Place,
@@ -64,10 +89,26 @@ export function placeRecords(
   return [...records].sort(
     (left, right) =>
       rank(right) - rank(left) ||
-      (right.matchScore ?? 0) - (left.matchScore ?? 0) ||
+      compareByTrust(left, right) ||
       (right.subscriberCount ?? 0) - (left.subscriberCount ?? 0) ||
       left.tasterName.localeCompare(right.tasterName, "ko"),
   );
+}
+
+/**
+ * 맛객 고르기 줄과 전체 목록에서 이름 아래 붙이는 짧은 표시입니다.
+ * 믿고 가는 맛객이면 구독 여부보다 신뢰 등급을 먼저 보여 줍니다(어떤 맛객의 기록을 믿을지 고르는 화면이라서).
+ */
+export function recordBadge(record: PlaceRecord, subscribedIds: string[]): string {
+  if (isMyTaster(record)) return "내 기록";
+  if (isTrustedTaster(record)) return tasteScoreLabel(record);
+  if (subscribedIds.includes(record.tasterId)) return "구독 중";
+  return tasteScoreLabel(record);
+}
+
+/** 서명 주소의 쿼리·해시를 떼어 같은 사진인지 비교할 열쇠로 씁니다. */
+function photoKey(src: string): string {
+  return src.split(/[?#]/, 1)[0];
 }
 
 /** 기록(보통 고른 맛객 한 명)의 사진과 메뉴 사진을 한 줄로 모읍니다. 같은 주소의 사진은 한 번만 넣습니다. */
@@ -75,7 +116,7 @@ export function collectPhotos(records: PlaceRecord[]): PlacePhoto[] {
   const seen = new Set<string>();
   const photos: PlacePhoto[] = [];
   const add = (photo: PlacePhoto) => {
-    const key = photo.src.split(/[?#]/, 1)[0];
+    const key = photoKey(photo.src);
     if (!photo.src || seen.has(key)) return;
     seen.add(key);
     photos.push(photo);
@@ -99,8 +140,8 @@ export function collectPhotos(records: PlaceRecord[]): PlacePhoto[] {
 
 export function photoIndexOf(photos: PlacePhoto[], src?: string): number {
   if (!src) return -1;
-  const key = src.split(/[?#]/, 1)[0];
-  return photos.findIndex((photo) => photo.src.split(/[?#]/, 1)[0] === key);
+  const key = photoKey(src);
+  return photos.findIndex((photo) => photoKey(photo.src) === key);
 }
 
 export function hasCoordinates(place: Pick<Place, "latitude" | "longitude">): boolean {

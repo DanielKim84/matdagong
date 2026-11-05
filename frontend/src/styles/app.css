@@ -321,7 +321,7 @@ html.is-page-locked .screen-content {
   pointer-events: none;
 }
 
-/* ── 지도 마커: 기호 마커(내 맛집·광고), 묶음 마커, 맛객 핀(지도와 BrandAssets의 미리 보기 공통) ── */
+/* ── 지도 마커: 기호 마커(내 맛집 하트), 묶음 마커, 맛객 핀(지도와 BrandAssets의 미리 보기 공통) ── */
 .map-category-marker {
   /* 안쪽 핀 모양·기호가 이 버튼 기준으로 자리 잡게 합니다(마커 안내 시트에서도 같은 모양). */
   position: relative;
@@ -344,25 +344,18 @@ html.is-page-locked .screen-content {
 .map-category-marker-shell path {
   stroke-width: 2.7;
 }
-.map-category-marker--other .map-category-marker-shell path {
-  fill: var(--blue-500);
-  stroke: var(--blue-700);
-}
-.map-category-marker--matched .map-category-marker-shell path {
-  fill: var(--brand-300);
-  stroke: var(--brand-600);
-}
+/* 가볼 곳은 초록, 다녀온 곳은 내 기록 핀과 같은 보라, 검색한 가게는 먹색입니다. */
 .map-category-marker--liked .map-category-marker-shell path {
-  fill: var(--berry-500);
-  stroke: var(--berry-700);
+  fill: var(--green-500);
+  stroke: var(--green-700);
 }
-.map-category-marker--ad .map-category-marker-shell path {
-  fill: var(--slate-500);
-  stroke: var(--slate-700);
+.map-category-marker--visited .map-category-marker-shell path {
+  fill: var(--berry-400);
+  stroke: var(--berry-600);
 }
-.map-category-marker--own .map-category-marker-shell path {
-  fill: var(--brand-400);
-  stroke: var(--brand-600);
+.map-category-marker--search .map-category-marker-shell path {
+  fill: var(--neutral-800);
+  stroke: var(--neutral-900);
 }
 .map-category-marker-glyph {
   position: absolute;
@@ -386,34 +379,23 @@ html.is-page-locked .screen-content {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.map-category-marker--other .map-category-marker-glyph {
-  color: var(--blue-600);
-}
-.map-category-marker--matched .map-category-marker-glyph {
-  background: var(--neutral-50);
-  color: var(--brand-600);
-}
 .map-category-marker--liked .map-category-marker-glyph {
   background: var(--neutral-100);
-  color: var(--berry-500);
+  color: var(--green-600);
 }
-.map-category-marker--ad .map-category-marker-glyph {
-  background: var(--neutral-100);
-  color: var(--slate-600);
+.map-category-marker--visited .map-category-marker-glyph {
+  color: var(--berry-600);
 }
-.map-category-marker--own .map-category-marker-glyph {
-  background: var(--neutral-50);
-  color: var(--brand-600);
+.map-category-marker--visited .map-category-marker-glyph > svg {
+  stroke-width: 3;
 }
-.map-category-marker--liked .map-category-marker-glyph > svg {
+.map-category-marker--search .map-category-marker-glyph {
+  color: var(--neutral-800);
+}
+.map-category-marker--liked .map-category-marker-glyph > svg,
+.map-category-marker--search .map-category-marker-glyph > svg {
   fill: currentColor;
   stroke: none;
-}
-.map-category-marker--own .map-category-marker-glyph > svg {
-  stroke-width: 1.8;
-}
-.map-category-marker--ad .map-category-marker-glyph > svg {
-  stroke-width: 1.7;
 }
 .map-cluster-marker {
   display: grid;
@@ -460,10 +442,6 @@ html.is-page-locked .screen-content {
 .taster-map-marker--other .taster-map-marker-shell path {
   fill: var(--amber-500);
   stroke: var(--clay-600);
-}
-.taster-map-marker--matched .taster-map-marker-shell path {
-  fill: var(--green-300);
-  stroke: var(--green-500);
 }
 .taster-map-marker--own .taster-map-marker-shell path {
   fill: var(--berry-400);
@@ -521,13 +499,31 @@ html.is-page-locked .screen-content {
   background: var(--neutral-0);
   color: var(--brand-500);
 }
-.taster-map-marker-badge--matched {
-  background: var(--neutral-0);
-  color: var(--green-500);
-}
 .taster-map-marker-badge--own {
   background: var(--neutral-0);
   color: var(--berry-400);
+}
+/*
+ * 구독하지 않은 믿고 가는 맛객(신뢰 80% 이상)의 기록: 오른쪽 위 주황 별. 다른 표식보다 조금 크고 진해서 먼저 눈에 띕니다.
+ * 구독 중인 믿고 가는 맛객은 이 표식 대신 하트 표식 안의 하트만 같은 색 별로 바꿉니다.
+ */
+.taster-map-marker-trust {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1.5px solid var(--neutral-0);
+  border-radius: 50%;
+  background: var(--amber-500);
+  color: var(--neutral-0);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--shadow-color) 18%, transparent);
+}
+.taster-map-marker-trust svg {
+  width: 10px;
+  height: 10px;
 }
 /* 나만 보는 내 기록: 자물쇠 표식 */
 .taster-map-marker.is-private .taster-map-marker-badge,

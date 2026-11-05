@@ -4,7 +4,7 @@ import { shortCategory } from "../../utils/format";
 import type { Coordinates } from "../../utils/geo";
 import type { FoodKind, MenuRow } from "./recordModel";
 
-export type RecordPayloadInput = {
+type RecordPayloadInput = {
   selectedPlace: KakaoPlaceResult;
   coordinates: Coordinates;
   name: string;

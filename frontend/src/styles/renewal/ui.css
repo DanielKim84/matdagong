@@ -174,11 +174,6 @@
 .r-card--flat {
   box-shadow: none;
 }
-.r-card--dark {
-  background: var(--neutral-800);
-  color: var(--on-strong);
-  box-shadow: none;
-}
 
 /* ── 버튼 ── */
 .r-button {
@@ -285,31 +280,175 @@
   background: var(--amber-50);
   color: var(--amber-800);
 }
+/*
+ * 색 역할(docs/ui/current-design.md "색 역할"):
+ * - 선택(지금 고르는 칩·탭): 먹색 채움 — .r-chip.is-on, .r-segmented
+ * - 나와의 관계(내 기록·내 맛집·구독 중·나와 같아요): 코랄 채움 — .r-tag--mine
+ * - 상태 글자(나만 보기·수정 중·분류 등): 강조색 연한 바탕 — .r-tag (관계 배지보다 한 단계 옅음)
+ * - 점수(취향·신뢰 %): .r-match / 안내·주의: .r-tag--amber
+ * - 취향·매장 태그 하나: 크림색 칩 + 코랄 # — .r-hashtag (components/HashTag), 묶음별: .r-tag-group (components/TagGroupList)
+ */
 .r-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .r-tag {
   display: inline-flex;
-  height: 26px;
+  height: 28px;
   align-items: center;
+  gap: 4px;
+  border: 1px solid var(--brand-200);
   border-radius: var(--radius-pill);
-  background: var(--brand-50);
-  padding: 0 10px;
+  background: var(--brand-100);
+  padding: 0 11px;
   color: var(--brand-700);
   font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.r-tag .icon {
+  width: 13px;
+  height: 13px;
+}
+.r-tag--mine {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-tag--amber {
+  border-color: var(--amber-100);
+  background: var(--amber-50);
+  color: var(--amber-800);
+}
+
+/*
+ * ── 태그 하나(HashTag) ──
+ * 취향·매장 태그는 화면 어디서나 발견 필터의 태그 칩과 같은 모양(크림색 바탕 · 진한 글씨)에 코랄 #을 붙입니다.
+ * 나와 같은 취향(is-matched)만 관계 배지처럼 코랄로 채웁니다. 상태 글자(나만 보기·수정 중 등)는 .r-tag를 씁니다.
+ */
+.r-hashtag {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+  font-family: var(--font-body);
   font-weight: 600;
   white-space: nowrap;
 }
-.r-tag--neutral {
-  border: 1px solid var(--neutral-150);
-  background: var(--color-surface);
-  color: var(--neutral-700);
+.r-hashtag--md {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
 }
-.r-tag--amber {
+.r-hashtag--sm {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+/* 태그 앞 코랄 #. 고르는 칩(r-chip) 안에 넣는 #(HashMark)도 같은 모양입니다. */
+.r-hashtag__hash {
+  color: var(--color-primary);
+  font-style: normal;
+  font-weight: 800;
+}
+/* 칩의 아이콘 간격(6px)보다 #과 글자를 붙여 한 낱말처럼 읽히게 합니다. */
+.r-chip .r-hashtag__hash {
+  margin-right: -4px;
+}
+/* 고른 칩(먹색 채움) 위에서는 # 색을 한 단계 밝게 둡니다. */
+.r-chip.is-on .r-hashtag__hash {
+  color: var(--brand-300);
+}
+.r-hashtag.is-matched {
+  gap: 4px;
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-hashtag .icon {
+  width: 13px;
+  height: 13px;
+}
+
+/*
+ * ── 묶음별 태그(TagGroupList) ──
+ * 발견 필터와 같이 연한 색 원 안 아이콘 + 묶음 이름 + 개수를 머리에 두고 HashTag를 늘어놓습니다.
+ * 묶음마다 필터처럼 테두리·그림자가 있는 흰 카드로 감쌉니다(크림 바탕 위든 흰 기록 카드 안이든 같은 모양).
+ */
+.r-tag-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-tag-group {
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 14px 14px 16px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 5%, transparent);
+}
+.r-tag-group__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 800;
+}
+.r-tag-group__icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+}
+.r-tag-group__icon .icon {
+  width: 16px;
+  height: 16px;
+}
+.r-tag-group__icon--amber {
   background: var(--amber-50);
-  color: var(--amber-800);
+  color: var(--amber-600);
+}
+.r-tag-group__icon--green {
+  background: var(--green-50);
+  color: var(--green-600);
+}
+.r-tag-group__icon--brand {
+  background: var(--brand-50);
+  color: var(--brand-500);
+}
+.r-tag-group__icon--blue {
+  background: var(--blue-50);
+  color: var(--blue-500);
+}
+.r-tag-group__icon--berry {
+  background: var(--berry-50);
+  color: var(--berry-500);
+}
+.r-tag-group__head small {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-tag-group__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 /* ── 탭 전환(세그먼트) ── */
@@ -371,6 +510,193 @@
   font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
+}
+/* 같은 맛집 경험이 생겨 취향 % 대신 신뢰 %를 보여 줄 때 */
+.r-match--trust {
+  background: var(--green-50);
+  color: var(--green-700);
+}
+/* 믿고 가는 맛객(신뢰 80% 이상): 별을 붙인 노란 칩 */
+.r-match--trusted {
+  gap: 3px;
+  background: var(--amber-100);
+  color: var(--amber-900);
+}
+.r-match--trusted .icon {
+  width: 12px;
+  height: 12px;
+  color: var(--amber-500);
+}
+/* 입맛이 다른 편: 구독을 막지 않도록 흐리게만 알립니다. */
+.r-match--different {
+  background: var(--neutral-100);
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+/* ── 하트 선택 시트(LikeChoiceSheet): 스토리 보기(100) 위, 확인창(150) 아래에 뜹니다. ── */
+/* 공용 .r-sheet-backdrop(90)이 이 파일 뒤쪽에 있어 두 클래스로 이깁니다. */
+.r-sheet-backdrop.r-like-choice-backdrop {
+  z-index: 120;
+}
+.r-like-choice__place {
+  margin: -6px 0 14px;
+  color: var(--color-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+.r-like-choice__list {
+  display: grid;
+  gap: 10px;
+}
+.r-like-choice__option {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--neutral-150);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 12px 14px;
+  color: var(--color-ink);
+  text-align: left;
+}
+.r-like-choice__option:active {
+  background: var(--color-surface-soft);
+}
+/* 가게에 들른 근거가 없어 아직 고를 수 없는 '다녀온 맛' */
+.r-like-choice__option:disabled {
+  border-style: dashed;
+  background: var(--color-surface-soft);
+  color: var(--color-muted);
+}
+.r-like-choice__option:disabled .r-like-choice__icon {
+  background: var(--neutral-100);
+  color: var(--neutral-400);
+}
+.r-like-choice__icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.r-like-choice__icon .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-like-choice__option--tasted .r-like-choice__icon {
+  background: var(--green-50);
+  color: var(--green-600);
+}
+.r-like-choice__option--disliked .r-like-choice__icon {
+  background: var(--neutral-100);
+  color: var(--neutral-500);
+}
+.r-like-choice__copy {
+  display: grid;
+  gap: 3px;
+}
+.r-like-choice__copy b {
+  font-size: 15px;
+}
+.r-like-choice__copy small {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.r-like-choice__remove {
+  align-self: center;
+  margin-top: 8px;
+  color: var(--color-muted);
+}
+
+/* ── 맛집 카드(PlaceCard): 발견 목록 · 맛집 다이어리 · 맛객 프로필 기록이 함께 쓰는 한 줄 카드 ── */
+.r-place-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-place-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 10px 12px 10px 10px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 6%, transparent);
+}
+.r-place-card__main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-place-card__thumb {
+  width: 76px;
+  height: 76px;
+  flex: none;
+}
+.r-place-card__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-place-card__copy > b {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-place-card__meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 내 기록 중 나만 보기 표시(이름 아래 한 줄 안의 작은 태그) */
+.r-place-card__private {
+  height: 20px;
+  flex: none;
+  padding: 0 7px;
+  font-size: 11px;
+}
+/* 추천 이유·한마디: 두 줄까지 */
+.r-place-card__note {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.r-place-card > .icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--color-subtle);
 }
 
 /* ── 목록 행 ── */
@@ -625,20 +951,47 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.r-tabbar__record {
+/* 가운데 내 지도 탭: 탭 막대 위로 살짝 올라온 코랄 동그라미에 아이콘을 넣고, 이름은 다른 탭과 같은 줄에 둡니다. */
+.r-tabbar__center {
+  justify-content: flex-end;
+  padding-bottom: 6px;
+}
+.r-tabbar__center-circle {
   display: grid;
-  width: 52px;
-  height: 52px;
+  width: 50px;
+  height: 50px;
+  margin-top: -26px;
   place-items: center;
-  border: 0;
+  border: 4px solid var(--color-surface);
   border-radius: 50%;
   background: var(--color-primary);
   color: var(--on-strong);
   box-shadow: 0 6px 14px color-mix(in srgb, var(--brand-600) 35%, transparent);
 }
-.r-tabbar__record .icon {
-  width: 26px;
-  height: 26px;
+.r-tabbar__center .r-tabbar__icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* 내 지도의 떠 있는 기록하기 버튼(RecordMenuButton) */
+.r-record-fab {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 0 18px 0 14px;
+  color: var(--on-strong);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 800;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--brand-600) 35%, transparent);
+}
+.r-record-fab .icon {
+  width: 22px;
+  height: 22px;
 }
 
 /* 기록 메뉴 시트 */
@@ -919,4 +1272,76 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* ── 제보·신고 시트(PlaceReportSheet, TasterReportSheet) ── */
+.r-report-sheet form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.r-report-sheet__lead {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.r-report-sheet__memo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.r-report-sheet__memo span small {
+  margin-left: 4px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.r-report-sheet__memo textarea {
+  min-height: 84px;
+  resize: vertical;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 12px 14px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.r-report-sheet__memo textarea:focus-visible {
+  outline: 2px solid var(--brand-300);
+  outline-offset: 1px;
+}
+.r-report-sheet__memo > small {
+  align-self: flex-end;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.r-report-sheet__error {
+  margin: 0;
+  color: var(--brand-700);
+  font-size: 13px;
+  font-weight: 600;
+}
+/* 안내 문장이 낱자 단위로 끊기지 않게 낱말 단위로 줄을 바꿉니다. */
+.r-report-sheet__lead small {
+  display: block;
+  word-break: keep-all;
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+/* 신고는 자주 누르는 동작이 아니라 눈에 덜 띄는 회색 글자 버튼으로 둡니다. */
+.r-report-button {
+  color: var(--color-muted);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

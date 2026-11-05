@@ -1,10 +1,11 @@
 /**
  * 이전 버전 호환용: 장소 등록·하트·최근 본 장소를 서버에 저장하기 전 버전은 이 브라우저(localStorage)에만 남겼습니다.
- * 지금은 App이 이 값을 계정 DB로 한 번 옮기는 데만 읽으며, 새 기록을 여기에 쓰지 않습니다.
+ * 지금은 app/useLegacyMigration이 이 값을 계정 DB로 한 번 옮기는 데만 읽으며, 새 기록을 여기에 쓰지 않습니다.
  */
 import { useState } from "react";
 import type { NewPlace, RecommendedMenu } from "../models/place";
-import { STORAGE_KEYS, readStorage, removeStorage } from "../utils/storage";
+import { DAY_MS } from "../utils/format";
+import { STORAGE_KEYS, readStorage, removeStorage, stringList } from "../utils/storage";
 
 type Activity = {
   registered: NewPlace[];
@@ -18,9 +19,9 @@ const INITIAL_ACTIVITY: Activity = {
   recent: [],
   recentAt: {},
 };
-// 앞의 키가 최신 형식입니다. 이전이 끝나면 App이 모두 지웁니다.
+// 앞의 키가 최신 형식입니다. 옮기기가 끝나면 useLegacyMigration이 모두 지웁니다.
 const LEGACY_ACTIVITY_STORAGE_KEYS = STORAGE_KEYS.legacyActivity;
-const RECENT_RETENTION_MS = 15 * 24 * 60 * 60 * 1000;
+const RECENT_RETENTION_MS = 15 * DAY_MS;
 const MAX_RECENT_ITEMS = 30;
 
 function pruneRecent(activity: Activity, now = Date.now()): Activity {
@@ -32,10 +33,6 @@ function pruneRecent(activity: Activity, now = Date.now()): Activity {
     .slice(0, MAX_RECENT_ITEMS);
   if (recent.length === activity.recent.length) return activity;
   return { ...activity, recent, recentAt: Object.fromEntries(recent.map((id) => [id, activity.recentAt[id]])) };
-}
-
-function stringList(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
 function field(value: object, key: string): unknown {

@@ -14,7 +14,7 @@ type Step = "name" | "taste" | "match";
 // 가입 단계에서는 분야를 따로 묻지 않고 모든 분야의 취향을 받습니다. 설정에서 바꿀 수 있습니다.
 const PREFERENCE_FOCUS: FoodFocus = "BOTH";
 
-/** Kakao 인증 뒤 처음 온 사용자가 닉네임 → 취향 → 입맛 맞는 맛객 순서로 가입을 마칩니다. */
+/** 소셜 로그인 뒤 처음 온 사용자가 닉네임 → 취향 → 입맛 맞는 맛객 순서로 가입을 마칩니다. */
 export default function SignupScreen({
   accessToken,
   displayName: initialName,
@@ -54,7 +54,7 @@ export default function SignupScreen({
     };
   }, [accessToken]);
 
-  /** 가입과 취향 저장은 예전과 같은 API 순서로 진행합니다. 실패하면 같은 단계에서 다시 시도할 수 있습니다. */
+  /** 회원 가입 → 맛객 프로필 만들기 → 취향 저장 순서입니다. 실패하면 같은 단계에서 다시 시도하고, 끝난 회원 가입은 건너뜁니다. */
   async function finishSignup(tags: string[]): Promise<boolean> {
     setIsSubmitting(true);
     setError("");

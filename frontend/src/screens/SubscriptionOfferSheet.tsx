@@ -51,23 +51,23 @@ export default function SubscriptionOfferSheet() {
     if (type === "PAID" && months === null) return;
     let isReplacementConfirmed = false;
     if (type === "FREE" && isReplacingFree) {
-      const accepted = await confirm({
+      const isAccepted = await confirm({
         title: "무료 구독 맛객을 바꿀까요?",
         message: `${freeName} 맛객의 무료 구독을 끝내고 ${taster.tasterName} 맛객을 무료로 구독해요.`,
         tone: "warning",
         confirmLabel: "무료 구독 바꾸기",
       });
-      if (!accepted) return;
+      if (!isAccepted) return;
       isReplacementConfirmed = true;
     }
     if (type === "PAID") {
-      const accepted = await confirm({
+      const isAccepted = await confirm({
         title: "맛객 구독 확인",
         message: `${taster.tasterName} 맛객의 기록을 ${months}개월 동안 구독해요.\n현재는 별도 결제 없이 이용할 수 있어요.`,
         tone: "info",
         confirmLabel: "구독하기",
       });
-      if (!accepted) return;
+      if (!isAccepted) return;
     }
     setIsSubmitting(true);
     setError("");

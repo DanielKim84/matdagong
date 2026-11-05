@@ -45,7 +45,7 @@ export function NoisyReviewsVisual() {
   );
 }
 
-/** 2. 취향 %로 찾고, 그 맛객의 맛집을 직접 다녀오며 신뢰가 쌓이는 장면 */
+/** 2. 취향 %로 찾고, 그 맛객의 맛집을 직접 다녀와 입맛이 맞을수록 신뢰 %가 쌓이는 장면(실제 등급 이름 "믿고 가는 맛객"을 씀) */
 export function TrustVisual() {
   const visits = [
     { photo: "korean-table", name: "정미소 밥상" },
@@ -62,11 +62,11 @@ export function TrustVisual() {
             <small>국수 · 만두 · 중식</small>
           </span>
           <span className="r-intro-trust__match">
-            <small>취향</small>94%
+            <small>취향</small>78%
           </span>
         </div>
         <p className="r-intro-trust__label">
-          내가 다녀온 이 맛객의 맛집 <em>예시</em>
+          함께 다녀와 입맛이 맞았던 맛집 <em>예시</em>
         </p>
         <ul className="r-intro-trust__visits">
           {visits.map((visit) => (
@@ -74,17 +74,17 @@ export function TrustVisual() {
               <img src={`${FOOD}/${visit.photo}.jpg`} alt="" />
               <span>{visit.name}</span>
               <span className="r-intro-trust__ok">
-                <Icon name="check" /> 만족
+                <Icon name="check" /> 입맛 맞음
               </span>
             </li>
           ))}
         </ul>
         <div className="r-intro-trust__meter">
-          <span>경험 신뢰</span>
+          <span>신뢰</span>
           <span className="r-intro-trust__bar">
             <span />
           </span>
-          <b>3/3</b>
+          <b>92%</b>
         </div>
       </div>
       <span className="r-intro-trust__badge">

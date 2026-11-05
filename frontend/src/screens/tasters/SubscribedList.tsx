@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
-import { Avatar } from "../../components/BrandAssets";
 import { useNotificationDialog } from "../../components/NotificationDialog";
 import Sheet from "../../components/Sheet";
 import { EmptyState } from "../../components/ui";
 import type { ActiveSubscription } from "../../models/community";
 import type { Taster } from "../../models/place";
 import { formatMonthDay } from "../../utils/format";
-import { avatarFallback, avatarSource } from "../../utils/profileMedia";
-import { confirmCancelSubscription, daysLeft, fallbackTaster, planLabel } from "./tasterData";
+import { confirmCancelSubscription, daysLeft, planLabel, subscribedTaster } from "./tasterData";
+import TasterAvatar from "../../components/TasterAvatar";
 
 /** 내가 구독 중인 맛객 목록. 각 줄의 "관리"에서 프로필 보기·해지를 고릅니다. */
 export default function SubscribedList() {
@@ -27,26 +26,16 @@ export default function SubscribedList() {
     );
   }
 
-  const tasterOf = (subscription: ActiveSubscription) =>
-    app.tasterById.get(subscription.targetAccountId) ??
-    fallbackTaster(subscription.targetAccountId, subscription.targetNickname);
-
   return (
     <>
       <div className="r-card r-tasters-list">
         {app.subscriptions.map((subscription) => {
-          const taster = tasterOf(subscription);
+          const taster = subscribedTaster(app.tasterById, subscription);
           const isFree = subscription.subscriptionType === "FREE";
           return (
             <div className="r-tasters-sub-row" key={subscription.subscriptionId}>
               <button type="button" className="r-row" onClick={() => go("profile", taster.tasterId)}>
-                <Avatar
-                  className="r-tasters-avatar r-tasters-avatar--md"
-                  src={avatarSource(taster.tasterId, taster.avatar)}
-                  fallbackSrc={avatarFallback(taster.tasterId, taster.avatar)}
-                  name={taster.tasterName}
-                  variant={taster.avatarVariant}
-                />
+                <TasterAvatar taster={taster} className="r-tasters-avatar r-tasters-avatar--md" />
                 <span className="r-row__copy">
                   <b>{taster.tasterName}</b>
                   <small className={isFree ? "r-tasters-plan is-free" : "r-tasters-plan"}>
@@ -68,7 +57,11 @@ export default function SubscribedList() {
       </div>
 
       {managing && (
-        <ManageSheet subscription={managing} taster={tasterOf(managing)} onClose={() => setManaging(null)} />
+        <ManageSheet
+          subscription={managing}
+          taster={subscribedTaster(app.tasterById, managing)}
+          onClose={() => setManaging(null)}
+        />
       )}
     </>
   );
@@ -87,7 +80,7 @@ function ManageSheet({
   const app = useAppData();
   const { confirm } = useNotificationDialog();
   const [isCanceling, setIsCanceling] = useState(false);
-  const left = daysLeft(subscription.endAt);
+  const remainingDays = daysLeft(subscription.endAt);
   const isPaid = subscription.subscriptionType === "PAID";
 
   async function cancel() {
@@ -104,13 +97,7 @@ function ManageSheet({
   return (
     <Sheet title="구독 관리" onClose={onClose} className="r-tasters-manage-sheet">
       <div className="r-tasters-manage-sheet__head">
-        <Avatar
-          className="r-tasters-avatar r-tasters-avatar--md"
-          src={avatarSource(taster.tasterId, taster.avatar)}
-          fallbackSrc={avatarFallback(taster.tasterId, taster.avatar)}
-          name={taster.tasterName}
-          variant={taster.avatarVariant}
-        />
+        <TasterAvatar taster={taster} className="r-tasters-avatar r-tasters-avatar--md" />
         <span>
           <b>{taster.tasterName}</b>
           <small>{planLabel(subscription)}</small>
@@ -119,7 +106,7 @@ function ManageSheet({
       {isPaid && (
         <div className="r-tasters-manage-sheet__term">
           <span>남은 기간</span>
-          <b>{left !== null ? `${left}일` : "확인할 수 없음"}</b>
+          <b>{remainingDays !== null ? `${remainingDays}일` : "확인할 수 없음"}</b>
           <small>
             {formatMonthDay(subscription.startAt)} 시작
             {subscription.endAt ? ` · ${formatMonthDay(subscription.endAt)} 종료` : ""}

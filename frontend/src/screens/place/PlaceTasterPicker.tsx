@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useAppData } from "../../app/AppData";
-import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
-import { isMyTaster } from "../../models/place";
-import { avatarFallback, avatarSource } from "../../utils/profileMedia";
+import { isTrustedTaster } from "../../models/trust";
 import PlaceTasterListSheet from "./PlaceTasterListSheet";
-import type { PlaceRecord } from "./placeRecords";
+import TasterAvatar from "../../components/TasterAvatar";
+import { recordBadge, type PlaceRecord } from "./placeRecords";
 
 /** 줄에 바로 보여 줄 맛객 수. 더 많으면 끝에 "전체 N명" 버튼으로 목록 시트를 엽니다. */
 const VISIBLE_COUNT = 6;
@@ -40,13 +39,7 @@ export default function PlaceTasterPicker({
         <div className="r-place-picker__tabs" role="tablist" aria-label="기록을 볼 맛객">
           {visible.map((record) => {
             const isSelected = record.tasterId === selectedId;
-            const badge = isMyTaster(record)
-              ? "내 기록"
-              : subscriptionIds.includes(record.tasterId)
-                ? "구독 중"
-                : record.matchScore
-                  ? `취향 ${record.matchScore}%`
-                  : "";
+            const badge = recordBadge(record, subscriptionIds);
             return (
               <button
                 key={record.tasterId}
@@ -57,14 +50,9 @@ export default function PlaceTasterPicker({
                 className={`r-place-picker__item ${isSelected ? "is-selected" : ""}`}
                 onClick={() => onSelect(record.tasterId)}
               >
-                <Avatar
-                  src={avatarSource(record.tasterId, record.avatar)}
-                  fallbackSrc={avatarFallback(record.tasterId, record.avatar)}
-                  name={record.tasterName}
-                  variant={record.avatarVariant}
-                />
+                <TasterAvatar taster={record} />
                 <b>{record.tasterName}</b>
-                {badge && <small>{badge}</small>}
+                {badge && <small className={isTrustedTaster(record) ? "is-trusted" : ""}>{badge}</small>}
               </button>
             );
           })}

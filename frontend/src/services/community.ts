@@ -1,3 +1,4 @@
+/** 커뮤니티 서비스(맛객·취향 태그·프로필·구독·포인트·알림) API 요청입니다. */
 import type {
   ActiveSubscription,
   ActivityScope,
@@ -13,9 +14,11 @@ import type {
   TagRequest,
   TagRequestInput,
   TasteTag,
+  TasterReportReason,
   UserNotification,
 } from "../models/community";
 import type { Taster } from "../models/place";
+import type { TrustLevel } from "../models/trust";
 import { avatarVariantFor, demoTasterAvatar } from "../utils/profileMedia";
 import { API_BASE_URL, apiRequest, type ApiRequestOptions } from "./http";
 
@@ -36,6 +39,8 @@ type TasterResponse = {
   profileTags: string[];
   matchedTags: string[];
   matchScore: number;
+  trustScore?: number | null;
+  trustLevel?: TrustLevel | null;
 };
 
 /** 커뮤니티 API도 공통 요청 도구를 거쳐 로그인 만료, 204 응답, 오류 메시지를 같게 처리합니다. */
@@ -65,6 +70,8 @@ export async function getTasters(accessToken: string): Promise<Taster[]> {
     profileTags: taster.profileTags,
     matchedTags: taster.matchedTags,
     matchScore: taster.matchScore,
+    trustScore: taster.trustScore ?? null,
+    trustLevel: taster.trustLevel ?? null,
   }));
 }
 
@@ -81,6 +88,11 @@ export function createTagRequest(accessToken: string, input: TagRequestInput): P
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+/** 맛다공 탈퇴: 커뮤니티 서비스의 내 프로필·취향·구독·알림·포인트 내역을 모두 지웁니다. */
+export function deleteMyCommunityData(accessToken: string): Promise<void> {
+  return request("/users/me", accessToken, { method: "DELETE", errorMessage: "내 프로필 정보를 지우지 못했어요." });
 }
 
 export function ensureMyProfile(accessToken: string, nickname: string): Promise<MyProfile> {
@@ -111,7 +123,7 @@ export function updateMyProfile(
 }
 
 /** 프로필 사진 한 장을 교체합니다. */
-export async function uploadProfileImage(accessToken: string, file: File): Promise<void> {
+async function uploadProfileImage(accessToken: string, file: File): Promise<void> {
   const form = new FormData();
   form.append("file", file);
   await request<void>("/users/me/profile/avatar", accessToken, {
@@ -122,7 +134,7 @@ export async function uploadProfileImage(accessToken: string, file: File): Promi
 }
 
 /** 배경 사진 여러 장을 기존 갤러리에 추가하고, 저장된 배경 사진 주소 목록을 돌려줍니다. */
-export async function uploadProfileCovers(accessToken: string, files: File[]): Promise<string[]> {
+async function uploadProfileCovers(accessToken: string, files: File[]): Promise<string[]> {
   const form = new FormData();
   files.forEach((file) => form.append("files", file));
   const urls = await request<string[] | undefined>("/users/me/profile/covers", accessToken, {
@@ -133,14 +145,14 @@ export async function uploadProfileCovers(accessToken: string, files: File[]): P
   return urls ?? [];
 }
 
-export async function removeProfileImage(accessToken: string, kind: "avatar" | "cover"): Promise<void> {
+async function removeProfileImage(accessToken: string, kind: "avatar" | "cover"): Promise<void> {
   await request<void>(`/users/me/profile/${kind}`, accessToken, {
     method: "DELETE",
     errorMessage: "프로필 이미지를 삭제하지 못했어요.",
   });
 }
 
-export async function removeProfileCoverPhoto(accessToken: string, photoId: string): Promise<void> {
+async function removeProfileCoverPhoto(accessToken: string, photoId: string): Promise<void> {
   await request<void>(`/users/me/profile/covers/${encodeURIComponent(photoId)}`, accessToken, {
     method: "DELETE",
     errorMessage: "배경 사진을 삭제하지 못했어요.",
@@ -273,4 +285,27 @@ export async function saveMyProfile(accessToken: string, changes: ProfileChanges
     profileCoverUrl: updatedCoverUrls.length ? savedProfile.profileCoverUrl : null,
     profileCoverUrls: updatedCoverUrls,
   };
+}
+
+/**
+ * 맛객을 신고합니다. 기록에서 신고했으면 그 장소 ID(placeId)를 함께 보냅니다.
+ * 확인 전인 신고가 이미 있으면 409(ApiError)로 답합니다.
+ */
+export function reportTaster(
+  accessToken: string,
+  tasterId: string,
+  reason: TasterReportReason,
+  memo: string,
+  placeId?: string,
+): Promise<{ reportId: string }> {
+  return request(`/tasters/${encodeURIComponent(tasterId)}/reports`, accessToken, {
+    method: "POST",
+    body: JSON.stringify({ reason, memo: memo.trim() || null, placeId: placeId ?? null }),
+    errorMessage: "신고를 보내지 못했어요.",
+  });
+}
+
+/** 내가 신고했고 아직 확인 전인 맛객 ID입니다. 이 맛객의 신고 버튼은 막습니다. */
+export function getMyReportedTasters(accessToken: string): Promise<string[]> {
+  return request("/users/me/taster-reports", accessToken, { errorMessage: "신고 내역을 불러오지 못했어요." });
 }

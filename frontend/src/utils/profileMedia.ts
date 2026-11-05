@@ -1,3 +1,6 @@
+/** 맛객 사진·배경의 기본값 고르기와 개발용 샘플 계정 그림입니다. */
+import { stableHash } from "./stableHash";
+
 /**
  * 개발용 샘플 맛객 계정(20000000-0000-4000-8000-00000000000N, N=1~5)의 번호를 돌려줍니다.
  * 이 ID는 infra/postgres/dev/seed-community-test-users.sql과 장소 서비스의 SamplePlaceCatalog가 함께 씁니다.
@@ -14,8 +17,7 @@ export function profileCoverFor(accountId: string, uploadedUrl?: string | null):
   if (uploadedUrl) return uploadedUrl;
   const demoIndex = demoAccountIndex(accountId);
   if (demoIndex) return `demo-cover:${demoIndex}`;
-  const hash = [...accountId].reduce((value, char) => (value * 31 + char.charCodeAt(0)) >>> 0, 0);
-  return `demo-cover:${(hash % 5) + 1}`;
+  return `demo-cover:${(stableHash(accountId) % 5) + 1}`;
 }
 
 /** 개발용 맛객은 일부만 사진을 등록한 상태로 보여 실제 프로필의 차이를 확인할 수 있게 합니다. 샘플 계정이 아니면 null입니다. */
@@ -31,6 +33,12 @@ export function demoTasterAvatar(accountId: string): string | null {
 export function avatarVariantFor(accountId: string, currentVariant: number): number {
   const demoIndex = demoAccountIndex(accountId);
   return demoIndex ? ((demoIndex * 2 + 2) % 10) + 1 : currentVariant;
+}
+
+/** 샘플 사진 값("demo-avatar:N")이면 N, 아니면 null입니다. */
+export function demoAvatarNumber(source?: string | null): number | null {
+  const match = source?.match(/^demo-avatar:(\d)$/);
+  return match ? Number(match[1]) : null;
 }
 
 // 이미지로 그릴 수 있는 사진 값입니다. 장소 서비스의 샘플 기록은 이니셜 같은 글자를 avatar로 주기도 합니다.

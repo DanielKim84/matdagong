@@ -4,9 +4,10 @@
  */
 import type { ActiveSubscription, IncomingSubscription, MyProfile } from "../models/community";
 import { MY_TASTER_ID, type NewPlace, type Place, type Taster } from "../models/place";
+import { compareByTrust, isTrustedTaster } from "../models/trust";
 
 /** 이전 버전이 브라우저에만 저장했던 등록 기록을 서버로 옮기기 전까지 화면에 보여줄 장소 형태로 바꿉니다. */
-export function registeredPlace(item: NewPlace): Place {
+function registeredPlace(item: NewPlace): Place {
   return {
     id: item.id,
     providerCode: item.providerCode,
@@ -40,7 +41,7 @@ export function registeredPlace(item: NewPlace): Place {
   };
 }
 
-export type PlaceSources = {
+type PlaceSources = {
   /** 지도 검색 결과(공개 장소) */
   places: Place[];
   myPlaceRecords: Place[];
@@ -118,9 +119,14 @@ export function enrichPlaces({
   // 아직 서버로 옮기지 못한 이전 브라우저 등록 기록입니다. 상세 화면에서 내 기록으로 보여줍니다.
   const legacyOwnRecord = legacyRegistered.find((place) => place.id === routeId);
   // 추천 취향에서 제외한 매장 조건(예: 노키즈존)이 있는 장소는 목록과 지도에서 뺍니다.
+  // 내가 직접 기록한 곳은 조건과 상관없이 남깁니다(내 다이어리에 있는데 지도에서 사라지지 않게).
   const excludedConditions = new Set(myProfile?.excludedTags ?? []);
   const allPlaces = [...legacyPublic, ...places]
-    .filter((place) => !(place.visitConditions ?? []).some((condition) => excludedConditions.has(condition)))
+    .filter(
+      (place) =>
+        place.tasters.some((taster) => isMyTasterId(taster.tasterId)) ||
+        !(place.visitConditions ?? []).some((condition) => excludedConditions.has(condition)),
+    )
     .map(enrichPlace);
   // 구독 화면 확인용 일반 계정이 맛객 추천에 섞이지 않도록 공개 기록 작성자만 맛객으로 취급합니다.
   const publicTasterIds = new Set(
@@ -153,8 +159,11 @@ export function enrichPlaces({
   const subscriptionIds = subscriptions.map((subscription) => subscription.targetAccountId);
   const recommendedTasters = communityTasters
     .filter((taster) => publicTasterIds.has(taster.tasterId))
-    .filter((taster) => (taster.matchScore ?? 0) > 0 && !subscriptionIds.includes(taster.tasterId))
-    .sort((left, right) => (right.matchScore ?? 0) - (left.matchScore ?? 0));
+    .filter(
+      (taster) =>
+        ((taster.matchScore ?? 0) > 0 || isTrustedTaster(taster)) && !subscriptionIds.includes(taster.tasterId),
+    )
+    .sort(compareByTrust);
 
   return {
     places: allPlaces,

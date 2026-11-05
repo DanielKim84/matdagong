@@ -1,5 +1,8 @@
 import { visiblePageIndices } from "../utils/pagination";
 
+// 점 하나가 차지하는 가로 칸(px)입니다(누르는 영역은 photo-tag-detail.css에서 세로 44px).
+const DOT_WIDTH_PX = 20;
+
 /** 사진·기록 카드의 페이지 점입니다. 점이 많으면 현재 위치 주변만 보이게 밀어 줍니다. */
 export default function PaginationDots({
   activeIndex,
@@ -17,8 +20,7 @@ export default function PaginationDots({
   const pages = visiblePageIndices(activeIndex, total);
   const startIndex = pages[0] ?? 0;
   const endIndex = startIndex + pages.length - 1;
-  // 점 하나가 가로 20px 칸을 차지합니다(누르는 영역은 photo-tag-detail.css에서 세로 44px).
-  const viewportWidth = pages.length * 20;
+  const viewportWidth = pages.length * DOT_WIDTH_PX;
 
   return (
     <div
@@ -27,7 +29,10 @@ export default function PaginationDots({
       aria-label={label}
       style={{ width: viewportWidth }}
     >
-      <div className="photo-slide-indicators-track" style={{ transform: `translateX(-${startIndex * 20}px)` }}>
+      <div
+        className="photo-slide-indicators-track"
+        style={{ transform: `translateX(-${startIndex * DOT_WIDTH_PX}px)` }}
+      >
         {Array.from({ length: total }, (_, index) => {
           const position = index - startIndex;
           const isVisible = position >= 0 && position < pages.length;

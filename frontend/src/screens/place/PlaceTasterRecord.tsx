@@ -1,58 +1,89 @@
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
-import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
+import { useNotificationDialog } from "../../components/NotificationDialog";
+import TagGroupList from "../../components/TagGroupList";
+import TasteScore from "../../components/TasteScore";
 import { useSwipe } from "../../hooks/useSwipe";
 import { isMyTaster } from "../../models/place";
 import { formatRelativeTime, formatWon } from "../../utils/format";
-import { avatarFallback, avatarSource } from "../../utils/profileMedia";
-import { photoIndexOf, recordMenus, type PlacePhoto, type PlaceRecord } from "./placeRecords";
-
-const SHOWN_PHOTO_COUNT = 3;
+import TasterAvatar from "../../components/TasterAvatar";
+import TasterReportButton from "../tasters/TasterReportButton";
+import { photoIndexOf, recordMenus, recordTagGroups, type PlacePhoto, type PlaceRecord } from "./placeRecords";
 
 /**
- * 고른 맛객 한 명의 기록. 추천 이유·사진·메뉴·취향 태그·매장 정보는 맛객마다 다르게 입력하므로
- * 다른 맛객 것과 합치지 않고 그대로 보여 줍니다. 옆으로 밀면 이전·다음 맛객으로 바뀝니다.
+ * 고른 맛객 한 명의 기록 카드: 추천 이유 → 추천 메뉴(메뉴 사진) → 이런 곳이에요(묶음별 태그·매장 이용).
+ * 맛객마다 다르게 입력하므로 다른 맛객 것과 합치지 않습니다. 대표 사진은 위쪽 큰 사진(PlaceHero)에만 둡니다.
+ * 옆으로 밀면 이전·다음 맛객으로 바뀝니다.
  */
 export default function PlaceTasterRecord({
   record,
+  placeId,
   panelId,
   photos,
   onOpenPhoto,
   onPrevious,
   onNext,
-  onEditOwn,
-  onOwnToLike,
+  onChangeOwnVisibility,
+  onDeleteOwn,
 }: {
   record: PlaceRecord;
+  /** 이 기록의 장소. 신고할 때 어떤 기록이었는지 함께 보냅니다. */
+  placeId: string;
   panelId: string;
   /** 이 맛객의 사진(큰 사진·사진 보기와 같은 순서) */
   photos: PlacePhoto[];
   onOpenPhoto: (index: number) => void;
   onPrevious?: () => void;
   onNext?: () => void;
-  onEditOwn: () => void;
-  onOwnToLike: () => void;
+  /** 내 기록의 공개 범위만 바꿉니다(공개 추천 ↔ 나만 보기). */
+  onChangeOwnVisibility: (visibility: "PUBLIC" | "PRIVATE") => void;
+  /** 내 기록을 지웁니다. 지웠으면 true입니다. 서버에 없는 이전 브라우저 기록처럼 지울 수 없으면 넘기지 않습니다. */
+  onDeleteOwn?: () => Promise<boolean>;
 }) {
   const { subscriptionIds, actions } = useAppData();
+  const { confirm } = useNotificationDialog();
   const swipe = useSwipe({ onLeft: onNext, onRight: onPrevious, isEnabled: !!(onNext || onPrevious) });
   const isMine = isMyTaster(record);
   const isSubscribed = subscriptionIds.includes(record.tasterId);
   const menus = recordMenus(record);
-  const tags = record.tags ?? [];
-  const conditions = record.visitConditions ?? [];
-  const recordPhotos = record.photos ?? [];
-  const shownPhotos = recordPhotos.slice(0, SHOWN_PHOTO_COUNT);
-  const morePhotos = recordPhotos.length - shownPhotos.length;
+  const tagGroups = recordTagGroups(record);
   const when = formatRelativeTime(record.recordedAt);
+  const isPrivate = record.visibility === "PRIVATE";
+
+  // 공개 범위는 다른 사람의 지도·피드 노출이 바로 바뀌므로, 무엇이 달라지는지 알리고 확인을 받은 뒤 바꿉니다.
+  async function changeVisibility() {
+    const isConfirmed = await confirm(
+      isPrivate
+        ? {
+            title: "공개 추천으로 바꿀까요?",
+            message: "남긴 사진·메뉴·태그 그대로 다른 맛객의 지도와 피드에 보여요.",
+            confirmLabel: "공개할게요",
+            tone: "info",
+          }
+        : {
+            title: "나만 보기로 바꿀까요?",
+            message: "기록은 그대로 남고, 다른 사람의 지도와 피드에서는 빠져요.",
+            confirmLabel: "나만 볼게요",
+            tone: "info",
+          },
+    );
+    if (isConfirmed) onChangeOwnVisibility(isPrivate ? "PUBLIC" : "PRIVATE");
+  }
+
+  // 지우면 되돌릴 수 없으므로 숨기기(나만 보기)라는 다른 길도 함께 알려 주고 확인을 받습니다.
+  async function deleteRecord() {
+    const isConfirmed = await confirm({
+      title: "이 기록을 지울까요?",
+      message: "남긴 사진·메뉴·태그가 모두 지워지고 되돌릴 수 없어요. 잠시 숨기려면 나만 보기로 바꿔 보세요.",
+      confirmLabel: "지울게요",
+      tone: "danger",
+    });
+    if (isConfirmed) await onDeleteOwn?.();
+  }
   const author = (
     <>
-      <Avatar
-        src={avatarSource(record.tasterId, record.avatar)}
-        fallbackSrc={avatarFallback(record.tasterId, record.avatar)}
-        name={record.tasterName}
-        variant={record.avatarVariant}
-      />
+      <TasterAvatar taster={record} />
       <span className="r-place-record__who">
         <b>{record.tasterName}</b>
         {when && <small>{when} 기록</small>}
@@ -82,34 +113,16 @@ export default function PlaceTasterRecord({
           </button>
         )}
         {isMine ? (
-          <span className="r-place-badge">{record.visibility === "PRIVATE" ? "내 기록 · 비공개" : "내 기록"}</span>
-        ) : isSubscribed ? (
-          <span className="r-place-badge">구독 중</span>
-        ) : record.matchScore ? (
-          <span className="r-match">취향 {record.matchScore}%</span>
-        ) : null}
+          <span className="r-tag r-tag--mine">{isPrivate ? "내 기록 · 비공개" : "내 기록"}</span>
+        ) : (
+          <>
+            {isSubscribed && <span className="r-tag r-tag--mine">구독 중</span>}
+            <TasteScore taster={record} />
+          </>
+        )}
       </header>
 
       {record.note?.trim() && <p className="r-place-record__note r-display">&ldquo;{record.note.trim()}&rdquo;</p>}
-
-      {shownPhotos.length > 0 && (
-        <div className="r-place-record__photos">
-          {shownPhotos.map((src, index) => {
-            const isLast = index === shownPhotos.length - 1 && morePhotos > 0;
-            return (
-              <button
-                type="button"
-                key={`${src}-${index}`}
-                onClick={() => onOpenPhoto(Math.max(0, photoIndexOf(photos, src)))}
-                aria-label={isLast ? `사진 ${morePhotos}장 더 보기` : `사진 ${index + 1} 크게 보기`}
-              >
-                <img src={src} alt="" loading="lazy" decoding="async" />
-                {isLast && <span aria-hidden="true">+{morePhotos}</span>}
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       {menus.length > 0 && (
         <section className="r-place-record__part">
@@ -118,10 +131,10 @@ export default function PlaceTasterRecord({
             {menus.map((menu, index) => {
               const photoIndex = photoIndexOf(photos, menu.photo);
               const label = (
-                <>
+                <span className="r-place-record__menu-text">
                   <span>{menu.name}</span>
                   {menu.price != null && <b>{formatWon(menu.price)}</b>}
-                </>
+                </span>
               );
               return (
                 <li key={`${menu.name}-${index}`}>
@@ -143,7 +156,7 @@ export default function PlaceTasterRecord({
                   ) : (
                     <div>
                       <span className="r-place-record__menu-photo is-empty" aria-hidden="true">
-                        <Icon name="image" />
+                        <Icon name="fork" />
                       </span>
                       {label}
                     </div>
@@ -155,41 +168,29 @@ export default function PlaceTasterRecord({
         </section>
       )}
 
-      {tags.length > 0 && (
+      {tagGroups.length > 0 && (
         <section className="r-place-record__part">
-          <h3>이럴 때 좋아요</h3>
-          <div className="r-tags">
-            {tags.map((tag) => (
-              <span className="r-tag" key={tag}>
-                {tag}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {conditions.length > 0 && (
-        <section className="r-place-record__part">
-          <h3>매장 이용 정보</h3>
-          <div className="r-tags">
-            {conditions.map((condition) => (
-              <span className="r-tag r-tag--neutral" key={condition}>
-                {condition}
-              </span>
-            ))}
-          </div>
+          <h3>이런 곳이에요</h3>
+          <TagGroupList groups={tagGroups} />
         </section>
       )}
 
       <footer className="r-place-record__actions">
         {isMine ? (
+          // 기록 수정은 아래 고정 버튼 줄에 있으므로 여기에는 공개 범위 바꾸기와 지우기만 둡니다.
           <>
-            <button type="button" className="r-button r-button--pill r-button--soft" onClick={onEditOwn}>
-              기록 수정
+            <button
+              type="button"
+              className="r-button r-button--pill r-button--secondary"
+              onClick={() => void changeVisibility()}
+            >
+              {isPrivate ? "공개 추천으로 바꾸기" : "나만 보기로 바꾸기"}
             </button>
-            <button type="button" className="r-button r-button--pill r-button--secondary" onClick={onOwnToLike}>
-              내 맛집으로 바꾸기
-            </button>
+            {onDeleteOwn && (
+              <button type="button" className="r-place-record__delete" onClick={() => void deleteRecord()}>
+                기록 지우기
+              </button>
+            )}
           </>
         ) : (
           <>
@@ -209,6 +210,12 @@ export default function PlaceTasterRecord({
             >
               프로필 보기
             </button>
+            <TasterReportButton
+              tasterId={record.tasterId}
+              tasterName={record.tasterName}
+              placeId={placeId}
+              className="r-place-record__report"
+            />
           </>
         )}
       </footer>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAppData } from "../../app/AppData";
+import type { RegisterDraftForm } from "../../services/registerDraft";
 import {
   VISIT_CONDITION_GROUPS,
   isVisitCondition,
@@ -8,7 +9,6 @@ import {
   type VisitCondition,
 } from "../../models/place";
 import { groupsForFocus } from "../../models/tasteTags";
-import type { RegisterDraftForm } from "../../services/registerDraft";
 import { initialFoodKind, type FoodKind } from "./recordModel";
 
 /** 장소 분야(음식점·카페), 취향 태그, 방문 조건 고르기입니다. */

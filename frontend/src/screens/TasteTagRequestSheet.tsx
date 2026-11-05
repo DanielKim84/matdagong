@@ -6,6 +6,11 @@ import { TASTE_TAG_GROUP_LABELS } from "../models/tasteTags";
 import { errorMessage } from "../utils/errorMessage";
 import { formatFullDate } from "../utils/format";
 
+const MAX_NAME_LENGTH = 30;
+const MAX_REASON_LENGTH = 300;
+/** 내 제안 내역에 보여 줄 최근 제안 수 */
+const HISTORY_LIMIT = 20;
+
 const STATUS_LABELS: Record<TagRequest["status"], string> = {
   PENDING: "검토 대기",
   APPROVED: "반영 완료",
@@ -20,6 +25,7 @@ const REQUEST_CATEGORY_OPTIONS: readonly (readonly [TagRequestInput["tagGroup"],
   ["VISIT", "제외 조건"],
 ];
 
+/** 취향 태그(프로필 편집)나 매장 이용 정보(맛집 기록) 추가를 제안하고 내 제안 내역을 보는 시트입니다. */
 export default function TasteTagRequestSheet({
   onClose,
   onRequest,
@@ -139,7 +145,7 @@ export default function TasteTagRequestSheet({
             <span>{requestType === "TAG" ? "어떤 태그가 있으면 좋을까요?" : "어떤 매장 이용 정보가 필요할까요?"}</span>
             <input
               value={name}
-              maxLength={30}
+              maxLength={MAX_NAME_LENGTH}
               required
               autoComplete="off"
               placeholder={requestType === "TAG" ? "예: 글루텐 프리, 반려동물 동반" : "예: 유아용 의자 있음, 포장 가능"}
@@ -170,13 +176,15 @@ export default function TasteTagRequestSheet({
             </span>
             <textarea
               value={reason}
-              maxLength={300}
+              maxLength={MAX_REASON_LENGTH}
               rows={3}
               placeholder="태그가 필요한 상황을 알려 주세요."
               onChange={(event) => setReason(event.target.value)}
               disabled={isSending}
             />
-            <small>{reason.length}/300</small>
+            <small>
+              {reason.length}/{MAX_REASON_LENGTH}
+            </small>
           </label>
           {error && (
             <p className="tag-request-error" role="alert">
@@ -201,7 +209,7 @@ export default function TasteTagRequestSheet({
           </div>
         )}
         {!isLoading && !hasHistoryError && !requests.length && <p>아직 제안한 태그가 없어요.</p>}
-        {requests.slice(0, 20).map((item) => (
+        {requests.slice(0, HISTORY_LIMIT).map((item) => (
           <article key={item.requestId}>
             <div>
               <b>

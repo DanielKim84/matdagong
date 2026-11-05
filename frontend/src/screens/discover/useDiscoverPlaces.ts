@@ -5,10 +5,10 @@ import type { Coordinates } from "../../utils/geo";
 import {
   isInBounds,
   matchesFilters,
-  mergePlaces,
-  nearbyMatchedPlaces,
+  discoverPlaces,
   recentSubscribedRecords,
   relocateSamples,
+  scopedPlace,
   sortPlaces,
   topCategories,
   topTags,
@@ -20,8 +20,6 @@ import {
 
 const CAROUSEL_LIMIT = 30;
 const RECENT_LIMIT = 8;
-const NEARBY_LIMIT = 6;
-const NEARBY_RADIUS_METERS = 1000;
 
 /** 발견 화면의 지도·카드·목록 시트에 보일 장소를 조건에 맞춰 고르고 정렬합니다. */
 export function useDiscoverPlaces({
@@ -40,27 +38,25 @@ export function useDiscoverPlaces({
   regionBounds: VisibleBounds | null;
   focusedId: string | null;
 }) {
-  const { subscriptionIds, likedPlaceIds, tasterById, places, privatePlaces, recommendedTasters } = useAppData();
+  const { subscriptionIds, tasterById, places } = useAppData();
 
   // 지도 마커는 장소 배열이 바뀔 때마다 다시 그려지므로, 카드 선택·지도 이동만으로는 새 배열을 만들지 않습니다.
   const ctx = useMemo<PlaceContext>(
     () => ({
       subscriptions: new Set(subscriptionIds),
-      liked: new Set(likedPlaceIds),
       device,
       matchOf: (taster: Taster) => taster.matchScore ?? tasterById.get(taster.tasterId)?.matchScore ?? 0,
     }),
-    [subscriptionIds, likedPlaceIds, tasterById, device],
+    [subscriptionIds, tasterById, device],
   );
-  const allPlaces = useMemo(
-    () => relocateSamples(mergePlaces(places, privatePlaces), device),
-    [places, privatePlaces, device],
-  );
+  const allPlaces = useMemo(() => relocateSamples(discoverPlaces(places), device), [places, device]);
   const filtered = useMemo(
-    () => allPlaces.filter((place) => matchesFilters(place, filters, ctx)),
+    () =>
+      allPlaces
+        .filter((place) => matchesFilters(place, filters, ctx))
+        .map((place) => scopedPlace(place, filters.scope, ctx)),
     [allPlaces, filters, ctx],
   );
-  const recommendedTasterIds = useMemo(() => recommendedTasters.map((taster) => taster.tasterId), [recommendedTasters]);
   const categories = useMemo(() => topCategories(allPlaces), [allPlaces]);
   const tags = useMemo(() => topTags(allPlaces), [allPlaces]);
 
@@ -72,21 +68,17 @@ export function useDiscoverPlaces({
   ).slice(0, CAROUSEL_LIMIT);
   const focusedPlace = focusedId ? filtered.find((place) => place.id === focusedId) : undefined;
   if (focusedPlace && !carousel.includes(focusedPlace)) carousel.push(focusedPlace);
+  const visible = filtered.filter((place) => isInBounds(place, bounds));
 
   return {
     ctx,
     filtered,
     carousel,
-    rows: sortPlaces(
-      filtered.filter((place) => isInBounds(place, bounds)),
-      sort,
-      ctx,
-    ),
-    recentSubscribed: recentSubscribedRecords(filtered, ctx, RECENT_LIMIT),
-    nearby: nearbyMatchedPlaces(filtered, ctx, NEARBY_RADIUS_METERS, NEARBY_LIMIT),
+    rows: sortPlaces(visible, sort, ctx),
+    // 목록 시트는 지금 지도에 보이는 지역 기준입니다. 구독한 맛객이 이 지역에 새로 올린 곳을 먼저 보여 줍니다.
+    recentSubscribed: recentSubscribedRecords(visible, ctx, RECENT_LIMIT),
     categories,
     tags,
-    recommendedTasterIds,
     countMatches: (next: DiscoverFilters) => allPlaces.filter((place) => matchesFilters(place, next, ctx)).length,
   };
 }

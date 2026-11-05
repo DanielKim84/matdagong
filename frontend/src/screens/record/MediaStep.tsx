@@ -1,6 +1,6 @@
 import Icon from "../../components/Icon";
 import { SectionHead } from "../../components/ui";
-import { MAX_MENUS, MAX_PHOTOS, formatPriceInput } from "./recordModel";
+import { MAX_MENUS, MAX_PHOTOS, MENU_NAME_MAX, formatPriceInput } from "./recordModel";
 import RecordStepTitle from "./RecordStepTitle";
 import type { RecordForm } from "./useRecordForm";
 
@@ -101,7 +101,7 @@ export default function MediaStep({ form }: { form: RecordForm }) {
               <div className="r-record-dish__fields">
                 <input
                   value={item.name}
-                  maxLength={30}
+                  maxLength={MENU_NAME_MAX}
                   placeholder="메뉴 이름 (예: 해물찜)"
                   aria-label={`추천 메뉴 ${index + 1} 이름`}
                   onChange={(event) => form.updateMenu(index, { name: event.target.value })}

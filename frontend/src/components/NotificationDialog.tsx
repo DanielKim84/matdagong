@@ -1,17 +1,10 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+/** 앱 공통 확인창·안내창입니다. 열린 동안 배경 스크롤은 hooks/usePageScrollLock으로 잠급니다. */
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { usePageScrollLock } from "../hooks/usePageScrollLock";
 import Icon from "./Icon";
 
-export type NoticeTone = "danger" | "info" | "success" | "warning";
+type NoticeTone = "danger" | "info" | "success" | "warning";
 type DialogOptions = {
   title: string;
   message: string;
@@ -28,79 +21,6 @@ type NotificationContextValue = {
 };
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
-let pageLockCount = 0;
-let previousTouchY: number | null = null;
-let pageUnlockFrame: number | null = null;
-
-function dialogCanScroll(dialog: HTMLElement, movement: number) {
-  if (movement < 0) return dialog.scrollTop > 0;
-  if (movement > 0) return dialog.scrollTop + dialog.clientHeight < dialog.scrollHeight - 1;
-  return true;
-}
-
-function blockBackgroundWheel(event: WheelEvent) {
-  if (!event.deltaY) return;
-  const target = event.target instanceof Element ? event.target : null;
-  const dialog = target?.closest<HTMLElement>(".r-dialog, .sheet");
-  if (dialog && dialogCanScroll(dialog, event.deltaY)) return;
-  event.preventDefault();
-}
-
-function rememberTouch(event: TouchEvent) {
-  previousTouchY = event.touches[0]?.clientY ?? null;
-}
-
-function blockBackgroundTouch(event: TouchEvent) {
-  const touchY = event.touches[0]?.clientY;
-  if (touchY === undefined || previousTouchY === null) return;
-  const movement = previousTouchY - touchY;
-  previousTouchY = touchY;
-  const target = event.target instanceof Element ? event.target : null;
-  const dialog = target?.closest<HTMLElement>(".r-dialog, .sheet");
-  if (!dialog || !dialogCanScroll(dialog, movement)) event.preventDefault();
-}
-
-function forgetTouch() {
-  previousTouchY = null;
-}
-
-/** 모달이 열린 동안 배경 문서 스크롤을 잠그고, 모달 안의 스크롤은 허용합니다. */
-export function useNotificationPageLock(isOpen: boolean) {
-  useLayoutEffect(() => {
-    if (!isOpen) return;
-    if (pageUnlockFrame !== null) {
-      window.cancelAnimationFrame(pageUnlockFrame);
-      pageUnlockFrame = null;
-    }
-    if (pageLockCount === 0) {
-      // 모든 모달이 같은 문서 잠금을 공유해 body와 html의 overflow가 충돌하지 않게 합니다.
-      document.documentElement.classList.add("is-page-locked");
-      document.addEventListener("wheel", blockBackgroundWheel, { capture: true, passive: false });
-      document.addEventListener("touchstart", rememberTouch, { capture: true, passive: true });
-      document.addEventListener("touchmove", blockBackgroundTouch, { capture: true, passive: false });
-      document.addEventListener("touchend", forgetTouch, true);
-      document.addEventListener("touchcancel", forgetTouch, true);
-    }
-    pageLockCount += 1;
-    return () => {
-      pageLockCount = Math.max(0, pageLockCount - 1);
-      if (pageLockCount !== 0) return;
-      // 연속 알림이 교체되는 프레임 사이에 잠금이 잠깐 풀려 스크롤바가 깜빡이지 않게 합니다.
-      pageUnlockFrame = window.requestAnimationFrame(() => {
-        pageUnlockFrame = null;
-        if (pageLockCount !== 0) return;
-        document.documentElement.classList.remove("is-page-locked");
-        document.removeEventListener("wheel", blockBackgroundWheel, true);
-        document.removeEventListener("touchstart", rememberTouch, true);
-        document.removeEventListener("touchmove", blockBackgroundTouch, true);
-        document.removeEventListener("touchend", forgetTouch, true);
-        document.removeEventListener("touchcancel", forgetTouch, true);
-        previousTouchY = null;
-      });
-    };
-  }, [isOpen]);
-}
-
 /** 확인과 안내를 한 가지 다이얼로그 디자인으로 제공해 브라우저 기본 팝업을 피합니다. */
 export function NotificationDialogProvider({ children }: { children: ReactNode }) {
   const [request, setRequest] = useState<DialogRequest | null>(null);
@@ -109,7 +29,7 @@ export function NotificationDialogProvider({ children }: { children: ReactNode }
   const queuedAlerts = useRef<QueuedAlert[]>([]);
   const cancelButton = useRef<HTMLButtonElement>(null);
   const acceptButton = useRef<HTMLButtonElement>(null);
-  useNotificationPageLock(!!request);
+  usePageScrollLock(!!request);
 
   const open = useCallback((options: DialogOptions, mode: DialogMode, resolve: (accepted: boolean) => void) => {
     resolveRequest.current = resolve;

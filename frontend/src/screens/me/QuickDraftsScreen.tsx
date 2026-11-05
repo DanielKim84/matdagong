@@ -45,7 +45,7 @@ export default function QuickDraftsScreen() {
                     <span className="r-me-draft-card__copy">
                       <b>{draft.placeName}</b>
                       <span className="r-me-draft-card__meta">
-                        <span className="r-tag r-tag--neutral">{label}</span>
+                        <span className="r-tag">{label}</span>
                         <small>{formatRelativeTime(draft.savedAt)} 저장</small>
                       </span>
                     </span>

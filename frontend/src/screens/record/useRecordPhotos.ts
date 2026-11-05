@@ -1,8 +1,8 @@
 import { useState, type ChangeEvent } from "react";
 import { useNotificationDialog } from "../../components/NotificationDialog";
-import type { Taster } from "../../models/place";
 import { loadPhoto } from "../../services/photos";
 import { refreshMediaUrl, type RegisterDraftForm } from "../../services/registerDraft";
+import type { Taster } from "../../models/place";
 import { errorMessage } from "../../utils/errorMessage";
 import { MAX_PHOTOS } from "./recordModel";
 

@@ -12,7 +12,7 @@ import {
 import type { NewPlace, Place } from "../models/place";
 import { errorMessage } from "../utils/errorMessage";
 import { placeMigrationKey, readStorage, recentMigrationKey, writeStorage } from "../utils/storage";
-import type { AppNotice } from "./AppData";
+import { RETRY_LATER_MESSAGE, type AppNotice } from "./AppData";
 
 const MIGRATION_DONE = "done";
 
@@ -20,7 +20,7 @@ function isMigrated(key: string): boolean {
   return readStorage(key, "local") === MIGRATION_DONE;
 }
 
-export type LegacyMigrationTargets = {
+type LegacyMigrationTargets = {
   setRecentPlaces: (places: Place[]) => void;
   setMyPlaceState: (records: Place[], likedIds: string[], visitedLikedIds: string[]) => void;
   notify: (notice: AppNotice) => void;
@@ -99,7 +99,7 @@ export function useLegacyMigration(
         notify({
           kind: "error",
           title: "기존 맛집 기록을 옮기지 못했어요",
-          message: errorMessage(cause, "잠시 후 다시 시도해 주세요."),
+          message: errorMessage(cause, RETRY_LATER_MESSAGE),
         });
     });
     return () => {

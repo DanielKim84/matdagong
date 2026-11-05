@@ -1,9 +1,18 @@
 import { useRef, type PointerEvent, type ReactNode } from "react";
-import Icon from "../../components/Icon";
+import { useAppData } from "../../app/AppData";
 import type { SheetState, SortOrder } from "./discoverModel";
 
 const SHEET_ORDER: SheetState[] = ["peek", "half", "full"];
 const SHEET_STATE_LABELS: Record<SheetState, string> = { peek: "접힘", half: "중간", full: "펼침" };
+/** 이만큼 움직여야 누르기가 아닌 끌기로 봅니다(px). */
+const DRAG_START_PX = 6;
+/** 놓은 높이가 원래 단계에 가까워도 이만큼 넘게 끌었으면 끈 방향으로 한 단계 옮깁니다(px). */
+const STEP_DRAG_PX = 40;
+/** 추천순: 믿고 가는 맛객 → 구독 → 취향 맞는 맛객 → 그 밖, 같은 단계에서는 가까운 곳 먼저. */
+const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
+  { value: "priority", label: "추천순" },
+  { value: "distance", label: "가까운 순" },
+];
 
 type Props = {
   state: SheetState;
@@ -29,6 +38,7 @@ export default function DiscoverSheet({
   onSortChange,
   children,
 }: Props) {
+  const { actions } = useAppData();
   const sheet = useRef<HTMLElement>(null);
   const drag = useRef<{ startY: number; startHeight: number; hasMoved: boolean } | null>(null);
   const shouldSuppressClick = useRef(false);
@@ -45,7 +55,7 @@ export default function DiscoverSheet({
       element = sheet.current;
     if (!current || !element) return;
     const delta = event.clientY - current.startY;
-    if (!current.hasMoved && Math.abs(delta) < 6) return;
+    if (!current.hasMoved && Math.abs(delta) < DRAG_START_PX) return;
     current.hasMoved = true;
     element.classList.add("is-dragging");
     const next = Math.min(heights.full, Math.max(heights.peek, current.startHeight - delta));
@@ -61,12 +71,11 @@ export default function DiscoverSheet({
     const finalHeight = element.getBoundingClientRect().height;
     element.classList.remove("is-dragging");
     element.style.removeProperty("height");
-    // 가장 가까운 높이로 맞추되, 충분히 끌었으면 끈 방향으로 한 단계는 움직입니다.
     let next = SHEET_ORDER.reduce((best, item) =>
       Math.abs(heights[item] - finalHeight) < Math.abs(heights[best] - finalHeight) ? item : best,
     );
     const index = SHEET_ORDER.indexOf(state);
-    if (next === state && Math.abs(delta) > 40)
+    if (next === state && Math.abs(delta) > STEP_DRAG_PX)
       next = SHEET_ORDER[Math.min(SHEET_ORDER.length - 1, Math.max(0, index + (delta < 0 ? 1 : -1)))];
     onStateChange(next);
   }
@@ -83,7 +92,18 @@ export default function DiscoverSheet({
     onStateChange(state === "peek" ? "half" : state === "half" ? "full" : "peek");
   }
 
-  const nextSort: SortOrder = sort === "priority" && canSortByDistance ? "distance" : "priority";
+  function chooseSort(next: SortOrder) {
+    if (next === "distance" && !canSortByDistance) {
+      actions.notify({
+        kind: "info",
+        title: "내 위치가 필요해요",
+        message: "지도 오른쪽의 ‘내 위치’를 켜면 가까운 순으로 볼 수 있어요.",
+      });
+      return;
+    }
+    onSortChange(next);
+  }
+
   return (
     <section ref={sheet} className="r-discover-sheet" aria-label="맛객 기록 목록">
       <div
@@ -104,16 +124,20 @@ export default function DiscoverSheet({
         </button>
         <div className="r-discover-sheet__title">
           <h2>{title}</h2>
-          <button
-            type="button"
-            className="r-discover-sheet__sort"
-            onClick={() => onSortChange(nextSort)}
-            disabled={!canSortByDistance && sort === "priority"}
-            aria-label={`정렬: ${sort === "distance" ? "가까운 순" : "구독 먼저"}${canSortByDistance ? ", 눌러서 바꾸기" : ""}`}
-          >
-            {sort === "distance" ? "가까운 순" : "구독 먼저"}
-            {canSortByDistance && <Icon name="list" />}
-          </button>
+          {/* 두 정렬을 나란히 보여 줘 지금 어떤 순서인지, 눌러서 무엇으로 바뀌는지 바로 알 수 있게 합니다. */}
+          <div className="r-discover-sheet__sort" role="group" aria-label="목록 정렬">
+            {SORT_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={sort === option.value ? "is-on" : ""}
+                aria-pressed={sort === option.value}
+                onClick={() => chooseSort(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

@@ -1,4 +1,6 @@
+/** 지도·목록·상세가 함께 쓰는 장소와 맛객 기록 자료형, 그리고 화면 주소(#화면) 목록입니다. */
 import type { ActivityScope, FoodFocus } from "./community";
+import type { TrustLevel } from "./trust";
 
 export type Place = {
   id: string;
@@ -18,13 +20,12 @@ export type Place = {
   longitude: number;
   recentNote: string;
   recordCount: number;
-  advertisement?: boolean;
   visitConditions?: VisitCondition[];
   tasters: Taster[];
 };
 
 // 직접 방문해 확인한 운영 시간과 매장 이용 정보를 맛객 기록에 남깁니다.
-export const VISIT_CONDITIONS = [
+const VISIT_CONDITIONS = [
   "웨이팅 있는 곳",
   "주차 불가",
   "주차 공간 협소",
@@ -102,14 +103,24 @@ export type Taster = {
   profileTags?: string[];
   matchedTags?: string[];
   matchScore?: number;
+  /** 같은 맛집 경험으로 쌓인 나와의 신뢰 %. 함께 다녀온 맛집이 없으면 null이고 취향 %를 대신 보여 줍니다. */
+  trustScore?: number | null;
+  trustLevel?: TrustLevel | null;
   visibility?: "PRIVATE" | "PUBLIC";
 };
 
 /**
- * 화면에 넘기는 장소 목록에서 내 기록의 tasterId입니다. App이 서버의 내 계정 ID를 이 값으로 바꿔 둡니다.
+ * 화면에 넘기는 장소 목록에서 내 기록의 tasterId입니다. app/enrichPlaces가 서버의 내 계정 ID를 이 값으로 바꿔 둡니다.
  * 서버 응답의 계정 ID까지 함께 판별해야 하면 useAppData().isMyTasterId를 씁니다.
  */
 export const MY_TASTER_ID = "me";
+
+/**
+ * 직접 다녀온 곳만 기록·빠른 저장하도록 허용하는 현재 위치와 가게 사이 거리(m)입니다. 장소 서비스도 같은 값으로 확인합니다.
+ * 안내 문구는 VISIT_RADIUS_LABEL을 써서 숫자를 바꿀 때 문구가 따로 남지 않게 합니다.
+ */
+export const VISIT_RADIUS_METERS = 1000;
+export const VISIT_RADIUS_LABEL = `${VISIT_RADIUS_METERS / 1000}km`;
 
 /** 화면용 장소 목록의 기록이 내 기록인지 확인합니다. */
 export function isMyTaster(taster: Pick<Taster, "tasterId">): boolean {
@@ -145,12 +156,19 @@ export type NewPlace = {
   photos: string[];
   visibility: "private" | "public";
   createdAt: string;
+  /** 저장할 때의 기기 위치. 새 기록이면 장소 서비스가 가게와 VISIT_RADIUS_METERS 안인지 다시 확인합니다(브라우저에 보관하지 않음). */
+  deviceLocation?: { latitude: number; longitude: number } | null;
 };
 
-export type MapKind = "other" | "subscribed" | "subscribedPhoto" | "ad" | "liked" | "own" | "matched";
+/**
+ * 지도 마커 종류입니다. 맛객 핀: other·subscribed(발견), own(내 기록). 기호 마커(내 지도): liked(가볼 곳),
+ * visited(기록 없이 다녀왔어요 하트), search(카카오에서 검색해 고른 가게).
+ */
+export type MapKind = "other" | "subscribed" | "liked" | "own" | "visited" | "search";
 export type Screen =
   | "home"
   | "map"
+  | "mymap"
   | "register"
   | "my"
   | "place"
@@ -169,7 +187,8 @@ export type Screen =
   | "tasters"
   | "wallet"
   | "my-records"
-  | "drafts";
+  | "drafts"
+  | "policy";
 
 /**
  * 장소의 대표 사진입니다. 고른 기록(대표 맛객)의 사진 → 그 장소의 다른 기록 사진 → 내 사진(useAppData().photoFor) 순서이고,

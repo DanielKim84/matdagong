@@ -1,28 +1,36 @@
 import { useMemo, useState } from "react";
-import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
 import PlaceThumb from "../../components/PlaceThumb";
 import { EmptyState, SectionHead, Segmented, TopBar } from "../../components/ui";
-import { dayKey, diaryEntries, entriesByDay, formatDay, sameMonth, WEEKDAYS, type DiaryEntry } from "./diary";
+import {
+  dayKey,
+  entriesByDay,
+  formatDay,
+  formatDiaryRoute,
+  isSameMonth,
+  parseDiaryRoute,
+  WEEKDAYS,
+  type DiaryEntry,
+  type DiaryView,
+} from "./diary";
 import DiaryEntryCard from "./DiaryEntryCard";
+import { useDiaryEntries } from "./useDiaryEntries";
 
-type View = "calendar" | "photo" | "list";
-
-/** 맛집 다이어리(#diary): 내 기록을 달력·사진·목록으로 봅니다. */
-export default function DiaryScreen() {
-  const app = useAppData();
-  const [view, setView] = useState<View>("calendar");
-  const [cursor, setCursor] = useState(() => {
-    const now = new Date();
-    return { year: now.getFullYear(), month: now.getMonth() };
-  });
+/**
+ * 맛집 다이어리(#diary/<보기>): 내 기록을 달력·사진·목록으로 봅니다.
+ * 고른 탭과 달력의 달은 주소에 담아(이동 기록은 늘리지 않고 바꿈), 상세에 다녀와도 보던 탭으로 돌아옵니다.
+ */
+export default function DiaryScreen({ routeId }: { routeId: string }) {
+  const { view, year, month } = parseDiaryRoute(routeId);
+  const cursor = { year, month };
   const [selected, setSelected] = useState<string | null>(null);
 
-  const entries = useMemo(
-    () => diaryEntries(app.myRecords, app.isMyTasterId, app.photoFor),
-    [app.myRecords, app.isMyTasterId, app.photoFor],
-  );
+  function setView(next: DiaryView) {
+    go("diary", formatDiaryRoute({ view: next, year, month }), true);
+  }
+
+  const entries = useDiaryEntries();
   const byDay = useMemo(() => entriesByDay(entries), [entries]);
   const undated = entries.filter((entry) => !entry.date);
 
@@ -38,7 +46,7 @@ export default function DiaryScreen() {
         }
       />
       <div className="r-me-body">
-        <Segmented<View>
+        <Segmented<DiaryView>
           label="다이어리 보기 방식"
           value={view}
           onChange={setView}
@@ -65,10 +73,8 @@ export default function DiaryScreen() {
             undatedCount={undated.length}
             onMonth={(step) => {
               setSelected(null);
-              setCursor(({ year, month }) => {
-                const next = new Date(year, month + step, 1);
-                return { year: next.getFullYear(), month: next.getMonth() };
-              });
+              const next = new Date(year, month + step, 1);
+              go("diary", formatDiaryRoute({ view, year: next.getFullYear(), month: next.getMonth() }), true);
             }}
             onSelect={(key) => setSelected((current) => (current === key ? null : key))}
             onShowList={() => setView("list")}
@@ -118,10 +124,10 @@ function CalendarView({
   const { year, month } = cursor;
   const today = new Date();
   const todayKey = dayKey(today);
-  const isCurrentMonth = sameMonth(today, year, month);
+  const isCurrentMonth = isSameMonth(today, year, month);
   const leading = new Date(year, month, 1).getDay();
   const days = new Date(year, month + 1, 0).getDate();
-  const monthEntries = entries.filter((entry) => entry.date && sameMonth(entry.date, year, month));
+  const monthEntries = entries.filter((entry) => entry.date && isSameMonth(entry.date, year, month));
   const selectedEntries = selected ? (byDay.get(selected) ?? []) : [];
   const selectedDate = selected ? (selectedEntries[0]?.date ?? null) : null;
 

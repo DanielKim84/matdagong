@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
 import { useModalLock } from "../../hooks/useModalLock";
 import { useSwipe } from "../../hooks/useSwipe";
 import { formatWon } from "../../utils/format";
 import { wrapIndex } from "../../utils/pagination";
-import { avatarFallback, avatarSource } from "../../utils/profileMedia";
+import TasterAvatar from "../../components/TasterAvatar";
 import type { PlacePhoto } from "./placeRecords";
+
+/** 사진을 넘기는 스와이프 거리(px). 전체 화면이라 기본값보다 조금 짧게 둡니다. */
+const SWIPE_THRESHOLD_PX = 45;
 
 /** 전체 화면 사진 보기. 좌우로 넘기고, 누가 찍은 어떤 메뉴인지 아래에 보여 줍니다. */
 export default function PhotoViewer({
@@ -26,7 +28,12 @@ export default function PhotoViewer({
   const thumbs = useRef<HTMLDivElement>(null);
   const total = photos.length;
   const step = (direction: number) => setIndex((current) => wrapIndex(current, direction, total));
-  const swipe = useSwipe({ onLeft: () => step(1), onRight: () => step(-1), threshold: 45, isEnabled: total > 1 });
+  const swipe = useSwipe({
+    onLeft: () => step(1),
+    onRight: () => step(-1),
+    threshold: SWIPE_THRESHOLD_PX,
+    isEnabled: total > 1,
+  });
 
   // 사진을 보는 동안 뒤 화면이 같이 스크롤되지 않게 잠그고, 좌우 화살표로 넘깁니다.
   useModalLock(onClose, {
@@ -104,12 +111,7 @@ export default function PhotoViewer({
           </div>
         )}
         <div className="r-place-viewer__author">
-          <Avatar
-            src={avatarSource(photo.record.tasterId, photo.record.avatar)}
-            fallbackSrc={avatarFallback(photo.record.tasterId, photo.record.avatar)}
-            name={photo.record.tasterName}
-            variant={photo.record.avatarVariant}
-          />
+          <TasterAvatar taster={photo.record} />
           <div>
             <b>{photo.record.tasterName}</b>
             <span>{photo.isMenu ? "메뉴 사진" : "방문 사진"}</span>

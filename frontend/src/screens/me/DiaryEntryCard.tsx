@@ -1,10 +1,10 @@
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
-import PlaceThumb from "../../components/PlaceThumb";
+import PlaceCard from "../../components/PlaceCard";
 import { formatRelativeTime } from "../../utils/format";
 import { formatDay, type DiaryEntry } from "./diary";
 
-/** 다이어리 기록 한 줄: 사진, 날짜, 장소 이름, 내가 남긴 한마디. */
+/** 다이어리 기록 한 줄: 사진, 장소 이름, 날짜, 내가 남긴 한마디. 공용 맛집 카드 모양입니다. */
 export default function DiaryEntryCard({
   entry,
   shouldShowRelative = false,
@@ -15,19 +15,22 @@ export default function DiaryEntryCard({
   const { place, record, date, photo, isPublic } = entry;
   const when = date ? (shouldShowRelative ? formatRelativeTime(record?.recordedAt) : formatDay(date)) : "날짜 없음";
   return (
-    <button type="button" className="r-card r-me-entry" onClick={() => go("place", place.id)}>
-      <PlaceThumb place={place} photo={photo} />
-      <span className="r-me-entry__copy">
-        <small>
+    <PlaceCard
+      place={place}
+      photo={photo}
+      meta={
+        <>
           {when}
-          {!isPublic && <span className="r-tag r-tag--neutral r-me-entry__private">나만 보기</span>}
-        </small>
-        <b>{place.name}</b>
-        <span className="r-me-entry__note">
+          {!isPublic && <span className="r-tag r-place-card__private">나만 보기</span>}
+        </>
+      }
+      detail={
+        <span className="r-place-card__note">
           {record?.note ? `“${record.note}”` : `${place.category}${place.address ? ` · ${place.address}` : ""}`}
         </span>
-      </span>
-      <Icon name="chevron" />
-    </button>
+      }
+      trailing={<Icon name="chevron" />}
+      onOpen={() => go("place", place.id)}
+    />
   );
 }

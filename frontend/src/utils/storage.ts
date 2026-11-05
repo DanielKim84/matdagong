@@ -21,6 +21,7 @@ export const STORAGE_KEYS = {
   /** session: 다른 화면이 기록 화면을 열면서 넘기는 일회성 장소 값 */
   likeConversionHandoff: "matdagong.place-conversion.from-like",
   quickPlaceHandoff: "matdagong.quick-place.selected-place",
+  placeDetailHandoff: "matdagong.place-detail.record-place",
   /** session: 로그인 만료 때 보관한 기록 입력과 남은 공간 확인용 값 */
   registerDraft: "matdagong.register.form-draft",
   registerDraftProbe: "matdagong.register.form-draft.probe",
@@ -52,7 +53,7 @@ export function placeMigrationKey(accountId: string): string {
 }
 
 /** session은 탭을 닫으면 지워지는 값, local은 브라우저에 남는 값입니다. */
-export type StorageArea = "session" | "local";
+type StorageArea = "session" | "local";
 
 function storageOf(area: StorageArea): Storage {
   return area === "session" ? window.sessionStorage : window.localStorage;
@@ -103,4 +104,9 @@ export function writeStorageJson(key: string, value: unknown, area: StorageArea)
     return false;
   }
   return writeStorage(key, raw, area);
+}
+
+/** 저장했던 값에서 문자열 항목만 골라 목록으로 돌려줍니다. 배열이 아니면 빈 목록입니다. */
+export function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }

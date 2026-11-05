@@ -9,9 +9,12 @@ import { distanceMeters, kakaoPlaceCoordinates, type Coordinates } from "../util
 import Icon from "./Icon";
 import { useNotificationDialog } from "./NotificationDialog";
 import Sheet from "./Sheet";
+import { VISIT_RADIUS_LABEL, VISIT_RADIUS_METERS } from "../models/place";
 
-// 맛집 등록 화면과 같은 기준으로 현재 위치 1km 안의 장소만 저장합니다.
-const RADIUS_METERS = 1000;
+// 맛집 등록 화면과 같은 기준(VISIT_RADIUS_METERS)으로 현재 위치 가까운 장소만 저장합니다.
+const RADIUS_METERS = VISIT_RADIUS_METERS;
+// 현재 위치 1km 안만 저장하므로 1분 안에 얻은 위치까지만 다시 씁니다.
+const LOCATION_OPTIONS: PositionOptions = { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 };
 
 /** 검색어와 겹치는 부분을 강조합니다. */
 function highlight(text: string, query: string) {
@@ -49,10 +52,10 @@ export default function QuickPlaceSheet({ onClose }: { onClose: () => void }) {
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         setLocation({ latitude: coords.latitude, longitude: coords.longitude });
-        setLocationState("현재 위치 1km 안의 장소만 저장할 수 있어요.");
+        setLocationState(`현재 위치 ${VISIT_RADIUS_LABEL} 안의 장소만 저장할 수 있어요.`);
       },
       () => setLocationState("주변 장소를 찾으려면 위치 권한을 허용해 주세요."),
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+      LOCATION_OPTIONS,
     );
   }
 
@@ -80,7 +83,8 @@ export default function QuickPlaceSheet({ onClose }: { onClose: () => void }) {
       );
       setResults(nearby);
       setSearchedQuery(query.trim());
-      if (!nearby.length) setError("1km 안에서 장소를 찾지 못했어요. 가게 근처에서 다시 검색해 주세요.");
+      if (!nearby.length)
+        setError(`${VISIT_RADIUS_LABEL} 안에서 장소를 찾지 못했어요. 가게 근처에서 다시 검색해 주세요.`);
     } catch (cause) {
       setError(errorMessage(cause, "장소를 검색하지 못했어요."));
     } finally {
@@ -96,16 +100,16 @@ export default function QuickPlaceSheet({ onClose }: { onClose: () => void }) {
       if (duplicate.alreadyRegistered || duplicate.alreadySaved) {
         const alreadyRegistered = duplicate.alreadyRegistered;
         await alert({
-          title: alreadyRegistered ? "이미 등록된 가게예요" : "이미 빠른 저장에 있는 가게예요",
+          title: alreadyRegistered ? "이미 기록한 가게예요" : "이미 빠른 저장에 있는 가게예요",
           message: alreadyRegistered
-            ? `${duplicate.placeName ?? place.place_name}은(는) 이미 맛집으로 등록되어 있어요.`
+            ? `${duplicate.placeName ?? place.place_name}은(는) 이미 내가 기록한 맛집이에요.`
             : `${duplicate.placeName ?? place.place_name}은(는) 빠른 저장 목록에 이미 있어요.`,
           tone: "info",
           confirmLabel: "확인했어요",
         });
         return;
       }
-      await saveQuickPlaceDraft(accessToken, place);
+      await saveQuickPlaceDraft(accessToken, place, location);
       window.dispatchEvent(new Event(MY_ACTIVITY_CHANGED_EVENT));
       onClose();
       await alert({

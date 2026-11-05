@@ -21,7 +21,7 @@ export default function StoryViewer({
 }: {
   groups: StoryGroup[];
   startGroup: number;
-  onSeen: (tasterId: string, time: number) => void;
+  onSeen: (tasterId: string, recordKey: string) => void;
   onClose: () => void;
 }) {
   const { likedPlaceIds, actions } = useAppData();
@@ -55,9 +55,9 @@ export default function StoryViewer({
     },
   });
 
-  // 본 기록은 맛객별로 기억해 스토리 링을 끕니다.
+  // 본 기록은 맛객별로 기억합니다. 다음에 열면 안 본 기록만 이어서 보이고, 다 보면 링이 꺼집니다.
   useEffect(() => {
-    if (group && record) onSeen(group.tasterId, record.time);
+    if (group && record) onSeen(group.tasterId, record.key);
   }, [group, record, onSeen]);
 
   // 목록이 바뀌어 위치가 사라지면 닫습니다.
@@ -70,12 +70,18 @@ export default function StoryViewer({
   const isLiked = likedPlaceIds.includes(place.id);
   const area = shortArea(place);
   const when = formatRelativeTime(taster.recordedAt);
+  // 화면 왼쪽·오른쪽을 누르고 있는 동안에는 넘김을 멈춥니다.
+  const holdToPause = {
+    onPointerDown: () => setIsPaused(true),
+    onPointerUp: () => setIsPaused(false),
+    onPointerLeave: () => setIsPaused(false),
+  };
 
-  async function toggleLike() {
-    // 확인 창이 뜰 수 있어 저장 처리 중에는 넘김을 멈춥니다.
+  async function chooseLike() {
+    // 하트 선택 시트가 떠 있고 저장하는 동안에는 넘김을 멈춥니다.
     setIsPaused(true);
     try {
-      await actions.toggleLike(place.id);
+      await actions.chooseLike(place.id);
     } finally {
       setIsPaused(false);
     }
@@ -84,7 +90,15 @@ export default function StoryViewer({
   return createPortal(
     <div className="r-feed-story" role="dialog" aria-modal="true" aria-label={`${group.name}의 기록 스토리`}>
       <div className="r-feed-story__media" aria-hidden="true">
-        <PlaceThumb place={place} photo={record.photo} fallback="icon" />
+        {record.photo ? (
+          // 사진 비율과 상관없이 잘리지 않게, 같은 사진을 흐리게 깔고 그 위에 사진 전체를 둡니다(가로 사진도 그대로 보임).
+          <>
+            <img className="r-feed-story__backdrop" src={record.photo} alt="" decoding="async" />
+            <img className="r-feed-story__photo" src={record.photo} alt="" decoding="async" />
+          </>
+        ) : (
+          <PlaceThumb place={place} fallback="icon" />
+        )}
       </div>
       <div className="r-feed-story__scrim-top" aria-hidden="true" />
       <div className="r-feed-story__scrim-bottom" aria-hidden="true" />
@@ -134,18 +148,14 @@ export default function StoryViewer({
         className="r-feed-story__tap r-feed-story__tap--prev"
         aria-label="이전 기록"
         onClick={previous}
-        onPointerDown={() => setIsPaused(true)}
-        onPointerUp={() => setIsPaused(false)}
-        onPointerLeave={() => setIsPaused(false)}
+        {...holdToPause}
       />
       <button
         type="button"
         className="r-feed-story__tap r-feed-story__tap--next"
         aria-label="다음 기록"
         onClick={next}
-        onPointerDown={() => setIsPaused(true)}
-        onPointerUp={() => setIsPaused(false)}
-        onPointerLeave={() => setIsPaused(false)}
+        {...holdToPause}
       />
 
       <div className="r-feed-story__panel">
@@ -171,9 +181,9 @@ export default function StoryViewer({
           <button
             type="button"
             className={`r-feed-story__like${isLiked ? " is-on" : ""}`}
-            aria-label={isLiked ? "내 맛집에서 빼기" : "내 맛집에 저장"}
+            aria-label={isLiked ? "내 맛집 바꾸기" : "내 맛집에 저장"}
             aria-pressed={isLiked}
-            onClick={() => void toggleLike()}
+            onClick={() => void chooseLike()}
           >
             <Icon name="heart" filled={isLiked} />
           </button>

@@ -1,9 +1,11 @@
+/** 해시 주소(#화면/ID) 화면 이동입니다. 앱 안의 이동 기록을 따로 들고 있어 뒤로 버튼이 앱 밖으로 나가지 않게 합니다. */
 import { useEffect, useState } from "react";
 import type { Screen } from "../models/place";
 
 const SCREENS: Screen[] = [
   "home",
   "map",
+  "mymap",
   "register",
   "my",
   "place",
@@ -23,10 +25,16 @@ const SCREENS: Screen[] = [
   "wallet",
   "my-records",
   "drafts",
+  "policy",
 ];
 
+/** 지금 주소의 해시 경로(앞의 # 뺀 값)입니다. 비어 있으면 첫 화면(home)으로 봅니다. */
+function currentHashPath(): string {
+  return window.location.hash.replace(/^#/, "") || "home";
+}
+
 function currentRoute(): { screen: Screen; id: string } {
-  const [screen, id = ""] = window.location.hash.replace("#", "").split("/");
+  const [screen, id = ""] = currentHashPath().split("/");
   return {
     screen: SCREENS.find((item) => item === screen) ?? "home",
     id: decodeURIComponent(id),
@@ -38,17 +46,17 @@ function routeKey(screen: Screen, id = ""): string {
 }
 
 // 해시 경로도 화면 이동 기록에 함께 저장해 앱 내부 뒤로가기를 복원합니다.
-let routeHistory = [window.location.hash.replace(/^#/, "") || "home"];
+let routeHistory = [currentHashPath()];
 let routeHistoryIndex = 0;
 
 /** 로그인 콜백에서 이전 화면 경로를 복원한 뒤 앱 내부 이동 기록을 현재 주소 기준으로 다시 시작합니다. */
 export function resetRouteHistory() {
-  routeHistory = [window.location.hash.replace(/^#/, "") || "home"];
+  routeHistory = [currentHashPath()];
   routeHistoryIndex = 0;
 }
 
 function syncRouteHistory() {
-  const current = window.location.hash.replace(/^#/, "") || "home";
+  const current = currentHashPath();
   if (routeHistory[routeHistoryIndex] === current) return;
 
   const previousIndex = routeHistory.lastIndexOf(current, routeHistoryIndex - 1);
@@ -69,8 +77,7 @@ function syncRouteHistory() {
 
 export function go(screen: Screen, id = "", replace = false) {
   const next = routeKey(screen, id);
-  const current = window.location.hash.replace(/^#/, "") || "home";
-  if (next === current) return;
+  if (next === currentHashPath()) return;
 
   if (replace) {
     window.history.replaceState(window.history.state, "", `#${next}`);

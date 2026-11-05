@@ -1,77 +1,136 @@
+import type { ReactNode } from "react";
 import { MyPositionMarker, TasterMapMarker } from "../../components/BrandAssets";
 import type { MapMe } from "../../components/MapCanvas";
-import { categoryMarkerHtml } from "../../components/mapMarkerArt";
+import { symbolMarkerHtml, type SymbolMarkerKind } from "../../components/mapMarkerArt";
 import Sheet from "../../components/Sheet";
 
-type TasterMarkerKind = "subscribed" | "matched" | "other" | "own";
+type GuideRow = { art: ReactNode; title: string; description: string };
 
-const TASTER_MARKERS: { kind: TasterMarkerKind; isPrivate?: boolean; title: string; description: string }[] = [
-  { kind: "subscribed", title: "구독 중인 맛객", description: "하트 표식이 붙은 코랄 핀이에요." },
-  { kind: "matched", title: "취향이 맞는 맛객", description: "반짝이 표식이 붙은 초록 핀이에요." },
-  { kind: "other", title: "다른 맛객", description: "아직 구독하지 않은 맛객의 기록이에요." },
-  { kind: "own", title: "내 기록 · 공개", description: "체크 표식이 붙은 보라 핀이에요. 다른 사람에게도 보여요." },
-  {
-    kind: "own",
-    isPrivate: true,
-    title: "내 기록 · 나만 보기",
-    description: "자물쇠 표식이 붙은 보라 핀이에요. 나에게만 보여요.",
-  },
-];
+/** 지도와 같은 기호 마커 원본(고정 SVG 문자열)을 그대로 그립니다. */
+function SymbolMarker({ kind }: { kind: SymbolMarkerKind }) {
+  return (
+    <span
+      className={`map-category-marker map-category-marker--${kind}`}
+      aria-hidden="true"
+      dangerouslySetInnerHTML={{ __html: symbolMarkerHtml(kind) }}
+    />
+  );
+}
 
-/** 발견 지도에 나오는 마커 종류를 한눈에 보여 주는 안내 시트입니다. 실제 지도와 같은 모양의 마커를 그립니다. */
-export default function MarkerGuideSheet({ me, onClose }: { me?: MapMe; onClose: () => void }) {
+/** 마커 한 줄: 실제 지도와 같은 모양의 핀 + 이름 + 설명. */
+function GuideItem({ art, title, description }: GuideRow) {
+  return (
+    <li className="r-discover-guide__row">
+      <span className="r-discover-guide__art">{art}</span>
+      <span className="r-discover-guide__copy">
+        <b>{title}</b>
+        <small>{description}</small>
+      </span>
+    </li>
+  );
+}
+
+/**
+ * 지도 마커 종류를 묶음으로 나눠 보여 주는 안내 시트입니다. 실제 지도와 같은 모양의 마커를 그립니다.
+ * 발견(variant="discover")은 맛객 기록만, 내 지도(variant="mymap")는 내 기록·다녀온 곳·가볼 곳·검색한 가게를 설명합니다.
+ */
+export default function MarkerGuideSheet({
+  me,
+  variant = "discover",
+  onClose,
+}: {
+  me?: MapMe;
+  variant?: "discover" | "mymap";
+  onClose: () => void;
+}) {
+  const myPosition: GuideRow = {
+    art: me ? <MyPositionMarker {...me} /> : <span className="position-dot" aria-hidden="true" />,
+    title: "내 위치",
+    description: "내 캐릭터가 서 있는 곳이에요. 발밑 파란 원이 실제 위치예요.",
+  };
+  const discoverGroups: { title: string; rows: GuideRow[] }[] = [
+    {
+      title: "맛객 기록",
+      rows: [
+        {
+          art: <TasterMapMarker kind="subscribed" name="구독 중인 맛객" />,
+          title: "구독 중인 맛객",
+          description: "하트 표식이 붙은 코랄 핀이에요.",
+        },
+        {
+          art: <TasterMapMarker kind="subscribed" isTrusted name="구독 중인 신뢰 맛객" />,
+          title: "구독 중인 신뢰 맛객",
+          description: "같은 맛집에서 입맛이 맞아 신뢰가 80% 넘게 쌓인 구독 맛객이에요. 하트 대신 별이 붙어요.",
+        },
+        {
+          art: <TasterMapMarker kind="other" name="구독하지 않은 맛객" />,
+          title: "구독하지 않은 맛객",
+          description: "아직 구독하지 않은 맛객의 기록이에요.",
+        },
+        {
+          art: <TasterMapMarker kind="other" isTrusted name="구독하지 않은 신뢰 맛객" />,
+          title: "구독하지 않은 신뢰 맛객",
+          description: "신뢰가 80% 넘게 쌓였지만 아직 구독하지 않은 맛객이에요. 주황 별이 붙어요.",
+        },
+      ],
+    },
+    { title: "그 밖에", rows: [myPosition] },
+  ];
+  const myMapGroups: { title: string; rows: GuideRow[] }[] = [
+    {
+      title: "가본 곳",
+      rows: [
+        {
+          art: <TasterMapMarker kind="own" name="내 기록 · 공개" />,
+          title: "내 기록 · 공개",
+          description: "체크 표식이 붙은 보라 핀이에요. 다른 사람의 발견 지도에도 보여요.",
+        },
+        {
+          art: <TasterMapMarker kind="own" isPrivate name="내 기록 · 나만 보기" />,
+          title: "내 기록 · 나만 보기",
+          description: "자물쇠 표식이 붙은 보라 핀이에요. 나에게만 보여요.",
+        },
+        {
+          art: <SymbolMarker kind="visited" />,
+          title: "다녀온 곳",
+          description: "기록 없이 ‘다녀왔는데 입맛에 맞았어요’로 하트한 곳이에요.",
+        },
+      ],
+    },
+    {
+      title: "가볼 곳",
+      rows: [
+        {
+          art: <SymbolMarker kind="liked" />,
+          title: "가볼 곳",
+          description: "‘가보고 싶어요’로 저장한 곳이에요. 가 보고 기록하면 내 기록으로 바뀌어요.",
+        },
+        {
+          art: <SymbolMarker kind="search" />,
+          title: "검색한 가게",
+          description: "위 검색에서 고른 가게예요. 가보고 싶어요를 누르면 가볼 곳으로 남아요.",
+        },
+      ],
+    },
+    { title: "그 밖에", rows: [myPosition] },
+  ];
+  const groups = variant === "mymap" ? myMapGroups : discoverGroups;
+
   return (
     <Sheet title="지도 마커 안내" onClose={onClose} className="r-discover-guide">
       <p className="r-discover-guide__intro">
         핀 색과 표식으로 기록 종류를 구분해요. 맛객이 프로필 사진을 올렸으면 캐릭터 대신 사진이 보여요.
       </p>
-      <ul className="r-discover-guide__list">
-        {TASTER_MARKERS.map((marker) => (
-          <li key={marker.title} className="r-discover-guide__row">
-            <span className="r-discover-guide__art">
-              <TasterMapMarker kind={marker.kind} isPrivate={marker.isPrivate} name={marker.title} />
-            </span>
-            <span className="r-discover-guide__copy">
-              <b>{marker.title}</b>
-              <small>{marker.description}</small>
-            </span>
-          </li>
-        ))}
-        <li className="r-discover-guide__row">
-          <span className="r-discover-guide__art">
-            {/* 지도와 같은 마커 원본(고정 SVG 문자열)을 그대로 씁니다. */}
-            <span
-              className="map-category-marker map-category-marker--liked"
-              aria-hidden="true"
-              dangerouslySetInnerHTML={{ __html: categoryMarkerHtml("liked") }}
-            />
-          </span>
-          <span className="r-discover-guide__copy">
-            <b>하트한 맛집</b>
-            <small>하트를 눌러 저장한 다른 맛객의 맛집이에요. ‘내 맛집’ 필터를 켜면 내 기록과 함께 모아 봐요.</small>
-          </span>
-        </li>
-        <li className="r-discover-guide__row">
-          <span className="r-discover-guide__art">
-            <span className="map-cluster-marker" aria-hidden="true">
-              3
-            </span>
-          </span>
-          <span className="r-discover-guide__copy">
-            <b>여러 곳이 모인 곳</b>
-            <small>숫자만큼 맛집이 모여 있어요. 누르면 지도가 가까워져요.</small>
-          </span>
-        </li>
-        <li className="r-discover-guide__row">
-          <span className="r-discover-guide__art">
-            {me ? <MyPositionMarker {...me} /> : <span className="position-dot" aria-hidden="true" />}
-          </span>
-          <span className="r-discover-guide__copy">
-            <b>내 위치</b>
-            <small>내 캐릭터가 서 있는 곳이에요. 발밑 파란 원이 실제 위치예요.</small>
-          </span>
-        </li>
-      </ul>
+      {groups.map((group) => (
+        <section key={group.title} className="r-discover-guide__group" aria-label={group.title}>
+          <h3 className="r-discover-guide__group-title">{group.title}</h3>
+          <ul className="r-discover-guide__list">
+            {group.rows.map((row) => (
+              <GuideItem key={row.title} {...row} />
+            ))}
+          </ul>
+        </section>
+      ))}
     </Sheet>
   );
 }

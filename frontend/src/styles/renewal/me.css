@@ -228,17 +228,14 @@
   color: var(--color-muted);
   font-size: 12px;
 }
-/* 포인트 타일: 다른 타일과 같은 흰 카드에 금색 아이콘·숫자로만 포인트를 줍니다. */
-.r-me-tile--amber .r-me-tile__icon {
+/* 포인트 타일: 다른 타일과 같은 흰 카드에 금색 아이콘·숫자로만 포인트를 줍니다. 지갑 타일(--amber-icon)은 아이콘만 금색입니다. */
+.r-me-tile--amber .r-me-tile__icon,
+.r-me-tile--amber-icon .r-me-tile__icon {
   background: var(--amber-50);
   color: var(--amber-600);
 }
 .r-me-tile--amber .r-me-tile__value {
   color: var(--amber-700);
-}
-.r-me-tile--amber-icon .r-me-tile__icon {
-  background: var(--amber-50);
-  color: var(--amber-600);
 }
 .r-me-wallet .r-me-tile {
   min-height: 0;
@@ -306,7 +303,6 @@
   font-family: var(--font-body);
 }
 .r-me-link > .icon,
-.r-me-entry > .icon,
 .r-me-setting > .icon {
   width: 18px;
   height: 18px;
@@ -480,8 +476,8 @@
   stroke-width: 2.6;
 }
 .r-me-check.is-on {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
+  border-color: var(--color-ink);
+  background: var(--color-ink);
   color: var(--on-strong);
 }
 .r-me-records__list {
@@ -499,7 +495,7 @@
   border-top: 1px solid var(--color-line);
 }
 .r-me-records__item.is-selected {
-  background: var(--brand-50);
+  background: var(--neutral-100);
 }
 .r-me-records__item > .r-icon-button {
   color: var(--color-subtle);
@@ -658,49 +654,6 @@
 }
 .r-me-day.is-selected::before {
   box-shadow: inset 0 0 0 3px var(--color-ink);
-}
-
-/* 다이어리 기록 한 줄 */
-.r-me-entry {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px 10px 10px;
-  font-family: var(--font-body);
-}
-.r-me-entry__copy {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  gap: 2px;
-}
-.r-me-entry__copy > small {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-.r-me-entry__private {
-  height: 20px;
-  padding: 0 7px;
-  font-size: 11px;
-}
-.r-me-entry__copy > b {
-  overflow: hidden;
-  font-size: 15px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.r-me-entry__note {
-  overflow: hidden;
-  color: var(--neutral-700);
-  font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* 사진 보기 */
@@ -977,4 +930,99 @@
 }
 .r-me-edit__save > .r-button {
   width: 100%;
+}
+
+/* 설정 맨 아래 탈퇴: 실수로 누르지 않게 목록 밖 작은 글자 버튼입니다. */
+.r-me-withdraw {
+  align-self: center;
+  border: 0;
+  background: none;
+  padding: 8px 12px;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.r-me-withdraw:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* ── 이용약관·개인정보 처리방침(#policy) ── */
+.r-me-policy__draft {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+  color: var(--color-primary-strong);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.r-me-policy__doc {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 20px;
+}
+.r-me-policy__doc h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+.r-me-policy__summary {
+  margin: -12px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.r-me-policy__doc section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-line);
+}
+.r-me-policy__doc h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+}
+.r-me-policy__doc p,
+.r-me-policy__doc li {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+.r-me-policy__doc ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+}
+.r-me-policy__doc li::marker {
+  color: var(--color-primary);
+}
+
+/* 신고가 쌓여 가려졌을 때 나 화면 맨 위 안내 */
+.r-me-hidden-notice {
+  margin: 0 16px 12px;
+  word-break: keep-all;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  padding: 12px 14px;
+  color: var(--color-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-me-hidden-notice b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--color-primary-strong);
+  font-size: 14px;
 }

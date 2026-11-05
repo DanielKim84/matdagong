@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { NewPlace, Taster } from "../../models/place";
 import type { RegisterDraftForm } from "../../services/registerDraft";
+import type { NewPlace, Taster } from "../../models/place";
 import { joinReason, splitReason } from "./recordModel";
 
 /** 한 줄 추천·자세한 이야기(저장할 때 한 필드로 합침)와 공개 범위입니다. */

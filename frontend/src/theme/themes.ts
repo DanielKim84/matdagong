@@ -5,7 +5,7 @@
  * 1. themes/<id>.css 를 만들고 `[data-theme="<id>"]` 안에서 계열 단계 변수(--neutral-*, --brand-* …)를 다시 정의합니다.
  *    단계별 밝기 순서(0 밝음 → 900 어두움)를 지켜야 글자 대비가 유지됩니다.
  * 2. 아래 THEMES에 id, 이름, 브라우저 상단 색, 필요한 글꼴을 등록합니다.
- * 3. themes/index.css 에 CSS 파일을 import합니다.
+ * 3. theme/index.css 에 CSS 파일을 import합니다.
  * 4. 기간 적용이 필요하면 THEME_SCHEDULE에 시작·종료일을 넣습니다. 기간이 끝나면 자동으로 기본 테마로 돌아갑니다.
  *
  * 미리 보기: 주소 뒤에 `?theme=<id>`를 붙이면 그 탭에서만 해당 테마로 봅니다. `?theme=auto`로 되돌립니다.

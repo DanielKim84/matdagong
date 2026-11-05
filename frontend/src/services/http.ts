@@ -24,7 +24,7 @@ export class ApiError extends Error {
 }
 
 /** 토큰이 만료됐거나 서버가 401로 거부해 다시 로그인해야 하는 경우입니다. */
-export class SessionExpiredError extends ApiError {
+class SessionExpiredError extends ApiError {
   constructor() {
     super(401, SESSION_EXPIRED_MESSAGE);
     this.name = "SessionExpiredError";
@@ -54,8 +54,11 @@ export function onSessionExpiring(listener: () => void): () => void {
   return () => window.removeEventListener(SESSION_EXPIRING_EVENT, listener);
 }
 
-/** main.tsx가 로그인 직후 저장한 만료 시각을 기준으로 현재 토큰을 더 쓸 수 있는지 확인합니다. */
-function isStoredTokenExpired(now = Date.now()): boolean {
+/**
+ * 로그인 직후(services/auth.ts) 저장한 만료 시각을 기준으로 현재 토큰을 더 쓸 수 있는지 확인합니다.
+ * 앱을 열 때(readStoredAccessToken)와 요청 직전이 같은 기준(만료 10초 전부터 만료로 봄)을 쓰도록 이 함수 하나만 씁니다.
+ */
+export function isStoredTokenExpired(now = Date.now()): boolean {
   const token = readStorage(ACCESS_TOKEN_KEY, "session");
   const expiresAt = Number(readStorage(TOKEN_EXPIRY_KEY, "session"));
   if (!token || !Number.isFinite(expiresAt) || expiresAt <= 0) return true;

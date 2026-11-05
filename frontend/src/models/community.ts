@@ -1,6 +1,6 @@
 /** 커뮤니티(프로필·취향 태그·구독·포인트·알림) 자료형입니다. 서버 JSON 필드 이름을 그대로 씁니다. */
 
-export type PaidPlan = { termMonths: number; priceAmount: number };
+type PaidPlan = { termMonths: number; priceAmount: number };
 export type PlanCatalog = {
   currency: "KRW";
   testMode: boolean;
@@ -31,7 +31,7 @@ export type IncomingSubscription = {
   startAt: string;
   endAt: string | null;
 };
-export type PointEntry = {
+type PointEntry = {
   historyId: string;
   eventType: "EARN" | "SPEND" | "ADJUST";
   title: string;
@@ -76,7 +76,19 @@ export type MyProfile = {
   profileTags: string[];
   preferenceTags: string[];
   excludedTags: string[];
+  /** 신고가 쌓여 자동으로 가려졌으면 true. 다른 맛객에게 프로필·기록이 보이지 않고 새 기록을 남길 수 없습니다. */
+  hiddenByReports?: boolean;
 };
+
+/** 맛객 신고 이유입니다. 커뮤니티 서비스 ReportReason과 같습니다. */
+export type TasterReportReason =
+  | "ILLEGAL_PHOTO"
+  | "ADVERTISING"
+  | "ABUSIVE"
+  | "DEFAMATION"
+  | "IMPERSONATION"
+  | "SPAM"
+  | "OTHER";
 
 export type FoodFocus = "RESTAURANT" | "CAFE_DESSERT" | "BOTH";
 export type ActivityScope = "LOCAL" | "TRAVEL" | "BOTH";
