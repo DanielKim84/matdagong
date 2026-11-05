@@ -84,6 +84,7 @@ git -C C:\workspace\dagong-matdagong pull
 | 카카오 REST API 키 | 두 `.env` 모두 | Kakao Developers → 맛다공 앱 → **앱 키 → REST API 키** |
 | 카카오 Client Secret | `dagong-auth\.env` | Kakao Developers → 맛다공 앱 → **카카오 로그인 → 보안 → Client Secret** |
 | 카카오 JavaScript 키 | `dagong-matdagong\frontend\.env.local` | Kakao Developers → 맛다공 앱 → **앱 키 → JavaScript 키** |
+| 네이버 Client ID·Client Secret | `dagong-auth\.env` | 네이버 Developers → 내 애플리케이션 → 맛다공 앱 → **개요 → 애플리케이션 정보** |
 | 서명 키 비밀번호 | `dagong-auth\.env` | 이 PC에서 새로 정하는 임의의 긴 문자열 |
 | 사진 주소 서명 키 | `dagong-matdagong\.env` | 이 PC에서 새로 정하는 임의의 32자 이상 문자열 |
 
@@ -92,6 +93,7 @@ git -C C:\workspace\dagong-matdagong pull
 - 카카오 앱에는 이미 아래가 등록되어 있어 PC가 바뀌어도 그대로 동작합니다(둘 다 `localhost`라서). 새로 등록할 필요 없습니다.
   - 카카오 로그인 Redirect URI: `http://localhost:4840/login/oauth2/code/kakao`
   - 플랫폼 Web 도메인: `http://localhost:4845`
+- 네이버 앱에는 **API 설정 → 네이버 로그인 → PC 웹**에 서비스 URL `http://localhost:4840`, Callback URL `http://localhost:4840/login/oauth2/code/naver`를 등록하고, 제공 정보로 **별명**을 고릅니다. 검수 전에는 **멤버관리**에 등록한 네이버 아이디만 로그인할 수 있습니다.
 
 ---
 
@@ -118,9 +120,12 @@ AUTH_ACCESS_TOKEN_TTL=PT8H
 
 KAKAO_CLIENT_ID=<카카오 REST API 키>
 KAKAO_CLIENT_SECRET=<카카오 Client Secret>
+
+NAVER_CLIENT_ID=<네이버 Client ID>
+NAVER_CLIENT_SECRET=<네이버 Client Secret>
 ```
 
-`AUTH_KEYSTORE_PATH`와 `KAKAO_REDIRECT_URI`는 적지 않습니다(기본값 사용: `%USERPROFILE%\.dagong-auth\auth-signing.p12`, `http://localhost:4840/login/oauth2/code/kakao`).
+`AUTH_KEYSTORE_PATH`, `KAKAO_REDIRECT_URI`, `NAVER_REDIRECT_URI`는 적지 않습니다(기본값 사용: `%USERPROFILE%\.dagong-auth\auth-signing.p12`, `http://localhost:4840/login/oauth2/code/kakao`, `.../naver`). 네이버 값을 아직 받지 않았으면 두 줄을 빼 두면 되고, 그동안 네이버 버튼은 네이버 오류 화면으로 넘어갑니다.
 
 ### 5-2. 서명 키 만들기 (PC마다 한 번)
 

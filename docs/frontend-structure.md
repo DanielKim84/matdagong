@@ -17,9 +17,10 @@ index.html → src/main.tsx → app/signIn.ts (로그인·가입 확인) → app
 | `src/main.tsx` | 진입점. 테마 적용, 로그인 확인 후 시작 화면 그리기 |
 | `src/app/signIn.ts` | 공통 인증(Authorization Code + PKCE) 로그인 시작·완료, 로그아웃, 로그인 전 주소 기억·복원 |
 | `src/app/startupView.tsx` | 로그인 중·오류·소개·가입·앱 중 무엇을 그릴지 정하고 렌더링 |
-| `src/app/App.tsx` | 서버 데이터를 불러와 `AppData`로 묶고, 해시 주소에 맞는 화면(경로→화면 표)과 하단 탭을 그림 |
+| `src/app/App.tsx` | 아래 훅들이 불러온 서버 데이터를 `AppData`로 묶고, 해시 주소에 맞는 화면과 하단 탭을 그림 |
+| `src/app/useCommunity.ts`, `useMyPlaces.ts`, `usePlaceSearch.ts`, `recordActions.ts`, `screenViews.ts` | App에서 나눈 부분: 내 프로필·맛객·구독·포인트 / 내 기록·최근 본 곳·하트 / 공개 장소 검색 / 기록 저장·하트→기록·공개 범위 바꾸기 / 주소별 화면 표(`SCREEN_VIEWS`) |
 | `src/app/AppData.tsx` | 화면들이 함께 쓰는 데이터와 동작(좋아요, 구독, 기록 저장, 프로필 저장, 알림 등). 화면은 props 대신 `useAppData()`로 꺼내 씀 |
-| `src/app/useNotifications.ts`, `useLegacyMigration.ts`, `enrichPlaces.ts`, `accountRole.ts` | App에서 나눈 알림 상태, 예전 브라우저 기록 서버 이전, 장소에 작성자 정보 합치기, 계정 역할 계산 |
+| `src/app/useNotifications.ts`, `useLegacyMigration.ts`, `useLikeChoice.ts`·`LikeChoiceSheet.tsx`, `enrichPlaces.ts`, `accountRole.ts` | App에서 나눈 알림 상태, 예전 브라우저 기록 서버 이전, 하트 누를 때 고르는 시트(가 보고 싶어요·입맛에 맞았어요·별로였어요), 장소에 작성자 정보 합치기, 계정 역할 계산 |
 | `src/app/navigation.ts` | 해시 주소(`#화면/ID`)와 앱 내부 뒤로 가기 기록. 화면 목록은 `SCREENS` |
 | `src/screens/<영역>/` | 영역별 화면 폴더(아래 표). `screens/` 바로 아래에는 여러 영역이 함께 쓰는 시트(구독 안내, 태그 제안)와 프로필 편집 조립 파일만 둠 |
 | `src/services/http.ts` | 맛다공 API 공통 요청(`apiRequest`, `API_BASE_URL`): 인증 헤더, JSON·204 처리, `ApiError`(상태 코드), 토큰 만료·401 시 재로그인 한 번만 시작 |
@@ -27,10 +28,10 @@ index.html → src/main.tsx → app/signIn.ts (로그인·가입 확인) → app
 | `src/services/auth.ts` | 인증 서버 호출: 토큰 교환, 맛다공 가입 상태 조회·가입, 세션 정리 |
 | `src/services/kakao.ts`, `regions.ts`, `photos.ts` | 카카오 지도 SDK·장소 검색 / 법정동 지역 목록 / 사진 줄이기 |
 | `src/services/registerDraft.ts`, `activity.ts` | 로그인 만료 직전 기록 입력 보관·복원 / 서버 저장 전 버전의 브라우저 기록 읽기(이전용) |
-| `src/components/` | 여러 화면이 쓰는 부품. `ui.tsx`(TopBar, NotificationButton, Segmented, SectionHead, EmptyState, Skeleton), `TabBar`, `Sheet`, `NotificationDialog`(확인·안내창, `notify`도 이것을 씀), `PlaceThumb`, `StepProgress`, `MascotArt`, `PaginationDots`, 지도(`MapCanvas`, `mapMarkerArt`), 태그 고르기 |
-| `src/hooks/` | 여러 화면이 쓰는 React 훅: `useModalLock`(스크롤 잠금·Esc·포커스 복원), `useSwipe`(포인터 스와이프) |
-| `src/models/` | 자료형과 도메인 상수: `place.ts`(Place, Taster, `MY_TASTER_ID`, `placePhoto`), `community.ts`(프로필·구독·알림 등), `tasteTags.ts`(취향 묶음 이름·한도), `region.ts`, 카카오 SDK 전역 타입 |
-| `src/utils/` | React와 무관한 계산: `format.ts`(시각·날짜·숫자·원·거리·분류 표시), `storage.ts`(브라우저 저장소 키 `STORAGE_KEYS`와 안전한 읽기·쓰기), `errorMessage.ts`, `placeLinks.ts`(길찾기·공유·카카오맵 주소), `profileMedia.ts`(맛객 사진), `geo.ts`, `accessToken.ts`, `pagination.ts`, `dragScroll.ts`(PC 마우스 끌어 넘기기) |
+| `src/components/` | 여러 화면이 쓰는 부품. `ui.tsx`(TopBar, NotificationButton, Segmented, SectionHead, EmptyState, Skeleton), `TabBar`, `Sheet`, `NotificationDialog`(확인·안내창, `notify`도 이것을 씀), `PlaceThumb`, `PlaceCard`(맛집 목록 카드), `TasteScore`(맛객 옆 신뢰·취향 % 칩), `StepProgress`, `MascotArt`, `PaginationDots`, 지도(`MapCanvas`, 마커 만들기·묶기 `mapMarkers`, 마커 그림 `mapMarkerArt`, 범위 맞추기 계산 `mapFit`, 내 위치 `useMyLocation`), 태그 고르기(`TasteTagPicker`), 태그 하나(`HashTag`: 크림색 칩 + 코랄 #)와 묶음별 태그(`TagGroupList`), 맛객 사진(`TasterAvatar`: 올린 사진, 없거나 깨지면 계정별 기본 그림) |
+| `src/hooks/` | 여러 화면이 쓰는 React 훅: `usePageScrollLock`(시트·확인창·전체 화면 창이 함께 쓰는 배경 스크롤 잠금, 겹쳐 열려도 수를 셈), `useModalLock`(전체 화면 창의 잠금·Esc·포커스 복원), `useScrolledPast`(큰 사진이 떠 있는 상단 바 밑으로 지나갔는지), `useSwipe`(포인터 스와이프) |
+| `src/models/` | 자료형과 도메인 상수: `place.ts`(Place, Taster, `MY_TASTER_ID`, `placePhoto`), `community.ts`(프로필·구독·알림 등), `trust.ts`(신뢰 등급·정렬·표시 문구), `tasteTags.ts`(취향 묶음 이름·한도), `region.ts`, 카카오 SDK 전역 타입 |
+| `src/utils/` | React와 무관한 계산: `format.ts`(시각·날짜·숫자·원·거리·분류 표시), `storage.ts`(브라우저 저장소 키 `STORAGE_KEYS`와 안전한 읽기·쓰기), `errorMessage.ts`, `placeLinks.ts`(길찾기·공유·카카오맵 주소), `profileMedia.ts`(맛객 사진), `geo.ts`, `accessToken.ts`, `pagination.ts`, `dragScroll.ts`(PC 마우스 끌어 넘기기), `stableHash.ts`(ID로 늘 같은 기본 사진·색을 고르는 해시) |
 | `src/theme/` | 색·글꼴·반경 토큰과 시즌 테마 예약([테마 관리](ui/theming.md)) |
 | `src/styles/renewal/` | 화면 스타일. `ui.css`(공통 `r-` 부품) + 영역별 파일(`discover.css` 등). 새 스타일은 여기에 둠 |
 | `src/styles/` (그 밖) | 리뉴얼 전부터 쓰는 공통 규칙(앱 틀, 아바타, 지도 마커, 프로필 편집·태그 고르기 폼, 로그인 시작 화면) |
@@ -39,22 +40,23 @@ index.html → src/main.tsx → app/signIn.ts (로그인·가입 확인) → app
 
 | 폴더 | 경로(해시) | 화면 |
 | --- | --- | --- |
-| `discover/` | `#home`, `#map` | 발견: 지도 + 필터 칩 + 장소 카드 넘기기 + 끌어 올리는 목록 시트 |
-| `place/` | `#place/<id>` | 맛집 상세: 공통 가게 정보 + 맛객 고르기(`PlaceTasterPicker`) + 고른 맛객의 기록(`PlaceTasterRecord`, 사진·메뉴·태그·매장 이용 정보), 사진 보기 |
+| `discover/` | `#home`, `#map` | 발견: 지도 + 필터 칩 + 장소 카드 넘기기 + 끌어 올리는 목록 시트. 다른 맛객(구독·구독 안 한)의 기록만 보여 주고 내 기록·하트는 빼요(`discoverPlaces`) |
+| `mymap/` | `#mymap` | 내 지도(가운데 탭): 내 기록·다녀온 곳·가볼 곳 마커와 전체/가볼 곳/가본 곳 칩, 카카오 전체 검색(`MyMapSearch`)으로 고른 가게를 가볼 곳으로 저장(`POST /api/v1/places/wishes`), 가게 카드(`MyMapCard`), 기록하기 버튼(`components/RecordMenuButton`) |
+| `place/` | `#place/<id>` | 맛집 상세: 공통 가게 정보 + 맛객 고르기(`PlaceTasterPicker`) + 고른 맛객의 기록(`PlaceTasterRecord`, 메뉴 사진 카드·묶음별 태그), 사진 보기 |
 | `feed/` | `#feed`, `#notifications` | 피드(스토리·기록 카드), 알림 |
 | `record/` | `#register`, `#register/<id>` | 단계형 기록하기와 완료 화면. 단계마다 한 파일, 입력 상태는 역할별 훅(`useRecordPhotos` 등)을 `useRecordForm`이 묶음 |
 | `tasters/` | `#tasters`, `#profile/<id>`, `#subscriptions`(`/incoming`이면 나를 구독 탭) | 맛객 탐색, 맛객 프로필, 구독 관리 |
-| `me/` | `#my`, `#diary`, `#saved`·`#liked`·`#recent`, `#my-records/public|private`, `#drafts`, `#wallet`, `#settings` | 나 홈, 기록 일기(달력), 모음, 내 기록 공개 설정, 빠른 장소 기록, 포인트 지갑, 계정 설정 |
+| `me/` | `#my`, `#diary`, `#saved`·`#liked`·`#recent`, `#my-records/public|private`, `#drafts`, `#wallet`, `#settings`, `#policy/terms|privacy` | 나 홈, 기록 일기(달력), 모음, 내 기록 공개 설정, 빠른 장소 기록, 포인트 지갑, 계정 설정, 이용약관·개인정보 처리방침(본문은 `me/policyDocuments.ts`, 법률 검토 전 초안) |
 | `onboarding/` | `#intro`, 가입 | 서비스 소개(`IntroScreen`), 가입 단계(`SignupScreen`: 닉네임 → 취향 → 맛객 추천) |
 | `profile-edit/` | `#profile-edit` | 프로필 편집 부품(공개 프로필, 사진·배경, 활동 지역, 취향). `screens/ProfileSettingsScreen.tsx`가 조립 |
 
-하단 탭(발견·피드·기록·맛객·나)은 각 탭의 첫 화면에서만 보이고, 나머지 화면은 상단 바의 뒤로 버튼을 씁니다.
+하단 탭(발견·피드·내 지도·맛객·나, 내 지도가 가운데 동그란 탭)은 각 탭의 첫 화면에서만 보이고, 나머지 화면은 상단 바의 뒤로 버튼을 씁니다.
 
 ## 데이터와 화면 경계
 
 로그인은 `dagong-auth`를 사용합니다. 맛다공 가입 상태 확인·가입은 인증 서버(`/auth-api`)를, 나머지 API는 API Gateway(`/api`)를 거쳐 장소 서비스 또는 커뮤니티 서비스를 호출합니다. 모든 API 호출은 `services/http.ts`의 `apiRequest`를 거치며, 로그인이 만료되면 `app/signIn.ts`가 등록한 처리기가 현재 주소를 기억하고 다시 로그인합니다. 이때 등록 화면은 작성 중인 입력을 `registerDraft.ts`로 보관합니다.
 
-장소 목록에는 장소 서비스의 개발용 샘플 카탈로그(`p-001` 등)와 사용자가 등록한 장소가 함께 나옵니다. 장소 등록 기록·하트·최근 본 장소·빠른 장소 기록은 장소 서비스 DB에 계정별로 저장됩니다. 비공개 기록 사진은 서명된 `/media/...?exp=&sig=` 주소로 내려오므로 주소가 만료될 수 있습니다. 프로필·취향·구독·포인트·태그 제안·알림은 커뮤니티 API 및 DB에 저장됩니다. 알림 수신 설정은 `GET`/`PUT /api/v1/notifications/settings`(`{ tasterNewPlace, newSubscriber, serviceNews }`)로 읽고 저장하며(커뮤니티 DB `user_notification_settings`, 행이 없으면 새 기록·새 구독자 켬, 소식 끔), 끈 종류의 알림은 서버가 만들지 않습니다. 내 기록 여러 곳의 공개 범위는 `PUT /api/v1/places/records/visibility`(`{ placeIds, visibility }`)로 한 번에 바꿉니다. 실제 결제 처리는 연결되지 않았고 유료 구독은 개발용 완료 흐름입니다.
+장소 목록에는 장소 서비스의 개발용 샘플 카탈로그(`p-001` 등)와 사용자가 등록한 장소가 함께 나옵니다. 장소 등록 기록·하트·최근 본 장소·빠른 장소 기록·맛집 정보 제보는 장소 서비스 DB에 계정별로 저장됩니다. 내 기록 지우기는 `DELETE /api/v1/places/records/{placeId}`, 맛집 정보 제보는 `POST /api/v1/places/{placeId}/reports`(`{ reason, memo }`)입니다. 맛객 신고는 맛객 프로필과 맛집 기록 카드의 `TasterReportButton`(`screens/tasters`)에서 `POST /api/v1/tasters/{tasterId}/reports`(`{ reason, memo, placeId }`)로 보내고, 내가 신고한(확인 전) 맛객은 `GET /api/v1/users/me/taster-reports`로 받아 신고 버튼을 "신고했어요 · 확인 중"으로 막습니다. 신고가 쌓여 가려진 내 프로필은 나 화면 맨 위에 안내합니다. 같은 종류의 다른 기기에서 로그인해 이 기기 로그인이 끝났는지는 게이트웨이(`ActiveLoginFilter`)가 API 요청마다 확인해 401로 막고(답은 토큰별 30초 기억), `useSignedInDeviceCheck`는 앱으로 돌아올 때 가입 상태를 한 번 물어 마지막 접속 시각을 남깁니다. 맛다공 탈퇴는 `DELETE /api/v1/places/me`(장소 데이터) → `DELETE /api/v1/users/me`(커뮤니티 데이터) → 공통 로그인 `DELETE /api/v1/matdagong/membership`(맛다공 가입을 WITHDRAWN으로 바꾸고 맛다공 로그인 기록도 지움, 공통 계정·소셜 연결은 남김) 순서로 부르며, 셋 다 다시 불러도 괜찮습니다. 비공개 기록 사진은 서명된 `/media/...?exp=&sig=` 주소로 내려오므로 주소가 만료될 수 있습니다. 프로필·취향·구독·포인트·태그 제안·알림은 커뮤니티 API 및 DB에 저장됩니다. 알림 수신 설정은 `GET`/`PUT /api/v1/notifications/settings`(`{ tasterNewPlace, newSubscriber, serviceNews }`)로 읽고 저장하며(커뮤니티 DB `user_notification_settings`, 행이 없으면 새 기록·새 구독자 켬, 소식 끔), 끈 종류의 알림은 서버가 만들지 않습니다. 내 기록 여러 곳의 공개 범위는 `PUT /api/v1/places/records/visibility`(`{ placeIds, visibility }`)로 한 번에 바꿉니다. 실제 결제 처리는 연결되지 않았고 유료 구독은 개발용 완료 흐름입니다.
 
 샘플 장소의 작성자는 `infra/postgres/dev/seed-community-test-users.sql`의 테스트 맛객(`20000000-0000-4000-8000-00000000000N`)과 같은 ID를 씁니다. `utils/profileMedia.ts`의 기본 사진·배경과 지도 화면의 샘플 장소 위치 이동(`p-\d+`)은 이 샘플 데이터를 위한 것입니다.
 
@@ -62,7 +64,7 @@ index.html → src/main.tsx → app/signIn.ts (로그인·가입 확인) → app
 
 브라우저 저장소는 화면 편의용 값에만 쓰고, 키와 읽기·쓰기는 모두 `utils/storage.ts`(`STORAGE_KEYS`)를 거칩니다.
 
-- sessionStorage: 로그인 토큰·PKCE 값·돌아갈 주소(`app/signIn.ts`, `http.ts`), 등록 입력 보관과 등록 화면으로 넘기는 일회성 장소(`registerDraft.ts`의 키), 발견 화면의 필터·시트 높이(`discoverModel.ts`)
+- sessionStorage: 로그인 토큰·PKCE 값·돌아갈 주소(`app/signIn.ts`, `http.ts`), 등록 입력 보관과 등록 화면으로 넘기는 일회성 장소(`registerDraft.ts`의 키), 발견 화면의 필터·시트 높이(`discoverStorage.ts`)
 - localStorage: 계정별 소개 화면 완료 표시, 피드 스토리에서 이미 본 기록(`feedRecords.ts`), 이전 버전 기록과 그 이전 완료 표시
 
 맛객 프로필의 공개 분야·태그와 개인 추천 취향은 별도로 저장합니다. 추천 취향의 제외 조건은 다른 사용자에게 공개하지 않습니다. 가이드 태그는 `tag_group`으로 음식 종류, 맛·메뉴, 카페·디저트, 방문 스타일, 제외 조건을 구분합니다. API에서 필요한 `MENU`/`VISIT` 구분은 해당 그룹에서 계산합니다.

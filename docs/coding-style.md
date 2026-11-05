@@ -79,6 +79,7 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
 | 빈 화면·오류·불러오는 중 | `EmptyState`(`tone`, `action.variant`), `Skeleton` — 다시 시도 문구는 "다시 불러오기" |
 | 시트·확인창·안내 | `Sheet`, `useNotificationDialog().confirm/alert`, `actions.notify` (위험한 동작은 `tone: "danger"` 확인) |
 | 사진 칸 / 대표 사진 | `PlaceThumb`, `placePhoto()` |
+| 맛집 목록 한 줄(카드) | `PlaceCard` (`r-place-cards` 목록 안에) |
 | 맛객 사진 | `avatarSource()`, `avatarFallback()` |
 | 진행 막대, 캐릭터, 페이지 점 | `StepProgress`, `MascotArt`, `PaginationDots` |
 | 모달 잠금, 스와이프 | `useModalLock`, `useSwipe` |
@@ -94,6 +95,7 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
 - 클래스 이름: `r-<영역>-<블록>__<요소>--<변형>` (예: `r-discover-sheet__title`), 상태는 `is-on`, `is-selected`처럼 `is-`로 시작. 화면 최상위는 `<main className="r-screen r-<영역>">`(하위 화면은 `r-<영역>-<화면>`, `-screen` 접미사 없음).
 - 색·글꼴·반경·그림자는 **테마 토큰만** 씁니다(`var(--color-primary)`, `var(--neutral-100)`, `var(--font-display)`). 반경 토큰: `--radius-xs`(4) · `--radius-sm`(12) · `--radius-md`(14) · `--radius-control`(16) · `--radius-card`(22) · `--radius-sheet`(28) · `--radius-pill`. 맞는 토큰이 없을 때만 숫자를 쓰고 이유를 주석으로 남깁니다. 자세한 내용은 [테마 관리](ui/theming.md).
 - 애니메이션·스켈레톤·글자 버튼은 공용(`r-pulse`, `.r-skeleton`, `.r-text-button`, `.visually-hidden`)을 씁니다.
+- 강조색은 뜻에 따라 정해진 것만 씁니다([현재 UI 기준 · 색 역할](ui/current-design.md#색-역할)). 정보 태그는 `.r-tag`, 나와의 관계(내 기록·구독 중·나와 같아요)는 `.r-tag--mine`, 지금 고른 상태는 먹색(`.r-chip.is-on`, `.r-segmented`)입니다. 영역 CSS에서 태그·선택 색을 새로 만들지 않습니다.
 - 공용 부품(`.r-empty`, `.r-button` 등)의 모양을 바꿀 때는 영역 클래스 아래로 한정합니다(`.r-me-empty .r-button`). 전역으로 덮어쓰지 않습니다.
 - 밝은 분위기를 유지합니다(다크 테마는 별도 요청이 있을 때만).
 - 선택자는 짧게: 클래스 하나 또는 두 단계까지. id 선택자는 앱 루트(`#root`) 외에는 쓰지 않습니다.
@@ -106,12 +108,12 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
   - **Controller**: HTTP 입출력만. `JdbcTemplate`·`@Transactional`을 쓰지 않습니다.
   - **Service**: 규칙, DB 작업, 트랜잭션. 조회만 하는 메서드는 `@Transactional(readOnly = true)`, 데이터를 바꾸는 메서드만 `@Transactional`.
   - **`XxxModels`**: 그 기능의 요청·응답 `record`를 한 파일에 모읍니다. `import static …XxxModels.*`는 이 묶음에만 씁니다.
-- **서비스 공통 코드는 `backend/matdagong-common`**(인증 계정 꺼내기, JWT 검증, 서비스 간 RestClient, 이미지 형식 검사, 오류 처리 기반, 시각 변환, 테스트용 embedded PostgreSQL). 서비스마다 같은 코드를 복사하지 않습니다.
+- **서비스 공통 코드는 `backend/matdagong-common`**(인증 계정 꺼내기, JWT 검증, 서비스 간 RestClient, 이미지 형식 검사, 오류 처리 기반, 시각 변환, LIKE 검색어 이스케이프(`LikePatterns`), 테스트용 embedded PostgreSQL과 동시 요청 재현 도우미). 서비스마다 같은 코드를 복사하지 않습니다.
 - **오류 응답**: `ResponseStatusException`(한국어 문구)을 던지고, 서비스마다 하나 있는 `@RestControllerAdvice`가 `ProblemDetail`의 `detail`로 내보냅니다. 화면(`services/http.ts`)은 `detail`을 그대로 보여 줍니다. 같은 상황은 같은 상태 코드·문구(상수)로 답합니다(예: 프로필이 먼저 필요 → 409 "맛객 프로필을 먼저 만들어 주세요.").
 - **검증**: 형식(길이·패턴·범위)은 record 애너테이션과 `@Valid`, 정해진 값 목록은 enum으로 받습니다. 공백 제거 같은 값 정리는 record의 compact constructor에서 검증 전에 합니다. Service는 업무 규칙만 확인합니다.
 - **상태 값**은 enum으로 다룹니다(DB·JSON 값은 그대로).
 - 의존성은 생성자 주입, 필드는 `private final`. 필드 주입(`@Autowired` 필드)은 쓰지 않습니다. 운영용 생성자 + 테스트용 package-private 생성자(RestClient·Clock 주입)가 있을 때만 운영 생성자에 `@Autowired`를 붙입니다.
-- **JDBC**: 필드 이름 `jdbc`(`JdbcTemplate`), RowMapper 인자 `(rs, row)`, UUID는 `rs.getObject(col, UUID.class)`, 시각은 `OffsetDateTime`, 존재 확인은 `EXISTS`, 여러 값은 `= ANY(?::uuid[])`. SQL은 텍스트 블록(`"""`)에 쓰고 **값은 항상 `?` 바인딩**. 고정된 SQL 조각을 조합하는 것은 괜찮지만 사용자 값을 이어 붙이지 않습니다.
+- **JDBC**: 필드 이름 `jdbc`(`JdbcTemplate`), RowMapper 인자 `(rs, row)`, UUID는 `rs.getObject(col, UUID.class)`, 시각은 `OffsetDateTime`, 존재 확인은 `EXISTS`, 여러 값은 `= ANY(?::uuid[])`. SQL은 텍스트 블록(`"""`)에 쓰고 **값은 항상 `?` 바인딩**. 고정된 SQL 조각을 조합하는 것은 괜찮지만 사용자 값을 이어 붙이지 않습니다. 검색어를 `LIKE`·`ILIKE`에 넣을 때는 `LikePatterns.contains()`로 바인딩하고 `ESCAPE '\'`를 붙입니다(Java 텍스트 블록에서는 `'\\'`).
 - 사용자에게 돌아가는 오류 메시지는 한국어. 로그에 토큰·비밀번호·개인정보를 남기지 않습니다. 예상하지 못한 오류(500)는 내부 메시지를 응답에 담지 않습니다.
 - **Flyway**: 이미 적용된 마이그레이션 파일은 절대 고치지 않고 새 버전(`V<n>__설명.sql`)을 추가합니다. 테이블·칼럼 설명은 `COMMENT ON`으로 남깁니다.
 - **테스트**: DB를 쓰는 테스트는 `*IntegrationTest`로 이름 짓고, 공통 지원 클래스로 embedded PostgreSQL을 클래스당 한 번 띄운 뒤 테스트마다 TRUNCATE 합니다(`getPostgresDatabase()`는 부를 때마다 새 DataSource를 만들므로 하나를 받아 공유). DB 없는 테스트는 `*Test`. 의존성에 `null`을 넣지 말고 실제 객체나 테스트 대역을 씁니다. 메서드 이름은 한국어로 동작을 설명해도 됩니다(`일치율은_내_좋아요_태그_중_겹친_비율이다`).
