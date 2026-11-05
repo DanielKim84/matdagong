@@ -2,7 +2,9 @@ package kr.matdagong.place.catalog;
 
 import static kr.matdagong.place.catalog.PlaceModels.*;
 
-import java.time.LocalDate;
+import java.sql.Array;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,13 +14,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import kr.matdagong.place.media.MediaUrlSigner;
+import kr.matdagong.place.profile.HiddenTasters;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 /**
  * DB에 저장된 장소와 맛객별 기록을 화면 응답으로 조립합니다.
- * 장소·기록마다 쿼리를 반복하지 않도록 하위 데이터는 ID 배열로 한 번씩 조회하고,
- * 사진 바이트는 읽지 않고 주소만 응답에 담습니다.
+ * DB가 멀리 있어 쿼리를 오가는 횟수가 응답 시간을 좌우하므로, 장소(기록 수 포함) 한 번, 기록(메뉴·태그·방문 조건·사진·
+ * 작성자 기록 수 포함) 한 번, 모두 두 번만 조회합니다. 사진 바이트는 읽지 않고 주소만 응답에 담습니다.
+ * 신고가 쌓여 가려진 맛객의 기록은 본인에게만 보입니다.
  */
 @Component
 public class PlaceViewLoader {
@@ -31,24 +35,30 @@ public class PlaceViewLoader {
 
     private final JdbcTemplate jdbc;
     private final MediaUrlSigner signer;
+    private final HiddenTasters hiddenTasters;
 
-    public PlaceViewLoader(JdbcTemplate jdbc, MediaUrlSigner signer) {
+    public PlaceViewLoader(JdbcTemplate jdbc, MediaUrlSigner signer, HiddenTasters hiddenTasters) {
         this.jdbc = jdbc;
         this.signer = signer;
+        this.hiddenTasters = hiddenTasters;
     }
 
     /** 요청한 순서를 유지해 장소 목록을 반환하며, 없는 장소 ID는 결과에서 빠집니다. */
     public List<PlaceView> load(List<UUID> placeIds, UUID viewerId, RecordScope scope) {
         if (placeIds.isEmpty()) return List.of();
         String[] placeIdArray = ids(placeIds);
+        String[] hiddenIds = hiddenTasters.idsExcept(viewerId);
 
         Map<UUID, PlaceRow> places = new HashMap<>();
         jdbc.query(
                 """
-                SELECT place_id, provider_code, provider_place_id, place_name, category, address,
-                       latitude, longitude, provider_phone, provider_url, road_address, lot_address
-                FROM restaurant_places WHERE place_id = ANY(?::uuid[])
-                """,
+                SELECT p.place_id, p.provider_code, p.provider_place_id, p.place_name, p.category, p.address,
+                       p.latitude, p.longitude, p.provider_phone, p.provider_url, p.road_address, p.lot_address,
+                       (SELECT count(*) FROM restaurant_records r
+                        WHERE r.place_id = p.place_id AND %s AND NOT (r.account_id = ANY(?::uuid[]))) AS record_count
+                FROM restaurant_places p WHERE p.place_id = ANY(?::uuid[])
+                """
+                        .formatted(countFilter(scope)),
                 rs -> {
                     UUID placeId = rs.getObject("place_id", UUID.class);
                     places.put(
@@ -65,42 +75,12 @@ public class PlaceViewLoader {
                                     rs.getString("provider_phone"),
                                     rs.getString("provider_url"),
                                     rs.getString("road_address"),
-                                    rs.getString("lot_address")));
+                                    rs.getString("lot_address"),
+                                    rs.getInt("record_count")));
                 },
-                (Object) placeIdArray);
+                placeArgs(placeIdArray, viewerId, scope, hiddenIds));
 
-        List<RecordRow> records = jdbc.query(
-                """
-                SELECT record_id, place_id, account_id, author_name, reason, visibility, reg_dt
-                FROM restaurant_records
-                WHERE place_id = ANY(?::uuid[]) AND %s
-                ORDER BY reg_dt DESC
-                """
-                        .formatted(recordFilter(scope)),
-                (rs, row) -> new RecordRow(
-                        rs.getObject("record_id", UUID.class),
-                        rs.getObject("place_id", UUID.class),
-                        rs.getObject("account_id", UUID.class),
-                        rs.getString("author_name"),
-                        rs.getString("reason"),
-                        RecordVisibility.valueOf(rs.getString("visibility")),
-                        rs.getObject("reg_dt", OffsetDateTime.class).toString()),
-                filterArgs(placeIdArray, viewerId, scope));
-
-        Map<UUID, Integer> recordCounts = new HashMap<>();
-        jdbc.query(
-                """
-                SELECT place_id, count(*) FROM restaurant_records
-                WHERE place_id = ANY(?::uuid[]) AND %s
-                GROUP BY place_id
-                """
-                        .formatted(countFilter(scope)),
-                rs -> {
-                    recordCounts.put(rs.getObject(1, UUID.class), rs.getInt(2));
-                },
-                filterArgs(placeIdArray, viewerId, scope));
-
-        Map<UUID, List<TasterRecordView>> authorsByPlace = loadAuthors(records, viewerId);
+        Map<UUID, List<TasterRecordView>> authorsByPlace = loadRecords(placeIdArray, viewerId, scope, hiddenIds);
         List<PlaceView> result = new ArrayList<>();
         for (UUID placeId : placeIds) {
             PlaceRow place = places.get(placeId);
@@ -111,8 +91,6 @@ public class PlaceViewLoader {
                     .flatMap(author -> author.visitConditions().stream())
                     .distinct()
                     .toList();
-            // emoji·강조색·광고 여부는 샘플 장소용 표시 값이라 DB 장소에는 고정 기본값을 넣습니다.
-            // 방문일 칸은 DB에 따로 없어 조회한 날(서버 기준 오늘)로 채웁니다. 기록 시각은 recordedAt에 있습니다.
             result.add(new PlaceView(
                     place.placeId().toString(),
                     place.name(),
@@ -120,13 +98,9 @@ public class PlaceViewLoader {
                     place.address(),
                     place.latitude(),
                     place.longitude(),
-                    "",
-                    "#e9d8c8",
-                    LocalDate.now().toString(),
                     latestNote,
-                    recordCounts.getOrDefault(placeId, 0),
+                    place.recordCount(),
                     conditions,
-                    false,
                     authors,
                     place.providerCode(),
                     place.providerPlaceId(),
@@ -138,124 +112,124 @@ public class PlaceViewLoader {
         return result;
     }
 
-    private Map<UUID, List<TasterRecordView>> loadAuthors(List<RecordRow> records, UUID viewerId) {
-        if (records.isEmpty()) return Map.of();
-        String[] recordIds = ids(records.stream().map(RecordRow::recordId).toList());
-        Map<UUID, RecordVisibility> visibilityByRecord = new HashMap<>();
-        records.forEach(record -> visibilityByRecord.put(record.recordId(), record.visibility()));
-
-        Map<UUID, List<MenuView>> menus = new HashMap<>();
-        jdbc.query(
-                """
-                SELECT menu_id, record_id, menu_name, price_amt, (photo_data IS NOT NULL) AS has_photo
-                FROM restaurant_record_menus WHERE record_id = ANY(?::uuid[]) ORDER BY record_id, sort_no
-                """,
-                rs -> {
-                    UUID recordId = rs.getObject("record_id", UUID.class);
-                    String photo = rs.getBoolean("has_photo")
-                            ? mediaUrl(
-                                    MediaUrlSigner.MENU_PHOTO,
-                                    rs.getObject("menu_id", UUID.class),
-                                    visibilityByRecord.get(recordId))
-                            : null;
-                    menus.computeIfAbsent(recordId, key -> new ArrayList<>())
-                            .add(new MenuView(rs.getString("menu_name"), (Integer) rs.getObject("price_amt"), photo));
-                },
-                (Object) recordIds);
-
-        Map<UUID, List<String>> tags = new HashMap<>();
-        Map<UUID, Map<String, String>> tagGroups = new HashMap<>();
-        jdbc.query(
-                """
-                SELECT record_id, tag_name, tag_group FROM restaurant_record_tags
-                WHERE record_id = ANY(?::uuid[]) ORDER BY record_id, tag_name
-                """,
-                rs -> {
-                    UUID recordId = rs.getObject("record_id", UUID.class);
-                    tags.computeIfAbsent(recordId, key -> new ArrayList<>()).add(rs.getString("tag_name"));
-                    tagGroups
-                            .computeIfAbsent(recordId, key -> new LinkedHashMap<>())
-                            .put(rs.getString("tag_name"), rs.getString("tag_group"));
-                },
-                (Object) recordIds);
-
-        Map<UUID, List<String>> conditions = new HashMap<>();
-        jdbc.query(
-                """
-                SELECT record_id, condition_name FROM restaurant_record_visit_conditions
-                WHERE record_id = ANY(?::uuid[]) ORDER BY record_id, condition_name
-                """,
-                rs -> {
-                    conditions
-                            .computeIfAbsent(rs.getObject("record_id", UUID.class), key -> new ArrayList<>())
-                            .add(rs.getString("condition_name"));
-                },
-                (Object) recordIds);
-
-        Map<UUID, List<String>> photos = new HashMap<>();
-        jdbc.query(
-                """
-                SELECT photo_id, record_id FROM restaurant_record_photos
-                WHERE record_id = ANY(?::uuid[]) ORDER BY record_id, sort_no
-                """,
-                rs -> {
-                    UUID recordId = rs.getObject("record_id", UUID.class);
-                    photos.computeIfAbsent(recordId, key -> new ArrayList<>())
-                            .add(mediaUrl(
-                                    MediaUrlSigner.RECORD_PHOTO,
-                                    rs.getObject("photo_id", UUID.class),
-                                    visibilityByRecord.get(recordId)));
-                },
-                (Object) recordIds);
-
-        // 맛객별 등록 장소 수: 다른 맛객은 공개 기록만, 본인은 비공개 기록까지 셉니다.
-        Map<UUID, Integer> placeCounts = new HashMap<>();
-        jdbc.query(
-                """
-                SELECT account_id, count(DISTINCT place_id) FROM restaurant_records
-                WHERE account_id = ANY(?::uuid[]) AND (visibility = 'PUBLIC' OR account_id = ?)
-                GROUP BY account_id
-                """,
-                rs -> {
-                    placeCounts.put(rs.getObject(1, UUID.class), rs.getInt(2));
-                },
-                ids(records.stream().map(RecordRow::accountId).distinct().toList()),
-                viewerId);
-
+    /**
+     * 기록과 하위 데이터(메뉴·태그·방문 조건·사진)를 기록마다 배열로 모아 한 번에 읽습니다. 각 하위 표는 record_id로
+     * 시작하는 색인이 있어 기록별 LATERAL 조회가 색인으로 끝납니다. 장소마다 최신 기록부터 담습니다.
+     */
+    private Map<UUID, List<TasterRecordView>> loadRecords(
+            String[] placeIds, UUID viewerId, RecordScope scope, String[] hiddenIds) {
         Map<UUID, List<TasterRecordView>> authorsByPlace = new LinkedHashMap<>();
-        for (RecordRow record : records) {
-            List<String> recordTags = tags.getOrDefault(record.recordId(), List.of());
-            authorsByPlace
-                    .computeIfAbsent(record.placeId(), key -> new ArrayList<>())
-                    .add(new TasterRecordView(
-                            record.accountId().toString(),
-                            record.authorName(),
-                            String.join(" · ", recordTags),
-                            "",
-                            "",
-                            record.reason(),
-                            menus.getOrDefault(record.recordId(), List.of()),
-                            recordTags,
-                            tagGroups.getOrDefault(record.recordId(), Map.of()),
-                            conditions.getOrDefault(record.recordId(), List.of()),
-                            photos.getOrDefault(record.recordId(), List.of()),
-                            record.visibility(),
-                            placeCounts.getOrDefault(record.accountId(), 0),
-                            record.recordedAt()));
-        }
+        jdbc.query(
+                """
+                SELECT r.record_id, r.place_id, r.account_id, r.author_name, r.reason, r.visibility, r.reg_dt,
+                       menus.menu_ids, menus.menu_names, menus.prices, menus.has_photos,
+                       tags.tag_names, tags.tag_groups, conditions.condition_names, photos.photo_ids,
+                       (SELECT count(DISTINCT other.place_id) FROM restaurant_records other
+                        WHERE other.account_id = r.account_id
+                          AND (other.visibility = 'PUBLIC' OR other.account_id = ?)) AS place_count
+                FROM restaurant_records r
+                LEFT JOIN LATERAL (
+                    SELECT array_agg(m.menu_id ORDER BY m.sort_no) AS menu_ids,
+                           array_agg(m.menu_name ORDER BY m.sort_no) AS menu_names,
+                           array_agg(m.price_amt ORDER BY m.sort_no) AS prices,
+                           array_agg(m.photo_data IS NOT NULL ORDER BY m.sort_no) AS has_photos
+                    FROM restaurant_record_menus m WHERE m.record_id = r.record_id
+                ) menus ON true
+                LEFT JOIN LATERAL (
+                    SELECT array_agg(t.tag_name ORDER BY t.tag_name) AS tag_names,
+                           array_agg(t.tag_group ORDER BY t.tag_name) AS tag_groups
+                    FROM restaurant_record_tags t WHERE t.record_id = r.record_id
+                ) tags ON true
+                LEFT JOIN LATERAL (
+                    SELECT array_agg(c.condition_name ORDER BY c.condition_name) AS condition_names
+                    FROM restaurant_record_visit_conditions c WHERE c.record_id = r.record_id
+                ) conditions ON true
+                LEFT JOIN LATERAL (
+                    SELECT array_agg(ph.photo_id ORDER BY ph.sort_no) AS photo_ids
+                    FROM restaurant_record_photos ph WHERE ph.record_id = r.record_id
+                ) photos ON true
+                WHERE r.place_id = ANY(?::uuid[]) AND %s AND NOT (r.account_id = ANY(?::uuid[]))
+                ORDER BY r.reg_dt DESC
+                """
+                        .formatted(recordFilter(scope)),
+                rs -> {
+                    UUID placeId = rs.getObject("place_id", UUID.class);
+                    authorsByPlace
+                            .computeIfAbsent(placeId, key -> new ArrayList<>())
+                            .add(recordView(rs));
+                },
+                recordArgs(placeIds, viewerId, scope, hiddenIds));
         return authorsByPlace;
+    }
+
+    private TasterRecordView recordView(ResultSet rs) throws SQLException {
+        RecordVisibility visibility = RecordVisibility.valueOf(rs.getString("visibility"));
+
+        Object[] menuIds = values(rs, "menu_ids");
+        Object[] menuNames = values(rs, "menu_names");
+        Object[] prices = values(rs, "prices");
+        Object[] hasPhotos = values(rs, "has_photos");
+        List<MenuView> menus = new ArrayList<>();
+        for (int index = 0; index < menuIds.length; index++) {
+            String photo = Boolean.TRUE.equals(hasPhotos[index])
+                    ? mediaUrl(MediaUrlSigner.MENU_PHOTO, uuid(menuIds[index]), visibility)
+                    : null;
+            menus.add(new MenuView((String) menuNames[index], (Integer) prices[index], photo));
+        }
+
+        Object[] tagNames = values(rs, "tag_names");
+        Object[] tagGroupNames = values(rs, "tag_groups");
+        List<String> tags = new ArrayList<>();
+        Map<String, String> tagGroups = new LinkedHashMap<>();
+        for (int index = 0; index < tagNames.length; index++) {
+            tags.add((String) tagNames[index]);
+            tagGroups.put((String) tagNames[index], (String) tagGroupNames[index]);
+        }
+
+        List<String> conditions = new ArrayList<>();
+        for (Object condition : values(rs, "condition_names")) conditions.add((String) condition);
+
+        List<String> photos = new ArrayList<>();
+        for (Object photoId : values(rs, "photo_ids")) {
+            photos.add(mediaUrl(MediaUrlSigner.RECORD_PHOTO, uuid(photoId), visibility));
+        }
+
+        return new TasterRecordView(
+                rs.getObject("account_id", UUID.class).toString(),
+                rs.getString("author_name"),
+                String.join(" · ", tags),
+                "",
+                rs.getString("reason"),
+                menus,
+                tags,
+                tagGroups,
+                conditions,
+                photos,
+                visibility,
+                rs.getInt("place_count"),
+                rs.getObject("reg_dt", OffsetDateTime.class).toString());
+    }
+
+    /** 하위 데이터가 없는 기록은 array_agg가 NULL을 돌려주므로 빈 배열로 바꿉니다. */
+    private static Object[] values(ResultSet rs, String column) throws SQLException {
+        Array array = rs.getArray(column);
+        return array == null ? new Object[0] : (Object[]) array.getArray();
+    }
+
+    private static UUID uuid(Object value) {
+        return value instanceof UUID id ? id : UUID.fromString(String.valueOf(value));
     }
 
     /** 공개 기록 사진은 누구나 열 수 있는 주소를, 본인의 비공개 기록 사진은 만료되는 서명 주소를 씁니다. */
     private String mediaUrl(String kind, UUID id, RecordVisibility visibility) {
-        return visibility == RecordVisibility.PUBLIC ? "/media/%s/%s".formatted(kind, id) : signer.signedUrl(kind, id);
+        return visibility == RecordVisibility.PUBLIC ? MediaUrlSigner.publicUrl(kind, id) : signer.signedUrl(kind, id);
     }
 
     private static String recordFilter(RecordScope scope) {
         return switch (scope) {
-            case PUBLIC_ONLY -> "visibility = 'PUBLIC'";
-            case PUBLIC_AND_OWN -> "(visibility = 'PUBLIC' OR account_id = ?)";
-            case OWN_ONLY -> "account_id = ?";
+            case PUBLIC_ONLY -> "r.visibility = 'PUBLIC'";
+            case PUBLIC_AND_OWN -> "(r.visibility = 'PUBLIC' OR r.account_id = ?)";
+            case OWN_ONLY -> "r.account_id = ?";
         };
     }
 
@@ -264,12 +238,23 @@ public class PlaceViewLoader {
      * 내 기록함(OWN_ONLY)에서도 다른 맛객의 공개 기록 수까지 보여주므로 기록 필터와 다릅니다.
      */
     private static String countFilter(RecordScope scope) {
-        return scope == RecordScope.PUBLIC_ONLY ? "visibility = 'PUBLIC'" : "(visibility = 'PUBLIC' OR account_id = ?)";
+        return scope == RecordScope.PUBLIC_ONLY
+                ? "r.visibility = 'PUBLIC'"
+                : "(r.visibility = 'PUBLIC' OR r.account_id = ?)";
     }
 
-    /** 두 필터 모두 PUBLIC_ONLY일 때만 조회자 ID 자리표시자가 없습니다. */
-    private static Object[] filterArgs(String[] placeIds, UUID viewerId, RecordScope scope) {
-        return scope == RecordScope.PUBLIC_ONLY ? new Object[] {placeIds} : new Object[] {placeIds, viewerId};
+    /** 장소 쿼리 자리표시자: [기록 수 필터의 조회자 ID], 가려진 맛객 ID, 장소 ID. PUBLIC_ONLY만 조회자 ID가 없습니다. */
+    private static Object[] placeArgs(String[] placeIds, UUID viewerId, RecordScope scope, String[] hiddenIds) {
+        return scope == RecordScope.PUBLIC_ONLY
+                ? new Object[] {hiddenIds, placeIds}
+                : new Object[] {viewerId, hiddenIds, placeIds};
+    }
+
+    /** 기록 쿼리 자리표시자: 작성자 기록 수의 조회자 ID, 장소 ID, [기록 필터의 조회자 ID], 가려진 맛객 ID. */
+    private static Object[] recordArgs(String[] placeIds, UUID viewerId, RecordScope scope, String[] hiddenIds) {
+        return scope == RecordScope.PUBLIC_ONLY
+                ? new Object[] {viewerId, placeIds, hiddenIds}
+                : new Object[] {viewerId, placeIds, viewerId, hiddenIds};
     }
 
     private static String[] ids(Collection<UUID> ids) {
@@ -288,14 +273,6 @@ public class PlaceViewLoader {
             String phone,
             String url,
             String roadAddress,
-            String lotAddress) {}
-
-    private record RecordRow(
-            UUID recordId,
-            UUID placeId,
-            UUID accountId,
-            String authorName,
-            String reason,
-            RecordVisibility visibility,
-            String recordedAt) {}
+            String lotAddress,
+            int recordCount) {}
 }

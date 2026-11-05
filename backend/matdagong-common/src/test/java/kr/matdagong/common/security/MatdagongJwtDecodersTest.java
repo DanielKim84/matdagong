@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.server.ResponseStatusException;
 
+/** 맛다공 client용 토큰 검증과 계정 ID 꺼내기를 확인합니다. */
 class MatdagongJwtDecodersTest {
     private final OAuth2TokenValidator<Jwt> validator = MatdagongJwtDecoders.audienceValidator("matdagong-web");
 

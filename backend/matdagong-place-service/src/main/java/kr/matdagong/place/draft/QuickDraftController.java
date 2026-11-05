@@ -5,6 +5,9 @@ import static kr.matdagong.place.draft.QuickDraftModels.*;
 import jakarta.validation.Valid;
 import java.util.List;
 import kr.matdagong.common.security.AuthenticatedAccount;
+import kr.matdagong.place.catalog.PlaceIdentifiers;
+import kr.matdagong.place.kakao.KakaoPlaceVerifier;
+import kr.matdagong.place.kakao.KakaoPlaceVerifier.PlaceInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -23,9 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/places/drafts")
 public class QuickDraftController {
     private final QuickDraftService drafts;
+    private final KakaoPlaceVerifier kakaoPlaces;
 
-    public QuickDraftController(QuickDraftService drafts) {
+    public QuickDraftController(QuickDraftService drafts, KakaoPlaceVerifier kakaoPlaces) {
         this.drafts = drafts;
+        this.kakaoPlaces = kakaoPlaces;
     }
 
     @GetMapping
@@ -39,10 +44,13 @@ public class QuickDraftController {
         return drafts.checkDuplicate(AuthenticatedAccount.id(jwt), providerCode, providerPlaceId);
     }
 
+    /** 카카오 장소 확인은 외부 호출이라 DB 트랜잭션(Service)에 들어가기 전에 여기서 먼저 끝냅니다. */
     @PostMapping
     public QuickPlaceDraftView saveDraft(
             @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody QuickPlaceDraftRequest request) {
-        return drafts.saveDraft(AuthenticatedAccount.id(jwt), request);
+        PlaceInfo place =
+                kakaoPlaces.verify(request.providerCode(), request.providerPlaceId(), request.submittedPlace());
+        return drafts.saveDraft(AuthenticatedAccount.id(jwt), place, request);
     }
 
     @DeleteMapping("/{providerPlaceId}")
@@ -50,7 +58,7 @@ public class QuickDraftController {
     public void deleteDraft(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable String providerPlaceId,
-            @RequestParam(defaultValue = "KAKAO") String providerCode) {
+            @RequestParam(defaultValue = PlaceIdentifiers.DEFAULT_PROVIDER) String providerCode) {
         drafts.deleteDraft(AuthenticatedAccount.id(jwt), providerPlaceId, providerCode);
     }
 }

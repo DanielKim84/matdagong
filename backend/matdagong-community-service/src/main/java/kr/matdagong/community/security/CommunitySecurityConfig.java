@@ -12,8 +12,11 @@ import org.springframework.security.web.SecurityFilterChain;
 /** 커뮤니티 API는 공통 인증 서버가 발급한 맛다공 access token만 받고, 허용 목록 밖의 주소는 막습니다. */
 @Configuration
 public class CommunitySecurityConfig {
-    /** img 태그가 토큰 없이 여는 프로필·배경 사진 주소입니다. */
-    static final String[] PUBLIC_PATHS = {"/media/profiles/**"};
+    /**
+     * img 태그가 토큰 없이 여는 프로필·배경 사진 주소와, 장소 서비스가 읽는 가려진 맛객 목록입니다.
+     * 가려진 맛객 목록은 게이트웨이가 넘기지 않는 /internal 주소라 화면에서는 닿지 않습니다.
+     */
+    static final String[] PUBLIC_PATHS = {"/media/profiles/**", "/internal/v1/hidden-tasters"};
 
     @Bean
     JwtDecoder communityJwtDecoder(

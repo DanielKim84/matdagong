@@ -7,11 +7,11 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import kr.matdagong.common.jdbc.JdbcTimes;
 import kr.matdagong.community.notification.NotificationService;
 import kr.matdagong.community.profile.ProfileMediaUrls;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -24,12 +24,12 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Service
 public class SubscriptionService {
-    // 오픈 전 무료 이용 기간에도 유료 플랜의 기간별 테스트 안내 금액은 화면에 표시합니다.
-    private static final Map<Integer, BigDecimal> TEST_PRICES = Map.of(
-            1, new BigDecimal("1000"),
-            3, new BigDecimal("2700"),
-            6, new BigDecimal("5000"),
-            12, new BigDecimal("9000"));
+    /** 결제 연동 전에는 유료 플랜도 무료로 제공해 회차 금액을 0으로 남깁니다. 요금표는 화면 안내용입니다(SubscriptionPlans). */
+    private static final BigDecimal PRELAUNCH_PRICE = BigDecimal.ZERO;
+    /** 구독자 프로필이 없을 때 새 구독자 알림에 쓰는 이름입니다. */
+    private static final String UNKNOWN_SUBSCRIBER_NAME = "새 사용자";
+
+    private static final String SUBSCRIPTION_IN_PROGRESS = "이미 처리 중인 구독이에요.";
 
     private final JdbcTemplate jdbc;
     private final NotificationService notifications;
@@ -40,11 +40,7 @@ public class SubscriptionService {
     }
 
     public PlanCatalog plans() {
-        List<PaidPlan> paidPlans = TEST_PRICES.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(entry -> new PaidPlan(entry.getKey(), entry.getValue()))
-                .toList();
-        return new PlanCatalog("KRW", true, BigDecimal.ZERO, paidPlans);
+        return SubscriptionPlans.catalog();
     }
 
     @Transactional
@@ -122,6 +118,10 @@ public class SubscriptionService {
         deactivate(subscriptionId);
     }
 
+    /**
+     * 구독을 신청하고 새 회차를 엽니다. 예전에 끝난 같은 맛객 구독이 있으면 그 관계 행을 다시 씁니다.
+     * 무료 구독은 한 명만 둘 수 있어, 다른 맛객을 무료 구독 중이면 교체에 동의(confirmFreeReplacement)했을 때만 바꿉니다.
+     */
     @Transactional
     public SubscribeResult subscribe(UUID subscriberId, SubscribeRequest request) {
         expireEndedSubscriptions();
@@ -136,55 +136,47 @@ public class SubscriptionService {
         String subscriberNickname = nickname(subscriberId);
 
         boolean isFree = request.subscriptionType() == SubscriptionType.FREE;
-        // 무료 구독 교체 요청을 한 계정씩 처리해 동시에 신청해도 무료 자리가 둘 생기지 않게 합니다.
-        if (isFree) {
-            jdbc.queryForList("SELECT account_id FROM user_profiles WHERE account_id = ? FOR UPDATE", subscriberId);
-        }
-        Integer termMonths = validatedTerm(request);
-        // 결제 연동 전에는 유료 플랜도 무료 제공하며, 요금표는 화면 안내용으로만 유지합니다.
-        BigDecimal price = BigDecimal.ZERO;
-
-        UUID existingId = jdbc
-                .query(
-                        "SELECT subscription_id FROM user_subscriptions WHERE subscriber_id = ? AND target_account_id = ?",
-                        (rs, row) -> rs.getObject("subscription_id", UUID.class),
-                        subscriberId,
-                        targetId)
-                .stream()
-                .findFirst()
-                .orElse(null);
-        if (existingId != null && isActive(existingId)) {
+        // 한 구독자의 신청을 하나씩 처리해 무료 자리가 둘 생기거나, 두 번 누른 유료 신청이 동시에 열리지 않게 합니다(뒤 요청은 409).
+        jdbc.queryForList("SELECT account_id FROM user_profiles WHERE account_id = ? FOR UPDATE", subscriberId);
+        Integer termMonths = SubscriptionPlans.validatedTerm(request);
+        if (isSubscribed(subscriberId, targetId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 구독 중인 맛객입니다.");
         }
 
         String replacedNickname = isFree ? replaceFreeSubscription(subscriberId, request) : null;
-        UUID subscriptionId = existingId == null
-                ? insertSubscription(subscriberId, targetId, request.subscriptionType())
-                : reactivate(existingId, request.subscriptionType());
-
         Instant start = Instant.now().truncatedTo(ChronoUnit.MICROS);
         // 유료 플랜의 무료 제공 기간에는 선택한 이용 기간만 기록하고 실제 청구는 하지 않습니다.
         Instant end = isFree
                 ? null
                 : start.atZone(ZoneOffset.UTC).plusMonths(termMonths).toInstant();
         UUID historyId = UUID.randomUUID();
-        jdbc.update(
-                """
-                INSERT INTO user_subscription_history (
-                    subscription_history_id, subscription_id, subscription_type,
-                    term_months, period_st, price_amt, start_dt, end_dt
-                ) VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?, ?)
-                """,
-                historyId,
-                subscriptionId,
-                request.subscriptionType().name(),
-                termMonths,
-                price,
-                start.atOffset(ZoneOffset.UTC),
-                end == null ? null : end.atOffset(ZoneOffset.UTC));
+        UUID subscriptionId;
+        try {
+            subscriptionId = activate(subscriberId, targetId, request.subscriptionType());
+            jdbc.update(
+                    """
+                    INSERT INTO user_subscription_history (
+                        subscription_history_id, subscription_id, subscription_type,
+                        term_months, period_st, price_amt, start_dt, end_dt
+                    ) VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?, ?)
+                    """,
+                    historyId,
+                    subscriptionId,
+                    request.subscriptionType().name(),
+                    termMonths,
+                    PRELAUNCH_PRICE,
+                    start.atOffset(ZoneOffset.UTC),
+                    end == null ? null : end.atOffset(ZoneOffset.UTC));
+        } catch (DuplicateKeyException exception) {
+            // 프로필이 없어 위 잠금이 걸리지 않은 구독자가 동시에 신청하면, 활성 회차·무료 자리 유일 제약이 마지막으로 막습니다.
+            throw new ResponseStatusException(HttpStatus.CONFLICT, SUBSCRIPTION_IN_PROGRESS);
+        }
 
         notifications.newSubscriber(
-                targetId, subscriberId, subscriberNickname == null ? "새 사용자" : subscriberNickname, historyId);
+                targetId,
+                subscriberId,
+                subscriberNickname == null ? UNKNOWN_SUBSCRIBER_NAME : subscriberNickname,
+                historyId);
 
         SubscriptionView view = new SubscriptionView(
                 subscriptionId, targetId, targetNickname, request.subscriptionType(), termMonths, start, end);
@@ -247,32 +239,22 @@ public class SubscriptionService {
         return replacedNickname;
     }
 
-    private UUID insertSubscription(UUID subscriberId, UUID targetId, SubscriptionType type) {
-        UUID subscriptionId = UUID.randomUUID();
-        jdbc.update(
+    /** 같은 맛객과의 관계 행은 하나(uk_user_subscriptions_pair)이므로, 예전에 끝난 구독이 있으면 그 행을 다시 켭니다. */
+    private UUID activate(UUID subscriberId, UUID targetId, SubscriptionType type) {
+        return jdbc.queryForObject(
                 """
                 INSERT INTO user_subscriptions (
-                    subscription_id, subscriber_id, target_account_id,
-                    subscription_st, subscription_type
+                    subscription_id, subscriber_id, target_account_id, subscription_st, subscription_type
                 ) VALUES (?, ?, ?, 'ACTIVE', ?)
+                ON CONFLICT (subscriber_id, target_account_id) DO UPDATE SET
+                    subscription_st = 'ACTIVE', subscription_type = EXCLUDED.subscription_type, upd_dt = now()
+                RETURNING subscription_id
                 """,
-                subscriptionId,
+                UUID.class,
+                UUID.randomUUID(),
                 subscriberId,
                 targetId,
                 type.name());
-        return subscriptionId;
-    }
-
-    private UUID reactivate(UUID subscriptionId, SubscriptionType type) {
-        jdbc.update(
-                """
-                UPDATE user_subscriptions
-                SET subscription_st = 'ACTIVE', subscription_type = ?, upd_dt = now()
-                WHERE subscription_id = ?
-                """,
-                type.name(),
-                subscriptionId);
-        return subscriptionId;
     }
 
     /** 구독과 그 활성 회차를 함께 끝냅니다. 사용자 취소와 무료 구독 교체가 같은 처리를 씁니다. */
@@ -293,40 +275,25 @@ public class SubscriptionService {
                 subscriptionId);
     }
 
-    private boolean isActive(UUID subscriptionId) {
+    private boolean isSubscribed(UUID subscriberId, UUID targetId) {
         return Boolean.TRUE.equals(jdbc.queryForObject(
                 """
                 SELECT EXISTS (
-                    SELECT 1 FROM user_subscriptions WHERE subscription_id = ? AND subscription_st = 'ACTIVE'
+                    SELECT 1 FROM user_subscriptions
+                    WHERE subscriber_id = ? AND target_account_id = ? AND subscription_st = 'ACTIVE'
                 )
                 """,
                 Boolean.class,
-                subscriptionId));
+                subscriberId,
+                targetId));
     }
 
     private String nickname(UUID accountId) {
         return jdbc
-                .query(
-                        "SELECT nickname FROM user_profiles WHERE account_id = ?",
-                        (rs, row) -> rs.getString("nickname"),
-                        accountId)
+                .queryForList("SELECT nickname FROM user_profiles WHERE account_id = ?", String.class, accountId)
                 .stream()
                 .findFirst()
                 .orElse(null);
-    }
-
-    /** 무료 구독은 기간을 고르지 않고(null), 유료 구독은 요금표에 있는 기간만 받습니다. */
-    private static Integer validatedTerm(SubscribeRequest request) {
-        if (request.subscriptionType() == SubscriptionType.FREE) {
-            if (request.termMonths() != null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "무료 구독에는 기간을 선택할 수 없습니다.");
-            }
-            return null;
-        }
-        if (request.termMonths() == null || !TEST_PRICES.containsKey(request.termMonths())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유료 구독 기간은 1, 3, 6, 12개월 중 선택해 주세요.");
-        }
-        return request.termMonths();
     }
 
     private record FreeSubscription(UUID subscriptionId, UUID targetAccountId, String nickname) {}

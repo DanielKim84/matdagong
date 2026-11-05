@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+/** 공통 주소 정책(API 인증, 허용 목록, 나머지 거부)을 확인합니다. */
 class ResourceServerSecurityTest {
     private AnnotationConfigWebApplicationContext context;
     private MockMvc mvc;

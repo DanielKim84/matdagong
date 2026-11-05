@@ -15,8 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * 프로필 사진과 배경 사진의 형식을 검증하고 파일 데이터와 MIME 형식을 함께 저장·조회합니다.
- * 프로필 사진은 user_profiles에, 배경 사진은 user_profile_cover_photos 갤러리에 저장합니다.
+ * 프로필 사진(user_profiles)을 저장·조회하고 배경 사진(user_profile_cover_photos)을 조회합니다.
+ * 이미지 형식·용량 검증(validate)은 배경 사진 갤러리를 저장하는 ProfileCoverService도 함께 씁니다.
  */
 @Service
 public class ProfileImageService {
@@ -36,8 +36,12 @@ public class ProfileImageService {
                         SELECT profile_img_data, profile_img_mime_type
                         FROM user_profiles
                         WHERE account_id = ? AND profile_img_data IS NOT NULL AND profile_img_mime_type IS NOT NULL
+                          AND NOT EXISTS (
+                              SELECT 1 FROM taster_moderations m WHERE m.account_id = ? AND m.hidden_at IS NOT NULL
+                          )
                         """,
                         (rs, row) -> new ProfileImage(rs.getBytes(1), rs.getString(2)),
+                        accountId,
                         accountId)
                 .stream()
                 .findFirst();
@@ -48,10 +52,17 @@ public class ProfileImageService {
     public Optional<ProfileImage> findCoverPhoto(UUID accountId, UUID photoId) {
         return jdbc
                 .query(
-                        "SELECT photo_data, mime_type FROM user_profile_cover_photos WHERE account_id = ? AND photo_id = ?",
+                        """
+                        SELECT photo_data, mime_type FROM user_profile_cover_photos
+                        WHERE account_id = ? AND photo_id = ?
+                          AND NOT EXISTS (
+                              SELECT 1 FROM taster_moderations m WHERE m.account_id = ? AND m.hidden_at IS NOT NULL
+                          )
+                        """,
                         (rs, row) -> new ProfileImage(rs.getBytes(1), rs.getString(2)),
                         accountId,
-                        photoId)
+                        photoId,
+                        accountId)
                 .stream()
                 .findFirst();
     }

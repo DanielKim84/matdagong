@@ -1,0 +1,67 @@
+package kr.matdagong.place.location;
+
+import kr.matdagong.place.catalog.PlaceIdentifiers;
+import kr.matdagong.place.kakao.KakaoPlaceVerifier.PlaceInfo;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
+
+/**
+ * 다녀왔다는 근거(빠른 저장·새 맛집 기록)를 남길 때 기기가 가게 가까이에 있는지 확인합니다.
+ * 트랜잭션은 부르는 Service가 열고, 이 클래스는 그 안에서만 불립니다.
+ */
+@Component
+public class NearbyPlaceGuard {
+    /** 화면의 "현재 위치 1km 안의 가게" 기준과 같은 값입니다. */
+    public static final double MAX_VISIT_DISTANCE_METERS = 1000;
+
+    public static final String LOCATION_REQUIRED = "현재 위치를 확인할 수 없어요. 위치 권한을 켜고 다시 시도해 주세요.";
+
+    private final JdbcTemplate jdbc;
+
+    public NearbyPlaceGuard(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    /**
+     * 기기 위치가 없거나 가게에서 1km보다 멀면 400으로 거부합니다.
+     *
+     * @param tooFarMessage 화면마다 안내 문구가 달라 부르는 쪽이 정합니다.
+     */
+    public void requireNearby(
+            DeviceLocation device, PlaceInfo place, String providerCode, String providerPlaceId, String tooFarMessage) {
+        if (device == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, LOCATION_REQUIRED);
+        }
+        Coordinate target = placeCoordinate(place, providerCode, providerPlaceId);
+        double distance =
+                GeoDistance.meters(device.latitude(), device.longitude(), target.latitude(), target.longitude());
+        if (distance > MAX_VISIT_DISTANCE_METERS) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, tooFarMessage);
+        }
+    }
+
+    /**
+     * 카카오로 확인한 좌표를 먼저 씁니다. 확인하지 못했으면(카카오 키 없음·카카오 장애·다른 지도 제공자) 이미 등록된 가게는
+     * 저장된 좌표를 씁니다. 기록 저장도 확인하지 못한 요청 값으로 기존 가게를 바꾸지 않으므로 같은 원칙입니다. 처음 보는
+     * 가게만 요청 좌표를 그대로 씁니다.
+     */
+    private Coordinate placeCoordinate(PlaceInfo place, String providerCode, String providerPlaceId) {
+        if (place.verified()) return new Coordinate(place.latitude(), place.longitude());
+        return jdbc
+                .query(
+                        """
+                        SELECT latitude, longitude FROM restaurant_places
+                        WHERE provider_code = ? AND provider_place_id = ?
+                        """,
+                        (rs, row) -> new Coordinate(rs.getDouble("latitude"), rs.getDouble("longitude")),
+                        PlaceIdentifiers.providerCode(providerCode),
+                        providerPlaceId)
+                .stream()
+                .findFirst()
+                .orElseGet(() -> new Coordinate(place.latitude(), place.longitude()));
+    }
+
+    private record Coordinate(double latitude, double longitude) {}
+}

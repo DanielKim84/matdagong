@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
+/** 이미지 머리 바이트 검사가 형식별로 맞는 파일만 인정하는지 확인합니다. */
 class ImageFilesTest {
     @Test
     void 형식별_머리_바이트가_맞을_때만_이미지로_인정한다() {

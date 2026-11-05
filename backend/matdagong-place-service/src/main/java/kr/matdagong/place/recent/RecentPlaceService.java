@@ -59,7 +59,7 @@ public class RecentPlaceService {
         loader.load(databaseIds, accountId, PlaceViewLoader.RecordScope.PUBLIC_AND_OWN)
                 .forEach(place -> databasePlaces.put(place.id(), place));
         return ids.stream()
-                .map(id -> samples.findById(id) != null ? samples.findById(id) : databasePlaces.get(id))
+                .map(id -> Objects.requireNonNullElseGet(samples.findById(id), () -> databasePlaces.get(id)))
                 .filter(Objects::nonNull)
                 .toList();
     }
@@ -79,8 +79,11 @@ public class RecentPlaceService {
                 """,
                 accountId,
                 placeId);
+        // 이 사람 것만 정리합니다. 다른 사람의 지난 행은 조회 조건이 이미 가리고, 그 사람이 다음에 볼 때 지워집니다.
         jdbc.update(
-                "DELETE FROM user_recent_places WHERE viewed_at < now() - make_interval(days => ?)", RETENTION_DAYS);
+                "DELETE FROM user_recent_places WHERE account_id = ? AND viewed_at < now() - make_interval(days => ?)",
+                accountId,
+                RETENTION_DAYS);
         jdbc.update(
                 """
                 DELETE FROM user_recent_places

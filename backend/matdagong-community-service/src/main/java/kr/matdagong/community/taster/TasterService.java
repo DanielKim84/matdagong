@@ -4,19 +4,27 @@ import static kr.matdagong.community.taster.TasterModels.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import kr.matdagong.community.profile.ProfileMediaUrls;
 import kr.matdagong.community.profile.ProfileModels;
 import kr.matdagong.community.profile.ProfileModels.ActivityScope;
 import kr.matdagong.community.profile.ProfileModels.FoodFocus;
 import kr.matdagong.community.subscription.SubscriptionService;
+import kr.matdagong.community.taster.PlaceTrustClient.TrustStats;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 다른 맛객 목록을 나와의 취향 일치율, 구독자 수 순서로 보여 줍니다. */
+/**
+ * 다른 맛객 목록을 나와의 취향 일치율, 구독자 수 순서로 보여 주고, 같은 맛집 경험이 있으면 신뢰 %를 함께 붙입니다.
+ * 신고가 쌓여 가려진 맛객은 목록에서 뺍니다.
+ */
 @Service
 public class TasterService {
+    /** 목록 카드의 기본 꼬리표입니다. 화면은 프로필 태그가 있으면 그 태그를 대신 보여 줍니다. */
+    private static final String TASTER_TAG = "맛객";
+
     private final JdbcTemplate jdbc;
     private final SubscriptionService subscriptions;
 
@@ -25,9 +33,13 @@ public class TasterService {
         this.subscriptions = subscriptions;
     }
 
-    /** 구독자 수에 만료된 구독이 섞이지 않도록 만료 회차를 먼저 정리하므로 쓰기 트랜잭션으로 실행합니다. */
+    /**
+     * 구독자 수에 만료된 구독이 섞이지 않도록 만료 회차를 먼저 정리하므로 쓰기 트랜잭션으로 실행합니다.
+     *
+     * @param trustStats 장소 서비스에서 받은 계정별 경험 재료. 받지 못했으면 빈 값이고 신뢰는 비워 둡니다.
+     */
     @Transactional
-    public List<TasterView> tasters(UUID currentAccountId) {
+    public List<TasterView> tasters(UUID currentAccountId, Map<UUID, TrustStats> trustStats) {
         subscriptions.expireEndedSubscriptions();
         return jdbc.query(
                 """
@@ -36,6 +48,7 @@ public class TasterService {
                        cover_images.photo_ids AS profile_cover_photo_ids,
                        p.profile_img_data IS NOT NULL AS has_avatar, p.intro,
                        COUNT(DISTINCT subscribers.subscription_id) AS subscriber_count,
+                       -- 일치율의 분자: 겹친 좋아요 태그 수 + 내가 정한 분야를 이 맛객이 소개하면 1
                        COUNT(DISTINCT preference.tag_id) + CASE
                            WHEN MAX(my_profile.preference_focus) <> 'BOTH'
                              AND (p.taster_focus = 'BOTH'
@@ -68,16 +81,23 @@ public class TasterService {
                  AND preference.preference_type = 'LIKE'
                  AND preference.tag_id = profile_tags.tag_id
                 WHERE p.account_id <> ?
+                  AND NOT EXISTS (
+                      SELECT 1 FROM taster_moderations m WHERE m.account_id = p.account_id AND m.hidden_at IS NOT NULL
+                  )
                 GROUP BY p.account_id, p.taster_focus, cover_images.photo_ids
                 ORDER BY match_score DESC, subscriber_count DESC, p.nickname
                 """,
                 (rs, row) -> {
                     UUID accountId = rs.getObject("account_id", UUID.class);
                     List<String> coverUrls = coverPhotoUrls(rs.getString("profile_cover_photo_ids"), accountId);
+                    int matchTotal = rs.getInt("match_total");
+                    int matchScore = matchPercent(rs.getInt("match_score"), matchTotal);
+                    TasteTrust.Result trust =
+                            TasteTrust.evaluate(trustStats.get(accountId), matchTotal > 0 ? matchScore : null);
                     return new TasterView(
                             accountId.toString(),
                             rs.getString("nickname"),
-                            "맛객",
+                            TASTER_TAG,
                             rs.getBoolean("has_avatar") ? ProfileMediaUrls.avatar(accountId) : null,
                             rs.getInt("avatar_variant"),
                             ProfileMediaUrls.representativeCover(coverUrls),
@@ -90,7 +110,9 @@ public class TasterService {
                             rs.getInt("subscriber_count"),
                             splitTagNames(rs.getString("profile_tags")),
                             splitTagNames(rs.getString("matched_tags")),
-                            matchPercent(rs.getInt("match_score"), rs.getInt("match_total")));
+                            matchScore,
+                            trust == null ? null : trust.score(),
+                            trust == null ? null : trust.level());
                 },
                 currentAccountId,
                 currentAccountId);

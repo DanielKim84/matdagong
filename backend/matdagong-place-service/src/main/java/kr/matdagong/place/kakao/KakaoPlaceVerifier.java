@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.regex.Pattern;
 import kr.matdagong.common.http.RestClients;
+import kr.matdagong.place.catalog.PlaceIdentifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class KakaoPlaceVerifier {
     private static final Pattern KAKAO_PLACE_URL = Pattern.compile("^https?://place\\.map\\.kakao\\.com/\\d{1,20}$");
     /** 요청 좌표 주변에서만 같은 장소 ID를 찾습니다. 카카오에서 고른 장소라면 거리는 0에 가깝습니다. */
     private static final int SEARCH_RADIUS_METERS = 1000;
+    /** 카카오 키워드 검색이 한 번에 돌려주는 최대 개수입니다. 반경 안의 같은 이름 가게 중에서 장소 ID를 찾습니다. */
+    private static final int SEARCH_RESULT_SIZE = 15;
 
     private final RestClient client;
     private final String restApiKey;
@@ -56,8 +59,9 @@ public class KakaoPlaceVerifier {
      * @param submitted 요청 본문의 가게 정보입니다. verified는 false여야 합니다.
      */
     public PlaceInfo verify(String providerCode, String providerPlaceId, PlaceInfo submitted) {
-        boolean kakaoPlace =
-                providerCode == null || providerCode.isBlank() || "KAKAO".equalsIgnoreCase(providerCode.trim());
+        boolean kakaoPlace = providerCode == null
+                || providerCode.isBlank()
+                || PlaceIdentifiers.DEFAULT_PROVIDER.equalsIgnoreCase(providerCode.trim());
         if (!kakaoPlace || restApiKey.isEmpty()) return submitted;
         KeywordSearchResponse response;
         try {
@@ -68,7 +72,7 @@ public class KakaoPlaceVerifier {
                             .queryParam("y", submitted.latitude())
                             .queryParam("radius", SEARCH_RADIUS_METERS)
                             .queryParam("sort", "distance")
-                            .queryParam("size", 15)
+                            .queryParam("size", SEARCH_RESULT_SIZE)
                             .build())
                     .header(HttpHeaders.AUTHORIZATION, "KakaoAK " + restApiKey)
                     .retrieve()

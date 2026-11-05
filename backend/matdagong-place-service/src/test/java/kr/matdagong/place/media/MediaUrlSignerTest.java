@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
+/** 비공개 사진 서명 주소의 만료·위조 방지를 확인합니다. */
 class MediaUrlSignerTest {
     private static final Pattern SIGNED =
             Pattern.compile("^/media/([a-z-]+)/([0-9a-f-]{36})\\?exp=(\\d+)&sig=([A-Za-z0-9_-]+)$");

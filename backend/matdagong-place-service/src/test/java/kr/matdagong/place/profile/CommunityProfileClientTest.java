@@ -17,6 +17,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
+/** 기록 작성자 프로필을 커뮤니티 서비스에서 가져오는 호출과 오류 변환을 확인합니다. */
 class CommunityProfileClientTest {
     private static final String PROFILE_URL = "http://community-service/api/v1/users/me/profile";
 
@@ -52,6 +53,15 @@ class CommunityProfileClientTest {
         server.reset();
         server.expect(requestTo(PROFILE_URL)).andRespond(withServerError());
         assertStatus(HttpStatus.SERVICE_UNAVAILABLE, "프로필 정보를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.");
+    }
+
+    @Test
+    void 신고로_가려진_맛객이면_403으로_기록을_막는다() {
+        server.expect(requestTo(PROFILE_URL))
+                .andRespond(withSuccess(
+                        "{\"nickname\": \"골목맛객\", \"avatarVariant\": 4, \"hiddenByReports\": true}",
+                        MediaType.APPLICATION_JSON));
+        assertStatus(HttpStatus.FORBIDDEN, CommunityProfileClient.HIDDEN_BY_REPORTS);
     }
 
     private void assertStatus(HttpStatus status, String detail) {

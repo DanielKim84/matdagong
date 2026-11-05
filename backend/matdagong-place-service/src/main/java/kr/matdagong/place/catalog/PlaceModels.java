@@ -16,7 +16,7 @@ public final class PlaceModels {
     /**
      * 장소 하나와 그 장소의 맛객별 기록입니다.
      *
-     * @param emoji 샘플 장소용 표시 값입니다. DB 장소는 빈 문자열입니다.
+     * @param recentNote 가장 최근 기록의 소개 글입니다. 기록이 없으면 빈 문자열입니다.
      * @param providerCode 지도 제공자(KAKAO 등)입니다. 샘플 장소는 null입니다.
      */
     public record PlaceView(
@@ -26,13 +26,9 @@ public final class PlaceModels {
             String address,
             double latitude,
             double longitude,
-            String emoji,
-            String accentColor,
-            String visitedOn,
             String recentNote,
             int recordCount,
             List<String> visitConditions,
-            boolean advertisement,
             List<TasterRecordView> tasters,
             String providerCode,
             String providerPlaceId,
@@ -48,13 +44,9 @@ public final class PlaceModels {
                 String address,
                 double latitude,
                 double longitude,
-                String emoji,
-                String accentColor,
-                String visitedOn,
                 String recentNote,
                 int recordCount,
                 List<String> visitConditions,
-                boolean advertisement,
                 List<TasterRecordView> tasters) {
             this(
                     id,
@@ -63,13 +55,9 @@ public final class PlaceModels {
                     address,
                     latitude,
                     longitude,
-                    emoji,
-                    accentColor,
-                    visitedOn,
                     recentNote,
                     recordCount,
                     visitConditions,
-                    advertisement,
                     tasters,
                     null,
                     null,
@@ -83,16 +71,16 @@ public final class PlaceModels {
     /**
      * 맛객 한 명이 이 장소에 남긴 기록입니다.
      *
+     * @param avatar 샘플 기록의 글자 캐릭터입니다. DB 기록은 빈 문자열입니다.
      * @param photos 기록 사진 주소입니다. 비공개 기록이면 만료 서명이 붙은 주소입니다.
      * @param placeCount 이 맛객이 등록한 장소 수입니다. 다른 맛객은 공개 기록만, 본인은 비공개 기록까지 셉니다.
-     * @param recordedAt 기록을 남긴 시각(ISO-8601)입니다. 피드 최신순과 기록 일기 달력에 씁니다. 샘플 기록은 null입니다.
+     * @param recordedAt 기록을 남긴 시각(ISO-8601)입니다. 피드 최신순과 기록 일기 달력에 씁니다.
      */
     public record TasterRecordView(
             String tasterId,
             String tasterName,
             String tag,
             String avatar,
-            String avatarColor,
             String note,
             List<MenuView> menus,
             List<String> tags,
@@ -102,15 +90,13 @@ public final class PlaceModels {
             RecordVisibility visibility,
             int placeCount,
             String recordedAt) {
-        /** 메뉴·사진 없이 소개만 있는 SamplePlaceCatalog의 공개 샘플 기록에서 사용합니다. */
-        public TasterRecordView(
-                String tasterId, String tasterName, String tag, String avatar, String avatarColor, String note) {
+        /** 메뉴·사진 없이 소개만 있는 SamplePlaceCatalog의 공개 샘플 기록에서 사용합니다. 기록 시각은 나중에 채웁니다. */
+        public TasterRecordView(String tasterId, String tasterName, String tag, String avatar, String note) {
             this(
                     tasterId,
                     tasterName,
                     tag,
                     avatar,
-                    avatarColor,
                     note,
                     List.of(),
                     List.of(),

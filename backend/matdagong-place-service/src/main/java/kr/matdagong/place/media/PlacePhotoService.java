@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import kr.matdagong.common.media.ImageFiles;
+import kr.matdagong.place.profile.HiddenTasters;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -24,17 +25,18 @@ import org.springframework.web.server.ResponseStatusException;
 public class PlacePhotoService {
     private static final Pattern DATA_URL = Pattern.compile("^data:(image/(?:jpeg|png|webp));base64,(.+)$");
     // 비공개 기록 사진은 만료 서명이 붙은 주소로 내려가므로, 수정 요청에서는 쿼리 문자열이 있어도 기존 사진으로 인식합니다.
-    private static final Pattern RECORD_PHOTO_REFERENCE =
-            Pattern.compile("^/media/place-record-photos/([0-9a-fA-F-]{36})(?:\\?[^#]*)?$");
-    private static final Pattern MENU_PHOTO_REFERENCE =
-            Pattern.compile("^/media/place-menu-photos/([0-9a-fA-F-]{36})(?:\\?[^#]*)?$");
+    private static final Pattern RECORD_PHOTO_REFERENCE = photoReference(MediaUrlSigner.RECORD_PHOTO);
+    private static final Pattern MENU_PHOTO_REFERENCE = photoReference(MediaUrlSigner.MENU_PHOTO);
     private static final int MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+    private static final String INVALID_PHOTO_FORMAT = "등록할 사진 형식을 확인해 주세요.";
     private static final RowMapper<Photo> PHOTO_MAPPER = (rs, row) -> new Photo(rs.getBytes(1), rs.getString(2));
 
     private final JdbcTemplate jdbc;
+    private final HiddenTasters hiddenTasters;
 
-    public PlacePhotoService(JdbcTemplate jdbc) {
+    public PlacePhotoService(JdbcTemplate jdbc, HiddenTasters hiddenTasters) {
         this.jdbc = jdbc;
+        this.hiddenTasters = hiddenTasters;
     }
 
     @Transactional(readOnly = true)
@@ -44,10 +46,11 @@ public class PlacePhotoService {
                 SELECT ph.photo_data, ph.mime_type
                 FROM restaurant_record_photos ph
                 JOIN restaurant_records r ON r.record_id = ph.record_id
-                WHERE ph.photo_id = ? AND r.visibility = 'PUBLIC'
+                WHERE ph.photo_id = ? AND r.visibility = 'PUBLIC' AND NOT (r.account_id = ANY(?::uuid[]))
                 """,
                 PHOTO_MAPPER,
-                photoId));
+                photoId,
+                hiddenTasters.ids()));
     }
 
     /** 서명 주소로 검증된 요청에서만 사용합니다. 공개 여부와 관계없이 사진을 반환합니다. */
@@ -67,9 +70,11 @@ public class PlacePhotoService {
                 FROM restaurant_record_menus m
                 JOIN restaurant_records r ON r.record_id = m.record_id
                 WHERE m.menu_id = ? AND m.photo_data IS NOT NULL AND r.visibility = 'PUBLIC'
+                  AND NOT (r.account_id = ANY(?::uuid[]))
                 """,
                 PHOTO_MAPPER,
-                menuId));
+                menuId,
+                hiddenTasters.ids()));
     }
 
     /** 서명 주소로 검증된 요청에서만 사용합니다. 공개 여부와 관계없이 메뉴 사진을 반환합니다. */
@@ -87,7 +92,7 @@ public class PlacePhotoService {
     /** 새로 올린 사진(base64 data URL)을 바이트로 바꾸고, 한 장 5MB 이하인지와 실제 이미지인지 확인합니다. */
     public Photo decode(String dataUrl) {
         Matcher matcher = DATA_URL.matcher(dataUrl == null ? "" : dataUrl);
-        if (!matcher.matches()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "등록할 사진 형식을 확인해 주세요.");
+        if (!matcher.matches()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, INVALID_PHOTO_FORMAT);
         byte[] bytes;
         try {
             bytes = Base64.getDecoder().decode(matcher.group(2));
@@ -99,7 +104,7 @@ public class PlacePhotoService {
         }
         String mimeType = matcher.group(1);
         if (!ImageFiles.matchesSignature(mimeType, bytes)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "등록할 사진 형식을 확인해 주세요.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, INVALID_PHOTO_FORMAT);
         }
         return new Photo(bytes, mimeType);
     }
@@ -122,6 +127,11 @@ public class PlacePhotoService {
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, invalidMessage);
         }
+    }
+
+    /** MediaUrlSigner가 만든 /media/{kind}/{id} 주소에서 ID를 꺼냅니다. 서명 쿼리 문자열은 있어도 됩니다. */
+    private static Pattern photoReference(String kind) {
+        return Pattern.compile("^/media/" + Pattern.quote(kind) + "/([0-9a-fA-F-]{36})(?:\\?[^#]*)?$");
     }
 
     private static Optional<Photo> first(List<Photo> photos) {

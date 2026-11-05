@@ -13,6 +13,9 @@ public final class ProfileModels {
     /** 소개를 쓰지 않은 맛객에게 보여 주는 기본 소개 문구입니다. 새 프로필의 intro와 맛객 목록의 note에 씁니다. */
     public static final String DEFAULT_INTRO = "맛있는 장소를 찾아 기록하고 있어요.";
 
+    private static final String NICKNAME_REQUIRED = "맛객 닉네임을 입력해 주세요.";
+    private static final String NICKNAME_TOO_LONG = "닉네임은 12자 이하로 입력해 주세요.";
+
     private ProfileModels() {}
 
     /** 맛객의 관심 분야입니다. DB의 taster_focus·preference_focus 값과 같습니다. */
@@ -46,12 +49,11 @@ public final class ProfileModels {
     }
 
     public record EnsureProfileRequest(
-            @NotBlank(message = "맛객 닉네임을 입력해 주세요.") @Size(max = 12, message = "닉네임은 12자 이하로 입력해 주세요.")
-                    String nickname) {}
+            @NotBlank(message = NICKNAME_REQUIRED) @Size(max = 12, message = NICKNAME_TOO_LONG) String nickname) {}
 
     /** 관심 분야를 비우면 BOTH, 활동 방식을 비우면 LOCAL로 저장합니다. */
     public record UpdateProfileRequest(
-            @NotBlank(message = "맛객 닉네임을 입력해 주세요.") @Size(max = 12, message = "닉네임은 12자 이하로 입력해 주세요.") String nickname,
+            @NotBlank(message = NICKNAME_REQUIRED) @Size(max = 12, message = NICKNAME_TOO_LONG) String nickname,
             @Size(max = 300, message = "소개는 300자 이하로 입력해 주세요.") String intro,
             FoodFocus tasterFocus,
             FoodFocus preferenceFocus,
@@ -66,6 +68,7 @@ public final class ProfileModels {
      * 내 프로필 응답입니다.
      *
      * @param profileCoverUrl 단일 배경 주소를 읽는 화면을 위한 대표 배경(갤러리의 첫 사진)입니다.
+     * @param hiddenByReports 신고가 쌓여 자동으로 가려졌으면 true. 화면은 안내를 띄우고, 장소 서비스는 새 기록을 막습니다.
      */
     public record ProfileView(
             UUID accountId,
@@ -81,7 +84,8 @@ public final class ProfileModels {
             String intro,
             List<String> profileTags,
             List<String> preferenceTags,
-            List<String> excludedTags) {}
+            List<String> excludedTags,
+            boolean hiddenByReports) {}
 
     /** 검증을 마친 이미지 파일 데이터와 MIME 형식입니다. */
     public record ProfileImage(byte[] data, String mimeType) {}

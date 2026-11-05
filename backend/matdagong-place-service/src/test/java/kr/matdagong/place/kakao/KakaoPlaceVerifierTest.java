@@ -17,6 +17,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
+/** 카카오 Local API로 가게 기본정보를 다시 확인하는 규칙을 검증합니다. */
 class KakaoPlaceVerifierTest {
     private static final String KAKAO_DOCUMENTS =
             """

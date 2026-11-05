@@ -49,10 +49,15 @@ public class MediaUrlSigner {
         this.clock = clock;
     }
 
+    /** 공개 기록 사진처럼 서명 없이 열리는 주소입니다. */
+    public static String publicUrl(String kind, UUID id) {
+        return "/media/%s/%s".formatted(kind, id);
+    }
+
     public String signedUrl(String kind, UUID id) {
         long expiresAt =
                 (clock.instant().plus(ttl).getEpochSecond() / EXPIRY_BUCKET_SECONDS + 1) * EXPIRY_BUCKET_SECONDS;
-        return "/media/%s/%s?exp=%d&sig=%s".formatted(kind, id, expiresAt, signature(kind, id, expiresAt));
+        return publicUrl(kind, id) + "?exp=%d&sig=%s".formatted(expiresAt, signature(kind, id, expiresAt));
     }
 
     /** 서명이 맞고 아직 만료되지 않았으면 남은 유효 시간(초)을, 아니면 -1을 반환합니다. */

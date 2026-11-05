@@ -3,10 +3,12 @@ package kr.matdagong.community.taster;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import kr.matdagong.common.test.EmbeddedPostgresTestSupport;
 import kr.matdagong.community.notification.NotificationService;
 import kr.matdagong.community.subscription.SubscriptionService;
+import kr.matdagong.community.taster.PlaceTrustClient.TrustStats;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,13 +42,37 @@ class TasterServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         jdbc.update("INSERT INTO user_profile_tags (account_id, tag_id) VALUES (?, ?)", taster, tags.get(1));
         jdbc.update("INSERT INTO user_profile_tags (account_id, tag_id) VALUES (?, ?)", taster, tags.get(4));
 
-        TasterModels.TasterView view = service.tasters(me).stream()
-                .filter(item -> item.tasterId().equals(taster.toString()))
-                .findFirst()
-                .orElseThrow();
+        TasterModels.TasterView view = viewOf(service.tasters(me, Map.of()), taster);
 
         assertThat(view.matchScore()).isEqualTo(50);
         assertThat(view.matchedTags()).hasSize(2);
+        assertThat(view.trustScore()).isNull();
+        assertThat(view.trustLevel()).isNull();
+    }
+
+    @Test
+    void 같은_맛집_경험이_있으면_취향_일치와_합쳐_신뢰를_붙인다() {
+        UUID me = UUID.randomUUID();
+        UUID taster = UUID.randomUUID();
+        jdbc.update("INSERT INTO user_profiles (account_id, nickname, avatar_variant) VALUES (?, '나', 1)", me);
+        jdbc.update("INSERT INTO user_profiles (account_id, nickname, avatar_variant) VALUES (?, '맛객', 1)", taster);
+        Integer tag = jdbc.queryForObject("SELECT tag_id FROM taste_tags ORDER BY tag_id LIMIT 1", Integer.class);
+        jdbc.update("INSERT INTO user_preference_tags (account_id, tag_id) VALUES (?, ?)", me, tag);
+        jdbc.update("INSERT INTO user_profile_tags (account_id, tag_id) VALUES (?, ?)", taster, tag);
+
+        TasterModels.TasterView view =
+                viewOf(service.tasters(me, Map.of(taster, new TrustStats(taster.toString(), 10, 0, 100))), taster);
+
+        assertThat(view.matchScore()).isEqualTo(100);
+        assertThat(view.trustScore()).isEqualTo(100);
+        assertThat(view.trustLevel()).isEqualTo(TasterModels.TrustLevel.TRUSTED);
+    }
+
+    private static TasterModels.TasterView viewOf(List<TasterModels.TasterView> views, UUID taster) {
+        return views.stream()
+                .filter(item -> item.tasterId().equals(taster.toString()))
+                .findFirst()
+                .orElseThrow();
     }
 
     @Test

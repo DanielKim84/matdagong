@@ -17,41 +17,50 @@ import kr.matdagong.place.draft.QuickDraftModels.QuickPlaceDraftRequest;
 import kr.matdagong.place.draft.QuickDraftService;
 import kr.matdagong.place.kakao.KakaoPlaceVerifier.PlaceInfo;
 import kr.matdagong.place.like.PlaceLikeService;
+import kr.matdagong.place.location.DeviceLocation;
+import kr.matdagong.place.location.NearbyPlaceGuard;
 import kr.matdagong.place.media.MediaUrlSigner;
 import kr.matdagong.place.media.PlacePhotoService;
 import kr.matdagong.place.profile.CommunityProfileClient.AuthorProfile;
-import kr.matdagong.place.recent.RecentPlaceService;
+import kr.matdagong.place.profile.TestHiddenTasters;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-/** 실제 PostgreSQL에 Flyway 스키마를 적용하고 장소 기록 저장·조회와 하트·최근 본 장소 SQL을 검증합니다. */
+/** 실제 PostgreSQL에 Flyway 스키마를 적용하고 장소 기록 저장·조회와 하트·빠른 기록 연동 SQL을 검증합니다. */
 class PlaceRecordServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     private static final String PNG =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
     private static final UUID FIRST = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID SECOND = UUID.fromString("22222222-2222-2222-2222-222222222222");
-    private static final AuthorProfile FIRST_AUTHOR = new AuthorProfile("첫맛객", 3);
-    private static final AuthorProfile SECOND_AUTHOR = new AuthorProfile("둘맛객", 5);
+    private static final AuthorProfile FIRST_AUTHOR = new AuthorProfile("첫맛객", 3, false);
+    private static final AuthorProfile SECOND_AUTHOR = new AuthorProfile("둘맛객", 5, false);
+    /** 아래 테스트 가게(을지로 1) 바로 앞의 기기 위치입니다. 거리 규칙은 PlaceVisitDistanceIntegrationTest가 확인합니다. */
+    private static final DeviceLocation NEAR = new DeviceLocation(37.566, 126.991);
 
     private PlaceQueryService places;
     private PlaceLikeService likes;
     private QuickDraftService drafts;
-    private RecentPlaceService recentPlaces;
     private PlaceRecordService service;
 
     @BeforeEach
     void setUp() {
-        truncate("restaurant_places, user_place_likes, user_recent_places, place_quick_drafts");
-        MediaUrlSigner signer = new MediaUrlSigner("integration-key", Duration.ofHours(6));
-        SamplePlaceCatalog samples = new SamplePlaceCatalog();
-        PlaceViewLoader loader = new PlaceViewLoader(jdbc, signer);
-        places = new PlaceQueryService(jdbc, samples, loader);
+        truncate("restaurant_places, user_place_likes, user_place_dislikes, place_quick_drafts");
+        PlaceViewLoader loader = new PlaceViewLoader(
+                jdbc, new MediaUrlSigner("integration-key", Duration.ofHours(6)), TestHiddenTasters.none());
+        places = new PlaceQueryService(jdbc, new SamplePlaceCatalog(), loader, TestHiddenTasters.none());
         likes = new PlaceLikeService(jdbc);
-        drafts = new QuickDraftService(jdbc);
-        recentPlaces = new RecentPlaceService(jdbc, samples, loader, places);
-        service = new PlaceRecordService(jdbc, places, loader, new PlacePhotoService(jdbc), drafts, likes);
+        NearbyPlaceGuard nearby = new NearbyPlaceGuard(jdbc);
+        drafts = new QuickDraftService(jdbc, nearby);
+        service = new PlaceRecordService(
+                jdbc,
+                places,
+                loader,
+                new PlaceRecordContentWriter(jdbc, new PlacePhotoService(jdbc, TestHiddenTasters.none())),
+                drafts,
+                likes,
+                nearby);
     }
 
     @Test
@@ -146,48 +155,28 @@ class PlaceRecordServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
-    void 최근_본_장소는_샘플과_DB_장소를_본_순서대로_함께_돌려준다() {
-        PlaceView created = service.createRecord(
-                FIRST,
-                FIRST_AUTHOR,
+    void 기록을_저장하면_빠른_기록에서_빠지고_입맛에_맞았던_하트는_기록으로_바뀐다() {
+        PlaceView place = service.createRecord(
+                SECOND,
+                SECOND_AUTHOR,
                 unverified("국밥집"),
                 request("국밥집", RecordVisibility.PUBLIC, List.of(), List.of(PNG)));
-        String sampleId = new SamplePlaceCatalog().findAll(null).get(0).id();
-
-        recentPlaces.remember(SECOND, created.id());
-        jdbc.update("UPDATE user_recent_places SET viewed_at = now() - INTERVAL '1 minute'");
-        recentPlaces.remember(SECOND, sampleId);
-
-        assertThat(recentPlaces.findRecent(SECOND)).extracting(PlaceView::id).containsExactly(sampleId, created.id());
-    }
-
-    @Test
-    void 기록을_저장하면_빠른_기록에서_빠지고_하트와_기록은_서로_바꿀_수_있다() {
-        drafts.saveDraft(
-                FIRST,
-                new QuickPlaceDraftRequest(
-                        "KAKAO", "1001", "국밥집", "한식", "서울 중구 을지로 1", 37.566, 126.991, null, null, null, null));
-        PlaceView created = service.createRecord(
-                FIRST,
-                FIRST_AUTHOR,
-                unverified("국밥집"),
-                request("국밥집", RecordVisibility.PUBLIC, List.of(), List.of(PNG)));
-        assertThat(drafts.findDrafts(FIRST)).isEmpty();
-
-        service.convertRecordToLike(FIRST, created.id());
-        assertThat(service.findMine(FIRST)).isEmpty();
-        assertThat(likes.visitedLikedPlaceIds(FIRST)).containsExactly(created.id());
+        QuickPlaceDraftRequest draft = new QuickPlaceDraftRequest(
+                "KAKAO", "1001", "국밥집", "한식", "서울 중구 을지로 1", 37.566, 126.991, null, null, null, null, NEAR);
+        drafts.saveDraft(FIRST, draft.submittedPlace(), draft);
+        likes.setLiked(FIRST, place.id(), true, true);
 
         service.convertLikeToRecord(
                 FIRST,
                 FIRST_AUTHOR,
                 unverified("국밥집"),
-                created.id(),
+                place.id(),
                 request("국밥집", RecordVisibility.PUBLIC, List.of(), List.of(PNG)),
                 true);
+        assertThat(drafts.findDrafts(FIRST)).isEmpty();
         assertThat(likes.likedPlaceIds(FIRST)).isEmpty();
         assertThat(service.findMine(FIRST)).hasSize(1);
-        assertThatThrownBy(() -> likes.setLiked(FIRST, created.id(), true))
+        assertThatThrownBy(() -> likes.setLiked(FIRST, place.id(), true, false))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
                     assertThat(exception.getReason()).isEqualTo("내가 등록한 맛집은 내 맛집으로 중복 저장할 수 없습니다.");
@@ -211,7 +200,13 @@ class PlaceRecordServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 FIRST, List.of(created.id(), created.id(), "p-001", "없는-ID"), RecordVisibility.PUBLIC);
 
         assertThat(changed).isEqualTo(1);
-        assertThat(service.findMine(FIRST).get(0).tasters().get(0).visibility()).isEqualTo(RecordVisibility.PUBLIC);
+        TasterRecordView changedRecord =
+                service.findMine(FIRST).get(0).tasters().get(0);
+        assertThat(changedRecord.visibility()).isEqualTo(RecordVisibility.PUBLIC);
+        // 공개 범위만 바뀌고 사진·태그·매장 정보는 그대로 남습니다.
+        assertThat(changedRecord.photos()).hasSize(1);
+        assertThat(changedRecord.tags()).containsExactly("국물");
+        assertThat(changedRecord.visitConditions()).containsExactly("혼밥");
         assertThat(service.findMine(SECOND).get(0).tasters().get(0).visibility())
                 .isEqualTo(RecordVisibility.PRIVATE);
         assertThat(places.findById(created.id(), SECOND).orElseThrow().tasters())
@@ -236,6 +231,33 @@ class PlaceRecordServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 .isZero();
     }
 
+    @Test
+    void 내_기록을_지우면_하위_내용까지_지워지고_다른_맛객_기록과_가게는_남는다() {
+        PlaceView created = service.createRecord(
+                FIRST,
+                FIRST_AUTHOR,
+                unverified("국밥집"),
+                request("국밥집", RecordVisibility.PUBLIC, List.of(new MenuInput("국밥", 9000, PNG)), List.of(PNG)));
+        service.createRecord(
+                SECOND,
+                SECOND_AUTHOR,
+                unverified("국밥집"),
+                request("국밥집", RecordVisibility.PUBLIC, List.of(), List.of()));
+
+        assertThat(service.deleteRecord(FIRST, created.id())).isTrue();
+        assertThat(service.deleteRecord(FIRST, created.id())).isFalse();
+
+        assertThat(service.findMine(FIRST)).isEmpty();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM restaurant_record_photos", Integer.class))
+                .isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM restaurant_record_menus", Integer.class))
+                .isZero();
+        assertThat(places.findById(created.id(), SECOND).orElseThrow().tasters())
+                .extracting(TasterRecordView::tasterName)
+                .containsExactly("둘맛객");
+    }
+
+    @Test
     private static PlaceInfo unverified(String name) {
         return new PlaceInfo(name, "서울 중구 을지로 1", 37.566, 126.991, null, null, "서울 중구 을지로 1", null, false);
     }
@@ -273,6 +295,7 @@ class PlaceRecordServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 List.of("국물"),
                 Map.of("국물", "TASTE"),
                 List.of("혼밥"),
-                photos);
+                photos,
+                NEAR);
     }
 }

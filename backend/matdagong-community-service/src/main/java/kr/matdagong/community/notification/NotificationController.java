@@ -46,13 +46,15 @@ public class NotificationController {
         return service.list(AuthenticatedAccount.id(jwt));
     }
 
-    /** 화면은 장소 ID만 보내고, 알림 내용과 공개 여부는 장소 서비스에 저장된 본인 기록에서 정합니다. */
+    /**
+     * 화면은 장소 ID만 보내고, 알림 내용과 공개 여부는 장소 서비스에 실제로 저장된 본인 기록에서 정합니다.
+     * 장소 서비스 조회는 DB 트랜잭션에 들어가기 전에 여기서 끝냅니다.
+     */
     @PostMapping("/place-recorded")
     @ResponseStatus(HttpStatus.CREATED)
     public NotificationView placeRegistered(
             @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody PlaceRegisteredRequest request) {
         UUID accountId = AuthenticatedAccount.id(jwt);
-        // 실제로 저장된 본인 기록만 알림으로 만들고, 장소 서비스 조회는 DB 트랜잭션 밖에서 끝냅니다.
         PlaceServiceClient.RecordedPlace place =
                 places.findOwnRecord(jwt.getTokenValue(), request.placeId(), accountId);
         return service.placeRegistered(accountId, place);

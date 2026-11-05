@@ -50,6 +50,11 @@ final class SampleRecordDetails {
             Map.entry("새콤한 맛", "TASTE"));
 
     private static final String PHOTO_BASE = "/assets/sample-food/";
+    private static final DateTimeFormatter VISITED_ON_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+    private static final LocalTime SAMPLE_RECORD_TIME = LocalTime.of(12, 30);
+    private static final ZoneOffset KOREA_OFFSET = ZoneOffset.ofHours(9);
+    /** 태그 사전에 없는 샘플 태그는 맛 태그로 봅니다. 실제 기록 저장(PlaceRecordContentWriter)과 같은 기준입니다. */
+    private static final String FALLBACK_TAG_GROUP = "TASTE";
 
     /** "장소ID:맛객ID 끝자리" → 그 맛객이 올린 예시 사진 */
     private static final Map<String, List<String>> PHOTOS = Map.ofEntries(
@@ -128,29 +133,31 @@ final class SampleRecordDetails {
                     conditions("주차 편리")),
             detail("p-012:5", menus("소금빵", 3500, "바닐라 크림빵", 4500), tags("베이커리", "디저트", "커피"), conditions("친절 경험")));
 
-    /** 샘플 기록에 내용을 채웁니다. 기록 시각은 장소 방문일에서 맛객 순서만큼 하루씩 앞당겨 정합니다. */
+    /**
+     * 샘플 기록에 내용을 채웁니다. 기록 시각은 장소 방문일 낮 12시 30분(한국 시각)에서 맛객 순서만큼 하루씩 앞당겨 정해,
+     * 피드 최신순과 기록 일기 달력에서 날짜가 흩어져 보이게 합니다.
+     */
     static List<TasterRecordView> enrich(String placeId, String visitedOn, List<TasterRecordView> tasters) {
-        LocalDate visited = LocalDate.parse(visitedOn, DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+        LocalDate visited = LocalDate.parse(visitedOn, VISITED_ON_FORMAT);
         List<TasterRecordView> result = new ArrayList<>();
         for (int index = 0; index < tasters.size(); index++) {
             TasterRecordView taster = tasters.get(index);
             String tasterId = taster.tasterId();
             String key = placeId + ":" + tasterId.substring(tasterId.length() - 1);
             Detail detail = DETAILS.get(key);
-            String recordedAt = OffsetDateTime.of(visited.minusDays(index), LocalTime.of(12, 30), ZoneOffset.ofHours(9))
+            String recordedAt = OffsetDateTime.of(visited.minusDays(index), SAMPLE_RECORD_TIME, KOREA_OFFSET)
                     .toString();
             if (detail == null) {
                 result.add(withRecordedAt(taster, recordedAt));
                 continue;
             }
             Map<String, String> tagGroups = new LinkedHashMap<>();
-            detail.tags().forEach(tag -> tagGroups.put(tag, TAG_GROUPS.getOrDefault(tag, "TASTE")));
+            detail.tags().forEach(tag -> tagGroups.put(tag, TAG_GROUPS.getOrDefault(tag, FALLBACK_TAG_GROUP)));
             result.add(new TasterRecordView(
                     tasterId,
                     taster.tasterName(),
                     String.join(" · ", detail.tags()),
                     taster.avatar(),
-                    taster.avatarColor(),
                     taster.note(),
                     withMenuPhotos(detail.menus(), MENU_PHOTOS.getOrDefault(key, List.of())),
                     detail.tags(),
@@ -180,7 +187,6 @@ final class SampleRecordDetails {
                 taster.tasterName(),
                 taster.tag(),
                 taster.avatar(),
-                taster.avatarColor(),
                 taster.note(),
                 taster.menus(),
                 taster.tags(),

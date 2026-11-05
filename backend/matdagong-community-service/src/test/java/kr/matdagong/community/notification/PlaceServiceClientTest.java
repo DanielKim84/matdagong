@@ -17,6 +17,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
+/** 맛집 등록 알림 전에 장소 서비스의 본인 기록을 확인하는 호출을 검증합니다. */
 class PlaceServiceClientTest {
     private static final UUID OWNER = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final String PLACE_ID = "22222222-2222-2222-2222-222222222222";

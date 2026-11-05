@@ -27,8 +27,6 @@ public class SamplePlaceCatalog {
                     "서울 마포구 동교로 251",
                     37.5637,
                     126.9254,
-                    "🍲",
-                    "#ead3bb",
                     "2026.10.12",
                     "맑고 깊은 국물. 혼자 와도 편안해서 자주 생각나요.",
                     taster(
@@ -36,15 +34,8 @@ public class SamplePlaceCatalog {
                             "골목맛객 민지",
                             "동네 골목의 오래된 맛집",
                             "민",
-                            "#ead5c7",
                             "맑고 깊은 국물에 밥 한 공기. 혼자 와도 편안한 분위기라 자주 생각나요."),
-                    taster(
-                            MEAL_TASTER_ID,
-                            "든든한 한끼 연구소",
-                            "정갈하고 든든한 한 끼",
-                            "한",
-                            "#e4ebd7",
-                            "자극적이지 않고 오래 먹을 수 있는 따뜻한 국밥.")),
+                    taster(MEAL_TASTER_ID, "든든한 한끼 연구소", "정갈하고 든든한 한 끼", "한", "자극적이지 않고 오래 먹을 수 있는 따뜻한 국밥.")),
             place(
                     "p-002",
                     "소금집델리",
@@ -52,17 +43,9 @@ public class SamplePlaceCatalog {
                     "서울 마포구 연남동 223-38",
                     37.5653,
                     126.9230,
-                    "🥪",
-                    "#e9d8bc",
                     "2026.10.08",
                     "잠봉뵈르의 버터 향과 바삭한 빵이 잘 어울려요.",
-                    taster(
-                            DESSERT_TASTER_ID,
-                            "달콤한 디저트 지도",
-                            "카페와 디저트 가게를 모아요",
-                            "달",
-                            "#f2dce8",
-                            "가벼운 점심으로 다시 올 곳. 버터 향이 좋아요.")),
+                    taster(DESSERT_TASTER_ID, "달콤한 디저트 지도", "카페와 디저트 가게를 모아요", "달", "가벼운 점심으로 다시 올 곳. 버터 향이 좋아요.")),
             place(
                     "p-003",
                     "산동만두",
@@ -70,18 +53,10 @@ public class SamplePlaceCatalog {
                     "서울 마포구 연희로 12",
                     37.5671,
                     126.9277,
-                    "🥟",
-                    "#e9c9b4",
                     "2026.10.03",
                     "뜨거울 때 먹는 만두와 오이무침 조합이 좋았습니다.",
-                    taster(NOODLE_TASTER_ID, "면요리 탐험가", "국수와 면 요리를 찾아다녀요", "면", "#dce7ce", "육즙 가득한 만두와 산뜻한 오이무침."),
-                    taster(
-                            WEEKEND_TASTER_ID,
-                            "주말 미식 산책",
-                            "주말마다 새로운 동네를 걸어요",
-                            "주",
-                            "#e4dff0",
-                            "따뜻할 때 한입 베어 물면 육즙이 가득해요.")),
+                    taster(NOODLE_TASTER_ID, "면요리 탐험가", "국수와 면 요리를 찾아다녀요", "면", "육즙 가득한 만두와 산뜻한 오이무침."),
+                    taster(WEEKEND_TASTER_ID, "주말 미식 산책", "주말마다 새로운 동네를 걸어요", "주", "따뜻할 때 한입 베어 물면 육즙이 가득해요.")),
             place(
                     "p-004",
                     "카페 레이어드",
@@ -89,23 +64,14 @@ public class SamplePlaceCatalog {
                     "서울 마포구 성미산로 161-4",
                     37.5651,
                     126.9298,
-                    "🥐",
-                    "#e2d9c7",
                     "2026.09.28",
                     "스콘을 고르는 시간부터 즐거운 곳. 창가 자리에 앉아 쉬기 좋아요.",
-                    taster(
-                            WEEKEND_TASTER_ID,
-                            "주말 미식 산책",
-                            "주말마다 새로운 동네를 걸어요",
-                            "주",
-                            "#e4dff0",
-                            "창가 자리에서 스콘과 커피를 천천히 즐겨요."),
+                    taster(WEEKEND_TASTER_ID, "주말 미식 산책", "주말마다 새로운 동네를 걸어요", "주", "창가 자리에서 스콘과 커피를 천천히 즐겨요."),
                     taster(
                             DESSERT_TASTER_ID,
                             "달콤한 디저트 지도",
                             "카페와 디저트 가게를 모아요",
                             "달",
-                            "#f2dce8",
                             "스콘을 고르는 시간부터 즐거운 곳. 창가 자리에 앉아 쉬기 좋아요.")),
             place(
                     "p-005",
@@ -114,12 +80,10 @@ public class SamplePlaceCatalog {
                     "서울 마포구 연남동 240-1",
                     37.5624,
                     126.9291,
-                    "☕",
-                    "#d8dfcf",
                     "2026.09.20",
                     "주말 아침 느긋하게 브런치를 먹고 싶은 날.",
-                    taster(ALLEY_TASTER_ID, "골목맛객 민지", "동네 골목의 오래된 맛집", "민", "#ead5c7", "주말 아침 느긋하게 브런치를 먹기 좋아요."),
-                    taster(WEEKEND_TASTER_ID, "주말 미식 산책", "주말마다 새로운 동네를 걸어요", "주", "#e4dff0", "혼자 가도 편하고, 커피가 부드러워요.")),
+                    taster(ALLEY_TASTER_ID, "골목맛객 민지", "동네 골목의 오래된 맛집", "민", "주말 아침 느긋하게 브런치를 먹기 좋아요."),
+                    taster(WEEKEND_TASTER_ID, "주말 미식 산책", "주말마다 새로운 동네를 걸어요", "주", "혼자 가도 편하고, 커피가 부드러워요.")),
             place(
                     "p-006",
                     "면의 온도",
@@ -127,18 +91,10 @@ public class SamplePlaceCatalog {
                     "서울 마포구 와우산로 29",
                     37.5608,
                     126.9312,
-                    "🍜",
-                    "#e3d3bd",
                     "2026.09.14",
                     "쫄깃한 면과 깔끔한 국물. 비 오는 날 다시 찾고 싶은 곳.",
-                    taster(
-                            NOODLE_TASTER_ID,
-                            "면요리 탐험가",
-                            "국수와 면 요리를 찾아다녀요",
-                            "면",
-                            "#dce7ce",
-                            "깔끔한 국물이라 부담 없이 한 그릇 먹기 좋아요."),
-                    taster(MEAL_TASTER_ID, "든든한 한끼 연구소", "정갈하고 든든한 한 끼", "한", "#e4ebd7", "비 오는 날 다시 찾고 싶은 우동.")),
+                    taster(NOODLE_TASTER_ID, "면요리 탐험가", "국수와 면 요리를 찾아다녀요", "면", "깔끔한 국물이라 부담 없이 한 그릇 먹기 좋아요."),
+                    taster(MEAL_TASTER_ID, "든든한 한끼 연구소", "정갈하고 든든한 한 끼", "한", "비 오는 날 다시 찾고 싶은 우동.")),
             place(
                     "p-007",
                     "작은 국수집",
@@ -146,18 +102,10 @@ public class SamplePlaceCatalog {
                     "서울 마포구 동교로 41",
                     37.5618,
                     126.9210,
-                    "🍜",
-                    "#e1d7c4",
                     "2026.09.11",
                     "멸치 향이 은은한 국물과 부드러운 면.",
-                    taster(NOODLE_TASTER_ID, "면요리 탐험가", "국수와 면 요리를 찾아다녀요", "면", "#dce7ce", "동네에서 편하게 먹는 따뜻한 한 그릇."),
-                    taster(
-                            DESSERT_TASTER_ID,
-                            "달콤한 디저트 지도",
-                            "카페와 디저트 가게를 모아요",
-                            "달",
-                            "#f2dce8",
-                            "면 요리 뒤에 디저트 코스까지 즐겨요.")),
+                    taster(NOODLE_TASTER_ID, "면요리 탐험가", "국수와 면 요리를 찾아다녀요", "면", "동네에서 편하게 먹는 따뜻한 한 그릇."),
+                    taster(DESSERT_TASTER_ID, "달콤한 디저트 지도", "카페와 디저트 가게를 모아요", "달", "면 요리 뒤에 디저트 코스까지 즐겨요.")),
             place(
                     "p-008",
                     "정미소 밥상",
@@ -165,12 +113,10 @@ public class SamplePlaceCatalog {
                     "서울 마포구 성미산로 53",
                     37.5677,
                     126.9204,
-                    "🍚",
-                    "#d9e1c9",
                     "2026.09.02",
                     "매일 달라지는 반찬과 정갈한 밥.",
-                    taster(ALLEY_TASTER_ID, "골목맛객 민지", "동네 골목의 오래된 맛집", "민", "#ead5c7", "따뜻한 집밥이 생각날 때 다시 오고 싶어요."),
-                    taster(MEAL_TASTER_ID, "든든한 한끼 연구소", "정갈하고 든든한 한 끼", "한", "#e4ebd7", "매일 달라지는 반찬과 정갈한 밥이 좋아요.")),
+                    taster(ALLEY_TASTER_ID, "골목맛객 민지", "동네 골목의 오래된 맛집", "민", "따뜻한 집밥이 생각날 때 다시 오고 싶어요."),
+                    taster(MEAL_TASTER_ID, "든든한 한끼 연구소", "정갈하고 든든한 한 끼", "한", "매일 달라지는 반찬과 정갈한 밥이 좋아요.")),
             place(
                     "p-009",
                     "연희동 작은 카레집",
@@ -178,17 +124,9 @@ public class SamplePlaceCatalog {
                     "서울 서대문구 연희로 87",
                     37.5685,
                     126.9309,
-                    "🍛",
-                    "#e9d8b4",
                     "2026.08.29",
                     "향신료가 과하지 않아 자주 찾게 돼요.",
-                    taster(
-                            NOODLE_TASTER_ID,
-                            "면요리 탐험가",
-                            "국수와 면 요리라면 어디든 찾아갑니다",
-                            "면",
-                            "#dce7ce",
-                            "밥과 함께 먹기 좋은 부드러운 카레.")),
+                    taster(NOODLE_TASTER_ID, "면요리 탐험가", "국수와 면 요리라면 어디든 찾아갑니다", "면", "밥과 함께 먹기 좋은 부드러운 카레.")),
             place(
                     "p-010",
                     "망원 소바정",
@@ -196,35 +134,29 @@ public class SamplePlaceCatalog {
                     "서울 마포구 포은로 72",
                     37.5554,
                     126.9058,
-                    "🍜",
-                    "#e5d9c8",
                     "2026.08.25",
                     "더운 날 가볍게 먹기 좋은 메밀 소바.",
-                    taster(WEEKEND_TASTER_ID, "주말 미식 산책", "주말마다 새로운 동네를 걸어요", "주", "#e4dff0", "산책하다 들르기 좋은 작은 소바집.")),
-            adPlace(
+                    taster(WEEKEND_TASTER_ID, "주말 미식 산책", "주말마다 새로운 동네를 걸어요", "주", "산책하다 들르기 좋은 작은 소바집.")),
+            place(
                     "p-011",
                     "망원 온기식탁",
                     "한식 · 가정식",
                     "서울 마포구 망원로 18",
                     37.5568,
                     126.9094,
-                    "🍚",
-                    "#ead9c1",
                     "2026.08.18",
                     "따뜻한 반찬과 편안한 분위기가 좋아요.",
-                    taster(MEAL_TASTER_ID, "든든한 한끼 연구소", "정갈하고 든든한 밥집을 소개합니다", "한", "#e4ebd7", "오늘의 반찬 구성이 알차요.")),
-            adPlace(
+                    taster(MEAL_TASTER_ID, "든든한 한끼 연구소", "정갈하고 든든한 밥집을 소개합니다", "한", "오늘의 반찬 구성이 알차요.")),
+            place(
                     "p-012",
                     "연남 오후의 빵",
                     "카페 · 베이커리",
                     "서울 마포구 동교로 267",
                     37.5630,
                     126.9273,
-                    "🥐",
-                    "#e6d3bf",
                     "2026.08.12",
                     "갓 구운 빵과 커피를 즐기기 좋아요.",
-                    taster(DESSERT_TASTER_ID, "달콤한 디저트 지도", "카페와 디저트 가게를 모아요", "달", "#f2dce8", "오후에 들러 빵과 커피를 즐겼어요.")));
+                    taster(DESSERT_TASTER_ID, "달콤한 디저트 지도", "카페와 디저트 가게를 모아요", "달", "오후에 들러 빵과 커피를 즐겼어요.")));
 
     public List<PlaceView> findAll(String query) {
         if (query == null || query.isBlank()) return places;
@@ -244,6 +176,7 @@ public class SamplePlaceCatalog {
                 .orElse(null);
     }
 
+    /** visitedOn(yyyy.MM.dd)은 응답에 담지 않고, 샘플 기록 시각(recordedAt)을 정하는 기준일로만 씁니다. */
     private static PlaceView place(
             String id,
             String name,
@@ -251,8 +184,6 @@ public class SamplePlaceCatalog {
             String address,
             double latitude,
             double longitude,
-            String emoji,
-            String color,
             String visitedOn,
             String recentNote,
             TasterRecordView... tasters) {
@@ -263,43 +194,9 @@ public class SamplePlaceCatalog {
                 address,
                 latitude,
                 longitude,
-                emoji,
-                color,
-                visitedOn,
                 recentNote,
                 tasters.length,
                 visitConditions(id),
-                false,
-                SampleRecordDetails.enrich(id, visitedOn, List.of(tasters)));
-    }
-
-    /** 광고 탭과 광고 마커를 확인할 수 있도록 개발 목록에만 노출하는 샘플입니다. */
-    private static PlaceView adPlace(
-            String id,
-            String name,
-            String category,
-            String address,
-            double latitude,
-            double longitude,
-            String emoji,
-            String color,
-            String visitedOn,
-            String recentNote,
-            TasterRecordView... tasters) {
-        return new PlaceView(
-                id,
-                name,
-                category,
-                address,
-                latitude,
-                longitude,
-                emoji,
-                color,
-                visitedOn,
-                recentNote,
-                tasters.length,
-                visitConditions(id),
-                true,
                 SampleRecordDetails.enrich(id, visitedOn, List.of(tasters)));
     }
 
@@ -315,8 +212,7 @@ public class SamplePlaceCatalog {
         };
     }
 
-    private static TasterRecordView taster(
-            String id, String name, String tag, String avatar, String color, String note) {
-        return new TasterRecordView(id, name, tag, avatar, color, note);
+    private static TasterRecordView taster(String id, String name, String tag, String avatar, String note) {
+        return new TasterRecordView(id, name, tag, avatar, note);
     }
 }

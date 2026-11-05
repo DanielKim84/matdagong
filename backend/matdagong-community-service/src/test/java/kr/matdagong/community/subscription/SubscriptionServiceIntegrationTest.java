@@ -12,6 +12,7 @@ import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 /** 무료·유료 구독 신청, 무료 구독 교체, 만료 처리를 실제 스키마로 확인합니다. */
@@ -83,6 +84,35 @@ class SubscriptionServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
+    void 같은_맛객을_유료로_동시에_두_번_신청하면_뒤_요청은_앞_요청을_기다렸다가_409로_끝난다() {
+        // 앞 요청처럼 구독자 잠금을 잡고 구독과 활성 회차를 연 채 커밋 전에 멈춰 둡니다.
+        assertStatus(
+                () -> callBlockedByUncommitted(
+                        other -> {
+                            other.queryForList(
+                                    "SELECT account_id FROM user_profiles WHERE account_id = ? FOR UPDATE", ME);
+                            openPaidSubscription(other, ME);
+                        },
+                        () -> service.subscribe(ME, paid(FIRST_TASTER))),
+                HttpStatus.CONFLICT,
+                "이미 구독 중인 맛객입니다.");
+        assertThat(activeHistoryCount()).isEqualTo(1);
+    }
+
+    @Test
+    void 잠글_프로필이_없는_구독자의_동시_신청은_활성_회차_제약에서_409로_끝난다() {
+        UUID withoutProfile = UUID.fromString("10000000-0000-0000-0000-000000000009");
+
+        assertStatus(
+                () -> callBlockedByUncommitted(
+                        other -> openPaidSubscription(other, withoutProfile),
+                        () -> service.subscribe(withoutProfile, paid(FIRST_TASTER))),
+                HttpStatus.CONFLICT,
+                "이미 처리 중인 구독이에요.");
+        assertThat(activeHistoryCount()).isEqualTo(1);
+    }
+
+    @Test
     void 만료된_유료_회차는_목록에서_빠지고_같은_맛객을_다시_구독할_수_있다() {
         SubscribeResult first = service.subscribe(ME, paid(FIRST_TASTER));
         jdbc.update(
@@ -118,6 +148,34 @@ class SubscriptionServiceIntegrationTest extends EmbeddedPostgresTestSupport {
 
     private static SubscribeRequest paid(UUID target) {
         return new SubscribeRequest(target, SubscriptionType.PAID, 1, false);
+    }
+
+    /** 다른 트랜잭션(other)에서 FIRST_TASTER 유료 구독과 그 활성 회차를 엽니다. */
+    private static void openPaidSubscription(JdbcTemplate other, UUID subscriberId) {
+        UUID subscriptionId = UUID.randomUUID();
+        other.update(
+                """
+                INSERT INTO user_subscriptions (
+                    subscription_id, subscriber_id, target_account_id, subscription_st, subscription_type
+                ) VALUES (?, ?, ?, 'ACTIVE', 'PAID')
+                """,
+                subscriptionId,
+                subscriberId,
+                FIRST_TASTER);
+        other.update(
+                """
+                INSERT INTO user_subscription_history (
+                    subscription_history_id, subscription_id, subscription_type,
+                    term_months, period_st, price_amt, start_dt, end_dt
+                ) VALUES (?, ?, 'PAID', 1, 'ACTIVE', 0, now(), now() + INTERVAL '1 month')
+                """,
+                UUID.randomUUID(),
+                subscriptionId);
+    }
+
+    private static int activeHistoryCount() {
+        return jdbc.queryForObject(
+                "SELECT count(*) FROM user_subscription_history WHERE period_st = 'ACTIVE'", Integer.class);
     }
 
     private static void profile(UUID accountId, String nickname) {

@@ -23,6 +23,9 @@ import org.springframework.web.server.ResponseStatusException;
 class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     private static final UUID FIRST = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID SECOND = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private static final UUID THIRD = UUID.fromString("33333333-3333-3333-3333-333333333333");
+    private static final String INSERT_PROFILE =
+            "INSERT INTO user_profiles (account_id, nickname, avatar_variant) VALUES (?, ?, 1)";
     private static final byte[] PNG = {(byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00};
 
     private UserProfileService profiles;
@@ -34,7 +37,7 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         truncate("user_profiles");
         images = new ProfileImageService(jdbc);
         covers = new ProfileCoverService(jdbc, images);
-        profiles = new UserProfileService(jdbc, covers);
+        profiles = new UserProfileService(jdbc);
     }
 
     @Test
@@ -50,6 +53,37 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         // 이미 있는 프로필은 다시 만들 때 닉네임을 덮어쓰지 않습니다.
         assertThat(profiles.ensureProfile(FIRST, "새이름").nickname()).isEqualTo("국밥러");
         assertThat(profiles.findProfile(UUID.randomUUID())).isEmpty();
+    }
+
+    @Test
+    void 자동_닉네임은_계정_ID_접미사까지_겹치면_무작위_접미사로_만든다() {
+        profiles.ensureProfile(FIRST, "국밥러");
+        insertProfile(THIRD, "국밥러-222222");
+
+        String nickname = profiles.ensureProfile(SECOND, "국밥러").nickname();
+
+        assertThat(nickname).matches("국밥러-[0-9a-f]{6}").isNotEqualTo("국밥러-222222");
+    }
+
+    @Test
+    void 자동_닉네임을_정하는_사이에_같은_닉네임이_먼저_저장되면_다음_후보로_만든다() throws Exception {
+        ProfileView created = callBlockedByUncommitted(
+                other -> other.update(INSERT_PROFILE, THIRD, "국밥러"), () -> profiles.ensureProfile(SECOND, "국밥러"));
+
+        assertThat(created.nickname()).isEqualTo("국밥러-222222");
+    }
+
+    @Test
+    void 닉네임을_바꾸는_사이에_다른_계정이_같은_닉네임을_먼저_저장하면_409로_안내한다() {
+        profiles.ensureProfile(SECOND, "냉면러");
+
+        assertStatus(
+                () -> callBlockedByUncommitted(
+                        other -> other.update(INSERT_PROFILE, THIRD, "국밥러"),
+                        () -> profiles.updateProfile(SECOND, request("국밥러", null, List.of(), List.of(), List.of()))),
+                HttpStatus.CONFLICT,
+                UserProfileService.NICKNAME_TAKEN);
+        assertThat(profiles.findProfile(SECOND).orElseThrow().nickname()).isEqualTo("냉면러");
     }
 
     @Test
@@ -86,7 +120,7 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         assertStatus(
                 () -> profiles.updateProfile(SECOND, request("국밥러", null, List.of(), List.of(), List.of())),
                 HttpStatus.CONFLICT,
-                "이미 사용 중인 닉네임이에요.");
+                UserProfileService.NICKNAME_TAKEN);
     }
 
     @Test
@@ -129,6 +163,10 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 () -> covers.addCovers(FIRST, List.of(notImage)),
                 HttpStatus.BAD_REQUEST,
                 "JPG, PNG, WEBP 이미지 파일을 선택해 주세요.");
+    }
+
+    private static void insertProfile(UUID accountId, String nickname) {
+        jdbc.update(INSERT_PROFILE, accountId, nickname);
     }
 
     private static String tagName(TasteTagGroup group) {

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import kr.matdagong.common.jdbc.LikePatterns;
+import kr.matdagong.place.profile.HiddenTasters;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +19,14 @@ public class PlaceQueryService {
     private final JdbcTemplate jdbc;
     private final SamplePlaceCatalog samples;
     private final PlaceViewLoader loader;
+    private final HiddenTasters hiddenTasters;
 
-    public PlaceQueryService(JdbcTemplate jdbc, SamplePlaceCatalog samples, PlaceViewLoader loader) {
+    public PlaceQueryService(
+            JdbcTemplate jdbc, SamplePlaceCatalog samples, PlaceViewLoader loader, HiddenTasters hiddenTasters) {
         this.jdbc = jdbc;
         this.samples = samples;
         this.loader = loader;
+        this.hiddenTasters = hiddenTasters;
     }
 
     /**
@@ -33,19 +38,28 @@ public class PlaceQueryService {
         Map<String, PlaceView> results = new LinkedHashMap<>();
         samples.findAll(query).forEach(place -> results.put(place.id(), place));
         String filter = query == null ? "" : query.trim();
+        // 검색어의 %, _ 는 글자 그대로 찾습니다(샘플 장소의 contains 검색과 같은 결과).
+        String pattern = LikePatterns.contains(filter);
         List<UUID> ids = jdbc.query(
                 """
                 SELECT DISTINCT p.place_id
                 FROM restaurant_places p
                 WHERE (EXISTS (SELECT 1 FROM restaurant_records r
-                               WHERE r.place_id = p.place_id AND r.visibility = 'PUBLIC')
+                               WHERE r.place_id = p.place_id AND r.visibility = 'PUBLIC'
+                                 AND NOT (r.account_id = ANY(?::uuid[])))
                        OR EXISTS (SELECT 1 FROM user_place_likes l
                                   WHERE l.place_id = p.place_id::text AND l.account_id = ?))
-                  AND (? = '' OR p.place_name ILIKE '%' || ? || '%'
-                       OR p.category ILIKE '%' || ? || '%' OR p.address ILIKE '%' || ? || '%')
+                  AND (? = '' OR p.place_name ILIKE ? ESCAPE '\\'
+                       OR p.category ILIKE ? ESCAPE '\\' OR p.address ILIKE ? ESCAPE '\\')
                 ORDER BY p.place_id
                 """,
-                (rs, row) -> rs.getObject("place_id", UUID.class), viewerId, filter, filter, filter, filter);
+                (rs, row) -> rs.getObject("place_id", UUID.class),
+                hiddenTasters.idsExcept(viewerId),
+                viewerId,
+                filter,
+                pattern,
+                pattern,
+                pattern);
         loader.load(ids, viewerId, PlaceViewLoader.RecordScope.PUBLIC_ONLY)
                 .forEach(place -> results.put(place.id(), place));
         return List.copyOf(results.values());

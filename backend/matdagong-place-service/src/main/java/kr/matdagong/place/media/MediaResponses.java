@@ -8,6 +8,9 @@ import org.springframework.http.ResponseEntity;
 
 /** 사진 응답의 캐시 정책을 한곳에서 정합니다. */
 final class MediaResponses {
+    private static final long MAX_PRIVATE_CACHE_SECONDS = 3600;
+    private static final long PUBLIC_CACHE_MINUTES = 5;
+
     private MediaResponses() {}
 
     /**
@@ -16,9 +19,9 @@ final class MediaResponses {
      */
     static ResponseEntity<byte[]> photo(Photo photo, long signedSeconds) {
         CacheControl cache = signedSeconds > 0
-                ? CacheControl.maxAge(Math.min(signedSeconds, 3600), TimeUnit.SECONDS)
+                ? CacheControl.maxAge(Math.min(signedSeconds, MAX_PRIVATE_CACHE_SECONDS), TimeUnit.SECONDS)
                         .cachePrivate()
-                : CacheControl.maxAge(5, TimeUnit.MINUTES).cachePublic();
+                : CacheControl.maxAge(PUBLIC_CACHE_MINUTES, TimeUnit.MINUTES).cachePublic();
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(photo.mimeType()))
                 .cacheControl(cache)

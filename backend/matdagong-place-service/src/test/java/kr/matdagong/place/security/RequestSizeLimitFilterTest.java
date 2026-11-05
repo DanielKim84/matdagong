@@ -21,6 +21,7 @@ import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 요청 본문 크기 제한이 길이 표시 여부와 관계없이 413으로 막는지 확인합니다. */
 class RequestSizeLimitFilterTest {
     private final RequestSizeLimitFilter filter = new RequestSizeLimitFilter(DataSize.ofBytes(10));
 

@@ -1,13 +1,9 @@
 package kr.matdagong.common.media;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Set;
 
 /** 서비스가 저장하는 사진 형식(JPG·PNG·WEBP)과 실제 파일 머리 바이트 검사를 한곳에서 정합니다. */
 public final class ImageFiles {
-    /** DB의 MIME 형식 CHECK 제약과 같은 목록입니다. */
-    public static final Set<String> MIME_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
-
     private ImageFiles() {}
 
     /** 확장자·Content-Type·data URL 머리말만 믿지 않고, 바이트가 그 형식의 이미지로 시작하는지 확인합니다. */

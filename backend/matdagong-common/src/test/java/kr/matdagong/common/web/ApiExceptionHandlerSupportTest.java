@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
+/** 오류 응답이 한국어 detail을 담은 ProblemDetail로 나가는지 확인합니다. */
 class ApiExceptionHandlerSupportTest {
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new SampleController())
             .setControllerAdvice(new SampleExceptionHandler())

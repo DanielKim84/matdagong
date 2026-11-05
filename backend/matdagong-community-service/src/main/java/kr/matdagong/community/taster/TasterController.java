@@ -15,13 +15,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/tasters")
 public class TasterController {
     private final TasterService tasters;
+    private final PlaceTrustClient trust;
 
-    public TasterController(TasterService tasters) {
+    public TasterController(TasterService tasters, PlaceTrustClient trust) {
         this.tasters = tasters;
+        this.trust = trust;
     }
 
+    /** 장소 서비스 호출이 DB 트랜잭션을 붙잡지 않도록 경험 재료를 먼저 받은 뒤 목록을 만듭니다. */
     @GetMapping
     public List<TasterView> tasters(@AuthenticationPrincipal Jwt jwt) {
-        return tasters.tasters(AuthenticatedAccount.id(jwt));
+        return tasters.tasters(AuthenticatedAccount.id(jwt), trust.statsFor(jwt.getTokenValue()));
     }
 }

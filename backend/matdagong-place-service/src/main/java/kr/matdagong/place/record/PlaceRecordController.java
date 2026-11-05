@@ -13,6 +13,7 @@ import kr.matdagong.place.profile.CommunityProfileClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,9 +22,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
- * 로그인 사용자의 맛집 기록 저장·조회와 하트↔기록 전환 API를 제공합니다.
+ * 로그인 사용자의 맛집 기록 저장·조회·삭제와 하트→기록 전환 API를 제공합니다.
  * 작성자 프로필 조회와 카카오 장소 확인은 외부 호출이므로 DB 트랜잭션(Service)에 들어가기 전에 여기서 먼저 끝냅니다.
  */
 @RestController
@@ -74,10 +76,13 @@ public class PlaceRecordController {
                 records.changeVisibility(AuthenticatedAccount.id(jwt), request.placeIds(), request.visibility()));
     }
 
-    @PostMapping("/{placeId}/to-like")
+    /** 이 장소의 내 기록을 지웁니다. 이미 없으면 404입니다. */
+    @DeleteMapping("/{placeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void convertRecordToLike(@AuthenticationPrincipal Jwt jwt, @PathVariable String placeId) {
-        records.convertRecordToLike(AuthenticatedAccount.id(jwt), placeId);
+    public void delete(@AuthenticationPrincipal Jwt jwt, @PathVariable String placeId) {
+        if (!records.deleteRecord(AuthenticatedAccount.id(jwt), placeId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "지울 내 기록이 없어요.");
+        }
     }
 
     private PlaceInfo verifiedPlace(CreatePlaceRecordRequest request) {

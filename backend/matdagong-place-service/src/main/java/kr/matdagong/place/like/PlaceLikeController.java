@@ -35,10 +35,27 @@ public class PlaceLikeController {
         return likes.visitedLikedPlaceIds(AuthenticatedAccount.id(jwt));
     }
 
+    @GetMapping("/visit-proofs")
+    public List<String> visitProofs(@AuthenticationPrincipal Jwt jwt) {
+        return likes.visitProofPlaceIds(AuthenticatedAccount.id(jwt));
+    }
+
     @PutMapping("/{placeId}/like")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void setLike(
             @AuthenticationPrincipal Jwt jwt, @PathVariable String placeId, @RequestBody LikeRequest request) {
-        likes.setLiked(AuthenticatedAccount.id(jwt), placeId, request.liked());
+        likes.setLiked(AuthenticatedAccount.id(jwt), placeId, request.liked(), request.visited());
+    }
+
+    @GetMapping("/dislikes")
+    public List<String> dislikes(@AuthenticationPrincipal Jwt jwt) {
+        return likes.dislikedPlaceIds(AuthenticatedAccount.id(jwt));
+    }
+
+    @PutMapping("/{placeId}/dislike")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void setDislike(
+            @AuthenticationPrincipal Jwt jwt, @PathVariable String placeId, @RequestBody DislikeRequest request) {
+        likes.setDisliked(AuthenticatedAccount.id(jwt), placeId, request.disliked());
     }
 }

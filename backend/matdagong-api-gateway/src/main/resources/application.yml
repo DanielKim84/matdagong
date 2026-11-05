@@ -35,6 +35,13 @@ spring:
                   args:
                     maxSize: 30MB
 
+dagong:
+  auth:
+    # 요청을 넘기기 전에 access token이 아직 로그인 중인지 묻는 공통 인증 서버 주소입니다(ActiveLoginFilter).
+    url: ${AUTH_ISSUER:http://localhost:5840}
+    # 로그인 확인 결과를 토큰별로 기억하는 시간. 길수록 인증 서버에 덜 묻지만, 다른 기기 로그인 뒤 그만큼 늦게 막습니다.
+    session-check-cache: PT30S
+
 management:
   endpoints:
     web:

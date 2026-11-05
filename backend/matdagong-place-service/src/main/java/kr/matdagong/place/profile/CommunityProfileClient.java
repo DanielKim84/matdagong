@@ -19,6 +19,8 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Component
 public class CommunityProfileClient {
+    static final String HIDDEN_BY_REPORTS = "신고가 쌓여 지금은 기록을 남기거나 고칠 수 없어요. 운영팀이 확인한 뒤 다시 알려 드릴게요.";
+
     private final RestClient client;
 
     @Autowired
@@ -33,7 +35,10 @@ public class CommunityProfileClient {
         this.client = client;
     }
 
-    /** 커뮤니티 서비스가 프로필 없음(404)으로 답하면, 기록을 남기기 전에 프로필을 만들라는 409로 바꿉니다. */
+    /**
+     * 커뮤니티 서비스가 프로필 없음(404)으로 답하면, 기록을 남기기 전에 프로필을 만들라는 409로 바꿉니다.
+     * 신고가 쌓여 가려진 맛객이면 403으로 막습니다.
+     */
     public AuthorProfile findMyProfile(String accessToken) {
         AuthorProfile profile;
         try {
@@ -50,9 +55,11 @@ public class CommunityProfileClient {
         if (profile == null || profile.nickname() == null || profile.nickname().isBlank()) {
             throw ApiErrors.profileRequired();
         }
+        if (Boolean.TRUE.equals(profile.hiddenByReports()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, HIDDEN_BY_REPORTS);
         return profile;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record AuthorProfile(String nickname, int avatarVariant) {}
+    public record AuthorProfile(String nickname, int avatarVariant, Boolean hiddenByReports) {}
 }
