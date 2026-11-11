@@ -35,7 +35,7 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
 - **주석**: 코드만 봐서는 알 수 없는 *이유·제약·주의점*만 짧게 씁니다. 코드를 그대로 풀어 쓰는 주석, 주석 처리한 옛 코드는 남기지 않습니다(이력은 Git에 있음). 사라진 화면·파일을 가리키는 주석은 바로 고칩니다.
 - **이름**: 줄임말 대신 뜻이 드러나는 이름(`placeCount`, `refreshNotifications`). 불리언 변수·props·필드는 `is·has·can·should`로 시작(`isLiked`, `hasOwnRecord`). 단, 서버와 주고받는 JSON 필드 이름은 API 그대로 둡니다(`verified` 등).
 - **한 곳에만 만들기**: 같은 일을 하는 함수·부품·상수를 두 번 만들지 않습니다. 이미 공용으로 있는지(아래 3·5장 목록) 먼저 찾고, 없으면 공용 위치에 새로 만듭니다.
-- **크기**: 함수는 한 가지 일만 합니다. 파일이 300줄을 넘으면 같은 폴더의 하위 부품·훅·계산 모듈로 나눕니다(샘플 데이터 파일은 예외).
+- **크기**: 함수는 한 가지 일만 합니다. 파일이 300줄을 넘으면 같은 폴더의 하위 부품·훅·계산 모듈로 나눕니다(약관 본문 같은 데이터 파일은 예외).
 - **죽은 코드 금지**: 쓰지 않는 파일·함수·export·CSS 규칙·이미지는 바로 지웁니다. 나중에 쓸 계획인 DB 칼럼·API는 그 이유를 주석이나 문서에 적어 둡니다.
 - **비밀 값**: 키·비밀번호는 `.env`·`.env.local`에만 두고 코드·문서·`.env.example`에 실제 값을 쓰지 않습니다.
 
@@ -48,7 +48,7 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
 | 화면·컴포넌트 | PascalCase `.tsx`, 파일 하나에 컴포넌트 default export 하나 | `PlaceDetailScreen.tsx` |
 | 훅 | `useXxx.ts` (여러 화면이 쓰면 `hooks/`, 한 영역만 쓰면 그 영역 폴더) | `useModalLock.ts`, `useRecordPhotos.ts` |
 | 계산·데이터 모듈 | camelCase `.ts`, React 없음 | `discoverModel.ts`, `recordValidation.ts` |
-| 화면 묶음 | `screens/<영역>/` (discover, place, feed, record, tasters, me, onboarding, profile-edit) | |
+| 화면 묶음 | `screens/<영역>/` (discover, mymap, place, feed, record, tasters, me, onboarding, profile-edit) | |
 
 구조와 각 폴더의 책임은 [프런트엔드 구조](frontend-structure.md)를 따릅니다.
 
@@ -80,13 +80,17 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
 | 시트·확인창·안내 | `Sheet`, `useNotificationDialog().confirm/alert`, `actions.notify` (위험한 동작은 `tone: "danger"` 확인) |
 | 사진 칸 / 대표 사진 | `PlaceThumb`, `placePhoto()` |
 | 맛집 목록 한 줄(카드) | `PlaceCard` (`r-place-cards` 목록 안에) |
-| 맛객 사진 | `avatarSource()`, `avatarFallback()` |
+| 모음·별로였던 곳의 사진 카드(하트·이름표·고르기) | `PlaceTile` |
+| 가게 1km 안인지(직접 다녀온 곳 확인) | `utils/visitCheck.ts` (`checkVisitNow`, `visitCheckMessage`) |
+| 주변 가게 검색에 쓸 지금 위치·안내 문구, 반경 안 가게 찾기 / 검색 결과의 검색어 강조 | `useCurrentLocation`, `searchNearbyKakaoPlaces`(`services/kakao.ts`), `SearchHighlight` |
+| 맛객 사진 | `TasterAvatar`, `avatarSource()` |
 | 진행 막대, 캐릭터, 페이지 점 | `StepProgress`, `MascotArt`, `PaginationDots` |
 | 모달 잠금, 스와이프 | `useModalLock`, `useSwipe` |
-| 시각·날짜·숫자·원·거리·분류 표시 | `utils/format.ts` (`formatRelativeTime`, `formatMonthDay`, `formatNumber`, `formatWon`, `formatDistance`, `categoryLabel`, `DAY_MS` …). `toLocaleString`을 화면에서 직접 쓰지 않음 |
+| 시각·날짜·숫자·원·거리·분류 표시 | `utils/format.ts` (`formatRelativeTime`, `formatMonthDay`, `formatNumber`, `formatWon`, `formatDistance`, `categoryLabel`, `DAY_MS`, `startOfDay` …). `toLocaleString`을 화면에서 직접 쓰지 않음 |
 | 길찾기·공유·카카오맵 주소 | `utils/placeLinks.ts` (`openDirections`, `sharePlace`, `kakaoPlaceUrl`) |
 | 내 기록 판별 | `isMyTaster()`, `MY_TASTER_ID` |
-| 취향 묶음 이름·한도 | `models/tasteTags.ts` |
+| 취향 분류 이름·한도·분야별 분류, 분류별로 묶기 | `models/tasteTags.ts` (`TASTE_TAG_GROUPS`, `groupsForFocus`, `groupTagsByDictionary`) |
+| 취향 태그 고르기(분류 줄 + 분류별 시트) / 분류 아이콘·색 | `TasteTagPicker`, `GroupIcon`(`tagGroupLook`) |
 | 브라우저 저장소 | `utils/storage.ts` (`STORAGE_KEYS`, `readStorage`/`writeStorage`/`readStorageJson` …). `localStorage`·`sessionStorage`를 직접 쓰지 않음. 새 키 이름은 `matdagong.<영역>.<이름>` |
 
 ## 4. CSS (`frontend/src/styles`, `frontend/src/theme`)
@@ -108,7 +112,7 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
   - **Controller**: HTTP 입출력만. `JdbcTemplate`·`@Transactional`을 쓰지 않습니다.
   - **Service**: 규칙, DB 작업, 트랜잭션. 조회만 하는 메서드는 `@Transactional(readOnly = true)`, 데이터를 바꾸는 메서드만 `@Transactional`.
   - **`XxxModels`**: 그 기능의 요청·응답 `record`를 한 파일에 모읍니다. `import static …XxxModels.*`는 이 묶음에만 씁니다.
-- **서비스 공통 코드는 `backend/matdagong-common`**(인증 계정 꺼내기, JWT 검증, 서비스 간 RestClient, 이미지 형식 검사, 오류 처리 기반, 시각 변환, LIKE 검색어 이스케이프(`LikePatterns`), 테스트용 embedded PostgreSQL과 동시 요청 재현 도우미). 서비스마다 같은 코드를 복사하지 않습니다.
+- **서비스 공통 코드는 `backend/matdagong-common`**(인증 계정 꺼내기, JWT 검증, 서비스 간 RestClient, 이미지 형식 검사, 오류 처리 기반, 시각 변환, LIKE 검색어 이스케이프(`LikePatterns`), 배열 칼럼(`ARRAY(...)`·`array_agg`)을 목록으로 읽기와 `= ANY(?::uuid[])` 값 만들기(`jdbc/JdbcArrays`), 테스트용 embedded PostgreSQL과 동시 요청 재현 도우미). 서비스마다 같은 코드를 복사하지 않습니다.
 - **오류 응답**: `ResponseStatusException`(한국어 문구)을 던지고, 서비스마다 하나 있는 `@RestControllerAdvice`가 `ProblemDetail`의 `detail`로 내보냅니다. 화면(`services/http.ts`)은 `detail`을 그대로 보여 줍니다. 같은 상황은 같은 상태 코드·문구(상수)로 답합니다(예: 프로필이 먼저 필요 → 409 "맛객 프로필을 먼저 만들어 주세요.").
 - **검증**: 형식(길이·패턴·범위)은 record 애너테이션과 `@Valid`, 정해진 값 목록은 enum으로 받습니다. 공백 제거 같은 값 정리는 record의 compact constructor에서 검증 전에 합니다. Service는 업무 규칙만 확인합니다.
 - **상태 값**은 enum으로 다룹니다(DB·JSON 값은 그대로).

@@ -222,7 +222,7 @@ npm.cmd run dev
 ## 8. 정상 확인
 
 1. `http://localhost:4845` 접속 → 로그인 화면(4840)으로 이동 → **카카오로 시작하기** → 카카오 로그인 → 맛다공 발견(지도) 화면으로 돌아오면 성공.
-2. 지도가 보이고 하단 탭(발견·피드·+·맛객·나)이 있으면 화면과 API 연결 정상.
+2. 지도가 보이고 하단 탭(발견·피드·가운데 내 지도·맛객·나)이 있으면 화면과 API 연결 정상.
 3. 회사 PC에서 만든 기록·구독이 그대로 보이면 공유 DB 연결 정상.
 
 ---
@@ -249,8 +249,6 @@ npm.cmd run dev
 ## 10. AI(Claude·Codex)에게 설정을 맡길 때
 
 두 저장소 루트의 `AGENTS.md`(Claude Code는 `CLAUDE.md`를 통해 같은 파일)를 AI 도구가 자동으로 읽어 한국어 응답, 코딩 스타일([coding-style.md](coding-style.md)), 비밀 값 규칙을 따릅니다. 환경 설정을 맡길 때는 아래 문장을 추가로 붙여 넣습니다.
-
-AI가 이것저것 바꾸지 않도록 아래 문장을 그대로 붙여 넣습니다.
 
 > `C:\workspace\dagong-matdagong\docs\home-development-setup.md` 를 읽고 그대로 이 PC의 개발 환경을 맞춰 줘. 아래는 정해진 사항이니 바꾸지 마.
 > - DB는 Neon 공유 개발 DB만 쓴다. 로컬 PostgreSQL·Docker를 띄우거나 DB 사용자를 새로 만들지 않는다.

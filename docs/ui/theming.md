@@ -18,7 +18,7 @@ frontend/src/theme/
 화면 모양은 테마 토큰만 쓰는 아래 파일에 있습니다. 시즌 테마는 이 파일들을 고치지 않고 토큰 값만 바꿉니다.
 
 - `frontend/src/styles/renewal/ui.css`: 공통 부품(상단 바, 버튼, 칩, 카드, 빈 화면, 스켈레톤, 시트, 확인·안내창, 하단 탭)
-- `frontend/src/styles/renewal/<영역>.css`: 발견·맛집 상세·피드·기록·맛객·나·시작 화면
+- `frontend/src/styles/renewal/<영역>.css`: 발견·내 지도·맛집 상세·피드·기록·맛객·나·시작 화면
 - `frontend/src/styles/app.css`, `design-system.css`: 리뉴얼 전부터 쓰는 앱 틀·아바타·지도 마커 등 공통 규칙
 - `frontend/src/styles/profile-settings.css`, `photo-tag-detail.css`, `a/forms.css`: 프로필 편집, 취향 태그 선택, 태그 제안
 - `frontend/src/styles/auth-start.css`: 로그인 시작·오류 화면
@@ -35,7 +35,7 @@ frontend/src/theme/
 | `--brand-*` | 주요 버튼, 선택 상태, 강조(기본 테마는 코랄) |
 | `--clay-*` | 채도가 낮은 갈색·살구 장식 |
 | `--amber-*` | 포인트 배지(기본 테마는 허니 앰버) |
-| `--green-*`, `--slate-*`, `--blue-*`, `--berry-*` | 지도, 알림, 카테고리 구분 |
+| `--green-*`, `--slate-*`, `--blue-*`, `--berry-*`, `--teal-*` | 지도, 알림, 카테고리·취향 태그 묶음 구분 |
 | `--shadow-color` | 그림자와 사진 위 어두운 막 |
 | `--on-strong` | 진한 색이나 사진 위 글자색 |
 
@@ -46,7 +46,7 @@ frontend/src/theme/
 1. `themes/<id>.css`를 만들고 `[data-theme="<id>"] { … }` 안에서 바꿀 계열 단계 변수만 다시 정의합니다. 단계별 밝기 순서(0 밝음 → 900 어두움)를 지켜야 글자와 바탕 대비가 유지됩니다. `--brand-600` 위 흰 글자는 4.5:1 대비 이상이어야 합니다.
 2. 제목 글꼴을 바꾸려면 같은 블록에서 `--font-display`를 바꿉니다.
 3. 장식이 필요하면 같은 파일에 `[data-theme="<id>"] .클래스` 규칙으로 배경 무늬나 작은 그림을 더합니다. 이미지는 CSS `data:` SVG나 `public/assets` 파일을 씁니다.
-4. `themes/index.css`에 `@import "./themes/<id>.css";`를 추가합니다(`base.css`보다 위).
+4. 테마 패키지 진입점 `index.css`(`frontend/src/theme/index.css`)에 `@import "./themes/<id>.css";`를 추가합니다(`base.css`보다 위).
 5. `themes.ts`의 `THEMES`에 `{ id, label, themeColor, fontStylesheet }`를 등록합니다. `fontStylesheet`는 Google Fonts css2 주소입니다(CSP가 Google Fonts를 허용합니다).
 
 ## 적용과 복원
