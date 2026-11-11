@@ -15,8 +15,8 @@ public final class ProfileMediaUrls {
         return "/media/profiles/%s/covers/%s".formatted(accountId, photoId);
     }
 
-    /** 단일 배경 주소(profileCoverUrl)를 읽는 화면과 호환되도록 갤러리의 첫 사진을 대표 배경으로 씁니다. */
-    public static String representativeCover(List<String> coverUrls) {
-        return coverUrls.isEmpty() ? null : coverUrls.get(0);
+    /** 배경 사진 ID 목록(sort_no 순)을 같은 순서의 주소 목록으로 바꿉니다. */
+    public static List<String> coverPhotos(UUID accountId, List<UUID> photoIds) {
+        return photoIds.stream().map(photoId -> coverPhoto(accountId, photoId)).toList();
     }
 }

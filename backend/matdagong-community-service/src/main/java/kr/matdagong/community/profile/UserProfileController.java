@@ -77,13 +77,6 @@ public class UserProfileController {
         return covers.addCovers(AuthenticatedAccount.id(jwt), files);
     }
 
-    /** 배경 사진 전체 삭제입니다. 화면의 기존 호출 경로(/cover)를 유지합니다. */
-    @DeleteMapping("/cover")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeCover(@AuthenticationPrincipal Jwt jwt) {
-        covers.removeAllCovers(AuthenticatedAccount.id(jwt));
-    }
-
     @DeleteMapping("/covers/{photoId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeCoverPhoto(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID photoId) {

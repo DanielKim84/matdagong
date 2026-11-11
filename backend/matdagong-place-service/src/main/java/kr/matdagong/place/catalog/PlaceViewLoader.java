@@ -2,17 +2,16 @@ package kr.matdagong.place.catalog;
 
 import static kr.matdagong.place.catalog.PlaceModels.*;
 
-import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import kr.matdagong.common.jdbc.JdbcArrays;
 import kr.matdagong.place.media.MediaUrlSigner;
 import kr.matdagong.place.profile.HiddenTasters;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -46,7 +45,7 @@ public class PlaceViewLoader {
     /** 요청한 순서를 유지해 장소 목록을 반환하며, 없는 장소 ID는 결과에서 빠집니다. */
     public List<PlaceView> load(List<UUID> placeIds, UUID viewerId, RecordScope scope) {
         if (placeIds.isEmpty()) return List.of();
-        String[] placeIdArray = ids(placeIds);
+        String[] placeIdArray = JdbcArrays.uuidParam(placeIds);
         String[] hiddenIds = hiddenTasters.idsExcept(viewerId);
 
         Map<UUID, PlaceRow> places = new HashMap<>();
@@ -115,6 +114,8 @@ public class PlaceViewLoader {
     /**
      * 기록과 하위 데이터(메뉴·태그·방문 조건·사진)를 기록마다 배열로 모아 한 번에 읽습니다. 각 하위 표는 record_id로
      * 시작하는 색인이 있어 기록별 LATERAL 조회가 색인으로 끝납니다. 장소마다 최신 기록부터 담습니다.
+     * 작성자 장소 수(place_count)는 계정마다 장소 하나에 기록이 하나뿐이라(uk_restaurant_records_owner_place) 기록 수와 같고,
+     * 같은 색인(account_id, place_id)으로 셉니다.
      */
     private Map<UUID, List<TasterRecordView>> loadRecords(
             String[] placeIds, UUID viewerId, RecordScope scope, String[] hiddenIds) {
@@ -124,7 +125,7 @@ public class PlaceViewLoader {
                 SELECT r.record_id, r.place_id, r.account_id, r.author_name, r.reason, r.visibility, r.reg_dt,
                        menus.menu_ids, menus.menu_names, menus.prices, menus.has_photos,
                        tags.tag_names, tags.tag_groups, conditions.condition_names, photos.photo_ids,
-                       (SELECT count(DISTINCT other.place_id) FROM restaurant_records other
+                       (SELECT count(*) FROM restaurant_records other
                         WHERE other.account_id = r.account_id
                           AND (other.visibility = 'PUBLIC' OR other.account_id = ?)) AS place_count
                 FROM restaurant_records r
@@ -165,59 +166,41 @@ public class PlaceViewLoader {
     private TasterRecordView recordView(ResultSet rs) throws SQLException {
         RecordVisibility visibility = RecordVisibility.valueOf(rs.getString("visibility"));
 
-        Object[] menuIds = values(rs, "menu_ids");
-        Object[] menuNames = values(rs, "menu_names");
-        Object[] prices = values(rs, "prices");
-        Object[] hasPhotos = values(rs, "has_photos");
+        List<UUID> menuIds = JdbcArrays.uuids(rs, "menu_ids");
+        List<String> menuNames = JdbcArrays.strings(rs, "menu_names");
+        List<Integer> prices = JdbcArrays.integers(rs, "prices");
+        List<Boolean> hasPhotos = JdbcArrays.booleans(rs, "has_photos");
         List<MenuView> menus = new ArrayList<>();
-        for (int index = 0; index < menuIds.length; index++) {
-            String photo = Boolean.TRUE.equals(hasPhotos[index])
-                    ? mediaUrl(MediaUrlSigner.MENU_PHOTO, uuid(menuIds[index]), visibility)
-                    : null;
-            menus.add(new MenuView((String) menuNames[index], (Integer) prices[index], photo));
+        for (int index = 0; index < menuIds.size(); index++) {
+            String photo =
+                    hasPhotos.get(index) ? mediaUrl(MediaUrlSigner.MENU_PHOTO, menuIds.get(index), visibility) : null;
+            menus.add(new MenuView(menuNames.get(index), prices.get(index), photo));
         }
 
-        Object[] tagNames = values(rs, "tag_names");
-        Object[] tagGroupNames = values(rs, "tag_groups");
-        List<String> tags = new ArrayList<>();
+        List<String> tags = JdbcArrays.strings(rs, "tag_names");
+        List<String> tagGroupNames = JdbcArrays.strings(rs, "tag_groups");
         Map<String, String> tagGroups = new LinkedHashMap<>();
-        for (int index = 0; index < tagNames.length; index++) {
-            tags.add((String) tagNames[index]);
-            tagGroups.put((String) tagNames[index], (String) tagGroupNames[index]);
+        for (int index = 0; index < tags.size(); index++) {
+            tagGroups.put(tags.get(index), tagGroupNames.get(index));
         }
-
-        List<String> conditions = new ArrayList<>();
-        for (Object condition : values(rs, "condition_names")) conditions.add((String) condition);
 
         List<String> photos = new ArrayList<>();
-        for (Object photoId : values(rs, "photo_ids")) {
-            photos.add(mediaUrl(MediaUrlSigner.RECORD_PHOTO, uuid(photoId), visibility));
+        for (UUID photoId : JdbcArrays.uuids(rs, "photo_ids")) {
+            photos.add(mediaUrl(MediaUrlSigner.RECORD_PHOTO, photoId, visibility));
         }
 
         return new TasterRecordView(
                 rs.getObject("account_id", UUID.class).toString(),
                 rs.getString("author_name"),
-                String.join(" · ", tags),
-                "",
                 rs.getString("reason"),
                 menus,
                 tags,
                 tagGroups,
-                conditions,
+                JdbcArrays.strings(rs, "condition_names"),
                 photos,
                 visibility,
                 rs.getInt("place_count"),
                 rs.getObject("reg_dt", OffsetDateTime.class).toString());
-    }
-
-    /** 하위 데이터가 없는 기록은 array_agg가 NULL을 돌려주므로 빈 배열로 바꿉니다. */
-    private static Object[] values(ResultSet rs, String column) throws SQLException {
-        Array array = rs.getArray(column);
-        return array == null ? new Object[0] : (Object[]) array.getArray();
-    }
-
-    private static UUID uuid(Object value) {
-        return value instanceof UUID id ? id : UUID.fromString(String.valueOf(value));
     }
 
     /** 공개 기록 사진은 누구나 열 수 있는 주소를, 본인의 비공개 기록 사진은 만료되는 서명 주소를 씁니다. */
@@ -255,10 +238,6 @@ public class PlaceViewLoader {
         return scope == RecordScope.PUBLIC_ONLY
                 ? new Object[] {viewerId, placeIds, hiddenIds}
                 : new Object[] {viewerId, placeIds, viewerId, hiddenIds};
-    }
-
-    private static String[] ids(Collection<UUID> ids) {
-        return ids.stream().map(UUID::toString).toArray(String[]::new);
     }
 
     private record PlaceRow(

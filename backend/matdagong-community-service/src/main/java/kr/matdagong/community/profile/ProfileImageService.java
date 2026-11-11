@@ -28,20 +28,18 @@ public class ProfileImageService {
         this.jdbc = jdbc;
     }
 
+    /** 신고로 가려진 맛객의 사진은 찾지 못한 것으로 답합니다(배경 사진도 같음). */
     @Transactional(readOnly = true)
     public Optional<ProfileImage> findAvatar(UUID accountId) {
         return jdbc
                 .query(
                         """
-                        SELECT profile_img_data, profile_img_mime_type
-                        FROM user_profiles
-                        WHERE account_id = ? AND profile_img_data IS NOT NULL AND profile_img_mime_type IS NOT NULL
-                          AND NOT EXISTS (
-                              SELECT 1 FROM taster_moderations m WHERE m.account_id = ? AND m.hidden_at IS NOT NULL
-                          )
-                        """,
+                        SELECT p.profile_img_data, p.profile_img_mime_type
+                        FROM user_profiles p
+                        WHERE p.account_id = ? AND p.profile_img_data IS NOT NULL AND NOT %s
+                        """
+                                .formatted(ProfileQueries.hiddenByReports("p.account_id")),
                         (rs, row) -> new ProfileImage(rs.getBytes(1), rs.getString(2)),
-                        accountId,
                         accountId)
                 .stream()
                 .findFirst();
@@ -53,16 +51,13 @@ public class ProfileImageService {
         return jdbc
                 .query(
                         """
-                        SELECT photo_data, mime_type FROM user_profile_cover_photos
-                        WHERE account_id = ? AND photo_id = ?
-                          AND NOT EXISTS (
-                              SELECT 1 FROM taster_moderations m WHERE m.account_id = ? AND m.hidden_at IS NOT NULL
-                          )
-                        """,
+                        SELECT c.photo_data, c.mime_type FROM user_profile_cover_photos c
+                        WHERE c.account_id = ? AND c.photo_id = ? AND NOT %s
+                        """
+                                .formatted(ProfileQueries.hiddenByReports("c.account_id")),
                         (rs, row) -> new ProfileImage(rs.getBytes(1), rs.getString(2)),
                         accountId,
-                        photoId,
-                        accountId)
+                        photoId)
                 .stream()
                 .findFirst();
     }

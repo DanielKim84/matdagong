@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import kr.matdagong.common.web.ApiErrors;
 import kr.matdagong.community.notification.NotificationService;
+import kr.matdagong.community.profile.ProfileQueries;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -36,22 +37,19 @@ public class TasterReportService {
         if (reporterId.equals(targetId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "내 프로필은 신고할 수 없어요.");
         }
-        // 운영팀이 무엇이 문제인지 확인할 수 있도록 어떤 이유든 설명을 꼭 받습니다.
+        // 운영팀이 무엇이 문제인지 확인할 수 있도록 어떤 이유든 설명을 꼭 받습니다(DB도 ck_taster_reports_memo로 막음).
         if (request.memo().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "어떤 점이 문제인지 적어 주세요.");
         }
-        if (!profileExists(reporterId)) throw ApiErrors.profileRequired();
+        if (!ProfileQueries.exists(jdbc, reporterId)) throw ApiErrors.profileRequired();
         // 같은 맛객에게 신고가 동시에 들어와도 기준 확인이 한 번씩 차례로 되도록 신고당한 프로필을 잠급니다.
-        List<UUID> target = jdbc.query(
-                "SELECT account_id FROM user_profiles WHERE account_id = ? FOR UPDATE",
-                (rs, row) -> rs.getObject(1, UUID.class),
-                targetId);
-        if (target.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "맛객 정보를 찾을 수 없어요.");
+        if (!ProfileQueries.lock(jdbc, targetId))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "맛객 정보를 찾을 수 없어요.");
 
         List<String> created = jdbc.queryForList(
                 """
                 INSERT INTO taster_reports (report_id, target_account_id, reporter_account_id, reason, memo, place_id)
-                VALUES (?, ?, ?, ?, NULLIF(?, ''), ?)
+                VALUES (?, ?, ?, ?, ?, ?)
                 ON CONFLICT (reporter_account_id, target_account_id) WHERE status = 'PENDING' DO NOTHING
                 RETURNING report_id::text
                 """,
@@ -84,18 +82,21 @@ public class TasterReportService {
                 (rs, row) -> rs.getObject(1, UUID.class));
     }
 
+    /**
+     * 확인 전 신고 수(신고한 사람 수와 같음, uk_taster_reports_pending)와 불법·음란 사진 신고가 있는지를 한 번에 세어
+     * 관리자 확인 목록에 올리거나 자동으로 가립니다.
+     */
     private void applyThresholds(UUID targetId) {
-        int reporters = count(
-                "SELECT count(*) FROM taster_reports WHERE target_account_id = ? AND status = 'PENDING'", targetId);
-        boolean hasIllegalPhoto = count(
-                        """
-                        SELECT count(*) FROM taster_reports
-                        WHERE target_account_id = ? AND status = 'PENDING' AND reason = 'ILLEGAL_PHOTO'
-                        """,
-                        targetId)
-                > 0;
-        boolean needsReview = reporters >= REVIEW_THRESHOLD || hasIllegalPhoto;
-        boolean shouldHide = reporters >= HIDE_THRESHOLD;
+        PendingReports pending = jdbc.queryForObject(
+                """
+                SELECT count(*) AS reporters, COALESCE(bool_or(reason = 'ILLEGAL_PHOTO'), FALSE) AS has_illegal_photo
+                FROM taster_reports
+                WHERE target_account_id = ? AND status = 'PENDING'
+                """,
+                (rs, row) -> new PendingReports(rs.getInt("reporters"), rs.getBoolean("has_illegal_photo")),
+                targetId);
+        boolean needsReview = pending.reporters() >= REVIEW_THRESHOLD || pending.hasIllegalPhoto();
+        boolean shouldHide = pending.reporters() >= HIDE_THRESHOLD;
         if (!needsReview) return;
 
         // 이미 채운 시각은 그대로 두고, 이번에 처음 가렸을 때만 새로 채운 가린 시각을 돌려받아 본인에게 알립니다.
@@ -119,13 +120,5 @@ public class TasterReportService {
         }
     }
 
-    private int count(String sql, Object... args) {
-        Integer value = jdbc.queryForObject(sql, Integer.class, args);
-        return value == null ? 0 : value;
-    }
-
-    private boolean profileExists(UUID accountId) {
-        return Boolean.TRUE.equals(jdbc.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM user_profiles WHERE account_id = ?)", Boolean.class, accountId));
-    }
+    private record PendingReports(int reporters, boolean hasIllegalPhoto) {}
 }

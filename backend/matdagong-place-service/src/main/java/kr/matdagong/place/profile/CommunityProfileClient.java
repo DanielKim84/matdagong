@@ -14,7 +14,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * 기록 작성자의 표시 이름과 캐릭터를 커뮤니티 서비스 프로필에서 가져옵니다.
+ * 기록 작성자의 표시 이름(닉네임)과 신고로 가려졌는지를 커뮤니티 서비스 프로필에서 가져옵니다.
  * 요청 본문의 작성자 정보를 믿으면 다른 맛객 이름으로 기록을 남길 수 있으므로, 사용자의 토큰으로 본인 프로필만 조회합니다.
  */
 @Component
@@ -61,5 +61,5 @@ public class CommunityProfileClient {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record AuthorProfile(String nickname, int avatarVariant, Boolean hiddenByReports) {}
+    public record AuthorProfile(String nickname, Boolean hiddenByReports) {}
 }

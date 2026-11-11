@@ -115,18 +115,28 @@ class SubscriptionServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     @Test
     void 만료된_유료_회차는_목록에서_빠지고_같은_맛객을_다시_구독할_수_있다() {
         SubscribeResult first = service.subscribe(ME, paid(FIRST_TASTER));
+        SubscribeResult free = service.subscribe(ME, free(SECOND_TASTER, false));
         jdbc.update(
                 """
                 UPDATE user_subscription_history
                 SET start_dt = now() - INTERVAL '2 months', end_dt = now() - INTERVAL '1 minute'
+                WHERE subscription_type = 'PAID'
                 """);
 
-        assertThat(service.subscriptions(ME)).isEmpty();
+        // 끝난 유료 구독만 빠지고, 기간이 없는 무료 구독은 그대로 이용 중입니다.
+        assertThat(service.subscriptions(ME))
+                .extracting(SubscriptionView::subscriptionId)
+                .containsExactly(free.subscription().subscriptionId());
+        assertThat(jdbc.queryForObject(
+                        "SELECT subscription_st FROM user_subscriptions WHERE subscription_id = ?",
+                        String.class,
+                        first.subscription().subscriptionId()))
+                .isEqualTo("INACTIVE");
         SubscribeResult again = service.subscribe(ME, paid(FIRST_TASTER));
 
         assertThat(again.subscription().subscriptionId())
                 .isEqualTo(first.subscription().subscriptionId());
-        assertThat(service.subscriptions(ME)).hasSize(1);
+        assertThat(service.subscriptions(ME)).hasSize(2);
     }
 
     @Test

@@ -5,7 +5,6 @@ import static kr.matdagong.place.report.PlaceReportModels.*;
 import java.util.List;
 import java.util.UUID;
 import kr.matdagong.place.catalog.PlaceIdentifiers;
-import kr.matdagong.place.catalog.SamplePlaceCatalog;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -19,16 +18,17 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class PlaceReportService {
     private final JdbcTemplate jdbc;
-    private final SamplePlaceCatalog samples;
 
-    public PlaceReportService(JdbcTemplate jdbc, SamplePlaceCatalog samples) {
+    public PlaceReportService(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
-        this.samples = samples;
     }
 
     @Transactional
-    public PlaceReportResponse report(UUID accountId, String placeId, PlaceReportRequest request) {
-        if (!exists(placeId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "맛집 정보를 찾을 수 없어요.");
+    public PlaceReportResponse report(UUID accountId, String placeIdValue, PlaceReportRequest request) {
+        UUID placeId = PlaceIdentifiers.uuidOrNull(placeIdValue);
+        if (placeId == null || !exists(placeId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "맛집 정보를 찾을 수 없어요.");
+        }
         String memo = request.memo() == null ? "" : request.memo().trim();
         if (request.reason() == PlaceReportReason.OTHER && memo.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "어떤 정보가 다른지 적어 주세요.");
@@ -59,10 +59,8 @@ public class PlaceReportService {
         return new PlaceReportResponse(existing, true);
     }
 
-    private boolean exists(String placeId) {
-        UUID uuid = PlaceIdentifiers.uuidOrNull(placeId);
-        if (uuid == null) return samples.findById(placeId) != null;
+    private boolean exists(UUID placeId) {
         return Boolean.TRUE.equals(jdbc.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM restaurant_places WHERE place_id = ?)", Boolean.class, uuid));
+                "SELECT EXISTS (SELECT 1 FROM restaurant_places WHERE place_id = ?)", Boolean.class, placeId));
     }
 }

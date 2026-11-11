@@ -12,7 +12,6 @@ import java.util.UUID;
 import kr.matdagong.common.test.EmbeddedPostgresTestSupport;
 import kr.matdagong.place.catalog.PlaceQueryService;
 import kr.matdagong.place.catalog.PlaceViewLoader;
-import kr.matdagong.place.catalog.SamplePlaceCatalog;
 import kr.matdagong.place.draft.QuickDraftModels.QuickPlaceDraftRequest;
 import kr.matdagong.place.draft.QuickDraftService;
 import kr.matdagong.place.kakao.KakaoPlaceVerifier.PlaceInfo;
@@ -23,19 +22,23 @@ import kr.matdagong.place.media.MediaUrlSigner;
 import kr.matdagong.place.media.PlacePhotoService;
 import kr.matdagong.place.profile.CommunityProfileClient.AuthorProfile;
 import kr.matdagong.place.profile.TestHiddenTasters;
+import kr.matdagong.place.visit.PlaceVisitService;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-/** 다녀온 근거(빠른 저장·새 맛집 기록)는 기기 위치가 가게 1km 안일 때만 남기는지 실제 스키마로 확인합니다. */
+/**
+ * 다녀온 근거(빠른 저장·새 맛집 기록)는 기기 위치가 가게 1km 안일 때만 남기고, 이미 근거가 있는 가게(다녀온 곳·빠른 저장·
+ * 내 기록·예전 다녀왔어요 하트)는 위치 없이 기록하는지 실제 스키마로 확인합니다.
+ */
 class PlaceVisitDistanceIntegrationTest extends EmbeddedPostgresTestSupport {
     private static final String PNG =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
     private static final UUID FIRST = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID SECOND = UUID.fromString("22222222-2222-2222-2222-222222222222");
-    private static final AuthorProfile AUTHOR = new AuthorProfile("첫맛객", 3, false);
+    private static final AuthorProfile AUTHOR = new AuthorProfile("첫맛객", false);
     private static final String DRAFT_TOO_FAR = "현재 위치 1km 안의 장소만 저장할 수 있어요.";
     private static final String RECORD_TOO_FAR = "현재 위치에서 1km 안에 있는 장소만 등록할 수 있어요.";
     /** 가게(을지로)와 약 70m 떨어진 기기 위치입니다. */
@@ -45,24 +48,26 @@ class PlaceVisitDistanceIntegrationTest extends EmbeddedPostgresTestSupport {
 
     private QuickDraftService drafts;
     private PlaceRecordService records;
+    private PlaceVisitService visits;
 
     @BeforeEach
     void setUp() {
-        truncate("restaurant_places, user_place_likes, user_place_dislikes, place_quick_drafts");
+        truncate("restaurant_places, user_place_likes, user_place_dislikes, user_place_visits, place_quick_drafts");
         MediaUrlSigner signer = new MediaUrlSigner("integration-key", Duration.ofHours(6));
         PlaceViewLoader loader = new PlaceViewLoader(jdbc, signer, TestHiddenTasters.none());
-        PlaceQueryService places =
-                new PlaceQueryService(jdbc, new SamplePlaceCatalog(), loader, TestHiddenTasters.none());
+        PlaceQueryService places = new PlaceQueryService(jdbc, loader, TestHiddenTasters.none());
         NearbyPlaceGuard nearby = new NearbyPlaceGuard(jdbc);
-        drafts = new QuickDraftService(jdbc, nearby);
+        visits = new PlaceVisitService(jdbc);
+        drafts = new QuickDraftService(jdbc, nearby, visits);
         records = new PlaceRecordService(
                 jdbc,
                 places,
                 loader,
                 new PlaceRecordContentWriter(jdbc, new PlacePhotoService(jdbc, TestHiddenTasters.none())),
                 drafts,
-                new PlaceLikeService(jdbc),
-                nearby);
+                new PlaceLikeService(jdbc, nearby),
+                nearby,
+                visits);
     }
 
     @Test
@@ -128,29 +133,13 @@ class PlaceVisitDistanceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
-    void 입맛에_맞았던_하트를_기록으로_바꿀_때는_위치_없이_저장한다() {
-        PlaceView place =
-                records.createRecord(SECOND, AUTHOR, place(37.566, 126.991, false), recordRequest("1001", NEAR));
-        like(place.id(), "VISITED");
-        like("p-001", "VISITED");
-
-        records.convertLikeToRecord(
-                FIRST, AUTHOR, place(37.566, 126.991, false), place.id(), recordRequest("1001", null), true);
-        // 샘플 장소 하트는 제공자 ID가 없어 가게와 맞춰 볼 수 없으므로, 전환할 때 보낸 하트 ID로 확인합니다.
-        records.convertLikeToRecord(
-                FIRST, AUTHOR, place(37.566, 126.991, false), "p-001", recordRequest("2002", null), true);
-
-        assertThat(records.findMine(FIRST)).hasSize(2);
-    }
-
-    @Test
     void 가_보고_싶은_하트나_다른_가게의_하트로는_위치_없이_새_기록을_만들_수_없다() {
         PlaceView other =
                 records.createRecord(SECOND, AUTHOR, place(37.566, 126.991, false), recordRequest("1001", NEAR));
         PlaceView wished =
                 records.createRecord(SECOND, AUTHOR, place(37.566, 126.991, false), recordRequest("2002", NEAR));
-        like(other.id(), "VISITED");
-        like(wished.id(), "LIKED");
+        like(other.id());
+        like(wished.id());
 
         assertStatus(
                 () -> records.convertLikeToRecord(
@@ -164,6 +153,36 @@ class PlaceVisitDistanceIntegrationTest extends EmbeddedPostgresTestSupport {
                 NearbyPlaceGuard.LOCATION_REQUIRED);
     }
 
+    @Test
+    void 빠른_저장한_곳은_다녀온_곳이_되고_빠른_저장을_지우면_빠진다() {
+        saveDraft("1001", NEAR);
+        assertThat(visits.visitedPlaceIds(FIRST)).hasSize(1);
+
+        drafts.discardDraft(FIRST, "KAKAO", "1001");
+
+        assertThat(visits.visitedPlaceIds(FIRST)).isEmpty();
+    }
+
+    @Test
+    void 기록한_곳은_기록을_지워도_다녀온_곳으로_남고_위치_없이_다시_기록할_수_있다() {
+        saveDraft("1001", NEAR);
+        createRecord("1001", null);
+        String placeId = records.findMine(FIRST).getFirst().id();
+
+        records.deleteRecord(FIRST, placeId);
+
+        assertThat(visits.visitedPlaceIds(FIRST)).containsExactly(placeId);
+        createRecord("1001", FAR);
+        assertThat(records.findMine(FIRST)).hasSize(1);
+    }
+
+    @Test
+    void 다녀온_곳이_아닌_가게의_새_기록은_여전히_위치를_확인한다() {
+        saveDraft("1001", NEAR);
+
+        assertStatus(() -> createRecord("2002", FAR), HttpStatus.BAD_REQUEST, RECORD_TOO_FAR);
+    }
+
     private void saveDraft(String providerPlaceId, DeviceLocation device) {
         QuickPlaceDraftRequest request = draftRequest(providerPlaceId, 37.566, 126.991, device);
         drafts.saveDraft(FIRST, request.submittedPlace(), request);
@@ -173,12 +192,8 @@ class PlaceVisitDistanceIntegrationTest extends EmbeddedPostgresTestSupport {
         records.createRecord(FIRST, AUTHOR, place(37.566, 126.991, false), recordRequest(providerPlaceId, device));
     }
 
-    private static void like(String placeId, String saveOrigin) {
-        jdbc.update(
-                "INSERT INTO user_place_likes (account_id, place_id, save_origin) VALUES (?, ?, ?)",
-                FIRST,
-                placeId,
-                saveOrigin);
+    private static void like(String placeId) {
+        jdbc.update("INSERT INTO user_place_likes (account_id, place_id) VALUES (?, ?::uuid)", FIRST, placeId);
     }
 
     private static PlaceInfo place(double latitude, double longitude, boolean verified) {

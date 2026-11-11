@@ -2,10 +2,6 @@ package kr.matdagong.community.profile;
 
 import static kr.matdagong.community.profile.ProfileModels.*;
 
-import java.sql.Array;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -14,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import kr.matdagong.common.jdbc.JdbcArrays;
 import kr.matdagong.common.tag.TasteTagGroup;
 import kr.matdagong.common.web.ApiErrors;
 import org.springframework.dao.DuplicateKeyException;
@@ -28,8 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserProfileService {
     public static final String NICKNAME_TAKEN = "이미 사용 중인 닉네임이에요.";
 
-    private static final int MAX_REGION_LENGTH = 50;
-    private static final int MAX_TAGS_PER_GROUP = 5;
+    /** user_profiles.avatar_variant의 CHECK(1~10)와 같습니다. */
     private static final int AVATAR_VARIANT_COUNT = 10;
 
     private final JdbcTemplate jdbc;
@@ -67,6 +63,7 @@ public class UserProfileService {
         throw nicknameTaken();
     }
 
+    /** 프로필과 배경 사진·태그 세 종류·가림 여부를 한 번에 읽습니다. 태그는 태그 사전 순서(sort_order)입니다. */
     @Transactional(readOnly = true)
     public Optional<ProfileView> findProfile(UUID accountId) {
         return jdbc
@@ -74,11 +71,7 @@ public class UserProfileService {
                         """
                         SELECT p.account_id, p.nickname, p.profile_img_data IS NOT NULL AS has_avatar,
                                p.avatar_variant, p.taster_focus, p.preference_focus, p.activity_scope,
-                               p.activity_region, p.intro,
-                               ARRAY(
-                                   SELECT c.photo_id FROM user_profile_cover_photos c
-                                   WHERE c.account_id = p.account_id ORDER BY c.sort_no
-                               ) AS cover_photo_ids,
+                               p.activity_region, p.intro, %s,
                                ARRAY(
                                    SELECT tag.tag_name FROM user_profile_tags selected
                                    JOIN taste_tags tag ON tag.tag_id = selected.tag_id
@@ -96,45 +89,39 @@ public class UserProfileService {
                                    WHERE selected.account_id = p.account_id AND selected.preference_type = 'AVOID'
                                    ORDER BY tag.sort_order
                                ) AS excluded_tags,
-                               EXISTS (
-                                   SELECT 1 FROM taster_moderations m
-                                   WHERE m.account_id = p.account_id AND m.hidden_at IS NOT NULL
-                               ) AS hidden_by_reports
+                               %s AS hidden_by_reports
                         FROM user_profiles p
                         WHERE p.account_id = ?
-                        """,
-                        (rs, row) -> new ProfileRow(
-                                rs.getObject("account_id", UUID.class),
-                                rs.getString("nickname"),
-                                rs.getBoolean("has_avatar"),
-                                rs.getInt("avatar_variant"),
-                                FoodFocus.valueOf(rs.getString("taster_focus")),
-                                FoodFocus.valueOf(rs.getString("preference_focus")),
-                                ActivityScope.valueOf(rs.getString("activity_scope")),
-                                rs.getString("activity_region"),
-                                rs.getString("intro"),
-                                coverPhotoUrls(rs, rs.getObject("account_id", UUID.class)),
-                                strings(rs, "profile_tags"),
-                                strings(rs, "preference_tags"),
-                                strings(rs, "excluded_tags"),
-                                rs.getBoolean("hidden_by_reports")),
+                        """
+                                .formatted(
+                                        ProfileQueries.COVER_PHOTO_IDS, ProfileQueries.hiddenByReports("p.account_id")),
+                        (rs, row) -> {
+                            List<String> coverUrls = ProfileQueries.coverUrls(rs, accountId);
+                            return new ProfileView(
+                                    accountId,
+                                    rs.getString("nickname"),
+                                    rs.getBoolean("has_avatar") ? ProfileMediaUrls.avatar(accountId) : null,
+                                    rs.getInt("avatar_variant"),
+                                    coverUrls,
+                                    FoodFocus.valueOf(rs.getString("taster_focus")),
+                                    FoodFocus.valueOf(rs.getString("preference_focus")),
+                                    ActivityScope.valueOf(rs.getString("activity_scope")),
+                                    rs.getString("activity_region"),
+                                    rs.getString("intro"),
+                                    JdbcArrays.strings(rs, "profile_tags"),
+                                    JdbcArrays.strings(rs, "preference_tags"),
+                                    JdbcArrays.strings(rs, "excluded_tags"),
+                                    rs.getBoolean("hidden_by_reports"));
+                        },
                         accountId)
                 .stream()
-                .findFirst()
-                .map(this::toView);
+                .findFirst();
     }
 
     /** 프로필과 두 종류의 태그를 함께 저장합니다. 검증 실패 시 모든 변경을 되돌립니다. */
     @Transactional
     public ProfileView updateProfile(UUID accountId, UpdateProfileRequest request) {
-        String nickname = request.nickname().trim();
-        if (isNicknameTaken(nickname, accountId)) throw nicknameTaken();
-        String intro = request.intro() == null || request.intro().isBlank()
-                ? null
-                : request.intro().trim();
-        FoodFocus tasterFocus = request.tasterFocus() == null ? FoodFocus.BOTH : request.tasterFocus();
-        FoodFocus preferenceFocus = request.preferenceFocus() == null ? FoodFocus.BOTH : request.preferenceFocus();
-        ActivityScope activityScope = request.activityScope() == null ? ActivityScope.LOCAL : request.activityScope();
+        if (isNicknameTaken(request.nickname(), accountId)) throw nicknameTaken();
         int updated;
         try {
             updated = jdbc.update(
@@ -144,12 +131,13 @@ public class UserProfileService {
                         activity_scope = ?, activity_region = ?, upd_dt = now()
                     WHERE account_id = ?
                     """,
-                    nickname,
-                    intro,
-                    tasterFocus.name(),
-                    preferenceFocus.name(),
-                    activityScope.name(),
-                    regionName(request.activityRegion(), activityScope),
+                    request.nickname(),
+                    request.intro(),
+                    request.tasterFocus().name(),
+                    request.preferenceFocus().name(),
+                    request.activityScope().name(),
+                    // 여행 위주 맛객은 한 지역에 묶이지 않으므로 활동 지역을 저장하지 않습니다.
+                    request.activityScope() == ActivityScope.TRAVEL ? null : request.activityRegion(),
                     accountId);
         } catch (DuplicateKeyException exception) {
             // 위 확인과 저장 사이에 다른 계정이 같은 닉네임을 먼저 저장한 경우입니다. 사용자가 고른 이름이라 바꾸지 않고 알립니다.
@@ -157,45 +145,9 @@ public class UserProfileService {
         }
         if (updated == 0) throw ApiErrors.profileRequired();
         // 프로필 태그는 공개용, 선호 태그는 추천 전용이므로 각 관계를 독립적으로 교체합니다.
-        replaceProfileTags(accountId, request.profileTags(), tasterFocus);
-        replacePreferences(accountId, request.preferenceTags(), request.excludedTags(), preferenceFocus);
+        replaceProfileTags(accountId, request.profileTags(), request.tasterFocus());
+        replacePreferences(accountId, request.preferenceTags(), request.excludedTags(), request.preferenceFocus());
         return findProfile(accountId).orElseThrow();
-    }
-
-    private ProfileView toView(ProfileRow profile) {
-        UUID accountId = profile.accountId();
-        List<String> coverUrls = profile.coverUrls();
-        return new ProfileView(
-                accountId,
-                profile.nickname(),
-                profile.hasAvatar() ? ProfileMediaUrls.avatar(accountId) : null,
-                profile.avatarVariant(),
-                ProfileMediaUrls.representativeCover(coverUrls),
-                coverUrls,
-                profile.tasterFocus(),
-                profile.preferenceFocus(),
-                profile.activityScope(),
-                profile.activityRegion(),
-                profile.intro(),
-                profile.profileTags(),
-                profile.preferenceTags(),
-                profile.excludedTags(),
-                profile.hiddenByReports());
-    }
-
-    /** 배경 사진 ID 배열을 순서대로 주소로 바꿉니다. 주소 형식은 ProfileCoverService.coverPhotoUrls와 같습니다. */
-    private static List<String> coverPhotoUrls(ResultSet rs, UUID accountId) throws SQLException {
-        Array photoIds = rs.getArray("cover_photo_ids");
-        if (photoIds == null) return List.of();
-        return Arrays.stream((Object[]) photoIds.getArray())
-                .map(photoId -> ProfileMediaUrls.coverPhoto(accountId, UUID.fromString(String.valueOf(photoId))))
-                .toList();
-    }
-
-    private static List<String> strings(ResultSet rs, String column) throws SQLException {
-        Array values = rs.getArray(column);
-        if (values == null) return List.of();
-        return Arrays.stream((Object[]) values.getArray()).map(String::valueOf).toList();
     }
 
     private void replaceProfileTags(UUID accountId, List<String> requestedTags, FoodFocus focus) {
@@ -203,15 +155,13 @@ public class UserProfileService {
         validateTagNames(tagNames, focus.allowedGroups());
 
         jdbc.update("DELETE FROM user_profile_tags WHERE account_id = ?", accountId);
-        for (String name : tagNames) {
-            jdbc.update(
-                    """
-                    INSERT INTO user_profile_tags (account_id, tag_id)
-                    SELECT ?, tag_id FROM taste_tags WHERE tag_name = ?
-                    """,
-                    accountId,
-                    name);
-        }
+        jdbc.update(
+                """
+                INSERT INTO user_profile_tags (account_id, tag_id)
+                SELECT ?, tag_id FROM taste_tags WHERE tag_name = ANY(?::text[])
+                """,
+                accountId,
+                tagNames.toArray(String[]::new));
     }
 
     private void replacePreferences(UUID accountId, List<String> liked, List<String> excluded, FoodFocus focus) {
@@ -221,7 +171,7 @@ public class UserProfileService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "같은 태그를 선호와 제외에 함께 등록할 수 없어요.");
         }
         validateTagNames(likedTags, focus.allowedGroups());
-        // 제외는 방문 조건(웨이팅·주차 등)만 고를 수 있습니다.
+        // 피하고 싶은 조건은 매장 이용(VISIT) 분류만 고를 수 있습니다.
         validateTagNames(excludedTags, Set.of(TasteTagGroup.VISIT));
 
         jdbc.update("DELETE FROM user_preference_tags WHERE account_id = ?", accountId);
@@ -230,18 +180,17 @@ public class UserProfileService {
     }
 
     private void insertPreferenceTags(UUID accountId, List<String> tagNames, PreferenceType type) {
-        for (String name : tagNames) {
-            jdbc.update(
-                    """
-                    INSERT INTO user_preference_tags (account_id, tag_id, preference_type)
-                    SELECT ?, tag_id, ? FROM taste_tags WHERE tag_name = ?
-                    """,
-                    accountId,
-                    type.name(),
-                    name);
-        }
+        jdbc.update(
+                """
+                INSERT INTO user_preference_tags (account_id, tag_id, preference_type)
+                SELECT ?, tag_id, ? FROM taste_tags WHERE tag_name = ANY(?::text[])
+                """,
+                accountId,
+                type.name(),
+                tagNames.toArray(String[]::new));
     }
 
+    /** 빈 이름을 빼고 앞뒤 공백을 지운 뒤, 같은 이름은 처음 한 번만 남깁니다. */
     private static List<String> cleanTagNames(List<String> requestedTags) {
         return requestedTags == null
                 ? List.of()
@@ -251,21 +200,26 @@ public class UserProfileService {
                         .toList()));
     }
 
-    /** 모든 태그가 태그 사전에 있고 허용된 그룹이며, 그룹마다 MAX_TAGS_PER_GROUP개 이하인지 확인합니다. */
+    /** 모든 태그가 태그 사전에 있고 허용된 분류이며, 분류마다 그 분류의 한도(maxSelections) 이하인지 확인합니다. */
     private void validateTagNames(List<String> tagNames, Set<TasteTagGroup> allowedGroups) {
         if (tagNames.isEmpty()) return;
         List<TasteTagGroup> groups = jdbc.query(
                 "SELECT tag_group FROM taste_tags WHERE tag_name = ANY(?::text[])",
                 (rs, row) -> TasteTagGroup.valueOf(rs.getString("tag_group")),
                 (Object) tagNames.toArray(String[]::new));
+        // tag_name은 유일하므로, 찾은 수가 적으면 사전에 없는 이름이 섞인 것입니다.
         if (groups.size() != tagNames.size() || !allowedGroups.containsAll(groups)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "목록에 있는 취향 태그만 선택해 주세요.");
         }
         Map<TasteTagGroup, Integer> counts = new EnumMap<>(TasteTagGroup.class);
         groups.forEach(group -> counts.merge(group, 1, Integer::sum));
-        if (counts.values().stream().anyMatch(count -> count > MAX_TAGS_PER_GROUP)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "태그 분류별로 최대 5개까지 선택할 수 있어요.");
-        }
+        counts.forEach((group, count) -> {
+            if (count > group.maxSelections()) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "'" + group.label() + "'에서는 최대 " + group.maxSelections() + "개까지 선택할 수 있어요.");
+            }
+        });
     }
 
     private static ResponseStatusException nicknameTaken() {
@@ -279,26 +233,4 @@ public class UserProfileService {
                 nickname,
                 accountId));
     }
-
-    private static String regionName(String region, ActivityScope activityScope) {
-        if (activityScope == ActivityScope.TRAVEL || region == null || region.isBlank()) return null;
-        String value = region.trim();
-        return value.length() > MAX_REGION_LENGTH ? value.substring(0, MAX_REGION_LENGTH) : value;
-    }
-
-    private record ProfileRow(
-            UUID accountId,
-            String nickname,
-            boolean hasAvatar,
-            int avatarVariant,
-            FoodFocus tasterFocus,
-            FoodFocus preferenceFocus,
-            ActivityScope activityScope,
-            String activityRegion,
-            String intro,
-            List<String> coverUrls,
-            List<String> profileTags,
-            List<String> preferenceTags,
-            List<String> excludedTags,
-            boolean hiddenByReports) {}
 }

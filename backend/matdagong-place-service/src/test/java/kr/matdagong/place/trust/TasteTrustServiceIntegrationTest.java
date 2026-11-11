@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.UUID;
 import kr.matdagong.common.test.EmbeddedPostgresTestSupport;
 import kr.matdagong.place.like.PlaceLikeService;
+import kr.matdagong.place.location.DeviceLocation;
+import kr.matdagong.place.location.NearbyPlaceGuard;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -18,19 +21,20 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     private static final UUID ME = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID TASTER = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final UUID OTHER = UUID.fromString("33333333-3333-3333-3333-333333333333");
+    private static final DeviceLocation NO_LOCATION = null;
 
     private PlaceLikeService likes;
     private TasteTrustService trust;
 
     @BeforeEach
     void setUp() {
-        truncate("restaurant_places, user_place_likes, user_place_dislikes, place_quick_drafts");
-        likes = new PlaceLikeService(jdbc);
+        truncate("restaurant_places, user_place_likes, user_place_dislikes, user_place_visits, place_quick_drafts");
+        likes = new PlaceLikeService(jdbc, new NearbyPlaceGuard(jdbc));
         trust = new TasteTrustService(jdbc);
     }
 
     @Test
-    void 나만_보기_기록과_입맛에_맞았던_하트도_인정으로_세고_가_보고_싶은_하트는_세지_않는다() {
+    void 공개와_나만_보기_기록은_인정으로_세고_가볼_곳_하트는_세지_않는다() {
         UUID first = place("1");
         UUID second = place("2");
         UUID third = place("3");
@@ -38,9 +42,8 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         record(TASTER, second, "PUBLIC");
         record(TASTER, third, "PUBLIC");
         record(ME, first, "PRIVATE");
-        quickSave(ME, "2");
-        likes.setLiked(ME, second.toString(), true, true);
-        likes.setLiked(ME, third.toString(), true, false);
+        record(ME, second, "PUBLIC");
+        likes.setLiked(ME, third.toString(), true);
 
         // 둘 다 태그를 고르지 않은 기록은 비교할 수 없어 태그 일치가 없습니다.
         assertThat(trust.statsFor(ME)).containsExactly(new TasteTrustStats(TASTER.toString(), 2, 0, null));
@@ -50,12 +53,10 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     void 신뢰_재료는_어느_쪽에서_물어도_같다() {
         UUID first = place("1");
         UUID second = place("2");
-        record(TASTER, first, "PUBLIC", "국물", "혼밥");
-        record(ME, first, "PRIVATE", "국물");
-        quickSave(ME, "2");
-        quickSave(TASTER, "2");
-        likes.setLiked(ME, second.toString(), true, true);
-        likes.setLiked(TASTER, second.toString(), true, true);
+        record(TASTER, first, "PUBLIC", "국물이 진한", "혼밥");
+        record(ME, first, "PRIVATE", "국물이 진한");
+        record(ME, second, "PUBLIC");
+        record(TASTER, second, "PUBLIC");
 
         TasteTrustStats fromMe = trust.statsFor(ME).get(0);
         TasteTrustStats fromTaster = trust.statsFor(TASTER).get(0);
@@ -75,8 +76,8 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         record(ME, second, "PUBLIC");
         quickSave(ME, "1");
         quickSave(TASTER, "2");
-        likes.setDisliked(ME, first.toString(), true);
-        likes.setDisliked(TASTER, second.toString(), true);
+        likes.setDisliked(ME, first.toString(), true, NO_LOCATION);
+        likes.setDisliked(TASTER, second.toString(), true, NO_LOCATION);
 
         assertThat(trust.statsFor(ME)).containsExactly(new TasteTrustStats(TASTER.toString(), 0, 2, null));
     }
@@ -85,10 +86,10 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     void 태그_일치는_둘_다_기록한_맛집만_비교하고_계정마다_따로_평균낸다() {
         UUID first = place("1");
         UUID second = place("2");
-        record(ME, first, "PUBLIC", "국물", "혼밥");
-        record(ME, second, "PUBLIC", "커피");
-        record(TASTER, first, "PUBLIC", "국물", "혼밥");
-        record(TASTER, second, "PUBLIC", "디저트");
+        record(ME, first, "PUBLIC", "국물이 진한", "혼밥");
+        record(ME, second, "PUBLIC", "커피 맛집");
+        record(TASTER, first, "PUBLIC", "국물이 진한", "혼밥");
+        record(TASTER, second, "PUBLIC", "디저트 카페");
         record(OTHER, first, "PUBLIC");
 
         assertThat(trust.statsFor(ME))
@@ -101,40 +102,42 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     void 별로였던_곳으로_남기면_하트가_지워지고_다시_하트하면_별로였던_표시가_지워진다() {
         String placeId = place("1").toString();
         quickSave(ME, "1");
-        likes.setLiked(ME, placeId, true, false);
+        likes.setLiked(ME, placeId, true);
 
-        likes.setDisliked(ME, placeId, true);
+        likes.setDisliked(ME, placeId, true, NO_LOCATION);
         assertThat(likes.likedPlaceIds(ME)).isEmpty();
         assertThat(likes.dislikedPlaceIds(ME)).containsExactly(placeId);
 
-        likes.setLiked(ME, placeId, true, true);
+        likes.setLiked(ME, placeId, true);
         assertThat(likes.dislikedPlaceIds(ME)).isEmpty();
-        assertThat(likes.visitedLikedPlaceIds(ME)).containsExactly(placeId);
-
-        likes.setLiked(ME, placeId, true, false);
-        assertThat(likes.visitedLikedPlaceIds(ME)).isEmpty();
         assertThat(likes.likedPlaceIds(ME)).containsExactly(placeId);
     }
 
     @Test
-    void 빠른_저장이나_기록을_옮긴_하트가_없으면_다녀온_맛을_고를_수_없고_가_보고_싶어요만_된다() {
+    void 방문_근거가_없으면_별로였어요는_고를_수_없고_가볼_곳은_저장된다() {
         String visitedPlace = place("1").toString();
         String unvisitedPlace = place("2").toString();
         quickSave(ME, "1");
 
-        for (Runnable choice : List.<Runnable>of(
-                () -> likes.setLiked(ME, unvisitedPlace, true, true),
-                () -> likes.setDisliked(ME, unvisitedPlace, true))) {
-            assertThatThrownBy(choice::run).isInstanceOfSatisfying(ResponseStatusException.class, exception -> {
-                assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-                assertThat(exception.getReason()).isEqualTo("이 가게에서 빠른 저장이나 맛집 기록을 남긴 뒤에 다녀온 맛을 고를 수 있어요.");
-            });
-        }
-        likes.setLiked(ME, unvisitedPlace, true, false);
-        likes.setLiked(ME, visitedPlace, true, true);
+        assertVisitProofRequired(() -> likes.setDisliked(ME, unvisitedPlace, true, NO_LOCATION));
+        likes.setLiked(ME, unvisitedPlace, true);
 
-        assertThat(likes.likedPlaceIds(ME)).containsExactlyInAnyOrder(visitedPlace, unvisitedPlace);
+        assertThat(likes.likedPlaceIds(ME)).containsExactly(unvisitedPlace);
         assertThat(likes.visitProofPlaceIds(ME)).containsExactly(visitedPlace);
+    }
+
+    @Test
+    void 방문_근거가_없어도_지금_가게_1km_안이면_별로였어요를_고를_수_있다() {
+        String placeId = place("1").toString();
+        likes.setLiked(ME, placeId, true);
+
+        // 가게(37.566, 126.991)에서 10km쯤 떨어진 곳에서는 고를 수 없습니다.
+        assertVisitProofRequired(() -> likes.setDisliked(ME, placeId, true, new DeviceLocation(37.656, 126.991)));
+
+        likes.setDisliked(ME, placeId, true, new DeviceLocation(37.5665, 126.9915));
+
+        assertThat(likes.likedPlaceIds(ME)).isEmpty();
+        assertThat(likes.dislikedPlaceIds(ME)).containsExactly(placeId);
     }
 
     @Test
@@ -142,11 +145,44 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         UUID placeId = place("1");
         record(ME, placeId, "PRIVATE");
 
-        assertThatThrownBy(() -> likes.setDisliked(ME, placeId.toString(), true))
+        assertThatThrownBy(() -> likes.setDisliked(ME, placeId.toString(), true, NO_LOCATION))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
                     assertThat(exception.getReason()).isEqualTo("내가 등록한 맛집은 별로였던 곳으로 남길 수 없습니다.");
                 });
+    }
+
+    @Test
+    void 없는_장소나_UUID가_아닌_ID는_하트하거나_별로였어요로_남길_수_없다() {
+        String missingPlace = UUID.randomUUID().toString();
+
+        for (ThrowingCallable call : List.<ThrowingCallable>of(
+                () -> likes.setLiked(ME, missingPlace, true),
+                () -> likes.setLiked(ME, "없는-ID", true),
+                () -> likes.setLiked(ME, "없는-ID", false),
+                () -> likes.setDisliked(ME, missingPlace, true, NO_LOCATION))) {
+            assertThatThrownBy(call).isInstanceOfSatisfying(ResponseStatusException.class, exception -> {
+                assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                assertThat(exception.getReason()).isEqualTo("저장할 맛집을 확인해 주세요.");
+            });
+        }
+        assertThat(likes.likedPlaceIds(ME)).isEmpty();
+    }
+
+    @Test
+    void 다른_계정의_인정과_엇갈림은_내가_인정하거나_별로였던_곳에서만_센다() {
+        UUID mine = place("1");
+        UUID disliked = place("2");
+        UUID unrelated = place("3");
+        record(ME, mine, "PUBLIC");
+        quickSave(ME, "2");
+        likes.setDisliked(ME, disliked.toString(), true, NO_LOCATION);
+        record(TASTER, mine, "PUBLIC");
+        record(TASTER, disliked, "PUBLIC");
+        record(TASTER, unrelated, "PUBLIC");
+        record(OTHER, unrelated, "PUBLIC");
+
+        assertThat(trust.statsFor(ME)).containsExactly(new TasteTrustStats(TASTER.toString(), 1, 1, null));
     }
 
     private static UUID place(String providerPlaceId) {
@@ -161,14 +197,20 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         return placeId;
     }
 
+    private static void assertVisitProofRequired(ThrowingCallable call) {
+        assertThatThrownBy(call).isInstanceOfSatisfying(ResponseStatusException.class, exception -> {
+            assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(exception.getReason()).isEqualTo("직접 다녀온 곳만 별로였다고 남길 수 있어요. 가게 근처(1km)에서 다시 골라 주세요.");
+        });
+    }
+
     /** 현재 위치 1km 안에서만 되는 빠른 저장으로 그 가게에 들른 근거를 남깁니다. */
     private static void quickSave(UUID accountId, String providerPlaceId) {
         jdbc.update(
                 """
-                INSERT INTO place_quick_drafts(draft_id, account_id, provider_place_id, place_name, address, latitude, longitude)
-                VALUES (?, ?, ?, '국밥집', '서울 중구 을지로 1', 37.566, 126.991)
+                INSERT INTO place_quick_drafts(account_id, provider_place_id, place_name, address, latitude, longitude)
+                VALUES (?, ?, '국밥집', '서울 중구 을지로 1', 37.566, 126.991)
                 """,
-                UUID.randomUUID(),
                 accountId,
                 providerPlaceId);
     }
@@ -185,7 +227,10 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 accountId,
                 visibility);
         for (String label : labels) {
-            jdbc.update("INSERT INTO restaurant_record_tags(record_id, tag_name) VALUES (?, ?)", recordId, label);
+            jdbc.update(
+                    "INSERT INTO restaurant_record_tags(record_id, tag_name, tag_group) VALUES (?, ?, 'TASTE')",
+                    recordId,
+                    label);
         }
     }
 }

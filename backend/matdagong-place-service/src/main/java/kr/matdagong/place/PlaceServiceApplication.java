@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-/** 장소·지도 API만 독립적으로 제공하는 Spring Boot 서비스의 시작점입니다. */
+/** 장소·지도 API만 독립적으로 제공하는 Spring Boot 서비스의 시작점입니다. 가려진 맛객 목록을 주기적으로 받으려고 스케줄링을 켭니다. */
 @SpringBootApplication
 @EnableScheduling
 public class PlaceServiceApplication {

@@ -18,6 +18,7 @@ public class AccountDataService {
             "restaurant_records",
             "user_place_likes",
             "user_place_dislikes",
+            "user_place_visits",
             "user_recent_places",
             "place_quick_drafts",
             "place_reports");

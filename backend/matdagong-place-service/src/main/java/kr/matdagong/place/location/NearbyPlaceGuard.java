@@ -1,5 +1,6 @@
 package kr.matdagong.place.location;
 
+import java.util.UUID;
 import kr.matdagong.place.catalog.PlaceIdentifiers;
 import kr.matdagong.place.kakao.KakaoPlaceVerifier.PlaceInfo;
 import org.springframework.http.HttpStatus;
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * 다녀왔다는 근거(빠른 저장·새 맛집 기록)를 남길 때 기기가 가게 가까이에 있는지 확인합니다.
+ * 다녀왔다는 근거(빠른 저장·새 맛집 기록·별로였어요)를 남길 때 기기가 가게 가까이에 있는지 확인합니다.
  * 트랜잭션은 부르는 Service가 열고, 이 클래스는 그 안에서만 불립니다.
  */
 @Component
@@ -61,6 +62,27 @@ public class NearbyPlaceGuard {
                 .stream()
                 .findFirst()
                 .orElseGet(() -> new Coordinate(place.latitude(), place.longitude()));
+    }
+
+    /**
+     * 이미 저장된 가게(장소 ID)와 기기가 1km 안인지 봅니다. 방문 근거가 없는 가게에서 '별로였어요'를 고를 때 지금 위치를
+     * 근거로 씁니다. DB에 없는 장소는 멀리 있는 것으로 봅니다.
+     */
+    public boolean isNearby(DeviceLocation device, UUID placeId) {
+        if (device == null) return false;
+        return jdbc
+                .query(
+                        "SELECT latitude, longitude FROM restaurant_places WHERE place_id = ?",
+                        (rs, row) -> GeoDistance.meters(
+                                device.latitude(),
+                                device.longitude(),
+                                rs.getDouble("latitude"),
+                                rs.getDouble("longitude")),
+                        placeId)
+                .stream()
+                .findFirst()
+                .map(distance -> distance <= MAX_VISIT_DISTANCE_METERS)
+                .orElse(false);
     }
 
     private record Coordinate(double latitude, double longitude) {}

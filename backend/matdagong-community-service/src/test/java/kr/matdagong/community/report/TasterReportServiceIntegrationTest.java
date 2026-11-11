@@ -15,11 +15,13 @@ import kr.matdagong.community.subscription.SubscriptionService;
 import kr.matdagong.community.taster.TasterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 /** 맛객 신고가 한 사람당 한 번만 쌓이고, 3명이면 확인 목록, 5명이면 자동 가림이 되는지 실제 스키마로 확인합니다. */
 class TasterReportServiceIntegrationTest extends EmbeddedPostgresTestSupport {
+    private static final UUID PLACE_ID = UUID.fromString("50000000-0000-0000-0000-000000000001");
     private static final UUID TARGET = UUID.fromString("30000000-0000-0000-0000-000000000001");
     private static final List<UUID> REPORTERS = IntStream.rangeClosed(1, 6)
             .mapToObj(index -> UUID.fromString("40000000-0000-0000-0000-00000000000" + index))
@@ -106,6 +108,16 @@ class TasterReportServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 () -> reports.report(REPORTERS.get(0), TARGET, new ReportRequest(ReportReason.ADVERTISING, " ", null)),
                 HttpStatus.BAD_REQUEST,
                 "어떤 점이 문제인지 적어 주세요.");
+        // 서비스를 거치지 않은 저장도 DB가 빈 설명을 막습니다(V43).
+        assertThatThrownBy(() -> jdbc.update(
+                        """
+                        INSERT INTO taster_reports (report_id, target_account_id, reporter_account_id, reason, memo)
+                        VALUES (?, ?, ?, 'SPAM', ' ')
+                        """,
+                        UUID.randomUUID(),
+                        TARGET,
+                        REPORTERS.get(0)))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     /** 아직 신고하지 않은 사람 count명이 차례로 신고합니다. */
@@ -132,7 +144,7 @@ class TasterReportServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     private static ReportRequest request(ReportReason reason) {
-        return new ReportRequest(reason, "기록 사진에 다른 가게 광고가 있어요.", "p-001");
+        return new ReportRequest(reason, "기록 사진에 다른 가게 광고가 있어요.", PLACE_ID);
     }
 
     private static void assertStatus(Runnable action, HttpStatus status, String detail) {

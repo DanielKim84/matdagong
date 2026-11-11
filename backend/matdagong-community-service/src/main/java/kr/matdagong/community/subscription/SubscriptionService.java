@@ -11,6 +11,7 @@ import java.util.UUID;
 import kr.matdagong.common.jdbc.JdbcTimes;
 import kr.matdagong.community.notification.NotificationService;
 import kr.matdagong.community.profile.ProfileMediaUrls;
+import kr.matdagong.community.profile.ProfileQueries;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -129,15 +130,13 @@ public class SubscriptionService {
         if (subscriberId.equals(targetId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "자기 프로필은 구독할 수 없습니다.");
         }
-        String targetNickname = nickname(targetId);
-        if (targetNickname == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "구독할 맛객을 찾을 수 없습니다.");
-        }
-        String subscriberNickname = nickname(subscriberId);
+        String targetNickname = ProfileQueries.nickname(jdbc, targetId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "구독할 맛객을 찾을 수 없습니다."));
+        String subscriberNickname = ProfileQueries.nickname(jdbc, subscriberId).orElse(UNKNOWN_SUBSCRIBER_NAME);
 
         boolean isFree = request.subscriptionType() == SubscriptionType.FREE;
         // 한 구독자의 신청을 하나씩 처리해 무료 자리가 둘 생기거나, 두 번 누른 유료 신청이 동시에 열리지 않게 합니다(뒤 요청은 409).
-        jdbc.queryForList("SELECT account_id FROM user_profiles WHERE account_id = ? FOR UPDATE", subscriberId);
+        ProfileQueries.lock(jdbc, subscriberId);
         Integer termMonths = SubscriptionPlans.validatedTerm(request);
         if (isSubscribed(subscriberId, targetId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 구독 중인 맛객입니다.");
@@ -172,35 +171,32 @@ public class SubscriptionService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, SUBSCRIPTION_IN_PROGRESS);
         }
 
-        notifications.newSubscriber(
-                targetId,
-                subscriberId,
-                subscriberNickname == null ? UNKNOWN_SUBSCRIBER_NAME : subscriberNickname,
-                historyId);
+        notifications.newSubscriber(targetId, subscriberId, subscriberNickname, historyId);
 
         SubscriptionView view = new SubscriptionView(
                 subscriptionId, targetId, targetNickname, request.subscriptionType(), termMonths, start, end);
         return new SubscribeResult(view, replacedNickname);
     }
 
-    /** 만료 시각이 지난 유료 회차를 비활성화해 다시 신청할 수 있게 합니다. 맛객 목록의 구독자 수도 이 정리 뒤에 셉니다. */
+    /**
+     * 만료 시각이 지난 유료 회차를 끝내고 그 구독도 비활성화해 다시 신청할 수 있게 합니다. 맛객 목록의 구독자 수도 이 정리
+     * 뒤에 셉니다. 활성 구독에는 늘 활성 회차가 하나 있으므로(신청·취소가 둘을 함께 바꿈), 이번에 끝난 회차의 구독만
+     * 바꿉니다. 목록을 열 때마다 불리므로 활성 구독 전체를 훑지 않고 끝난 회차만 찾습니다(idx_subscription_history_active_end).
+     */
     @Transactional
     public void expireEndedSubscriptions() {
         jdbc.update(
                 """
-                UPDATE user_subscription_history
-                SET period_st = 'EXPIRED'
-                WHERE period_st = 'ACTIVE' AND end_dt IS NOT NULL AND end_dt <= now()
-                """);
-        jdbc.update(
-                """
+                WITH expired AS (
+                    UPDATE user_subscription_history
+                    SET period_st = 'EXPIRED'
+                    WHERE period_st = 'ACTIVE' AND end_dt <= now()
+                    RETURNING subscription_id
+                )
                 UPDATE user_subscriptions s
                 SET subscription_st = 'INACTIVE', upd_dt = now()
-                WHERE s.subscription_st = 'ACTIVE'
-                  AND NOT EXISTS (
-                      SELECT 1 FROM user_subscription_history period
-                      WHERE period.subscription_id = s.subscription_id AND period.period_st = 'ACTIVE'
-                  )
+                FROM expired
+                WHERE s.subscription_id = expired.subscription_id AND s.subscription_st = 'ACTIVE'
                 """);
     }
 
@@ -286,14 +282,6 @@ public class SubscriptionService {
                 Boolean.class,
                 subscriberId,
                 targetId));
-    }
-
-    private String nickname(UUID accountId) {
-        return jdbc
-                .queryForList("SELECT nickname FROM user_profiles WHERE account_id = ?", String.class, accountId)
-                .stream()
-                .findFirst()
-                .orElse(null);
     }
 
     private record FreeSubscription(UUID subscriptionId, UUID targetAccountId, String nickname) {}

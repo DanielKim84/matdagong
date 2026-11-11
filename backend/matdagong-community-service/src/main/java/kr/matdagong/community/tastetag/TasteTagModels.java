@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 import java.util.UUID;
-import kr.matdagong.common.tag.TasteTagCategory;
 import kr.matdagong.common.tag.TasteTagGroup;
 
 /** 취향 태그 목록과 태그 추가 제안 API의 요청·응답 자료형입니다. */
@@ -25,20 +24,29 @@ public final class TasteTagModels {
         REJECTED
     }
 
-    public record TasteTagView(String name, TasteTagCategory category, TasteTagGroup tagGroup) {}
+    /** 태그 사전 한 줄입니다. 매장 이용 태그인지는 tagGroup == VISIT으로 구분합니다. */
+    public record TasteTagView(String name, TasteTagGroup tagGroup) {}
 
-    /** requestType을 비우면 TAG로 접수합니다. */
+    /**
+     * 태그·매장 이용 정보 제안입니다. requestType을 비우면 TAG로 접수합니다. 이름의 앞뒤·연속 공백과 공백뿐인 이유는
+     * 검증 전에 정리합니다.
+     */
     public record TagRequest(
             TagRequestType requestType,
             @NotBlank(message = "추가할 태그명을 입력해 주세요.") @Size(max = 30, message = "태그명은 30자 이하로 입력해 주세요.") String name,
             @NotNull(message = "태그 분류를 선택해 주세요.") TasteTagGroup tagGroup,
-            @Size(max = 300, message = "제안 이유는 300자 이하로 입력해 주세요.") String reason) {}
+            @Size(max = 300, message = "제안 이유는 300자 이하로 입력해 주세요.") String reason) {
+        public TagRequest {
+            requestType = requestType == null ? TagRequestType.TAG : requestType;
+            name = name == null ? null : name.strip().replaceAll("\\s+", " ");
+            reason = reason == null || reason.isBlank() ? null : reason.strip();
+        }
+    }
 
     public record TagRequestView(
             UUID requestId,
             TagRequestType requestType,
             String tagName,
-            TasteTagCategory tagCategory,
             TasteTagGroup tagGroup,
             String reason,
             TagRequestStatus status,

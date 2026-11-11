@@ -19,14 +19,14 @@ final class TasteTrust {
 
     private TasteTrust() {}
 
-    /** @param tasteMatchPercent 내 취향 태그가 없어 취향 %를 셀 수 없으면 null입니다. */
+    /** @param tasteMatchPercent 비교할 취향이 없어 취향 %를 셀 수 없으면(TasteMatch가 null) null입니다. */
     static Result evaluate(TrustStats stats, Integer tasteMatchPercent) {
         if (stats == null) return null;
         int sharedPlaces = stats.agreedCount() + stats.conflictCount();
         if (sharedPlaces <= 0) return null;
         double weighted = EXPERIENCE_WEIGHT * (stats.agreedCount() * 100.0 / sharedPlaces);
         int weights = EXPERIENCE_WEIGHT;
-        // 하트로만 겹친 맛집은 태그가 없으므로, 비교할 재료가 없는 항목은 빼고 나머지 비중을 늘려 계산합니다.
+        // 둘 다 기록한 맛집이 없으면(하트·별로였어요로만 겹침) 태그를 비교할 수 없으므로, 재료가 없는 항목은 빼고 나머지 비중을 늘립니다.
         if (stats.tagMatchPercent() != null) {
             weighted += TAG_WEIGHT * stats.tagMatchPercent();
             weights += TAG_WEIGHT;

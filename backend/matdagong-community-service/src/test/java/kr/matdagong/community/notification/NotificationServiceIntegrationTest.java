@@ -93,7 +93,15 @@ class NotificationServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 VALUES (?, 'SYSTEM_NOTICE', '공지', '점검 안내입니다.')
                 """,
                 TASTER);
+        // 보관 기간이 지난 알림은 목록에도, 안 읽은 수에도 넣지 않습니다.
+        jdbc.update(
+                """
+                INSERT INTO user_notifications (recipient_account_id, notification_type, title, message, expires_at)
+                VALUES (?, 'SYSTEM_NOTICE', '지난 공지', '지난 안내입니다.', now() - INTERVAL '1 minute')
+                """,
+                TASTER);
         assertThat(service.list(TASTER).unreadCount()).isEqualTo(2);
+        assertThat(service.list(TASTER).items()).hasSize(2);
 
         service.markPassiveRead(TASTER);
 

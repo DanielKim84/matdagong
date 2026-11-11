@@ -66,8 +66,8 @@ public class MediaUrlSigner {
         long remaining = expiresAt - clock.instant().getEpochSecond();
         if (remaining <= 0) return -1;
         byte[] expected = signature(kind, id, expiresAt).getBytes(StandardCharsets.US_ASCII);
-        boolean valid = MessageDigest.isEqual(expected, signature.getBytes(StandardCharsets.US_ASCII));
-        return valid ? remaining : -1;
+        boolean isValid = MessageDigest.isEqual(expected, signature.getBytes(StandardCharsets.US_ASCII));
+        return isValid ? remaining : -1;
     }
 
     private String signature(String kind, UUID id, long expiresAt) {

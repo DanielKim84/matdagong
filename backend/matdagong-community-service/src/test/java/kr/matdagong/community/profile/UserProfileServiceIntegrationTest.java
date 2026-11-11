@@ -113,6 +113,42 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
+    void 분류마다_정한_수까지만_고를_수_있다() {
+        profiles.ensureProfile(FIRST, "국밥러");
+        List<String> tenCuisines = tagNames(TasteTagGroup.CUISINE, 10);
+        List<String> sixTastes = tagNames(TasteTagGroup.TASTE, 6);
+        List<String> cafeAndTravel = List.of(tagName(TasteTagGroup.DESSERT), tagName(TasteTagGroup.TRAVEL));
+
+        ProfileView restaurant = profiles.updateProfile(
+                FIRST, request("국밥러", FoodFocus.RESTAURANT, tenCuisines, tenCuisines, List.of()));
+        ProfileView cafe = profiles.updateProfile(
+                FIRST, request("국밥러", FoodFocus.CAFE_DESSERT, cafeAndTravel, List.of(), List.of()));
+
+        assertThat(restaurant.profileTags()).hasSize(10);
+        assertThat(cafe.profileTags()).containsExactlyElementsOf(cafeAndTravel);
+        assertStatus(
+                () -> profiles.updateProfile(
+                        FIRST, request("국밥러", FoodFocus.RESTAURANT, sixTastes, List.of(), List.of())),
+                HttpStatus.BAD_REQUEST,
+                "'맛·메뉴'에서는 최대 5개까지 선택할 수 있어요.");
+    }
+
+    @Test
+    void 여행_위주_맛객은_활동_지역을_저장하지_않는다() {
+        profiles.ensureProfile(FIRST, "국밥러");
+
+        ProfileView local = profiles.updateProfile(FIRST, request("국밥러", null, List.of(), List.of(), List.of()));
+        ProfileView travel = profiles.updateProfile(
+                FIRST,
+                new UpdateProfileRequest(
+                        "국밥러", null, null, null, ActivityScope.TRAVEL, "마포", List.of(), List.of(), List.of()));
+
+        assertThat(local.activityRegion()).isEqualTo("마포");
+        assertThat(travel.activityRegion()).isNull();
+        assertThat(travel.activityScope()).isEqualTo(ActivityScope.TRAVEL);
+    }
+
+    @Test
     void 다른_맛객이_쓰는_닉네임으로는_바꿀_수_없다() {
         profiles.ensureProfile(FIRST, "국밥러");
         profiles.ensureProfile(SECOND, "냉면러");
@@ -147,7 +183,7 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         MockMultipartFile notImage = new MockMultipartFile("files", "a.png", "image/png", new byte[] {1, 2, 3});
 
         List<String> urls = covers.addCovers(FIRST, List.of(image, image, image));
-        UUID firstPhoto = UUID.fromString(urls.get(0).substring(urls.get(0).lastIndexOf('/') + 1));
+        UUID firstPhoto = photoId(urls.get(0));
         covers.removeCover(FIRST, firstPhoto);
         covers.removeCover(FIRST, firstPhoto);
 
@@ -159,10 +195,20 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                         Integer.class,
                         FIRST))
                 .containsExactly(0, 1);
+
+        // 가운데 사진을 지워도 남은 사진의 앞뒤 순서는 그대로입니다.
+        List<String> added = covers.addCovers(FIRST, List.of(image));
+        covers.removeCover(FIRST, photoId(added.get(1)));
+        assertThat(profiles.findProfile(FIRST).orElseThrow().profileCoverUrls())
+                .containsExactly(added.get(0), added.get(2));
         assertStatus(
                 () -> covers.addCovers(FIRST, List.of(notImage)),
                 HttpStatus.BAD_REQUEST,
                 "JPG, PNG, WEBP 이미지 파일을 선택해 주세요.");
+    }
+
+    private static UUID photoId(String coverUrl) {
+        return UUID.fromString(coverUrl.substring(coverUrl.lastIndexOf('/') + 1));
     }
 
     private static void insertProfile(UUID accountId, String nickname) {
@@ -170,10 +216,15 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     private static String tagName(TasteTagGroup group) {
-        return jdbc.queryForObject(
-                "SELECT tag_name FROM taste_tags WHERE tag_group = ? ORDER BY sort_order LIMIT 1",
+        return tagNames(group, 1).get(0);
+    }
+
+    private static List<String> tagNames(TasteTagGroup group, int count) {
+        return jdbc.queryForList(
+                "SELECT tag_name FROM taste_tags WHERE tag_group = ? ORDER BY sort_order LIMIT ?",
                 String.class,
-                group.name());
+                group.name(),
+                count);
     }
 
     private static UpdateProfileRequest request(

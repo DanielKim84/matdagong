@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import kr.matdagong.common.tag.TasteTagGroup;
 import kr.matdagong.common.web.ApiErrors;
+import kr.matdagong.community.profile.ProfileQueries;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,20 +20,16 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class TasteTagRequestService {
     private static final int RECENT_REQUEST_LIMIT = 20;
-    private static final RowMapper<TagRequestView> REQUEST_MAPPER = (rs, row) -> {
-        TasteTagGroup group = TasteTagGroup.valueOf(rs.getString("tag_group"));
-        return new TagRequestView(
-                rs.getObject("request_id", UUID.class),
-                TagRequestType.valueOf(rs.getString("request_type")),
-                rs.getString("tag_name"),
-                group.category(),
-                group,
-                rs.getString("request_rsn"),
-                TagRequestStatus.valueOf(rs.getString("request_st")),
-                rs.getString("review_note"),
-                rs.getObject("reg_dt", OffsetDateTime.class),
-                rs.getObject("review_dt", OffsetDateTime.class));
-    };
+    private static final RowMapper<TagRequestView> REQUEST_MAPPER = (rs, row) -> new TagRequestView(
+            rs.getObject("request_id", UUID.class),
+            TagRequestType.valueOf(rs.getString("request_type")),
+            rs.getString("tag_name"),
+            TasteTagGroup.valueOf(rs.getString("tag_group")),
+            rs.getString("request_rsn"),
+            TagRequestStatus.valueOf(rs.getString("request_st")),
+            rs.getString("review_note"),
+            rs.getObject("reg_dt", OffsetDateTime.class),
+            rs.getObject("review_dt", OffsetDateTime.class));
 
     private final JdbcTemplate jdbc;
 
@@ -40,13 +37,14 @@ public class TasteTagRequestService {
         this.jdbc = jdbc;
     }
 
+    /** 태그 제안은 이미 사전에 있는 이름(대소문자 무시)이면 409로 답합니다. 매장 이용 정보 제안은 그 확인을 하지 않습니다. */
     @Transactional
     public TagRequestView create(UUID accountId, TagRequest request) {
-        TagRequestType requestType = request.requestType() == null ? TagRequestType.TAG : request.requestType();
-        // 매장 이용 정보 제안은 화면이 보낸 그룹과 관계없이 방문 조건(VISIT) 검토 대상으로 분류합니다.
+        TagRequestType requestType = request.requestType();
+        // 매장 이용 정보 제안은 화면이 보낸 분류와 관계없이 매장 이용(VISIT) 검토 대상으로 분류합니다.
         TasteTagGroup tagGroup = requestType == TagRequestType.PLACE_INFO ? TasteTagGroup.VISIT : request.tagGroup();
-        String name = request.name().strip().replaceAll("\\s+", " ");
-        if (!hasProfile(accountId)) throw ApiErrors.profileRequired();
+        String name = request.name();
+        if (!ProfileQueries.exists(jdbc, accountId)) throw ApiErrors.profileRequired();
         if (requestType == TagRequestType.TAG && isExistingTag(name)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 선택 목록에 있는 태그예요.");
         }
@@ -65,15 +63,14 @@ public class TasteTagRequestService {
                     requestType.name(),
                     name,
                     tagGroup.name(),
-                    request.reason() == null || request.reason().isBlank()
-                            ? null
-                            : request.reason().strip());
+                    request.reason());
         } catch (DuplicateKeyException exception) {
             // 동시 제출도 DB의 대기 요청 유일 키로 막아 중복 접수를 방지합니다.
             throw new ResponseStatusException(HttpStatus.CONFLICT, "같은 내용의 제안을 이미 보냈어요. 처리 내역을 확인해 주세요.");
         }
     }
 
+    /** 본인의 최근 제안 20건을 최신순으로 돌려줍니다. */
     @Transactional(readOnly = true)
     public List<TagRequestView> mine(UUID accountId) {
         return jdbc.query(
@@ -85,11 +82,6 @@ public class TasteTagRequestService {
                 REQUEST_MAPPER,
                 accountId,
                 RECENT_REQUEST_LIMIT);
-    }
-
-    private boolean hasProfile(UUID accountId) {
-        return Boolean.TRUE.equals(jdbc.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM user_profiles WHERE account_id = ?)", Boolean.class, accountId));
     }
 
     private boolean isExistingTag(String name) {

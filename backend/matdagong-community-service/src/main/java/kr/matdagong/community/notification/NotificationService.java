@@ -5,6 +5,7 @@ import static kr.matdagong.community.notification.NotificationModels.*;
 import java.util.List;
 import java.util.UUID;
 import kr.matdagong.common.jdbc.JdbcTimes;
+import kr.matdagong.community.profile.ProfileQueries;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 알림 스냅샷과 사용자별 읽음·삭제 상태를 관리합니다.
- * 알림은 서버 이벤트(맛집 기록 확인, 구독 신청)에서만 만들며, DB에 있는 SYSTEM_NOTICE 종류는 운영 공지용으로 남겨 둔 값입니다.
+ * 알림은 서버 이벤트(맛집 기록 확인, 구독 신청, 신고 누적 가림)에서만 만듭니다.
  * 받는 사람이 끈 종류(구독 맛객 새 기록·새 구독자)는 만들지 않습니다(user_notification_settings, 행이 없으면 기본값).
  */
 @Service
@@ -80,7 +81,10 @@ public class NotificationService {
         return settings(accountId);
     }
 
-    /** 보관 기간이 지난 알림은 조건으로 빼고 보여 줍니다. 실제 삭제는 매일 정리 작업과 알림을 만들 때 합니다. */
+    /**
+     * 보관 기간이 지난 알림은 조건으로 빼고 보여 줍니다. 실제 삭제는 매일 정리 작업과 알림을 만들 때 합니다.
+     * 목록에 개수 제한이 없어 안 읽은 수는 받은 목록에서 셉니다.
+     */
     @Transactional(readOnly = true)
     public NotificationFeed list(UUID recipientId) {
         List<NotificationView> items = jdbc.query(
@@ -92,14 +96,9 @@ public class NotificationService {
                         .formatted(NOTIFICATION_COLUMNS),
                 NOTIFICATION_MAPPER,
                 recipientId);
-        Integer unreadCount = jdbc.queryForObject(
-                """
-                SELECT count(*) FROM user_notifications
-                WHERE recipient_account_id = ? AND read_at IS NULL AND expires_at > now()
-                """,
-                Integer.class,
-                recipientId);
-        return new NotificationFeed(items, unreadCount == null ? 0 : unreadCount);
+        int unreadCount =
+                (int) items.stream().filter(item -> item.readAt() == null).count();
+        return new NotificationFeed(items, unreadCount);
     }
 
     /**
@@ -121,10 +120,7 @@ public class NotificationService {
                 place.placeId(),
                 eventKey);
         if (place.publicRecord()) {
-            String tasterName = jdbc.query(
-                    "SELECT nickname FROM user_profiles WHERE account_id = ?",
-                    rs -> rs.next() ? rs.getString(1) : UNKNOWN_TASTER_NAME,
-                    recipientId);
+            String tasterName = ProfileQueries.nickname(jdbc, recipientId).orElse(UNKNOWN_TASTER_NAME);
             for (UUID subscriberId : subscribersToNotify(recipientId)) {
                 insert(
                         subscriberId,
@@ -202,16 +198,17 @@ public class NotificationService {
                 recipientId);
     }
 
-    /** 눌러서 이동할 대상(장소 상세·내 구독자)이 없는 안내성 알림만 읽음 처리합니다. 이동형 알림은 실제로 눌렀을 때 읽음이 됩니다. */
+    /**
+     * 눌러서 이동할 대상(장소 상세·내 구독자)이 없는 안내성 알림만 읽음 처리합니다. 이동형 알림은 실제로 눌렀을 때 읽음이 됩니다.
+     * 대상 종류와 ID는 늘 함께 있거나 함께 비어 있습니다(ck_user_notifications_target).
+     */
     @Transactional
     public void markPassiveRead(UUID recipientId) {
         jdbc.update(
                 """
                 UPDATE user_notifications SET read_at = now()
                 WHERE recipient_account_id = ? AND read_at IS NULL
-                  AND expires_at > now()
-                  AND NOT (target_type = 'PLACE' AND target_id IS NOT NULL)
-                  AND target_type IS DISTINCT FROM 'MY_SUBSCRIBERS'
+                  AND expires_at > now() AND target_type IS NULL
                 """,
                 recipientId);
     }

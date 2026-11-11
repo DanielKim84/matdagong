@@ -32,7 +32,7 @@ class CommunityProfileClientTest {
     }
 
     @Test
-    void 사용자_토큰으로_본인_프로필의_닉네임과_캐릭터를_가져온다() {
+    void 사용자_토큰으로_본인_프로필의_닉네임을_가져온다() {
         server.expect(requestTo(PROFILE_URL))
                 .andExpect(header("Authorization", "Bearer user-token"))
                 .andRespond(withSuccess(
@@ -42,7 +42,6 @@ class CommunityProfileClientTest {
         CommunityProfileClient.AuthorProfile profile = client.findMyProfile("user-token");
 
         assertThat(profile.nickname()).isEqualTo("골목맛객");
-        assertThat(profile.avatarVariant()).isEqualTo(4);
     }
 
     @Test

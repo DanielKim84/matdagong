@@ -11,24 +11,20 @@ public final class TasterModels {
     /**
      * 다른 맛객 한 명의 공개 프로필과 나와의 취향·신뢰 비교 결과입니다.
      *
-     * @param profileCoverUrl 단일 배경 주소를 읽는 화면을 위한 대표 배경(갤러리의 첫 사진)입니다.
      * @param matchedTags 맛객의 프로필 태그 중 내 좋아요 태그와 겹치는 태그입니다.
-     * @param matchScore 나와의 취향 일치율(0~100). 내 취향 태그 중 이 맛객의 프로필 태그와 겹치는 비율입니다.
+     * @param matchScore 나와의 취향 일치율(0~100). 계산 방법은 TasteMatch에 있고, 비교할 취향이 없으면 0입니다.
      * @param trustScore 같은 맛집 경험으로 쌓인 신뢰 %(0~100). 함께 다녀온 맛집이 없으면 null이고 화면은 취향 %를 보여 줍니다.
      * @param trustLevel 신뢰 등급. trustScore가 null이면 null입니다.
      */
     public record TasterView(
             String tasterId,
             String tasterName,
-            String tag,
             String avatar,
             int avatarVariant,
-            String profileCoverUrl,
             List<String> profileCoverUrls,
             FoodFocus tasterFocus,
             ActivityScope activityScope,
             String activityRegion,
-            String note,
             String intro,
             int subscriberCount,
             List<String> profileTags,

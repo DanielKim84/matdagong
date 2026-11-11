@@ -12,7 +12,7 @@ import kr.matdagong.community.taster.PlaceTrustClient.TrustStats;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** 맛객 목록의 취향 일치율이 겹친 태그 개수가 아니라 내 취향 대비 백분율로 내려가는지 확인합니다. */
+/** 맛객 목록이 DB의 태그 재료로 분류별 취향 일치율을 계산하고, 일치율 순서로 정렬하는지 확인합니다. */
 class TasterServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     private TasterService service;
 
@@ -23,42 +23,47 @@ class TasterServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
-    void 일치율은_내_좋아요_태그_중_겹친_비율이다() {
-        UUID me = UUID.randomUUID();
-        UUID taster = UUID.randomUUID();
-        jdbc.update("INSERT INTO user_profiles (account_id, nickname, avatar_variant) VALUES (?, '나', 1)", me);
-        jdbc.update("INSERT INTO user_profiles (account_id, nickname, avatar_variant) VALUES (?, '맛객', 1)", taster);
-        List<Integer> tags = jdbc.queryForList("SELECT tag_id FROM taste_tags ORDER BY tag_id LIMIT 5", Integer.class);
-        // 나는 4개를 좋아요(분야는 BOTH라 분모에 더하지 않음), 1개는 피하기로 고릅니다.
-        for (int i = 0; i < 4; i++) {
-            jdbc.update("INSERT INTO user_preference_tags (account_id, tag_id) VALUES (?, ?)", me, tags.get(i));
-        }
-        jdbc.update(
-                "INSERT INTO user_preference_tags (account_id, tag_id, preference_type) VALUES (?, ?, 'AVOID')",
-                me,
-                tags.get(4));
-        // 맛객 프로필 태그 중 내 좋아요와 겹치는 것은 2개입니다.
-        jdbc.update("INSERT INTO user_profile_tags (account_id, tag_id) VALUES (?, ?)", taster, tags.get(0));
-        jdbc.update("INSERT INTO user_profile_tags (account_id, tag_id) VALUES (?, ?)", taster, tags.get(1));
-        jdbc.update("INSERT INTO user_profile_tags (account_id, tag_id) VALUES (?, ?)", taster, tags.get(4));
+    void 일치율은_맛객_분야의_분류별_겹친_비율_평균이다() {
+        UUID me = profile("나", "BOTH", "BOTH");
+        UUID restaurant = profile("식당맛객", "RESTAURANT", "BOTH");
+        // 음식 종류 2개 중 1개, 맛·메뉴 1개 중 1개가 겹칩니다. 피하고 싶은 조건은 셈에 넣지 않습니다.
+        like(me, "한식", "일식", "매콤·얼큰", "커피 맛집");
+        avoid(me, "주차 불가");
+        profileTags(restaurant, "한식", "매콤·얼큰", "커피 맛집");
 
-        TasterModels.TasterView view = viewOf(service.tasters(me, Map.of()), taster);
+        TasterModels.TasterView view = viewOf(service.tasters(me, Map.of()), restaurant);
 
-        assertThat(view.matchScore()).isEqualTo(50);
-        assertThat(view.matchedTags()).hasSize(2);
+        // 식당 맛객은 카페 종류를 고를 수 없는 분야라 커피 맛집은 평균에 넣지 않습니다: (1/2 + 1/1) / 2
+        assertThat(view.matchScore()).isEqualTo(75);
+        assertThat(view.matchedTags()).containsExactlyInAnyOrder("한식", "매콤·얼큰", "커피 맛집");
         assertThat(view.trustScore()).isNull();
         assertThat(view.trustLevel()).isNull();
     }
 
     @Test
+    void 카페_맛객은_내_식당_태그로_깎이지_않고_일치율_순서로_앞에_온다() {
+        UUID me = profile("나", "BOTH", "BOTH");
+        UUID cafe = profile("카페맛객", "CAFE_DESSERT", "BOTH");
+        UUID restaurant = profile("식당맛객", "RESTAURANT", "BOTH");
+        like(me, "한식", "일식", "커피 맛집");
+        profileTags(cafe, "커피 맛집");
+        profileTags(restaurant, "한식");
+
+        List<TasterModels.TasterView> views = service.tasters(me, Map.of());
+
+        assertThat(viewOf(views, cafe).matchScore()).isEqualTo(100);
+        assertThat(viewOf(views, restaurant).matchScore()).isEqualTo(50);
+        assertThat(views)
+                .extracting(TasterModels.TasterView::tasterId)
+                .containsExactly(cafe.toString(), restaurant.toString());
+    }
+
+    @Test
     void 같은_맛집_경험이_있으면_취향_일치와_합쳐_신뢰를_붙인다() {
-        UUID me = UUID.randomUUID();
-        UUID taster = UUID.randomUUID();
-        jdbc.update("INSERT INTO user_profiles (account_id, nickname, avatar_variant) VALUES (?, '나', 1)", me);
-        jdbc.update("INSERT INTO user_profiles (account_id, nickname, avatar_variant) VALUES (?, '맛객', 1)", taster);
-        Integer tag = jdbc.queryForObject("SELECT tag_id FROM taste_tags ORDER BY tag_id LIMIT 1", Integer.class);
-        jdbc.update("INSERT INTO user_preference_tags (account_id, tag_id) VALUES (?, ?)", me, tag);
-        jdbc.update("INSERT INTO user_profile_tags (account_id, tag_id) VALUES (?, ?)", taster, tag);
+        UUID me = profile("나", "BOTH", "BOTH");
+        UUID taster = profile("맛객", "BOTH", "BOTH");
+        like(me, "한식");
+        profileTags(taster, "한식");
 
         TasterModels.TasterView view =
                 viewOf(service.tasters(me, Map.of(taster, new TrustStats(taster.toString(), 10, 0, 100))), taster);
@@ -68,17 +73,85 @@ class TasterServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         assertThat(view.trustLevel()).isEqualTo(TasterModels.TrustLevel.TRUSTED);
     }
 
+    @Test
+    void 비교할_취향이_없으면_일치율은_0이고_신뢰는_경험만으로_낸다() {
+        UUID me = profile("나", "BOTH", "BOTH");
+        UUID taster = profile("맛객", "BOTH", "BOTH");
+        profileTags(taster, "한식");
+
+        TasterModels.TasterView view =
+                viewOf(service.tasters(me, Map.of(taster, new TrustStats(taster.toString(), 10, 0, null))), taster);
+
+        assertThat(view.matchScore()).isZero();
+        assertThat(view.trustScore()).isEqualTo(100);
+    }
+
+    @Test
+    void 쉼표가_든_태그_이름도_나뉘지_않고_프로필이_없으면_일치율은_0이다() {
+        jdbc.update("INSERT INTO taste_tags (tag_name, tag_group, sort_order) VALUES ('국밥, 순대', 'CUISINE', 199)");
+        UUID me = profile("나", "BOTH", "BOTH");
+        UUID taster = profile("맛객", "BOTH", "BOTH");
+        like(me, "국밥, 순대");
+        profileTags(taster, "국밥, 순대", "한식");
+
+        TasterModels.TasterView view = viewOf(service.tasters(me, Map.of()), taster);
+        TasterModels.TasterView withoutProfile = viewOf(service.tasters(UUID.randomUUID(), Map.of()), taster);
+
+        assertThat(view.profileTags()).containsExactly("국밥, 순대", "한식");
+        assertThat(view.matchedTags()).containsExactly("국밥, 순대");
+        assertThat(view.matchScore()).isEqualTo(100);
+        assertThat(withoutProfile.matchScore()).isZero();
+        assertThat(withoutProfile.matchedTags()).isEmpty();
+    }
+
+    private static UUID profile(String nickname, String tasterFocus, String preferenceFocus) {
+        UUID accountId = UUID.randomUUID();
+        jdbc.update(
+                """
+                INSERT INTO user_profiles (account_id, nickname, avatar_variant, taster_focus, preference_focus)
+                VALUES (?, ?, 1, ?, ?)
+                """,
+                accountId,
+                nickname,
+                tasterFocus,
+                preferenceFocus);
+        return accountId;
+    }
+
+    private static void like(UUID accountId, String... tagNames) {
+        preferences(accountId, "LIKE", tagNames);
+    }
+
+    private static void avoid(UUID accountId, String... tagNames) {
+        preferences(accountId, "AVOID", tagNames);
+    }
+
+    private static void preferences(UUID accountId, String type, String... tagNames) {
+        for (String name : tagNames) {
+            jdbc.update(
+                    """
+                    INSERT INTO user_preference_tags (account_id, tag_id, preference_type)
+                    SELECT ?, tag_id, ? FROM taste_tags WHERE tag_name = ?
+                    """,
+                    accountId,
+                    type,
+                    name);
+        }
+    }
+
+    private static void profileTags(UUID accountId, String... tagNames) {
+        for (String name : tagNames) {
+            jdbc.update(
+                    "INSERT INTO user_profile_tags (account_id, tag_id) SELECT ?, tag_id FROM taste_tags WHERE tag_name = ?",
+                    accountId,
+                    name);
+        }
+    }
+
     private static TasterModels.TasterView viewOf(List<TasterModels.TasterView> views, UUID taster) {
         return views.stream()
                 .filter(item -> item.tasterId().equals(taster.toString()))
                 .findFirst()
                 .orElseThrow();
-    }
-
-    @Test
-    void 내_취향이_없으면_일치율은_0이다() {
-        assertThat(TasterService.matchPercent(0, 0)).isZero();
-        assertThat(TasterService.matchPercent(3, 3)).isEqualTo(100);
-        assertThat(TasterService.matchPercent(1, 3)).isEqualTo(33);
     }
 }

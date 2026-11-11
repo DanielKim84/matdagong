@@ -11,7 +11,7 @@ import java.util.UUID;
 public final class NotificationModels {
     private NotificationModels() {}
 
-    /** 알림 종류입니다. DB의 notification_type 값과 같고, SYSTEM_NOTICE는 운영 공지용으로 남겨 둔 값입니다. */
+    /** 알림 종류입니다. DB의 notification_type 값과 같습니다. SYSTEM_NOTICE는 운영 안내(지금은 신고 누적으로 가려짐)입니다. */
     public enum NotificationType {
         PLACE_RECORD_CREATED,
         TASTER_NEW_PLACE,

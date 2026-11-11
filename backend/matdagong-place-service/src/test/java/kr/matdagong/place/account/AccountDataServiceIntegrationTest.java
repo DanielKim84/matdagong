@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.UUID;
 import kr.matdagong.common.test.EmbeddedPostgresTestSupport;
-import kr.matdagong.place.catalog.SamplePlaceCatalog;
 import kr.matdagong.place.report.PlaceReportModels.PlaceReportReason;
 import kr.matdagong.place.report.PlaceReportModels.PlaceReportRequest;
 import kr.matdagong.place.report.PlaceReportService;
@@ -19,7 +18,8 @@ class AccountDataServiceIntegrationTest extends EmbeddedPostgresTestSupport {
 
     @BeforeEach
     void setUp() {
-        truncate("restaurant_places, user_place_likes, user_place_dislikes, user_recent_places, place_reports");
+        truncate(
+                "restaurant_places, user_place_likes, user_place_dislikes, user_place_visits, user_recent_places, place_reports");
     }
 
     @Test
@@ -40,11 +40,19 @@ class AccountDataServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 placeId,
                 FIRST);
         jdbc.update(
-                "INSERT INTO user_place_likes (account_id, place_id) VALUES (?, 'p-001'), (?, 'p-001')", FIRST, SECOND);
-        jdbc.update("INSERT INTO user_place_dislikes (account_id, place_id) VALUES (?, 'p-002')", FIRST);
-        jdbc.update("INSERT INTO user_recent_places (account_id, place_id) VALUES (?, ?)", FIRST, placeId.toString());
-        new PlaceReportService(jdbc, new SamplePlaceCatalog())
-                .report(FIRST, "p-001", new PlaceReportRequest(PlaceReportReason.CLOSED, null));
+                "INSERT INTO user_place_likes (account_id, place_id) VALUES (?, ?), (?, ?)",
+                FIRST,
+                placeId,
+                SECOND,
+                placeId);
+        jdbc.update("INSERT INTO user_place_dislikes (account_id, place_id) VALUES (?, ?)", FIRST, placeId);
+        jdbc.update(
+                "INSERT INTO user_place_visits (account_id, place_id, visit_source) VALUES (?, ?, 'RECORD')",
+                FIRST,
+                placeId);
+        jdbc.update("INSERT INTO user_recent_places (account_id, place_id) VALUES (?, ?)", FIRST, placeId);
+        new PlaceReportService(jdbc)
+                .report(FIRST, placeId.toString(), new PlaceReportRequest(PlaceReportReason.CLOSED, null));
 
         new AccountDataService(jdbc).deleteAll(FIRST);
         new AccountDataService(jdbc).deleteAll(FIRST);
@@ -53,6 +61,7 @@ class AccountDataServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 "restaurant_records",
                 "user_place_likes",
                 "user_place_dislikes",
+                "user_place_visits",
                 "user_recent_places",
                 "place_reports")) {
             assertThat(jdbc.queryForObject(
@@ -62,7 +71,7 @@ class AccountDataServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         }
         assertThat(jdbc.queryForList(
                         "SELECT place_id FROM user_place_likes WHERE account_id = ?", String.class, SECOND))
-                .containsExactly("p-001");
+                .containsExactly(placeId.toString());
         assertThat(jdbc.queryForObject("SELECT count(*) FROM restaurant_places", Integer.class))
                 .isEqualTo(1);
     }

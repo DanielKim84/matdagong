@@ -59,10 +59,10 @@ public class KakaoPlaceVerifier {
      * @param submitted 요청 본문의 가게 정보입니다. verified는 false여야 합니다.
      */
     public PlaceInfo verify(String providerCode, String providerPlaceId, PlaceInfo submitted) {
-        boolean kakaoPlace = providerCode == null
+        boolean isKakaoPlace = providerCode == null
                 || providerCode.isBlank()
                 || PlaceIdentifiers.DEFAULT_PROVIDER.equalsIgnoreCase(providerCode.trim());
-        if (!kakaoPlace || restApiKey.isEmpty()) return submitted;
+        if (!isKakaoPlace || restApiKey.isEmpty()) return submitted;
         KeywordSearchResponse response;
         try {
             response = client.get()

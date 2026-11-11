@@ -22,10 +22,8 @@ class PlaceQueryServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     @BeforeEach
     void setUp() {
         truncate("restaurant_places");
-        SamplePlaceCatalog samples = new SamplePlaceCatalog();
         places = new PlaceQueryService(
                 jdbc,
-                samples,
                 new PlaceViewLoader(
                         jdbc, new MediaUrlSigner("integration-key", Duration.ofHours(6)), TestHiddenTasters.none()),
                 TestHiddenTasters.none());
@@ -52,7 +50,6 @@ class PlaceQueryServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     void 가려진_맛객의_기록은_다른_사람에게_빠지고_본인에게만_보인다() {
         PlaceQueryService hiddenAware = new PlaceQueryService(
                 jdbc,
-                new SamplePlaceCatalog(),
                 new PlaceViewLoader(
                         jdbc, new MediaUrlSigner("integration-key", Duration.ofHours(6)), TestHiddenTasters.of(HIDDEN)),
                 TestHiddenTasters.of(HIDDEN));
@@ -72,12 +69,8 @@ class PlaceQueryServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 .containsExactly(HIDDEN.toString()));
     }
 
-    /** 샘플 장소도 함께 검색되므로 DB 장소 이름만 골라 봅니다. */
     private List<String> names(String query) {
-        return places.findAll(query, VIEWER).stream()
-                .filter(place -> PlaceIdentifiers.uuidOrNull(place.id()) != null)
-                .map(PlaceView::name)
-                .toList();
+        return places.findAll(query, VIEWER).stream().map(PlaceView::name).toList();
     }
 
     private static void publicPlace(String name) {

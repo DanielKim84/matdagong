@@ -59,6 +59,6 @@ public class QuickDraftController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable String providerPlaceId,
             @RequestParam(defaultValue = PlaceIdentifiers.DEFAULT_PROVIDER) String providerCode) {
-        drafts.deleteDraft(AuthenticatedAccount.id(jwt), providerPlaceId, providerCode);
+        drafts.discardDraft(AuthenticatedAccount.id(jwt), providerCode, providerPlaceId);
     }
 }

@@ -8,9 +8,9 @@ import java.util.UUID;
 import kr.matdagong.common.test.EmbeddedPostgresTestSupport;
 import kr.matdagong.place.catalog.PlaceQueryService;
 import kr.matdagong.place.catalog.PlaceViewLoader;
-import kr.matdagong.place.catalog.SamplePlaceCatalog;
 import kr.matdagong.place.kakao.KakaoPlaceVerifier.PlaceInfo;
 import kr.matdagong.place.like.PlaceLikeService;
+import kr.matdagong.place.location.NearbyPlaceGuard;
 import kr.matdagong.place.media.MediaUrlSigner;
 import kr.matdagong.place.profile.TestHiddenTasters;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,12 +39,12 @@ class WishServiceIntegrationTest extends EmbeddedPostgresTestSupport {
 
     @BeforeEach
     void setUp() {
-        truncate("restaurant_places, user_place_likes, user_place_dislikes");
+        truncate("restaurant_places, user_place_likes, user_place_dislikes, user_place_visits");
         PlaceViewLoader loader = new PlaceViewLoader(
                 jdbc, new MediaUrlSigner("integration-key", Duration.ofHours(6)), TestHiddenTasters.none());
-        places = new PlaceQueryService(jdbc, new SamplePlaceCatalog(), loader, TestHiddenTasters.none());
-        likes = new PlaceLikeService(jdbc);
-        wishes = new WishService(jdbc, places);
+        places = new PlaceQueryService(jdbc, loader, TestHiddenTasters.none());
+        likes = new PlaceLikeService(jdbc, new NearbyPlaceGuard(jdbc));
+        wishes = new WishService(jdbc, places, likes);
     }
 
     @Test
@@ -54,7 +54,6 @@ class WishServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         assertThat(saved.name()).isEqualTo("제주 고기국수");
         assertThat(saved.tasters()).isEmpty();
         assertThat(likes.likedPlaceIds(ME)).containsExactly(saved.id());
-        assertThat(likes.visitedLikedPlaceIds(ME)).isEmpty();
         assertThat(places.findAll("제주 고기국수", ME)).extracting(view -> view.id()).contains(saved.id());
         assertThat(places.findAll("제주 고기국수", OTHER))
                 .extracting(view -> view.id())
@@ -62,15 +61,25 @@ class WishServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
-    void 같은_가게를_다시_저장해도_하나만_남고_다녀왔어요_하트는_그대로다() {
+    void 같은_가게를_다시_저장해도_하트는_하나만_남는다() {
         var saved = wishes.save(ME, verified(), JEJU);
-        jdbc.update("UPDATE user_place_likes SET save_origin = 'VISITED' WHERE account_id = ?", ME);
 
         var again = wishes.save(ME, verified(), JEJU);
 
         assertThat(again.id()).isEqualTo(saved.id());
         assertThat(likes.likedPlaceIds(ME)).containsExactly(saved.id());
-        assertThat(likes.visitedLikedPlaceIds(ME)).containsExactly(saved.id());
+    }
+
+    @Test
+    void 별로였던_가게를_가볼_곳으로_저장하면_별로였어요_표시를_지운다() {
+        var saved = wishes.save(ME, verified(), JEJU);
+        jdbc.update("DELETE FROM user_place_likes");
+        jdbc.update("INSERT INTO user_place_dislikes (account_id, place_id) VALUES (?, ?::uuid)", ME, saved.id());
+
+        wishes.save(ME, verified(), JEJU);
+
+        assertThat(likes.likedPlaceIds(ME)).containsExactly(saved.id());
+        assertThat(likes.dislikedPlaceIds(ME)).isEmpty();
     }
 
     @Test

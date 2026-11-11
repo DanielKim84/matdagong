@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 맛집 상세의 "잘못된 정보 알려주기" 제보를 받습니다. 확인·반영은 관리자 화면에서 합니다. */
+/** 맛집 상세의 "잘못된 정보 알려주기" 제보를 받습니다. 확인·반영(status)을 다루는 관리자 화면은 아직 없어 운영자가 DB에서 처리합니다. */
 @RestController
 @RequestMapping("/api/v1/places/{placeId}/reports")
 public class PlaceReportController {

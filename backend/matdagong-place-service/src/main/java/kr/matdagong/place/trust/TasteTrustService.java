@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 같은 맛집을 두고 나와 다른 계정이 남긴 반응을 모아 경험 신뢰의 재료를 셉니다.
- * 인정은 기록(공개·나만 보기)과 '입맛에 맞았어요' 하트(VISITED)이고, '가 보고 싶어요' 하트(LIKED)는 아직 가 보지 않은 곳이라 세지 않습니다.
+ * 인정은 기록(공개·나만 보기)이고, 가볼 곳 하트는 아직 가 보지 않은 곳이라 세지 않습니다. 엇갈림은 한쪽의 인정과 다른 쪽의 별로였던 곳이 겹친 맛집입니다.
  */
 @Service
 public class TasteTrustService {
@@ -29,30 +29,30 @@ public class TasteTrustService {
     public List<TasteTrustStats> statsFor(UUID accountId) {
         Map<UUID, Integer> tagMatches = tagMatchPercents(accountId);
         // 엇갈림은 두 방향(내가 인정하고 상대가 별로, 상대가 인정하고 내가 별로)을 모두 세고, 한쪽만 있는 계정도 FULL JOIN으로 남깁니다.
+        // 다른 계정의 인정은 내가 인정했거나 별로였다고 남긴 장소(my_places)에서만 찾아, 전체 기록을 훑지 않고 장소 색인으로 좁힙니다.
         List<TasteTrustStats> stats = new ArrayList<>(jdbc.query(
                 """
-                WITH approvals AS (
-                    SELECT account_id, place_id::text AS place_id FROM restaurant_records
-                    UNION
-                    SELECT account_id, place_id FROM user_place_likes WHERE save_origin = 'VISITED'
-                ),
-                my_approvals AS (SELECT place_id FROM approvals WHERE account_id = ?),
+                WITH my_approvals AS (SELECT DISTINCT place_id FROM restaurant_records WHERE account_id = ?),
                 my_dislikes AS (SELECT place_id FROM user_place_dislikes WHERE account_id = ?),
+                my_places AS (SELECT place_id FROM my_approvals UNION SELECT place_id FROM my_dislikes),
+                other_approvals AS (
+                    SELECT DISTINCT account_id, place_id FROM restaurant_records
+                    WHERE place_id IN (SELECT place_id FROM my_places) AND account_id <> ?
+                ),
                 agreed AS (
                     SELECT a.account_id, count(*) AS agreed_count
-                    FROM approvals a
+                    FROM other_approvals a
                     JOIN my_approvals m ON m.place_id = a.place_id
-                    WHERE a.account_id <> ?
                     GROUP BY a.account_id
                 ),
                 conflicts AS (
                     SELECT account_id, count(*) AS conflict_count
                     FROM (
-                        SELECT a.account_id FROM approvals a JOIN my_dislikes d ON d.place_id = a.place_id
+                        SELECT a.account_id FROM other_approvals a JOIN my_dislikes d ON d.place_id = a.place_id
                         UNION ALL
                         SELECT d.account_id FROM user_place_dislikes d JOIN my_approvals m ON m.place_id = d.place_id
+                        WHERE d.account_id <> ?
                     ) conflict
-                    WHERE account_id <> ?
                     GROUP BY account_id
                 )
                 SELECT COALESCE(g.account_id, c.account_id) AS account_id,

@@ -2,6 +2,7 @@ package kr.matdagong.community.report;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.util.UUID;
 
 /** 맛객 신고 API의 요청·응답 자료형입니다. */
 public final class ReportModels {
@@ -25,10 +26,9 @@ public final class ReportModels {
     public record ReportRequest(
             @NotNull(message = "신고 이유를 골라 주세요.") ReportReason reason,
             @Size(max = 500, message = "설명은 500자 이하로 입력해 주세요.") String memo,
-            @Size(max = 100) String placeId) {
+            UUID placeId) {
         public ReportRequest {
             memo = memo == null ? "" : memo.trim();
-            placeId = placeId == null || placeId.isBlank() ? null : placeId.trim();
         }
     }
 

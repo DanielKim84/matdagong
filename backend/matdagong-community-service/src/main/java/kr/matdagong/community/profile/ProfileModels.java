@@ -10,11 +10,13 @@ import kr.matdagong.common.tag.TasteTagGroup;
 
 /** 내 프로필 API의 요청·응답 자료형과 프로필 설정 값 목록입니다. */
 public final class ProfileModels {
-    /** 소개를 쓰지 않은 맛객에게 보여 주는 기본 소개 문구입니다. 새 프로필의 intro와 맛객 목록의 note에 씁니다. */
+    /** 소개를 쓰지 않은 맛객에게 보여 주는 기본 소개 문구입니다. 새 프로필의 intro에 씁니다. */
     public static final String DEFAULT_INTRO = "맛있는 장소를 찾아 기록하고 있어요.";
 
     private static final String NICKNAME_REQUIRED = "맛객 닉네임을 입력해 주세요.";
     private static final String NICKNAME_TOO_LONG = "닉네임은 12자 이하로 입력해 주세요.";
+    /** VISIT을 뺀 분류별 한도의 합(10+5+5+10+5+10+5)입니다. 애너테이션 값이라 상수로 둡니다. */
+    static final int MAX_NON_VISIT_TAGS = 50;
 
     private ProfileModels() {}
 
@@ -24,13 +26,25 @@ public final class ProfileModels {
         CAFE_DESSERT,
         BOTH;
 
-        /** 이 분야에서 고를 수 있는 메뉴 태그 그룹입니다. 상황(OCCASION) 태그는 어느 분야에서나 고릅니다. */
-        Set<TasteTagGroup> allowedGroups() {
+        /**
+         * 이 분야에서 고를 수 있는 태그 분류입니다. 여행·뷰·이럴 때(TRAVEL·MOOD·OCCASION)는 어느 분야에서나 고르고,
+         * 매장 이용(VISIT)은 피하고 싶은 조건에만 씁니다. 화면 기록하기의 FoodKind도 같은 묶음을 씁니다.
+         */
+        public Set<TasteTagGroup> allowedGroups() {
             return switch (this) {
-                case RESTAURANT -> EnumSet.of(TasteTagGroup.CUISINE, TasteTagGroup.TASTE, TasteTagGroup.OCCASION);
-                case CAFE_DESSERT -> EnumSet.of(TasteTagGroup.CAFE, TasteTagGroup.OCCASION);
-                case BOTH -> EnumSet.of(
-                        TasteTagGroup.CUISINE, TasteTagGroup.TASTE, TasteTagGroup.CAFE, TasteTagGroup.OCCASION);
+                case RESTAURANT -> EnumSet.of(
+                        TasteTagGroup.CUISINE,
+                        TasteTagGroup.TASTE,
+                        TasteTagGroup.TRAVEL,
+                        TasteTagGroup.MOOD,
+                        TasteTagGroup.OCCASION);
+                case CAFE_DESSERT -> EnumSet.of(
+                        TasteTagGroup.CAFE,
+                        TasteTagGroup.DESSERT,
+                        TasteTagGroup.TRAVEL,
+                        TasteTagGroup.MOOD,
+                        TasteTagGroup.OCCASION);
+                case BOTH -> EnumSet.complementOf(EnumSet.of(TasteTagGroup.VISIT));
             };
         }
     }
@@ -51,7 +65,11 @@ public final class ProfileModels {
     public record EnsureProfileRequest(
             @NotBlank(message = NICKNAME_REQUIRED) @Size(max = 12, message = NICKNAME_TOO_LONG) String nickname) {}
 
-    /** 관심 분야를 비우면 BOTH, 활동 방식을 비우면 LOCAL로 저장합니다. */
+    /**
+     * 프로필 수정 요청입니다. 관심 분야를 비우면 BOTH, 활동 방식을 비우면 LOCAL로 저장하고, 닉네임·소개·활동 지역의 앞뒤
+     * 공백은 검증 전에 지웁니다(소개·활동 지역이 공백뿐이면 비움). 태그 목록 길이는 형식만 막고, 분류별 한도
+     * (TasteTagGroup.maxSelections)와 사전에 있는 태그인지는 UserProfileService가 확인합니다.
+     */
     public record UpdateProfileRequest(
             @NotBlank(message = NICKNAME_REQUIRED) @Size(max = 12, message = NICKNAME_TOO_LONG) String nickname,
             @Size(max = 300, message = "소개는 300자 이하로 입력해 주세요.") String intro,
@@ -59,15 +77,27 @@ public final class ProfileModels {
             FoodFocus preferenceFocus,
             ActivityScope activityScope,
             @Size(max = 50, message = "활동 지역은 50자 이하로 입력해 주세요.") String activityRegion,
-            @Size(max = 30) List<@NotBlank @Size(max = 30) String> profileTags,
-            @Size(max = 30) List<@NotBlank @Size(max = 30) String> preferenceTags,
-            @Size(max = 5, message = "제외할 방문 조건은 최대 5개까지 선택할 수 있어요.")
-                    List<@NotBlank @Size(max = 30) String> excludedTags) {}
+            @Size(max = MAX_NON_VISIT_TAGS) List<@NotBlank @Size(max = 30) String> profileTags,
+            @Size(max = MAX_NON_VISIT_TAGS) List<@NotBlank @Size(max = 30) String> preferenceTags,
+            @Size(max = 5, message = "피하고 싶은 조건은 최대 5개까지 선택할 수 있어요.")
+                    List<@NotBlank @Size(max = 30) String> excludedTags) {
+        public UpdateProfileRequest {
+            nickname = nickname == null ? null : nickname.trim();
+            intro = blankToNull(intro);
+            tasterFocus = tasterFocus == null ? FoodFocus.BOTH : tasterFocus;
+            preferenceFocus = preferenceFocus == null ? FoodFocus.BOTH : preferenceFocus;
+            activityScope = activityScope == null ? ActivityScope.LOCAL : activityScope;
+            activityRegion = blankToNull(activityRegion);
+        }
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
 
     /**
      * 내 프로필 응답입니다.
      *
-     * @param profileCoverUrl 단일 배경 주소를 읽는 화면을 위한 대표 배경(갤러리의 첫 사진)입니다.
      * @param hiddenByReports 신고가 쌓여 자동으로 가려졌으면 true. 화면은 안내를 띄우고, 장소 서비스는 새 기록을 막습니다.
      */
     public record ProfileView(
@@ -75,7 +105,6 @@ public final class ProfileModels {
             String nickname,
             String profileImgUrl,
             int avatarVariant,
-            String profileCoverUrl,
             List<String> profileCoverUrls,
             FoodFocus tasterFocus,
             FoodFocus preferenceFocus,
