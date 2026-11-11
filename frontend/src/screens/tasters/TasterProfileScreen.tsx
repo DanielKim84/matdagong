@@ -3,6 +3,8 @@ import { useAppData } from "../../app/AppData";
 import { go, useRoute } from "../../app/navigation";
 import Icon from "../../components/Icon";
 import { EmptyState, Segmented, TopBar } from "../../components/ui";
+import TasterAvatar from "../../components/TasterAvatar";
+import { useScrolledPast } from "../../hooks/useScrolledPast";
 import type { Taster } from "../../models/place";
 import { formatNumber, formatRelativeTime } from "../../utils/format";
 import ProfileActionBar from "./ProfileActionBar";
@@ -21,8 +23,6 @@ import {
   tagsOf,
   tasterFromProfile,
 } from "./tasterData";
-import TasterAvatar from "../../components/TasterAvatar";
-import { useScrolledPast } from "../../hooks/useScrolledPast";
 
 type Tab = "map" | "list" | "taste";
 
@@ -32,7 +32,7 @@ const PROFILE_TABS: { value: Tab; label: string }[] = [
   { value: "taste", label: "취향" },
 ];
 
-/** 맛객 프로필(#profile/<accountId>): 취향 일치, 통계, 맛집 지도와 기록 목록. */
+/** 맛객 프로필(#profile/<accountId>): 소개·통계, 나와의 신뢰·취향 비교, 맛집 지도·기록 목록·취향 탭, 구독 버튼. */
 export default function TasterProfileScreen() {
   const app = useAppData();
   const route = useRoute();
@@ -52,7 +52,7 @@ export default function TasterProfileScreen() {
     return (
       <main className="r-screen">
         <TopBar title="맛객 프로필" fallback="tasters" />
-        {app.loading ? (
+        {app.isLoading ? (
           <EmptyState tone="loading" title="맛객 정보를 불러오고 있어요…" />
         ) : (
           <EmptyState

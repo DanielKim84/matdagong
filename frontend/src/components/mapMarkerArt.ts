@@ -17,15 +17,14 @@ export const LOCK_BADGE_SVG =
 export const TRUST_BADGE_SVG =
   '<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z"/></svg>';
 
-/** 기호 마커(내 지도)의 종류입니다. 가볼 곳(하트), 다녀온 곳(체크), 검색해 고른 가게(점)입니다. */
-export type SymbolMarkerKind = "liked" | "visited" | "search";
+/** 기호 마커(내 지도)의 종류입니다. 가볼 곳(하트), 다녀온 곳(체크)입니다. */
+export type SymbolMarkerKind = "liked" | "visited";
 
-/** 기호 마커 안쪽 아이콘입니다. 하트와 점은 채우고, 체크는 선으로 그립니다(app.css의 마커 규칙). */
+/** 기호 마커 안쪽 아이콘입니다. 하트는 채우고, 체크는 선으로 그립니다(app.css의 마커 규칙). */
 const SYMBOL_GLYPHS: Record<SymbolMarkerKind, string> = {
   liked:
     '<svg viewBox="0 0 24 24"><path d="M20.8 8.8c0 4.1-8.8 10-8.8 10s-8.8-5.9-8.8-10A4.8 4.8 0 0 1 12 6.2a4.8 4.8 0 0 1 8.8 2.6Z"/></svg>',
   visited: '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
-  search: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg>',
 };
 
 /** 기호 마커 버튼 안에 넣을 HTML입니다. 지도와 마커 안내 시트가 같이 씁니다. */

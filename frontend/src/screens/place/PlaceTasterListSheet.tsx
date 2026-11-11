@@ -3,9 +3,9 @@ import { useAppData } from "../../app/AppData";
 import Icon from "../../components/Icon";
 import Sheet from "../../components/Sheet";
 import { Segmented } from "../../components/ui";
+import TasterAvatar from "../../components/TasterAvatar";
 import { compareByTrust } from "../../models/trust";
 import { formatMonthDay, parseTime } from "../../utils/format";
-import TasterAvatar from "../../components/TasterAvatar";
 import { recordBadge, recordMenus, type PlaceRecord } from "./placeRecords";
 
 type SortOrder = "recommended" | "match" | "recent";

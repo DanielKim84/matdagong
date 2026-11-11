@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Icon from "../../components/Icon";
+import TasterAvatar from "../../components/TasterAvatar";
 import { useModalLock } from "../../hooks/useModalLock";
 import { useSwipe } from "../../hooks/useSwipe";
 import { formatWon } from "../../utils/format";
 import { wrapIndex } from "../../utils/pagination";
-import TasterAvatar from "../../components/TasterAvatar";
 import type { PlacePhoto } from "./placeRecords";
 
 /** 사진을 넘기는 스와이프 거리(px). 전체 화면이라 기본값보다 조금 짧게 둡니다. */

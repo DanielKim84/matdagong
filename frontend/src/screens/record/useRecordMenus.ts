@@ -20,9 +20,7 @@ export function useRecordMenus({
   const [menus, setMenus] = useState<MenuRow[]>(() => {
     if (!draft) return menuRowsFromRecord(editRecord);
     // 복원한 메뉴 사진도 새로 받은 기록의 서명 주소로 바꿉니다.
-    const currentMenuPhotos = (editRecord?.menus ?? []).flatMap((menu) =>
-      typeof menu !== "string" && menu.photo ? [menu.photo] : [],
-    );
+    const currentMenuPhotos = (editRecord?.menus ?? []).flatMap((menu) => (menu.photo ? [menu.photo] : []));
     return draft.menus.map((menu) =>
       menu.photo ? { ...menu, photo: refreshMediaUrl(menu.photo, currentMenuPhotos) } : menu,
     );

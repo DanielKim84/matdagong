@@ -113,7 +113,7 @@ export async function restartSignIn(): Promise<void> {
 export async function logout(): Promise<void> {
   // 공통 서버 세션과 이 기기의 맛다공 로그인 기록을 끊어, 다음 방문에서 이전 SSO 세션이 재사용되지 않고
   // 다른 기기에서 로그인할 때 이 기기를 로그아웃할지 묻지 않게 합니다.
-  await clearServerSession({ endDeviceLogin: true });
+  await clearServerSession({ shouldEndDeviceLogin: true });
   clearStoredAccessToken();
   clearPendingSignIn();
   // 로그아웃은 다른 계정으로 다시 들어올 수 있으므로 돌아갈 화면과 작성 중 입력을 남기지 않습니다.

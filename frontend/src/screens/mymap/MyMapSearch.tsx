@@ -3,6 +3,7 @@ import Icon from "../../components/Icon";
 import { searchKakaoPlaces } from "../../services/kakao";
 import { categoryLabel } from "../../utils/format";
 import { errorMessage } from "../../utils/errorMessage";
+import { kakaoPlaceAddress } from "../../utils/geo";
 
 const SEARCH_MIN_LENGTH = 2;
 
@@ -82,9 +83,7 @@ export default function MyMapSearch({ onSelect }: { onSelect: (result: KakaoPlac
                   <button type="button" onClick={() => select(result)}>
                     <b>{result.place_name}</b>
                     <small>
-                      {[categoryLabel(result.category_name), result.road_address_name || result.address_name]
-                        .filter(Boolean)
-                        .join(" · ")}
+                      {[categoryLabel(result.category_name), kakaoPlaceAddress(result)].filter(Boolean).join(" · ")}
                     </small>
                   </button>
                 </li>

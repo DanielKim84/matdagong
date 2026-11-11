@@ -1,25 +1,12 @@
 import { useState } from "react";
 import Icon from "../../components/Icon";
+import SearchHighlight from "../../components/SearchHighlight";
 import { EmptyState } from "../../components/ui";
+import { VISIT_RADIUS_LABEL } from "../../models/place";
 import { formatDistance, shortCategory } from "../../utils/format";
-import { distanceMeters, kakaoPlaceCoordinates } from "../../utils/geo";
+import { distanceMeters, kakaoPlaceAddress, kakaoPlaceCoordinates } from "../../utils/geo";
 import RecordStepTitle from "./RecordStepTitle";
 import type { RecordForm } from "./useRecordForm";
-import { VISIT_RADIUS_LABEL } from "../../models/place";
-
-/** 검색어와 겹치는 부분을 강조합니다. */
-function Highlight({ text, query }: { text: string; query: string }) {
-  const keyword = query.trim();
-  const at = keyword ? text.toLowerCase().indexOf(keyword.toLowerCase()) : -1;
-  if (at < 0) return <>{text}</>;
-  return (
-    <>
-      {text.slice(0, at)}
-      <mark>{text.slice(at, at + keyword.length)}</mark>
-      {text.slice(at + keyword.length)}
-    </>
-  );
-}
 
 /** 1단계 · 장소 고르기 */
 export default function PlaceStep({ form }: { form: RecordForm }) {
@@ -35,12 +22,6 @@ export default function PlaceStep({ form }: { form: RecordForm }) {
         다녀오셨나요?
       </RecordStepTitle>
 
-      {form.shouldSearchConversionPlace && form.conversionSearchName && !selectedPlace && (
-        <p className="r-record-hint">
-          하트로 저장한 ‘{form.conversionSearchName}’을(를) 지도에서 찾아 골라 주세요. 방문 기록으로 바뀌어요.
-        </p>
-      )}
-
       {selectedPlace ? (
         <div className="r-card r-record-picked">
           <span className="r-badge-icon">
@@ -54,7 +35,7 @@ export default function PlaceStep({ form }: { form: RecordForm }) {
                 ? `이미 ${form.existingVenue.recordCount}개의 맛객 기록이 있는 장소예요.`
                 : "카카오 지도에서 확인한 장소예요."}
             </small>
-            {(form.convertFromPlaceId || form.selectedLikedPlace) && (
+            {form.selectedLikedPlace && (
               <span className="r-tag r-tag--amber">직접 방문 확인 · 내 맛집 하트가 방문 기록으로 바뀌어요</span>
             )}
           </div>
@@ -95,19 +76,19 @@ export default function PlaceStep({ form }: { form: RecordForm }) {
                   type="button"
                   className="r-row r-record-result"
                   key={result.id}
-                  onClick={() => form.choosePlace(result, form.shouldSearchConversionPlace, !!form.convertFromPlaceId)}
+                  onClick={() => form.choosePlace(result)}
                 >
                   <span className={`r-badge-icon ${resultIndex === 0 ? "" : "is-quiet"}`}>
                     <Icon name="pin" />
                   </span>
                   <span className="r-row__copy">
                     <b>
-                      <Highlight text={result.place_name} query={query} />
+                      <SearchHighlight text={result.place_name} query={query} />
                     </b>
                     <small>
                       {[
                         shortCategory(result.category_name),
-                        result.road_address_name || result.address_name,
+                        kakaoPlaceAddress(result),
                         location ? formatDistance(distanceMeters(location, kakaoPlaceCoordinates(result))) : "",
                       ]
                         .filter(Boolean)

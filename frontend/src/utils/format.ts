@@ -11,6 +11,11 @@ export function parseTime(value?: string | number | Date | null): number | null 
   return Number.isNaN(time) ? null : time;
 }
 
+/** 기기 시간대로 그날 0시의 시각(ms)입니다. 오늘·이번 주처럼 날짜로 묶을 때 씁니다. */
+export function startOfDay(now = new Date()): number {
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+}
+
 /** "3시간 전", "어제", "10월 26일"처럼 기록 시각을 짧게 보여 줍니다. 값이 없거나 읽을 수 없으면 빈 문자열입니다. */
 export function formatRelativeTime(value?: string | null): string {
   const time = parseTime(value);

@@ -17,7 +17,7 @@ export default function RegionPicker({
   value: string;
   options: string[];
   placeholder: string;
-  isDisabled?: boolean;
+  isDisabled: boolean;
   onChange: (value: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);

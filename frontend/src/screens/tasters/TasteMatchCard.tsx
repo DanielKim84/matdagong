@@ -5,7 +5,7 @@ import { isTrustedTaster, TRUST_LEVEL_LABELS } from "../../models/trust";
 
 /** 신뢰 등급마다 퍼센트 아래에 붙이는 한 줄 설명입니다. */
 const TRUST_HINTS = {
-  LEARNING: "같은 맛집을 다녀온 경험이 10곳 넘게 쌓이면 믿고 가는 맛객인지 알 수 있어요.",
+  LEARNING: "같은 맛집을 다녀온 경험이 10곳 이상 쌓이면 믿고 가는 맛객인지 알 수 있어요.",
   NORMAL: "같은 맛집을 다녀온 경험과 고른 태그, 취향으로 계산했어요.",
   TRUSTED: "이 맛객이 기록한 곳이라면 믿고 가도 좋아요.",
   DIFFERENT: "같은 맛집에서 입맛이 엇갈린 적이 많았어요.",

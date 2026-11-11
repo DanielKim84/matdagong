@@ -7,11 +7,11 @@
 export type PolicyKey = "terms" | "privacy";
 
 /** 문단 하나입니다. 문자열은 보통 문단, 문자열 배열은 점 목록으로 그립니다. */
-export type PolicyBlock = string | string[];
+type PolicyBlock = string | string[];
 
-export type PolicySection = { title: string; blocks: PolicyBlock[] };
+type PolicySection = { title: string; blocks: PolicyBlock[] };
 
-export type PolicyDocument = {
+type PolicyDocument = {
   key: PolicyKey;
   title: string;
   /** 본문 위 한 줄 안내 */

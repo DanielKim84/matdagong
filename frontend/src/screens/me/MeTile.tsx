@@ -1,6 +1,7 @@
+import type { ReactNode } from "react";
 import Icon, { type IconName } from "../../components/Icon";
 
-/** 나 탭에서 다른 화면으로 가는 벤토 타일입니다. */
+/** 나 탭에서 다른 화면으로 가는 벤토 타일입니다. value에 숫자 두 개를 나란히 넣을 때는 MeTilePair를 씁니다. */
 export default function MeTile({
   icon,
   value,
@@ -10,7 +11,7 @@ export default function MeTile({
   caption,
 }: {
   icon: IconName;
-  value: string;
+  value: ReactNode;
   label: string;
   onClick: () => void;
   tone?: "default" | "amber";
@@ -25,5 +26,19 @@ export default function MeTile({
       <span className="r-me-tile__label">{label}</span>
       {caption && <small className="r-me-tile__caption">{caption}</small>}
     </button>
+  );
+}
+
+/** 타일 하나에 숫자 두 개(예: 구독 중 · 나를 구독)를 이름과 함께 나란히 보여 줍니다. */
+export function MeTilePair({ items }: { items: { count: number; label: string }[] }) {
+  return (
+    <span className="r-me-tile__pair">
+      {items.map((item) => (
+        <span key={item.label}>
+          <b>{item.count}</b>
+          <small>{item.label}</small>
+        </span>
+      ))}
+    </span>
   );
 }

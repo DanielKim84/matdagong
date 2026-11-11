@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
+import GroupIcon, { tagGroupLook } from "../components/GroupIcon";
 import Icon from "../components/Icon";
 import Sheet from "../components/Sheet";
 import type { TagRequest, TagRequestInput } from "../models/community";
-import { TASTE_TAG_GROUP_LABELS } from "../models/tasteTags";
+import { TASTE_TAG_GROUP_LABELS, TASTE_TAG_GROUPS, type TasteTagGroup } from "../models/tasteTags";
 import { errorMessage } from "../utils/errorMessage";
 import { formatFullDate } from "../utils/format";
 
@@ -16,14 +17,7 @@ const STATUS_LABELS: Record<TagRequest["status"], string> = {
   APPROVED: "반영 완료",
   REJECTED: "미반영",
 };
-// 제안 화면에서는 VISIT 묶음을 짧게 "제외 조건"으로 부릅니다.
-const REQUEST_CATEGORY_OPTIONS: readonly (readonly [TagRequestInput["tagGroup"], string])[] = [
-  ["CUISINE", TASTE_TAG_GROUP_LABELS.CUISINE],
-  ["TASTE", TASTE_TAG_GROUP_LABELS.TASTE],
-  ["CAFE", TASTE_TAG_GROUP_LABELS.CAFE],
-  ["OCCASION", TASTE_TAG_GROUP_LABELS.OCCASION],
-  ["VISIT", "제외 조건"],
-];
+const ALL_GROUPS = TASTE_TAG_GROUPS.map((group) => group.id);
 
 /** 취향 태그(프로필 편집)나 매장 이용 정보(맛집 기록) 추가를 제안하고 내 제안 내역을 보는 시트입니다. */
 export default function TasteTagRequestSheet({
@@ -31,16 +25,17 @@ export default function TasteTagRequestSheet({
   onRequest,
   onLoad,
   requestType = "TAG",
+  groups = ALL_GROUPS,
 }: {
   onClose: () => void;
   onRequest: (input: TagRequestInput) => Promise<TagRequest>;
   onLoad: () => Promise<TagRequest[]>;
   requestType?: "TAG" | "PLACE_INFO";
+  /** 태그 제안에서 고를 수 있는 분류. 기록하기는 지금 장소 분야의 분류만 넘깁니다. */
+  groups?: readonly TasteTagGroup[];
 }) {
   const [name, setName] = useState("");
-  const [tagGroup, setTagGroup] = useState<TagRequestInput["tagGroup"]>(
-    requestType === "PLACE_INFO" ? "VISIT" : "TASTE",
-  );
+  const [tagGroup, setTagGroup] = useState<TasteTagGroup>(requestType === "PLACE_INFO" ? "VISIT" : groups[0]);
   const [reason, setReason] = useState("");
   const [requests, setRequests] = useState<TagRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -148,7 +143,7 @@ export default function TasteTagRequestSheet({
               maxLength={MAX_NAME_LENGTH}
               required
               autoComplete="off"
-              placeholder={requestType === "TAG" ? "예: 글루텐 프리, 반려동물 동반" : "예: 유아용 의자 있음, 포장 가능"}
+              placeholder={requestType === "TAG" ? "예: 글루텐 프리, 수제 맥주" : "예: 콘센트 있음, 배달 가능"}
               onChange={(event) => setName(event.target.value)}
               disabled={isSending}
             />
@@ -156,16 +151,19 @@ export default function TasteTagRequestSheet({
           {requestType === "TAG" && (
             <fieldset className="tag-request-category" disabled={isSending}>
               <legend>태그 분류</legend>
-              {REQUEST_CATEGORY_OPTIONS.map(([value, label]) => (
-                <label key={value}>
+              {groups.map((group) => (
+                <label key={group}>
                   <input
                     className="visually-hidden"
                     type="radio"
                     name="request-category"
-                    checked={tagGroup === value}
-                    onChange={() => setTagGroup(value)}
+                    checked={tagGroup === group}
+                    onChange={() => setTagGroup(group)}
                   />
-                  <span>{label}</span>
+                  <span>
+                    <GroupIcon look={tagGroupLook(group)} />
+                    {TASTE_TAG_GROUP_LABELS[group]}
+                  </span>
                 </label>
               ))}
             </fieldset>

@@ -24,28 +24,28 @@ const NotificationContext = createContext<NotificationContextValue | null>(null)
 /** 확인과 안내를 한 가지 다이얼로그 디자인으로 제공해 브라우저 기본 팝업을 피합니다. */
 export function NotificationDialogProvider({ children }: { children: ReactNode }) {
   const [request, setRequest] = useState<DialogRequest | null>(null);
-  const resolveRequest = useRef<((accepted: boolean) => void) | null>(null);
+  const resolveRequest = useRef<((isAccepted: boolean) => void) | null>(null);
   const activeMode = useRef<DialogMode | null>(null);
   const queuedAlerts = useRef<QueuedAlert[]>([]);
   const cancelButton = useRef<HTMLButtonElement>(null);
   const acceptButton = useRef<HTMLButtonElement>(null);
   usePageScrollLock(!!request);
 
-  const open = useCallback((options: DialogOptions, mode: DialogMode, resolve: (accepted: boolean) => void) => {
+  const open = useCallback((options: DialogOptions, mode: DialogMode, resolve: (isAccepted: boolean) => void) => {
     resolveRequest.current = resolve;
     activeMode.current = mode;
     setRequest({ ...options, mode });
   }, []);
 
   const finish = useCallback(
-    (accepted: boolean) => {
+    (isAccepted: boolean) => {
       const resolve = resolveRequest.current;
       resolveRequest.current = null;
       activeMode.current = null;
       const next = queuedAlerts.current.shift();
       if (next) open(next.options, "alert", () => next.resolve());
       else setRequest(null);
-      resolve?.(accepted);
+      resolve?.(isAccepted);
     },
     [open],
   );

@@ -11,7 +11,7 @@ const IS_AI_PICK_ENABLED = import.meta.env.VITE_FEATURE_AI_PICK === "true";
 
 /**
  * 지도 위에 떠 있는 검색창·알림 버튼·필터 칩과 불러오기 상태 줄입니다.
- * 칩 줄에는 필터 버튼과 "누구의 기록"만 두고, 음식 종류·이럴 때·매장 정보는 필터 시트에서 고릅니다.
+ * 칩 줄에는 필터 버튼과 "누구의 기록"만 두고, 음식 종류·취향 태그(여행·드라이브·뷰·분위기·이럴 때)·매장 정보는 필터 시트에서 고릅니다.
  */
 export default function DiscoverSearchPanel({
   ref,
@@ -105,9 +105,9 @@ export default function DiscoverSearchPanel({
           </button>
         </p>
       ) : (
-        (app.loading || app.query) && (
+        (app.isLoading || app.query) && (
           <p className="r-discover-status" role="status">
-            {app.loading ? "주변 맛집을 불러오고 있어요…" : `‘${app.query}’ 검색 결과 ${resultCount}곳`}
+            {app.isLoading ? "주변 맛집을 불러오고 있어요…" : `‘${app.query}’ 검색 결과 ${resultCount}곳`}
           </p>
         )
       )}

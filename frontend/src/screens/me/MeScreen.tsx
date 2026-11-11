@@ -2,10 +2,10 @@ import { useAppData, type AccountRole } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
-import { SectionHead, TopBar } from "../../components/ui";
+import { TopBar } from "../../components/ui";
 import { formatNumber } from "../../utils/format";
 import MeDiaryCard from "./MeDiaryCard";
-import MeTile from "./MeTile";
+import MeTile, { MeTilePair } from "./MeTile";
 import { useDiaryEntries } from "./useDiaryEntries";
 import { useQuickPlaceDrafts } from "./useQuickPlaceDrafts";
 
@@ -16,7 +16,7 @@ const ROLE_LABEL: Record<AccountRole, string> = {
   USER: "사용자",
 };
 
-/** 나 탭(#my): 프로필 머리, 다이어리 카드, 한눈에 보는 타일, 맛객 활동 요약. */
+/** 나 탭(#my): 프로필 머리, 다이어리 카드, 맛객 활동 요약, 바로 가기 타일, 취향 맛객 추천 링크. */
 export default function MeScreen() {
   const app = useAppData();
   const quickDrafts = useQuickPlaceDrafts();
@@ -25,13 +25,18 @@ export default function MeScreen() {
   const publicCount = entries.filter((entry) => entry.isPublic).length;
   const paidCount = app.incomingSubscriptions.filter((item) => item.subscriptionType === "PAID").length;
   const freeCount = app.incomingSubscriptions.length - paidCount;
-  const savedCount = new Set(app.likedPlaceIds).size;
+  // 내 기록·다녀온 곳·하트의 장소 ID 수입니다(겹치면 한 번). 모음 화면과 달리 별로였던 곳은 세지 않습니다.
+  const myPlaceCount = new Set([
+    ...app.myRecords.map((place) => place.id),
+    ...app.visitedPlaceIds,
+    ...app.likedPlaceIds,
+  ]).size;
 
   return (
     <main className="r-screen r-me">
       <TopBar
         title="나"
-        root
+        isRoot
         right={
           <button type="button" className="r-icon-button" onClick={() => go("settings")} aria-label="설정">
             <Icon name="settings" />
@@ -44,36 +49,56 @@ export default function MeScreen() {
           다른 맛객에게 내 프로필과 기록이 보이지 않고, 새 기록을 남길 수 없어요. 운영팀이 확인한 뒤 다시 알려 드릴게요.
         </p>
       )}
-      <section className="r-me-profile" aria-label="내 프로필">
-        <button
-          type="button"
-          className="r-me-profile__avatar"
-          onClick={() => go("profile-edit")}
-          aria-label="프로필 편집"
-        >
-          <Avatar
-            src={app.myProfile?.profileImgUrl ?? null}
-            name={app.nickname}
-            variant={app.myProfile?.avatarVariant ?? 1}
-          />
-        </button>
-        <div className="r-me-profile__copy">
-          <div className="r-me-profile__name">
-            <h2 className="r-display">{app.nickname}</h2>
-            <span className={`r-me-role r-me-role--${app.accountRole.toLowerCase()}`}>
-              {ROLE_LABEL[app.accountRole]}
+      {/*
+        내 프로필 카드: 사진(올린 사진, 없으면 고른 기본 캐릭터)을 누르면 사진을 바꾸는 프로필 편집으로 갑니다(카메라 표시).
+        아래 두 버튼은 고치기(프로필 편집)와, 다른 사람에게 보이는 내 맛객 프로필 보기입니다.
+      */}
+      <section className="r-card r-me-profile" aria-label="내 프로필">
+        <div className="r-me-profile__main">
+          <button
+            type="button"
+            className="r-me-profile__avatar"
+            onClick={() => go("profile-edit")}
+            aria-label="프로필 사진 바꾸기"
+          >
+            <Avatar
+              src={app.myProfile?.profileImgUrl ?? null}
+              name={app.nickname}
+              variant={app.myProfile?.avatarVariant ?? 1}
+            />
+            <span className="r-me-profile__camera" aria-hidden="true">
+              <Icon name="camera" />
             </span>
+          </button>
+          <div className="r-me-profile__copy">
+            <div className="r-me-profile__name">
+              <h2 className="r-display">{app.nickname}</h2>
+              <span className={`r-me-role r-me-role--${app.accountRole.toLowerCase()}`}>
+                {ROLE_LABEL[app.accountRole]}
+              </span>
+            </div>
+            <small>
+              {app.myProfile
+                ? "다른 맛객에게 보이는 내 사진과 이름이에요"
+                : "사진과 이름을 정하고 맛객 활동을 시작해 보세요"}
+            </small>
           </div>
-          <div className="r-me-profile__links">
-            {app.myProfile && (
-              <button type="button" onClick={() => go("profile", app.myProfile?.accountId)}>
-                내 맛객 프로필 보기
-              </button>
-            )}
-            <button type="button" onClick={() => go("profile-edit")}>
-              프로필 편집
+        </div>
+        <div className="r-me-profile__actions">
+          <button type="button" className="r-button r-button--pill r-button--soft" onClick={() => go("profile-edit")}>
+            <Icon name="pencil" />
+            프로필 편집
+          </button>
+          {app.myProfile && (
+            <button
+              type="button"
+              className="r-button r-button--pill r-button--secondary"
+              onClick={() => go("profile", app.myProfile?.accountId)}
+            >
+              <Icon name="user" />
+              공개 프로필 보기
             </button>
-          </div>
+          )}
         </div>
       </section>
 
@@ -81,19 +106,22 @@ export default function MeScreen() {
         <MeDiaryCard entries={entries} />
 
         {/* 내가 관리하는 기록(공개·나만 보기)과 구독자가 가장 중요해 다이어리 바로 아래에 둡니다. */}
-        <section className="r-me-section">
-          <SectionHead title="맛객 활동" />
-          <div className="r-card r-me-activity">
-            {/* 숫자를 누르면 공개 설정·구독자 화면으로 바로 갑니다. */}
+        <section className="r-card r-me-feature" aria-label="맛객 활동">
+          <span className="r-me-feature__head">
+            <small lang="en">TASTER ACTIVITY</small>
+            <b className="r-display">맛객 활동</b>
+          </span>
+          <div className="r-me-activity">
+            {/* 숫자를 누르면 내 맛집 모음의 공개·나만 보기 칩(여기서 공개 범위도 바꿈)과 구독자 화면으로 바로 갑니다. */}
             <div className="r-me-stats">
-              <button type="button" onClick={() => go("my-records", "public")}>
+              <button type="button" onClick={() => go("saved", "mine")}>
                 <span>공개 기록</span>
                 <b>
                   {publicCount}
                   <small>곳</small>
                 </b>
               </button>
-              <button type="button" onClick={() => go("my-records", "private")}>
+              <button type="button" onClick={() => go("saved", "private")}>
                 <span>나만 보기</span>
                 <b>
                   {entries.length - publicCount}
@@ -116,25 +144,30 @@ export default function MeScreen() {
                   : "기록을 공개하면 다른 사람들이 나를 맛객으로 구독할 수 있어요."}
             </p>
           </div>
-          <button type="button" className="r-card r-me-link" onClick={() => go("my-records", "private")}>
-            <span className="r-badge-icon">
-              <Icon name="lock" />
-            </span>
-            <span className="r-row__copy">
-              <b>내 기록 공개 설정</b>
-              <small>공개·나만 보기를 한 번에 골라 바꿔요</small>
-            </span>
-            <Icon name="chevron" />
-          </button>
         </section>
 
+        {/* 두 칸씩 짝지어 둡니다: 내 맛집(모음·최근 본 곳) / 구독·포인트 / 빠른 기록·별로였던 곳. */}
         <div className="r-me-tiles">
           <MeTile
             icon="heart"
-            value={`${savedCount}`}
-            label="저장한 맛집"
-            caption="하트를 누른 곳"
+            value={`${myPlaceCount}`}
+            label="내 맛집 모음"
+            caption="등록·다녀온·가볼 곳"
             onClick={() => go("saved")}
+          />
+          <MeTile icon="clock" value={`${app.recentPlaces.length}`} label="최근 본 맛집" onClick={() => go("recent")} />
+          <MeTile
+            icon="bookmark"
+            value={
+              <MeTilePair
+                items={[
+                  { count: app.subscriptionIds.length, label: "구독 중" },
+                  { count: app.incomingSubscriptions.length, label: "나를 구독" },
+                ]}
+              />
+            }
+            label="구독 관리"
+            onClick={() => go("subscriptions")}
           />
           <MeTile
             icon="star"
@@ -144,24 +177,19 @@ export default function MeScreen() {
             onClick={() => go("wallet")}
           />
           <MeTile
-            icon="user"
-            value={`${app.incomingSubscriptions.length}`}
-            label="나를 구독하는 맛객"
-            onClick={() => go("subscriptions", "incoming")}
-          />
-          <MeTile icon="clock" value={`${app.recentPlaces.length}`} label="최근 본 맛집" onClick={() => go("recent")} />
-          <MeTile
-            icon="bookmark"
-            value={`${app.subscriptionIds.length}`}
-            label="내가 구독한 맛객"
-            onClick={() => go("subscriptions")}
-          />
-          <MeTile
             icon="pin"
             value={quickDrafts.isLoaded ? `${quickDrafts.drafts.length}` : "—"}
             label="빠른 장소 기록"
-            caption={quickDrafts.isLoading && !quickDrafts.isLoaded ? "불러오는 중" : undefined}
+            caption={quickDrafts.isLoading && !quickDrafts.isLoaded ? "불러오는 중" : "이어서 기록할 곳"}
             onClick={() => go("drafts")}
+          />
+          {/* 하트를 풀며 별로였어요를 고른 곳은 지도에서 빠지므로, 잘못 고른 곳을 되돌릴 수 있게 둡니다. */}
+          <MeTile
+            icon="pin-off"
+            value={`${app.dislikedPlaceIds.length}`}
+            label="별로였던 곳"
+            caption="지도에서 뺀 곳"
+            onClick={() => go("disliked")}
           />
         </div>
 

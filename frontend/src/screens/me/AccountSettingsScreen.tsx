@@ -31,7 +31,7 @@ export default function AccountSettingsScreen() {
   const notificationSettings = useNotificationSettings();
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
-  function notifyPending(title: string, message = "기능이 열리면 이곳에서 바로 설정할 수 있어요.") {
+  function notifyPending(title: string, message: string) {
     app.actions.notify({ kind: "info", title, message });
   }
 

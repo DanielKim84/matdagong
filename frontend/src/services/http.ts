@@ -13,6 +13,7 @@ const EXPIRY_SKEW_MS = 10_000;
 const SESSION_EXPIRED_MESSAGE = "로그인 시간이 지나 다시 로그인하고 있어요.";
 const NETWORK_ERROR_MESSAGE = "서버에 연결하지 못했어요. 네트워크 상태를 확인해 주세요.";
 
+/** 서버 오류 응답입니다. status 0은 서버에 닿지 못한 경우(네트워크 오류)입니다. */
 export class ApiError extends Error {
   readonly status: number;
 

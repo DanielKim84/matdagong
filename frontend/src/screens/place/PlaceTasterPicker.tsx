@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useAppData } from "../../app/AppData";
 import Icon from "../../components/Icon";
+import TasterAvatar from "../../components/TasterAvatar";
 import { isTrustedTaster } from "../../models/trust";
 import PlaceTasterListSheet from "./PlaceTasterListSheet";
-import TasterAvatar from "../../components/TasterAvatar";
 import { recordBadge, type PlaceRecord } from "./placeRecords";
 
 /** 줄에 바로 보여 줄 맛객 수. 더 많으면 끝에 "전체 N명" 버튼으로 목록 시트를 엽니다. */

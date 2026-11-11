@@ -1,8 +1,11 @@
 /*
  * app/startupView.tsx 가 React 를 그리기 전에 띄우는 접속 중·로그인 오류 화면입니다.
- * 시안의 로그인 화면처럼 로고 → 문구 → 캐릭터 → 버튼 순서로 둡니다. 소셜 버튼 선택은 공통 인증 서버 로그인 화면이 맡습니다.
+ * 로고 → 캐릭터 무대 → 문구 순서로 가운데에 둡니다. 소셜 버튼 선택은 공통 인증 서버 로그인 화면이 맡습니다.
+ * 접속 중(.is-loading)에는 크림 바탕 위로 코랄·노랑 빛이 천천히 번지고, 접시를 코랄 고리가 돌며,
+ * 캐릭터가 접시 위에서 살짝 떠오르고(그림자는 그만큼 작아짐), 문구 아래 점 세 개가 차례로 숨 쉽니다.
  */
 .auth-start-screen {
+  position: relative;
   display: flex;
   width: min(var(--app-width), 100%);
   min-height: 100dvh;
@@ -10,45 +13,124 @@
   align-items: center;
   justify-content: center;
   gap: 14px;
+  overflow: hidden;
   margin: 0 auto;
   background: var(--color-canvas);
   padding: calc(48px + env(safe-area-inset-top)) 24px calc(48px + env(safe-area-inset-bottom));
   color: var(--color-ink);
   font-family: var(--font-body);
   text-align: center;
+  isolation: isolate;
 }
 
-/* 맛다공 로고 */
-.auth-start-screen::before {
-  display: block;
-  width: 220px;
-  height: 96px;
-  order: 0;
-  background: url("/assets/brand-logo.png") center / contain no-repeat;
-  content: "";
-}
-
-/* 프라이팬을 든 맛다공 캐릭터(캐릭터 시트 5×2 중 3번째 칸) */
+/* 바탕의 옅은 빛 두 개(위 오른쪽 코랄, 아래 왼쪽 노랑). 글자 뒤에 깔립니다. */
+.auth-start-screen::before,
 .auth-start-screen::after {
-  display: block;
-  width: 200px;
-  height: 200px;
-  order: 2;
-  margin: 12px 0;
-  background: url("/assets/avatars/matdagong-characters-v1.png") 50% 0 / 500% 200% no-repeat;
+  position: absolute;
+  z-index: -1;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  filter: blur(48px);
   content: "";
 }
-
-.auth-start-screen > * {
-  order: 1;
+.auth-start-screen::before {
+  top: -120px;
+  right: -140px;
+  background: color-mix(in srgb, var(--brand-100) 80%, transparent);
+}
+.auth-start-screen::after {
+  bottom: -140px;
+  left: -150px;
+  background: color-mix(in srgb, var(--amber-100) 75%, transparent);
 }
 
-.auth-start-screen p {
+.auth-start-logo {
+  display: block;
+  width: 168px;
+  height: auto;
+}
+
+/* ── 캐릭터 무대: 코랄 고리 · 흰 접시 · 바닥 그림자 · 캐릭터를 겹쳐 둡니다. ── */
+.auth-start-stage {
+  position: relative;
+  width: 216px;
+  height: 216px;
+  margin: 10px 0 6px;
+}
+.auth-start-stage > span {
+  position: absolute;
+  display: block;
+}
+/* 고리가 지나는 길: 호가 끊겨 보이지 않게 아주 옅은 둥근 선을 먼저 깝니다. */
+.auth-start-stage::before {
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--brand-50);
+  border-radius: 50%;
+  content: "";
+}
+/* 접시 둘레를 도는 고리: 꼬리가 투명했다가 끝으로 갈수록 진해지는 코랄 호입니다. */
+.auth-start-stage__ring {
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 55%, var(--brand-200) 78%, var(--color-primary) 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+}
+.auth-start-stage__plate {
+  inset: 12px;
+  border: 1px solid color-mix(in srgb, var(--brand-100) 70%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%, var(--color-surface) 0 58%, var(--brand-50) 100%);
+  box-shadow:
+    0 18px 40px color-mix(in srgb, var(--shadow-color) 10%, transparent),
+    inset 0 -6px 16px color-mix(in srgb, var(--brand-100) 45%, transparent);
+}
+.auth-start-stage__shadow {
+  bottom: 40px;
+  left: 50%;
+  width: 104px;
+  height: 14px;
+  margin-left: -52px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--shadow-color) 16%, transparent);
+  filter: blur(4px);
+}
+/* 프라이팬을 든 맛다공 캐릭터(캐릭터 시트 5×2 중 3번째 칸) */
+.auth-start-stage__character {
+  bottom: 42px;
+  left: 50%;
+  width: 164px;
+  height: 164px;
+  margin-left: -82px;
+  background: url("/assets/avatars/matdagong-characters-v1.png") 50% 0 / 500% 200% no-repeat;
+}
+/* 오류 화면은 고리가 돌지 않으니 옅은 테두리만 남깁니다. */
+.auth-start-error .auth-start-stage__ring {
+  background: var(--brand-100);
+}
+
+.auth-start-message {
   max-width: 320px;
   margin: 0;
   color: var(--color-muted);
   font-size: 15px;
+  font-weight: 600;
   line-height: 1.6;
+}
+
+.auth-start-dots {
+  display: inline-flex;
+  gap: 6px;
+  margin-top: -4px;
+}
+.auth-start-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  opacity: 0.25;
 }
 
 .auth-start-error h1 {
@@ -62,7 +144,7 @@
 .auth-start-error button {
   width: 100%;
   min-height: 54px;
-  order: 3;
+  margin-top: 10px;
   border: 0;
   border-radius: var(--radius-control);
   background: var(--color-primary);
@@ -73,13 +155,71 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .auth-start-screen:not(.auth-start-error)::after {
-    animation: auth-start-bob 1.4s ease-in-out infinite;
+  .auth-start-screen > * {
+    animation: auth-start-rise 0.5s ease-out both;
+  }
+  .auth-start-screen > :nth-child(2) {
+    animation-delay: 0.08s;
+  }
+  .auth-start-screen > :nth-child(n + 3) {
+    animation-delay: 0.16s;
+  }
+  .is-loading::before {
+    animation: auth-start-drift 9s ease-in-out infinite alternate;
+  }
+  .is-loading::after {
+    animation: auth-start-drift 11s ease-in-out -4s infinite alternate-reverse;
+  }
+  .is-loading .auth-start-stage__ring {
+    animation: auth-start-spin 1.6s linear infinite;
+  }
+  .is-loading .auth-start-stage__character {
+    animation: auth-start-float 2.4s ease-in-out infinite;
+  }
+  .is-loading .auth-start-stage__shadow {
+    animation: auth-start-shadow 2.4s ease-in-out infinite;
+  }
+  .auth-start-dots i {
+    animation: auth-start-dot 1.2s ease-in-out infinite;
+  }
+  .auth-start-dots i:nth-child(2) {
+    animation-delay: 0.16s;
+  }
+  .auth-start-dots i:nth-child(3) {
+    animation-delay: 0.32s;
   }
 }
 
-@keyframes auth-start-bob {
+@keyframes auth-start-rise {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+@keyframes auth-start-drift {
+  to {
+    transform: translate(-40px, 30px) scale(1.12);
+  }
+}
+@keyframes auth-start-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@keyframes auth-start-float {
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-9px) rotate(-1.5deg);
+  }
+}
+@keyframes auth-start-shadow {
+  50% {
+    transform: scaleX(0.78);
+    opacity: 0.6;
+  }
+}
+@keyframes auth-start-dot {
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
   }
 }

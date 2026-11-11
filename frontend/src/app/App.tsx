@@ -2,10 +2,11 @@
  * 로그인한 앱의 뿌리입니다. 서버 상태를 모아 useAppData()로 화면에 넘기고, 주소(#화면)에 맞는 화면과 하단 탭을 그립니다.
  * 상태 묶음은 같은 폴더의 훅(useCommunity, useMyPlaces, usePlaceSearch …)이 맡습니다.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { NotificationDialogProvider, useNotificationDialog } from "../components/NotificationDialog";
 import TabBar, { tabForScreen } from "../components/TabBar";
 import SubscriptionOfferSheet from "../screens/SubscriptionOfferSheet";
+import { isKakaoOnlyPlaceId, kakaoPlaceForRoute } from "../screens/place/kakaoPlaceDetail";
 import { isSessionExpiring } from "../services/http";
 import {
   getPlace,
@@ -24,7 +25,6 @@ import { useRoute } from "./navigation";
 import { recordActions } from "./recordActions";
 import { SCREEN_VIEWS } from "./screenViews";
 import { useCommunity } from "./useCommunity";
-import { useLegacyMigration } from "./useLegacyMigration";
 import { useLikeChoice } from "./useLikeChoice";
 import { useMyPlaces } from "./useMyPlaces";
 import { useNotifications } from "./useNotifications";
@@ -68,19 +68,7 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
   const search = usePlaceSearch(accessToken, route.screen);
   const { setPlaces } = search;
   const myPlaces = useMyPlaces({ accessToken, screen: route.screen, notify, setPlaces, refreshCommunity });
-  const {
-    setMyPlaceRecords,
-    setRecentPlaces,
-    setLikedPlaceIds,
-    setVisitedLikedPlaceIds,
-    setDislikedPlaceIds,
-    setVisitProofPlaceIds,
-  } = myPlaces;
-  const { legacyRegistered, legacyStillLocal } = useLegacyMigration(accessToken, myProfile?.accountId, {
-    setRecentPlaces,
-    setMyPlaceState: myPlaces.setMyPlaceState,
-    notify,
-  });
+  const { setMyPlaceRecords, setRecentPlaces, setLikedPlaceIds, setDislikedPlaceIds, setVisitProofPlaceIds } = myPlaces;
   /** 장소 응답의 작성자가 나인지 확인합니다. 프로필 응답 전에도 JWT subject로 알아봅니다. */
   const isMyTasterId = (tasterId: string) =>
     tasterId === MY_TASTER_ID || tasterId === authenticatedAccountId || tasterId === myProfile?.accountId;
@@ -98,7 +86,7 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
 
   useEffect(() => {
     let active = true;
-    if (route.screen === "place" && route.id && !route.id.startsWith("local-")) {
+    if (route.screen === "place" && route.id && !isKakaoOnlyPlaceId(route.id)) {
       getPlace(accessToken, route.id)
         .then((place) => {
           if (active) setDetail(place);
@@ -110,14 +98,17 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
     };
   }, [route.screen, route.id, accessToken]);
 
+  // 내 지도 검색에서 고른, 맛다공에 아직 없는 카카오 가게는 서버에 묻지 않고 검색 결과로 상세를 엽니다.
+  const kakaoDetail = useMemo(
+    () => (route.screen === "place" && isKakaoOnlyPlaceId(route.id) ? kakaoPlaceForRoute(route.id) : null),
+    [route.screen, route.id],
+  );
   const views = enrichPlaces({
     places: search.places,
     myPlaceRecords: myPlaces.myPlaceRecords,
     recentPlaces: myPlaces.recentPlaces,
-    detail,
+    detail: kakaoDetail ?? detail,
     routeId: route.id,
-    legacyRegistered,
-    legacyStillLocal,
     communityTasters: community.communityTasters,
     subscriptions: community.subscriptions,
     incomingSubscriptions: community.incomingSubscriptions,
@@ -129,7 +120,7 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
 
   const hasActivePlace = !!views.activePlace;
   useEffect(() => {
-    if (route.screen !== "place" || !hasActivePlace) return;
+    if (route.screen !== "place" || !hasActivePlace || isKakaoOnlyPlaceId(route.id)) return;
     let active = true;
     rememberRecentPlace(accessToken, route.id)
       .then(() => getRecentPlaces(accessToken))
@@ -147,13 +138,12 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
   const likeChoice = useLikeChoice({
     accessToken,
     likedPlaceIds: myPlaces.likedPlaceIds,
-    visitedLikedPlaceIds: myPlaces.visitedLikedPlaceIds,
     visitProofPlaceIds: myPlaces.visitProofPlaceIds,
     setLikedPlaceIds,
-    setVisitedLikedPlaceIds,
     setDislikedPlaceIds,
-    placeNameOf: (id) =>
-      [...views.places, ...views.recentPlaces, detail].find((place) => place?.id === id)?.name ?? "이 맛집",
+    placeOf: (id) =>
+      [...views.places, ...views.recentPlaces, ...views.myRecords, detail].find((place) => place?.id === id) ??
+      undefined,
     isOwnRecord: (id) =>
       myPlaces.myPlaceRecords.some(
         (place) => place.id === id && place.tasters.some((taster) => isMyTasterId(taster.tasterId)),
@@ -174,7 +164,6 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
     setDetail,
     setMyPlaceRecords,
     setLikedPlaceIds,
-    setVisitedLikedPlaceIds,
     setDislikedPlaceIds,
   });
 
@@ -193,7 +182,7 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
 
   function openSubscription(tasterId: string) {
     // 화면에 보이는 맛객은 장소 기록과 커뮤니티 API 응답을 합친 목록에서 찾습니다.
-    // API 응답보다 장소 목록이 먼저 도착해도 유효한 샘플 계정의 구독을 막지 않습니다.
+    // API 응답보다 장소 목록이 먼저 도착해도, 장소 기록으로 이미 알게 된 맛객의 구독을 막지 않습니다.
     const target = views.tasters.find((taster) => taster.tasterId === tasterId);
     if (!target) {
       notify({ kind: "info", title: "맛객 정보를 확인할 수 없어요", message: RETRY_LATER_MESSAGE });
@@ -215,11 +204,10 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
     myRecords: views.myRecords,
     recentPlaces: views.recentPlaces,
     likedPlaceIds: myPlaces.likedPlaceIds,
-    visitedLikedPlaceIds: myPlaces.visitedLikedPlaceIds,
+    visitedPlaceIds: myPlaces.visitedPlaceIds,
     dislikedPlaceIds: myPlaces.dislikedPlaceIds,
     visitProofPlaceIds: myPlaces.visitProofPlaceIds,
     activePlace: views.activePlace,
-    legacyOwnRecord: views.legacyOwnRecord,
     editablePlace: views.editablePlace,
     subscriptions: community.subscriptions,
     subscriptionIds: views.subscriptionIds,
@@ -233,10 +221,10 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
     tasteTags: community.tasteTags,
     subscriptionTarget,
     notificationFeed: notifications.feed,
-    notificationLoading: notifications.isLoading,
+    isNotificationLoading: notifications.isLoading,
     notificationError: notifications.error,
-    unread: notifications.feed.unreadCount > 0,
-    loading: search.isLoading,
+    hasUnread: notifications.feed.unreadCount > 0,
+    isLoading: search.isLoading,
     error: search.error,
     query: search.query,
     setQuery: search.setQuery,
@@ -254,7 +242,6 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
       cancelTasterSubscription: community.cancelTasterSubscription,
       reportTaster: community.reportTaster,
       register: records.register,
-      startRecordConversion: records.startRecordConversion,
       changeOwnRecordVisibility: records.changeOwnRecordVisibility,
       deleteOwnRecord: records.deleteOwnRecord,
       refreshCommunity,
@@ -270,7 +257,7 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
     },
   };
 
-  // 하단 탭은 발견·피드·맛객·나 첫 화면에서만 보이고, 나머지 화면은 각자 상단 바의 뒤로 버튼을 씁니다.
+  // 하단 탭은 발견·피드·내 지도·맛객·나 첫 화면에서만 보이고, 나머지 화면은 각자 상단 바의 뒤로 버튼을 씁니다.
   const activeTab = tabForScreen(route.screen);
   const ScreenView = SCREEN_VIEWS[route.screen];
 

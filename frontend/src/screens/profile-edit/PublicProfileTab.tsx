@@ -1,7 +1,8 @@
 import AvatarEditor from "./AvatarEditor";
 import CoverEditor from "./CoverEditor";
 import PublicStyleSettings from "./PublicStyleSettings";
-import { MAX_INTRO_LENGTH, MAX_NICKNAME_LENGTH, type ProfileForm } from "./useProfileForm";
+import { MAX_NICKNAME_LENGTH } from "../../models/community";
+import { MAX_INTRO_LENGTH, type ProfileForm } from "./useProfileForm";
 
 /** 공개 프로필 탭: 사진, 배경, 닉네임·소개, 공개 맛집 스타일입니다. */
 export default function PublicProfileTab({ form }: { form: ProfileForm }) {

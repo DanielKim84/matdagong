@@ -2,7 +2,8 @@ import { useId } from "react";
 import type { FoodFocus } from "../models/community";
 import Icon, { type IconName } from "./Icon";
 
-const FOOD_FOCUS_OPTIONS: { value: FoodFocus; label: string; icon: IconName }[] = [
+/** 찾는 분야 세 가지입니다. 가입 화면의 분야 탭도 같은 이름을 씁니다. */
+export const FOOD_FOCUS_OPTIONS: { value: FoodFocus; label: string; icon: IconName }[] = [
   { value: "RESTAURANT", label: "음식점", icon: "fork" },
   { value: "CAFE_DESSERT", label: "카페·디저트", icon: "coffee" },
   { value: "BOTH", label: "둘 다", icon: "sparkle" },

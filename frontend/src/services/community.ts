@@ -19,21 +19,17 @@ import type {
 } from "../models/community";
 import type { Taster } from "../models/place";
 import type { TrustLevel } from "../models/trust";
-import { avatarVariantFor, demoTasterAvatar } from "../utils/profileMedia";
 import { API_BASE_URL, apiRequest, type ApiRequestOptions } from "./http";
 
 type TasterResponse = {
   tasterId: string;
   tasterName: string;
-  tag: string;
   avatar: string | null;
   avatarVariant: number;
-  profileCoverUrl: string | null;
-  profileCoverUrls?: string[];
+  profileCoverUrls: string[];
   tasterFocus: FoodFocus;
   activityScope: ActivityScope;
   activityRegion: string | null;
-  note: string;
   intro: string | null;
   subscriberCount: number;
   profileTags: string[];
@@ -45,10 +41,7 @@ type TasterResponse = {
 
 /** 커뮤니티 API도 공통 요청 도구를 거쳐 로그인 만료, 204 응답, 오류 메시지를 같게 처리합니다. */
 function request<T>(path: string, accessToken: string, init: ApiRequestOptions = {}): Promise<T> {
-  return apiRequest<T>(`${API_BASE_URL}/v1${path}`, accessToken, {
-    errorMessage: "요청을 처리하지 못했어요.",
-    ...init,
-  });
+  return apiRequest<T>(`${API_BASE_URL}/v1${path}`, accessToken, init);
 }
 
 export async function getTasters(accessToken: string): Promise<Taster[]> {
@@ -56,15 +49,14 @@ export async function getTasters(accessToken: string): Promise<Taster[]> {
   return response.map((taster) => ({
     tasterId: taster.tasterId,
     tasterName: taster.tasterName,
-    tag: taster.profileTags.length ? taster.profileTags.join(" · ") : taster.tag,
-    avatar: taster.avatar ?? demoTasterAvatar(taster.tasterId) ?? "",
-    avatarVariant: avatarVariantFor(taster.tasterId, taster.avatarVariant),
-    profileCoverUrl: taster.profileCoverUrl,
-    profileCoverUrls: taster.profileCoverUrls ?? (taster.profileCoverUrl ? [taster.profileCoverUrl] : []),
+    avatar: taster.avatar ?? "",
+    avatarVariant: taster.avatarVariant,
+    profileCoverUrls: taster.profileCoverUrls,
     tasterFocus: taster.tasterFocus,
     activityScope: taster.activityScope,
     activityRegion: taster.activityRegion,
-    note: taster.note,
+    // note는 장소 기록의 한마디 자리라 커뮤니티 프로필에서는 비워 둡니다.
+    note: "",
     intro: taster.intro ?? "맛있는 장소를 찾아 기록하고 있어요.",
     subscriberCount: taster.subscriberCount,
     profileTags: taster.profileTags,
@@ -145,8 +137,8 @@ async function uploadProfileCovers(accessToken: string, files: File[]): Promise<
   return urls ?? [];
 }
 
-async function removeProfileImage(accessToken: string, kind: "avatar" | "cover"): Promise<void> {
-  await request<void>(`/users/me/profile/${kind}`, accessToken, {
+async function removeProfileAvatar(accessToken: string): Promise<void> {
+  await request<void>("/users/me/profile/avatar", accessToken, {
     method: "DELETE",
     errorMessage: "프로필 이미지를 삭제하지 못했어요.",
   });
@@ -187,11 +179,16 @@ export function createSubscription(
   targetAccountId: string,
   subscriptionType: "FREE" | "PAID",
   termMonths: number | null,
-  confirmFreeReplacement = false,
+  isFreeReplacementConfirmed = false,
 ): Promise<SubscribeResult> {
   return request("/subscriptions", accessToken, {
     method: "POST",
-    body: JSON.stringify({ targetAccountId, subscriptionType, termMonths, confirmFreeReplacement }),
+    body: JSON.stringify({
+      targetAccountId,
+      subscriptionType,
+      termMonths,
+      confirmFreeReplacement: isFreeReplacementConfirmed,
+    }),
   });
 }
 
@@ -259,30 +256,24 @@ export async function saveMyProfile(accessToken: string, changes: ProfileChanges
     activityRegion: changes.activityRegion,
   });
   if (changes.avatarFile) await uploadProfileImage(accessToken, changes.avatarFile);
-  else if (changes.removeAvatar) await removeProfileImage(accessToken, "avatar");
-  if (changes.removeCover) await removeProfileImage(accessToken, "cover");
-  else {
-    for (const photoId of changes.removedCoverPhotoIds) {
-      await removeProfileCoverPhoto(accessToken, photoId);
-    }
+  else if (changes.shouldRemoveAvatar) await removeProfileAvatar(accessToken);
+  for (const photoId of changes.removedCoverPhotoIds) {
+    await removeProfileCoverPhoto(accessToken, photoId);
   }
   const savedCoverUrls = changes.coverFiles?.length
     ? await uploadProfileCovers(accessToken, changes.coverFiles)
     : undefined;
-  const remainingCoverUrls = changes.removeCover
-    ? []
-    : (savedProfile.profileCoverUrls ?? []).filter(
-        (url) => !changes.removedCoverPhotoIds.some((photoId) => url.includes(`/covers/${photoId}`)),
-      );
+  const remainingCoverUrls = savedProfile.profileCoverUrls.filter(
+    (url) => !changes.removedCoverPhotoIds.some((photoId) => url.includes(`/covers/${photoId}`)),
+  );
   const updatedCoverUrls = savedCoverUrls ?? remainingCoverUrls;
   return {
     ...savedProfile,
-    profileImgUrl: changes.removeAvatar
+    profileImgUrl: changes.shouldRemoveAvatar
       ? null
       : changes.avatarFile
         ? `/media/profiles/${savedProfile.accountId}/avatar`
         : savedProfile.profileImgUrl,
-    profileCoverUrl: updatedCoverUrls.length ? savedProfile.profileCoverUrl : null,
     profileCoverUrls: updatedCoverUrls,
   };
 }

@@ -2,33 +2,35 @@ import { useAppData } from "../../app/AppData";
 import Icon from "../../components/Icon";
 import { EmptyState, SectionHead } from "../../components/ui";
 import type { Taster } from "../../models/place";
+import { BrowseNote } from "./TasterFilters";
 import TasterRows from "./TasterRows";
-import { scopeNote } from "./TasterScopeChips";
 import {
   PAGE_SIZE,
   filterBrowseTasters,
   type BrowseFilter,
+  type BrowseSort,
   type ScopeContext,
   type TasterFocusFilter,
   type TasterScope,
   type TasterStats,
 } from "./tasterData";
 
-const FOCUS_OPTIONS: { value: TasterFocusFilter; label: string }[] = [
-  { value: "ALL", label: "모든 분야" },
-  { value: "RESTAURANT", label: "식당" },
-  { value: "CAFE_DESSERT", label: "카페·디저트" },
+const SORT_OPTIONS: { value: BrowseSort; label: string }[] = [
+  { value: "SUBSCRIBERS", label: "구독자순" },
+  { value: "TASTE", label: "취향순" },
+  { value: "RECORDS", label: "기록순" },
 ];
 
 /**
- * 맛객 둘러보기: 취향 일치와 상관없이 위쪽 공통 범위 칩(scope)에 드는 맛객 전체를 분야 칩으로 거르고 목록으로 보여 줍니다.
- * 내 주변·내 지역은 그 안에 실제로 기록을 남긴 맛객을 기록이 많은 순, 그 밖은 구독자 많은 순입니다.
- * 분야와 보이는 개수는 TastersScreen이 들고 있어 검색·탭을 오가도 남습니다.
+ * 맛객 둘러보기: 취향 일치와 상관없이 위쪽 공통 조건(지역·분야)에 드는 맛객 전체를 목록으로 보여 줍니다.
+ * 제목 오른쪽에서 구독자순 · 취향순 · 기록순을 고릅니다(내 주변·내 지역의 기록순은 그 안에 남긴 기록 수 기준).
+ * 정렬과 보이는 개수는 TastersScreen이 들고 있어 검색을 열고 닫아도 남습니다.
  */
 export default function BrowseTasters({
   tasters,
   stats,
   scope,
+  focus,
   filter,
   onFilterChange,
   context,
@@ -36,35 +38,36 @@ export default function BrowseTasters({
   tasters: Taster[];
   stats: Map<string, TasterStats>;
   scope: TasterScope;
+  focus: TasterFocusFilter;
   filter: BrowseFilter;
   onFilterChange: (filter: BrowseFilter) => void;
   context: ScopeContext;
 }) {
   const app = useAppData();
-  const list = filterBrowseTasters(tasters, scope, filter.focus, stats, context);
+  const list = filterBrowseTasters(tasters, scope, focus, filter.sort, stats, context);
   const isAreaScope = scope === "NEARBY" || scope === "MY_AREA";
 
   return (
     <section className="r-tasters-section">
-      <SectionHead title="맛객 둘러보기" />
-      <div className="r-chips r-tasters-chips r-tasters-chips--small" role="group" aria-label="분야">
-        {FOCUS_OPTIONS.map((option) => (
-          <button
-            type="button"
-            key={option.value}
-            className={`r-chip ${filter.focus === option.value ? "is-on" : ""}`}
-            aria-pressed={filter.focus === option.value}
-            onClick={() => onFilterChange({ focus: option.value, limit: PAGE_SIZE })}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+      <SectionHead title="맛객 둘러보기">
+        {/* 세 정렬을 나란히 보여 줘 지금 어떤 순서인지 바로 알 수 있게 합니다(발견 목록 시트와 같은 모양). */}
+        <div className="r-tasters-sort" role="group" aria-label="맛객 정렬">
+          {SORT_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={filter.sort === option.value ? "is-on" : ""}
+              aria-pressed={filter.sort === option.value}
+              onClick={() => onFilterChange({ sort: option.value, limit: PAGE_SIZE })}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </SectionHead>
       {list.length ? (
         <>
-          <p className="r-tasters-note">
-            {scopeNote(scope, context.myArea)} · {isAreaScope ? "그 안 기록이 많은 순" : "구독자 많은 순"}
-          </p>
+          <BrowseNote scope={scope} focus={focus} sort={filter.sort} myArea={context.myArea} total={list.length} />
           <TasterRows tasters={list.slice(0, filter.limit)} stats={stats} />
           {list.length > filter.limit && (
             <button
@@ -78,11 +81,13 @@ export default function BrowseTasters({
         </>
       ) : (
         <EmptyState
-          title={scope === "MY_AREA" ? `${context.myArea}에 기록한 맛객이 아직 없어요` : "이 범위의 맛객이 아직 없어요"}
+          title={
+            scope === "MY_AREA" ? `${context.myArea}에 기록한 맛객이 아직 없어요` : "이 조건에 맞는 맛객이 아직 없어요"
+          }
           message={
             isAreaScope
-              ? "위쪽에서 전체 지역을 고르거나, 맛객 검색에서 동네 이름으로 찾아보세요."
-              : "다른 범위나 분야를 골라 보세요."
+              ? "위쪽에서 전체 지역이나 모든 분야를 고르거나, 맛객 검색에서 동네 이름으로 찾아보세요."
+              : "위쪽에서 다른 지역이나 분야를 골라 보세요."
           }
         />
       )}

@@ -9,12 +9,10 @@ import {
   getMyPlaceRecords,
   getPlace,
   getPlaces,
-  kakaoPlaceFromPlace,
 } from "../services/places";
 import type { UserNotification } from "../models/community";
 import type { NewPlace, Place, Screen } from "../models/place";
 import { errorMessage } from "../utils/errorMessage";
-import { STORAGE_KEYS, writeStorageJson } from "../utils/storage";
 import { RETRY_LATER_MESSAGE, type AppNotice } from "./AppData";
 import { go } from "./navigation";
 
@@ -31,43 +29,35 @@ type Context = {
   setDetail: Dispatch<SetStateAction<Place | null>>;
   setMyPlaceRecords: Dispatch<SetStateAction<Place[]>>;
   setLikedPlaceIds: Dispatch<SetStateAction<string[]>>;
-  setVisitedLikedPlaceIds: Dispatch<SetStateAction<string[]>>;
   setDislikedPlaceIds: Dispatch<SetStateAction<string[]>>;
 };
 
-/** 내 기록 저장·하트에서 기록으로 바꾸기·공개 범위 바꾸기·기록 지우기 동작입니다. App이 그릴 때마다 현재 상태로 만듭니다. */
+/** 내 기록 저장(하트한 곳은 기록으로 바꾸기)·공개 범위 바꾸기·기록 지우기 동작입니다. App이 그릴 때마다 현재 상태로 만듭니다. */
 export function recordActions(context: Context) {
   const { accessToken, route, notify } = context;
 
-  /** 기록을 저장하고 저장된 장소를 돌려줍니다. stayOnScreen이면 새 기록 저장 뒤 상세로 옮기지 않고 호출한 화면이 완료 화면을 그립니다. */
-  async function register(
-    place: NewPlace,
-    convertFromPlaceId?: string,
-    visitedConfirmed = false,
-    stayOnScreen = false,
-  ): Promise<Place> {
+  /** 기록을 저장하고 저장된 장소를 돌려줍니다. 새 기록은 상세로 옮기지 않고 호출한 화면이 완료 화면을 그리며, 수정은 상세로 옮깁니다. */
+  async function register(place: NewPlace, convertFromPlaceId?: string, isVisitConfirmed = false): Promise<Place> {
     // 등록 화면 주소에 기록 ID가 있으면(#register/<id>) 기존 기록 수정입니다.
     const isEditing = route.screen === "register" && !!route.id;
     try {
-      if (convertFromPlaceId && !visitedConfirmed) {
+      if (convertFromPlaceId && !isVisitConfirmed) {
         throw new Error("직접 방문을 확인한 뒤 등록해 주세요.");
       }
       const created = convertFromPlaceId
         ? await convertLikedPlaceToRecord(accessToken, convertFromPlaceId, place)
         : await createPlaceRecord(accessToken, place);
       // 수정은 새 알림을 만들지 않으므로 알림 저장 실패로 보지 않습니다.
-      let isNotificationSaved = isEditing;
+      let isNotificationSaved = true;
       if (!isEditing) {
         try {
           context.addNotification(await createPlaceRegisteredNotification(accessToken, created.id));
-          isNotificationSaved = true;
         } catch {
           isNotificationSaved = false;
         }
       }
       if (convertFromPlaceId) {
         context.setLikedPlaceIds((current) => current.filter((item) => item !== convertFromPlaceId));
-        context.setVisitedLikedPlaceIds((current) => current.filter((item) => item !== convertFromPlaceId));
       }
       context.setMyPlaceRecords((current) => [created, ...current.filter((item) => item.id !== created.id)]);
       // 기록은 입맛에 맞았다는 뜻이라 서버가 별로였던 곳 표시를 지웠고, 같은 맛집 맛객과의 신뢰도 달라집니다.
@@ -76,27 +66,20 @@ export function recordActions(context: Context) {
       if (place.visibility === "public")
         context.setPlaces((current) => [created, ...current.filter((item) => item.id !== created.id)]);
       context.setDetail(created);
-      if (isEditing) context.retryPlaces();
-      const shouldStay = stayOnScreen && !isEditing;
-      if (!shouldStay) {
-        // 등록 완료 상세에서 뒤로 가면 등록 폼 대신 지도로 돌아가도록 경로를 정리합니다.
+      if (isEditing) {
+        context.retryPlaces();
+        // 수정을 마친 상세에서 뒤로 가면 기록 폼 대신 지도로 돌아가도록 경로를 정리합니다.
         go("map", "", true);
         go("place", created.id);
+        notify({ kind: "success", title: "맛집 내용을 수정했어요", message: "변경한 내용을 저장했어요." });
+      } else if (!isNotificationSaved) {
+        // 새 기록은 부른 화면이 완료 화면을 그리므로 알림 저장에 실패했을 때만 따로 알립니다.
+        notify({
+          kind: "error",
+          title: "맛집은 등록했지만 알림 저장에 실패했어요",
+          message: "맛집 기록은 저장됐어요. 알림함에는 다시 표시되지 않을 수 있어요.",
+        });
       }
-      if (!shouldStay || !isNotificationSaved)
-        notify(
-          isNotificationSaved
-            ? {
-                kind: "success",
-                title: isEditing ? "맛집 내용을 수정했어요" : "맛집을 등록했어요",
-                message: isEditing ? "변경한 내용을 저장했어요." : "맛객 기록과 알림을 저장했어요.",
-              }
-            : {
-                kind: "error",
-                title: "맛집은 등록했지만 알림 저장에 실패했어요",
-                message: "맛집 기록은 저장됐어요. 알림함에는 다시 표시되지 않을 수 있어요.",
-              },
-        );
       return created;
     } catch (cause) {
       notify({
@@ -121,16 +104,6 @@ export function recordActions(context: Context) {
     if (records.status === "fulfilled") context.setMyPlaceRecords(records.value);
     if (placeList.status === "fulfilled") context.setPlaces(placeList.value);
     if (refreshedPlace.status === "fulfilled") context.setDetail(refreshedPlace.value);
-  }
-
-  /** 하트로 저장한 맛집을 방문 기록으로 바꾸도록 등록 화면에 장소를 넘깁니다. 카카오 장소 ID가 없으면 이름으로 다시 검색하게 합니다. */
-  function startRecordConversion(place: Place) {
-    writeStorageJson(
-      STORAGE_KEYS.likeConversionHandoff,
-      { sourcePlaceId: place.id, place: kakaoPlaceFromPlace(place), searchName: place.name },
-      "session",
-    );
-    go("register");
   }
 
   /** 내 기록의 공개 범위만 바꿉니다(공개 추천 ↔ 나만 보기). 사진·메뉴·태그·추천 이유는 그대로 남습니다. */
@@ -170,5 +143,5 @@ export function recordActions(context: Context) {
     return true;
   }
 
-  return { register, startRecordConversion, changeOwnRecordVisibility, deleteOwnRecord };
+  return { register, changeOwnRecordVisibility, deleteOwnRecord };
 }

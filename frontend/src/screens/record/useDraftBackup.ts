@@ -8,11 +8,7 @@ import { saveRegisterDraft, type RegisterDraftForm } from "../../services/regist
  */
 export function useDraftBackup(
   form: RegisterDraftForm,
-  {
-    accountId,
-    hasRestoredDraft,
-    isEditLoading,
-  }: { accountId: string | null; hasRestoredDraft: boolean; isEditLoading: boolean },
+  { accountId, hasRestoredDraft }: { accountId: string | null; hasRestoredDraft: boolean },
 ) {
   const [initialSnapshot] = useState(() => JSON.stringify(form));
   const isDirty = JSON.stringify(form) !== initialSnapshot;
@@ -23,7 +19,6 @@ export function useDraftBackup(
   });
 
   function persistDraft(shouldForce = false) {
-    if (isEditLoading) return;
     const current = latestForm.current;
     // 처음 연 상태 그대로라면 보관할 입력이 없습니다. 복원한 입력은 수정하지 않았어도 다시 보관합니다.
     if (!shouldForce && !hasRestoredDraft && JSON.stringify(current) === initialSnapshot) return;

@@ -1,5 +1,8 @@
 /** 커뮤니티(프로필·취향 태그·구독·포인트·알림) 자료형입니다. 서버 JSON 필드 이름을 그대로 씁니다. */
 
+/** 맛객 닉네임 최대 글자 수입니다. 커뮤니티 서버(ProfileModels)의 검증과 같습니다. */
+export const MAX_NICKNAME_LENGTH = 12;
+
 type PaidPlan = { termMonths: number; priceAmount: number };
 export type PlanCatalog = {
   currency: "KRW";
@@ -66,7 +69,6 @@ export type MyProfile = {
   nickname: string;
   profileImgUrl: string | null;
   avatarVariant: number;
-  profileCoverUrl: string | null;
   profileCoverUrls: string[];
   tasterFocus: FoodFocus;
   preferenceFocus: FoodFocus;
@@ -94,8 +96,8 @@ export type FoodFocus = "RESTAURANT" | "CAFE_DESSERT" | "BOTH";
 export type ActivityScope = "LOCAL" | "TRAVEL" | "BOTH";
 export type TasteTag = {
   name: string;
-  category: "MENU" | "VISIT";
-  tagGroup: "CUISINE" | "TASTE" | "CAFE" | "OCCASION" | "VISIT";
+  /** 태그 분류. 커뮤니티 서비스 TasteTagGroup과 같은 값이며, 순서·이름·한도는 models/tasteTags.ts에 둡니다. */
+  tagGroup: "CUISINE" | "TASTE" | "CAFE" | "DESSERT" | "TRAVEL" | "MOOD" | "OCCASION" | "VISIT";
 };
 
 export type TagRequestInput = {
@@ -108,7 +110,6 @@ export type TagRequest = {
   requestType: "TAG" | "PLACE_INFO";
   requestId: string;
   tagName: string;
-  tagCategory: TasteTag["category"];
   tagGroup: TasteTag["tagGroup"];
   reason: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED";
@@ -124,8 +125,7 @@ export type ProfileChanges = {
   avatarFile?: File;
   coverFiles?: File[];
   removedCoverPhotoIds: string[];
-  removeAvatar?: boolean;
-  removeCover?: boolean;
+  shouldRemoveAvatar?: boolean;
   profileTags: string[];
   tasterFocus: FoodFocus;
   activityScope: ActivityScope;

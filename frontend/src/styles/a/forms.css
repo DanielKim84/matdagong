@@ -9,120 +9,6 @@
   --forms-card-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
   --forms-focus-ring: 0 0 0 3px var(--brand-50);
 }
-/* design-system.css의 공통 태그 규칙(`.taste-tag-options > button` 등)을 이겨야 해서 일부 선택자가 세 단계입니다. */
-
-.profile-settings .taste-tag-picker {
-  gap: 0;
-}
-.profile-settings .taste-tag-picker > section.taste-tag-group {
-  gap: 12px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  box-shadow: none;
-}
-.profile-settings .taste-tag-group + section.taste-tag-group {
-  margin-top: 18px;
-  border-top: 1px solid var(--color-line);
-  padding-top: 18px;
-}
-.profile-settings .taste-tag-group__header {
-  gap: 12px;
-}
-.profile-settings .taste-tag-group__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: var(--brand-50);
-  color: var(--color-primary);
-}
-.profile-settings .taste-tag-group__icon .icon {
-  width: 20px;
-  height: 20px;
-}
-.profile-settings .taste-tag-group__titles {
-  gap: 2px;
-}
-.profile-settings .taste-tag-group__titles b {
-  color: var(--color-ink);
-  font-size: 15px;
-  font-weight: 700;
-}
-.profile-settings .taste-tag-group__titles small {
-  color: var(--color-muted);
-  font-size: 12px;
-  line-height: 1.45;
-}
-/* 선택 수: 테두리 없이 오른쪽 끝에 숫자만 */
-.profile-settings .taste-tag-group .taste-tag-group__count {
-  display: flex;
-  min-width: 0;
-  height: auto;
-  align-items: center;
-  align-self: center;
-  justify-content: flex-end;
-  gap: 1px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  color: var(--color-muted);
-}
-.profile-settings .taste-tag-group .taste-tag-group__count b {
-  color: var(--color-primary-strong);
-  font-size: 14px;
-  font-weight: 800;
-}
-.profile-settings .taste-tag-group .taste-tag-group__count i {
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 600;
-}
-.profile-settings .taste-tag-options {
-  gap: 8px;
-}
-/* 칩: 흰 알약, 선택하면 먹색 */
-.profile-settings .taste-tag-group .taste-tag-options button {
-  min-height: 38px;
-  gap: 0;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface);
-  padding: 0 14px;
-  color: var(--neutral-700);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.2;
-  box-shadow: none;
-}
-.profile-settings .taste-tag-options button:hover:not(:disabled) {
-  border-color: var(--brand-400);
-  background: var(--color-surface);
-  color: var(--neutral-700);
-}
-.profile-settings .taste-tag-group .taste-tag-options button.is-selected,
-.profile-settings .taste-tag-group .taste-tag-options button.is-selected:hover:not(:disabled) {
-  border-color: var(--color-ink);
-  background: var(--color-ink);
-  color: var(--on-strong);
-  font-weight: 700;
-  box-shadow: none;
-}
-.profile-settings .taste-tag-options .taste-tag-label > i {
-  margin-right: 1px;
-  color: var(--color-primary);
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 700;
-}
-.profile-settings .taste-tag-options button.is-selected .taste-tag-label > i {
-  color: color-mix(in srgb, var(--on-strong) 70%, transparent);
-}
-.profile-settings .taste-tag-options button:disabled {
-  opacity: 0.4;
-}
-
 /* ═════════════ 프로필·취향 편집 ═════════════ */
 
 .app-view .profile-settings {
@@ -713,14 +599,24 @@
   display: inline-flex;
   height: 38px;
   align-items: center;
+  gap: 6px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-pill);
   background: var(--color-surface);
-  padding: 0 14px;
+  padding: 0 14px 0 5px;
   color: var(--neutral-700);
   font-size: 13px;
   font-weight: 600;
   box-shadow: none;
+}
+/* 분류 이름 앞 분류 아이콘(GroupIcon)은 알약 높이에 맞춰 조금 작게 둡니다. */
+.tag-request-sheet .tag-request-category .r-group-icon {
+  width: 28px;
+  height: 28px;
+}
+.tag-request-sheet .tag-request-category .r-group-icon .icon {
+  width: 14px;
+  height: 14px;
 }
 .tag-request-sheet .tag-request-category input:checked + span {
   border-color: var(--color-ink);

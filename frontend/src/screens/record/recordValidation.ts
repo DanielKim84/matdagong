@@ -8,9 +8,6 @@ type RecordCheckInput = {
   selectedPlace: KakaoPlaceResult | null;
   address: string;
   coordinates: Coordinates | null;
-  shouldSearchConversionPlace: boolean;
-  conversionSearchName: string;
-  convertFromPlaceId: string | null;
   hasSelectedLikedPlace: boolean;
   isVisitConfirmed: boolean;
   isBusy: boolean;
@@ -38,27 +35,17 @@ function placeStepError({
   selectedPlace,
   address,
   coordinates,
-  shouldSearchConversionPlace,
-  conversionSearchName,
-  convertFromPlaceId,
   hasSelectedLikedPlace,
   isVisitConfirmed,
 }: RecordCheckInput): string {
   if (!selectedPlace || !address.trim() || !coordinates) return "카카오 지도에서 실제 장소를 검색해 선택해 주세요.";
-  if (
-    shouldSearchConversionPlace &&
-    conversionSearchName &&
-    !selectedPlace.place_name.replaceAll(" ", "").includes(conversionSearchName.replaceAll(" ", ""))
-  ) {
-    return `‘${conversionSearchName}’와 같은 장소를 선택해 주세요.`;
-  }
   if (
     !isEditing &&
     places.some((place) => isSameKakaoPlace(place, selectedPlace.id) && place.tasters.some(isMyTaster))
   ) {
     return "이미 내 맛집으로 등록한 장소예요. 다른 카카오 장소를 선택해 주세요.";
   }
-  if ((convertFromPlaceId || hasSelectedLikedPlace) && !isVisitConfirmed) {
+  if (hasSelectedLikedPlace && !isVisitConfirmed) {
     return "이 장소에 직접 방문한 뒤 기록하는 경우에만 내 맛집에서 전환할 수 있어요.";
   }
   return "";

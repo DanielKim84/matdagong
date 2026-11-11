@@ -1,5 +1,5 @@
 /**
- * 카카오 지도 위에 맛집 마커·묶음 마커·내 위치를 그립니다. 발견 화면과 맛객 프로필 지도가 함께 씁니다.
+ * 카카오 지도 위에 맛집 마커·묶음 마커·내 위치를 그립니다. 발견·내 지도 화면과 맛객 프로필 지도가 함께 씁니다.
  * 마커 DOM은 mapMarkers.ts, 범위 계산은 mapFit.ts, 내 위치 확인은 useMyLocation이 맡고, 이 부품은 지도 상태(배율·강조·범위 맞추기)를 맡습니다.
  */
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +11,7 @@ import type { Coordinates } from "../utils/geo";
 import { MyPositionMarker } from "./BrandAssets";
 import Icon from "./Icon";
 import { fitMapToPlaces, fitMapToRadius } from "./mapFit";
-import { createClusterMarker, createPlaceMarker, groupPlacesByCell } from "./mapMarkers";
+import { CLUSTER_LEVEL, createClusterMarker, createPlaceMarker, groupPlacesByCell } from "./mapMarkers";
 import { useMyLocation } from "./useMyLocation";
 
 type Props = {
@@ -21,19 +21,19 @@ type Props = {
   /** 지도가 멈출 때마다 보이는 범위를 알립니다. 강조 장소로 지도가 따라 움직인 경우 isFocusMove가 true입니다. */
   onBoundsChange?: (bounds: MapBounds, isFocusMove: boolean) => void;
   onPositionChange?: (position: Coordinates) => void;
-  /** 강조할 장소. 바뀌면 그 마커를 키우고 지도 중심을 옮깁니다(발견 화면의 카드 선택). */
+  /** 강조할 장소. 바뀌면 그 마커를 키우고 지도 중심을 옮깁니다(발견·내 지도의 카드 선택). */
   focusedPlaceId?: string | null;
   /** 처음 그릴 때 받은 장소가 모두 보이도록 지도 범위를 맞춥니다(맛객 프로필 지도). */
-  fitToPlaces?: boolean;
-  /** fitToPlaces일 때 이 장소들만 꽉 차게 맞춥니다(핀은 places 전부 그대로). 없으면 places 전체에 맞춥니다(맛객 프로필의 지역 칩). */
+  shouldFitToPlaces?: boolean;
+  /** shouldFitToPlaces일 때 이 장소들만 꽉 차게 맞춥니다(핀은 places 전부 그대로). 없으면 places 전체에 맞춥니다(맛객 프로필의 지역 칩). */
   fitPlaces?: Place[];
   /** 내 위치를 가운데 두고 이 반경이 꼭 차게 지도를 맞춥니다(발견 화면의 반경 고르기). 그 뒤 확대·축소는 자유입니다. */
   radiusView?: RadiusView | null;
   /** 이 장소들이 모두 보이게 한 번 맞춥니다(발견 화면의 검색 결과). 그 뒤 확대·축소·이동은 자유입니다. */
   fitRequest?: FitRequest | null;
-  /** 내 위치를 파란 점 대신 내 캐릭터로 보여 줄 때 넘깁니다(발견 화면). */
+  /** 내 위치를 파란 점 대신 내 캐릭터로 보여 줄 때 넘깁니다(발견·내 지도). */
   me?: MapMe;
-  /** 마커 종류를 직접 정합니다(내 지도: 내 기록·다녀온 곳·가볼 곳·검색한 가게). 없으면 구독·하트 관계로 정합니다. */
+  /** 마커 종류를 직접 정합니다(내 지도: 내 기록·다녀온 곳·가볼 곳). 없으면 내 기록·구독 관계로 정합니다. */
   markerKindOf?: (place: Place) => MapKind;
 };
 
@@ -51,8 +51,7 @@ const DEFAULT_LEVEL = 5;
 const MY_LOCATION_RADIUS_METERS = 500;
 // 내 위치 마커(높이 72px)에서 발밑 원의 가운데(위에서 64px)를 좌표에 맞춥니다. app.css의 .my-position-marker와 같은 값입니다.
 const MY_MARKER_Y_ANCHOR = 64 / 72;
-// 이 배율부터 개별 핀 대신 묶음 마커를, HIDE_MARKERS_LEVEL부터는 마커를 그리지 않습니다(숫자가 클수록 넓게 봄).
-const CLUSTER_LEVEL = 7;
+// CLUSTER_LEVEL(mapMarkers) 배율부터 개별 핀 대신 묶음 마커를, 이 배율부터는 마커를 그리지 않습니다(숫자가 클수록 넓게 봄).
 const HIDE_MARKERS_LEVEL = 10;
 // 묶음 마커를 누르면 이만큼 확대하되, 이 배율보다 더 가까이 가지는 않습니다.
 const CLUSTER_ZOOM_STEP = 2;
@@ -72,7 +71,7 @@ export default function MapCanvas({
   onBoundsChange,
   onPositionChange,
   focusedPlaceId = null,
-  fitToPlaces = false,
+  shouldFitToPlaces = false,
   fitPlaces,
   radiusView = null,
   fitRequest = null,
@@ -130,7 +129,11 @@ export default function MapCanvas({
         maps.event.addListener(map, "dragstart", () => {
           isFocusMove.current = false;
         });
-        requestAnimationFrame(() => map.relayout());
+        // 처음 범위도 바로 알립니다. idle은 타일을 다 그린 뒤에야 와서, 그 전까지 화면이 지역과 상관없는 목록을 보이지 않게 합니다.
+        requestAnimationFrame(() => {
+          map.relayout();
+          boundsCallback.current?.(map.getBounds(), false);
+        });
         setIsReady(true);
       })
       .catch((cause: unknown) => {
@@ -221,10 +224,10 @@ export default function MapCanvas({
   const fitTargets = fitPlaces ?? places;
   const fitTargetsRef = useRef(fitTargets);
   fitTargetsRef.current = fitTargets;
-  const fitKey = fitToPlaces ? fitTargets.map((place) => place.id).join(",") : "";
+  const fitKey = shouldFitToPlaces ? fitTargets.map((place) => place.id).join(",") : "";
   useEffect(() => {
-    if (fitToPlaces && isReady) fitAll(fitTargetsRef.current);
-  }, [fitToPlaces, fitKey, isReady]);
+    if (shouldFitToPlaces && isReady) fitAll(fitTargetsRef.current);
+  }, [shouldFitToPlaces, fitKey, isReady]);
 
   const fitRequestId = fitRequest?.requestId;
   useEffect(() => {
@@ -266,9 +269,13 @@ export default function MapCanvas({
     });
     // 맛객 프로필 지도처럼 기록한 곳 전체를 맞춰 보여 주는 지도는 처음 내 위치를 찾아도 옮기지 않습니다(점만 표시).
     // '내 위치' 버튼을 누르면 locate가 따로 옮깁니다.
-    if (!fitToPlaces) map.setCenter(new maps.LatLng(position.latitude, position.longitude));
+    if (!shouldFitToPlaces) {
+      map.setCenter(new maps.LatLng(position.latitude, position.longitude));
+      // 내 위치로 옮긴 범위를 idle을 기다리지 않고 알려, 카드·목록이 처음부터 내 주변 기준이 되게 합니다.
+      boundsCallback.current?.(map.getBounds(), false);
+    }
     return () => overlay.setMap(null);
-  }, [isReady, position, hasMe, meNode, fitToPlaces]);
+  }, [isReady, position, hasMe, meNode, shouldFitToPlaces]);
 
   return (
     <>

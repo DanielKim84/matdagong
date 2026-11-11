@@ -33,7 +33,7 @@ export default function SubscriptionsManageScreen({ routeId }: { routeId: string
           ]}
         />
 
-        {app.loading && !app.subscriptions.length && !app.incomingSubscriptions.length ? (
+        {app.isLoading && !app.subscriptions.length && !app.incomingSubscriptions.length ? (
           <Skeleton shape="row" count={3} label="구독 정보를 불러오고 있어요." />
         ) : tab === "subscribed" ? (
           <>

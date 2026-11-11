@@ -5,6 +5,7 @@ import PlaceThumb from "../../components/PlaceThumb";
 import { EmptyState, SectionHead, Segmented, TopBar } from "../../components/ui";
 import {
   dayKey,
+  entriesInMonth,
   entriesByDay,
   formatDay,
   formatDiaryRoute,
@@ -127,7 +128,7 @@ function CalendarView({
   const isCurrentMonth = isSameMonth(today, year, month);
   const leading = new Date(year, month, 1).getDay();
   const days = new Date(year, month + 1, 0).getDate();
-  const monthEntries = entries.filter((entry) => entry.date && isSameMonth(entry.date, year, month));
+  const monthEntries = entriesInMonth(entries, year, month);
   const selectedEntries = selected ? (byDay.get(selected) ?? []) : [];
   const selectedDate = selected ? (selectedEntries[0]?.date ?? null) : null;
 

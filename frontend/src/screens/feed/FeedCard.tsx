@@ -38,13 +38,14 @@ export default function FeedCard({ record }: { record: FeedRecord }) {
     <article className="r-card r-feed-card">
       <header className="r-feed-card__head">
         <button type="button" className="r-feed-card__author" onClick={() => go("profile", author.id)}>
-          <Avatar src={author.avatar} fallbackSrc={author.fallbackAvatar} name={author.name} variant={author.variant} />
+          <Avatar src={author.avatar} name={author.name} variant={author.variant} />
           <span className="r-feed-card__who">
             <b>{author.name}</b>
             <small>{[when, isNew ? "새 기록" : ""].filter(Boolean).join(" · ") || "기록"}</small>
+            {/* 이름이 배지에 밀려 잘리지 않도록 신뢰·취향은 이름 아래 줄에 둡니다. */}
+            <TasteScore taster={author} />
           </span>
         </button>
-        <TasteScore taster={author} />
       </header>
 
       {record.photo ? (

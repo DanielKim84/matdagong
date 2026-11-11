@@ -3,9 +3,9 @@ import { go } from "../../app/navigation";
 import { ProfileCover } from "../../components/BrandAssets";
 import HashTag from "../../components/HashTag";
 import TasteScore from "../../components/TasteScore";
+import TasterAvatar from "../../components/TasterAvatar";
 import type { Taster } from "../../models/place";
 import { activityLabel, coverOf, introOf, tagsOf } from "./tasterData";
-import TasterAvatar from "../../components/TasterAvatar";
 
 /** 카드 한 장에 보여 줄 취향 태그 수 */
 const CARD_TAG_LIMIT = 2;

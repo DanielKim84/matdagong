@@ -1,10 +1,12 @@
 import { isMyTaster, type Place, type Taster, type VisitCondition } from "../../models/place";
+import type { TasteTagGroup } from "../../models/tasteTags";
 import { compareByTrust, isTrustedTaster } from "../../models/trust";
 import { categoryLabel, formatDistance } from "../../utils/format";
 import { distanceMeters, type Coordinates } from "../../utils/geo";
 
 /**
- * 발견 화면(DiscoverScreen)의 필터·정렬·대표 맛객 고르기 계산입니다. React 없이 장소 목록만 다룹니다.
+ * 발견 화면(DiscoverScreen)의 필터·정렬·대표 맛객 고르기 계산입니다. 내 지도도 범위·정렬·대표 맛객 계산을 함께 씁니다.
+ * React 없이 장소 목록만 다룹니다.
  * 탭 저장소에 남기는 화면 상태(고른 조건·시트 높이·정렬)는 discoverStorage.ts가 맡습니다.
  */
 
@@ -14,6 +16,8 @@ type Scope = "all" | "subscribed" | "unsubscribed";
 export type ViewRadius = 500 | 1000 | 5000 | 10000;
 export type SortOrder = "priority" | "distance";
 export type SheetState = "peek" | "half" | "full";
+/** 지도 아래 카드에 한 번에 보여 줄 최대 장소 수입니다(발견·내 지도). */
+export const CAROUSEL_LIMIT = 30;
 /** 지도에 보이는 영역(위도·경도) */
 export type VisibleBounds = { south: number; west: number; north: number; east: number };
 
@@ -21,7 +25,7 @@ export type DiscoverFilters = {
   scope: Scope;
   /** 음식 종류(장소 분류의 마지막 단계). 빈 문자열이면 전체 */
   category: string;
-  /** 맛객 기록 태그(혼밥·데이트 등). 모두 맞아야 보입니다. */
+  /** 맛객 기록 태그(여행·드라이브·뷰·분위기·이럴 때). 모두 맞아야 보입니다. */
   tags: string[];
   /** 방문해 확인한 매장 정보. 모두 맞아야 보입니다. */
   conditions: VisitCondition[];
@@ -42,14 +46,25 @@ export const VIEW_RADIUS_OPTIONS: { value: ViewRadius; label: string; hint: stri
   { value: 10000, label: "10km", hint: "넓게" },
 ];
 
-/** 필터로 고를 만한 매장 정보입니다. 부정적인 경험(불친절 등)은 거르기 조건으로 쓰지 않습니다. */
+/**
+ * 필터로 고를 만한 매장 이용 정보입니다. 찾아갈 이유가 되는 것만 두고, 피하는 조건(주차 불가·노키즈존·불친절 등)은
+ * 거르기 조건으로 쓰지 않습니다(그건 추천 취향의 "피하고 싶은 조건"이 맡음).
+ */
 export const FILTER_CONDITIONS: VisitCondition[] = [
   "주차 편리",
+  "예약 권장",
   "늦게까지 영업",
   "24시간 영업",
+  "반려동물 동반",
+  "아이 의자 있음",
+  "단체석·룸",
+  "테라스·야외석",
+  "포장 가능",
   "친절 경험",
-  "예약 권장",
 ];
+
+/** 필터 시트에 묶음으로 보여 줄 취향 태그 분류입니다. 음식 종류는 카카오 분류로 따로 고릅니다. */
+export const FILTER_TAG_GROUPS: readonly TasteTagGroup[] = ["TRAVEL", "MOOD", "OCCASION"];
 
 /** 화면이 장소를 판단할 때 쓰는 계정 관계입니다. */
 export type PlaceContext = {
@@ -69,23 +84,6 @@ export function discoverPlaces(places: Place[]): Place[] {
       return tasters.length === place.tasters.length ? place : { ...place, tasters, recordCount: tasters.length };
     })
     .filter((place) => place.tasters.length > 0);
-}
-
-/** 샘플 장소가 모여 있는 연남동 부근 기준점입니다. 지도 기본 중심과 같습니다. */
-const SAMPLE_ORIGIN = { latitude: 37.5642, longitude: 126.9254 };
-
-/** 장소 서비스의 개발용 샘플 장소(p-001 등)는 서로의 간격을 유지한 채 현재 위치 주변으로 옮겨 보여 줍니다. */
-export function relocateSamples(places: Place[], device: Coordinates | null): Place[] {
-  if (!device) return places;
-  return places.map((place) =>
-    /^p-\d+$/.test(place.id)
-      ? {
-          ...place,
-          latitude: device.latitude + (place.latitude - SAMPLE_ORIGIN.latitude),
-          longitude: device.longitude + (place.longitude - SAMPLE_ORIGIN.longitude),
-        }
-      : place,
-  );
 }
 
 function isSubscribedPlace(place: Place, ctx: PlaceContext): boolean {
@@ -151,6 +149,7 @@ export function placeSummary(place: Place, ctx: PlaceContext): string {
   return [categoryLabel(place.category), formatDistance(distanceTo(place, ctx))].filter(Boolean).join(" · ");
 }
 
+/** 범위를 아직 모르면(null) 모든 장소를 안에 있는 것으로 봅니다. */
 export function isInBounds(place: Place, bounds: VisibleBounds | null): boolean {
   return (
     !bounds ||
@@ -184,6 +183,7 @@ function priorityOf(place: Place, ctx: PlaceContext): number {
   return 3;
 }
 
+/** 추천순은 우선순위 → 가까운 곳 → 기록 수, 가까운 순은 내 위치를 모르면 추천순으로 정렬합니다. */
 export function sortPlaces(list: Place[], order: SortOrder, ctx: PlaceContext): Place[] {
   const distance = (place: Place) => distanceTo(place, ctx) ?? Number.POSITIVE_INFINITY;
   return [...list].sort((left, right) => {
@@ -210,6 +210,7 @@ export function leadTaster(place: Place, ctx: PlaceContext): Taster | undefined 
   );
 }
 
+/** 같은 맛객(tasterId)은 첫 기록만 남깁니다(얼굴 겹치기·"외 N명" 수). */
 export function uniqueTasters(place: Place): Taster[] {
   return place.tasters.filter(
     (taster, index, list) => list.findIndex((other) => other.tasterId === taster.tasterId) === index,
@@ -247,8 +248,11 @@ export function topCategories(places: Place[], limit = 8): string[] {
   );
 }
 
-export function topTags(places: Place[], limit = 8): string[] {
-  return mostUsed(places.flatMap(placeTags), limit);
+/** 사전 순서의 태그 이름을 이 장소들에서 많이 쓰인 순으로 다시 놓습니다. 쓰인 수가 같으면 사전 순서를 지킵니다. */
+export function sortByUsage(names: string[], places: Place[]): string[] {
+  const counts = new Map<string, number>();
+  places.flatMap(placeTags).forEach((tag) => counts.set(tag, (counts.get(tag) ?? 0) + 1));
+  return [...names].sort((left, right) => (counts.get(right) ?? 0) - (counts.get(left) ?? 0));
 }
 
 /** 범위(상단 칩)를 뺀 세부 조건 수입니다. */

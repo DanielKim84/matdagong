@@ -52,6 +52,7 @@ function snapPositions(element: HTMLElement): number[] {
 
 const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
+/** 문서 전체에 마우스 끌기 처리기를 겁니다. 앱 시작 때(main.tsx) 한 번만 부릅니다. */
 export function installMouseDragScroll() {
   let drag: {
     element: HTMLElement;

@@ -67,7 +67,7 @@ export default function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        // "sheet"는 모양이 아니라 NotificationDialog의 배경 스크롤 잠금이 시트 안 스크롤을 허용할 때 찾는 표시입니다.
+        // "sheet"는 모양이 아니라 usePageScrollLock이 시트 안 스크롤을 허용할 때 찾는 표시입니다.
         className={`sheet ${isPlain ? "" : "r-sheet"} ${className}`}
         onClick={(event) => event.stopPropagation()}
       >

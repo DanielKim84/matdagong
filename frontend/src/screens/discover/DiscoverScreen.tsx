@@ -15,6 +15,7 @@ import PlaceCarousel from "./PlaceCarousel";
 import {
   DEFAULT_FILTERS,
   detailFilterCount,
+  FILTER_TAG_GROUPS,
   isInBounds,
   type DiscoverFilters,
   type SheetState,
@@ -24,6 +25,7 @@ import {
 import { loadStoredState, saveStoredState } from "./discoverStorage";
 import { useDiscoverPlaces } from "./useDiscoverPlaces";
 import { useSheetHeights } from "./useSheetHeights";
+import { visibleMapArea } from "./visibleMapArea";
 
 /**
  * 발견 탭(앱 첫 화면): 화면 가득 지도, 넘기는 장소 카드, 끌어 올리는 목록 시트.
@@ -49,7 +51,7 @@ export default function DiscoverScreen() {
   const top = useRef<HTMLDivElement>(null);
   const float = useRef<HTMLDivElement>(null);
   const { heights, style } = useSheetHeights(root, top, float);
-  const { ctx, filtered, carousel, rows, recentSubscribed, categories, tags, countMatches } = useDiscoverPlaces({
+  const { ctx, filtered, carousel, rows, recentSubscribed, categories, tagSections, countMatches } = useDiscoverPlaces({
     filters,
     sort,
     device,
@@ -60,8 +62,19 @@ export default function DiscoverScreen() {
 
   useEffect(() => saveStoredState({ filters, sheet, sort }), [filters, sheet, sort]);
 
+  // 탭 저장소에 예전 사전의 태그 이름이 남아 있으면, 사전을 받은 뒤 필터 묶음에 지금 있는 이름만 남깁니다.
+  useEffect(() => {
+    if (!app.tasteTags.length) return;
+    setFilters((current) => {
+      const tags = current.tags.filter((tag) =>
+        app.tasteTags.some((option) => option.name === tag && FILTER_TAG_GROUPS.includes(option.tagGroup)),
+      );
+      return tags.length === current.tags.length ? current : { ...current, tags };
+    });
+  }, [app.tasteTags]);
+
   // 검색 응답이 도착해 결과가 바뀔 때마다 한 번 맞춥니다. 응답을 기다리는 동안의 이전 목록으로는 옮기지 않습니다.
-  const searchResultKey = app.query.trim() && !app.loading ? filtered.map((place) => place.id).join(",") : "";
+  const searchResultKey = app.query.trim() && !app.isLoading ? filtered.map((place) => place.id).join(",") : "";
   useEffect(() => {
     if (!searchResultKey) return;
     setFocusedId(null);
@@ -74,7 +87,7 @@ export default function DiscoverScreen() {
     : undefined;
 
   const hasFilterChanges = filters.scope !== "all" || detailFilterCount(filters) > 0;
-  const isFirstLoad = app.loading && !app.places.length;
+  const isFirstLoad = app.isLoading && !app.places.length;
 
   function selectFromMap(place: Place) {
     // 이미 고른 핀을 다시 누르면 상세로, 처음 누르면 카드로 보여 줍니다.
@@ -86,14 +99,8 @@ export default function DiscoverScreen() {
     setSheet("peek");
   }
   function changeBounds(next: MapBounds, isFocusMove: boolean) {
-    const southWest = next.getSouthWest();
-    const northEast = next.getNorthEast();
-    const visible = {
-      south: southWest.getLat(),
-      west: southWest.getLng(),
-      north: northEast.getLat(),
-      east: northEast.getLng(),
-    };
+    // 검색창·카드·시트에 가려진 곳은 빼고, 눈에 보이는 지도 범위의 맛집만 카드·목록에 둡니다.
+    const visible = visibleMapArea(next, root.current, top.current);
     setBounds(visible);
     // 카드를 넘겨 지도가 따라간 경우가 아니면 새 지역으로 보고 카드를 다시 만듭니다. 고른 장소가 지역 밖이면 선택을 풉니다.
     if (isFocusMove) return;
@@ -210,7 +217,7 @@ export default function DiscoverScreen() {
         <FilterSheet
           initial={filters}
           categories={categories}
-          tags={tags}
+          tagSections={tagSections}
           hasPosition={!!device}
           countMatches={countMatches}
           onApply={(next, radius) => {

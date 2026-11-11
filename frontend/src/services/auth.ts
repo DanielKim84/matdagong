@@ -115,12 +115,14 @@ export function cancelMembership(accessToken: string): Promise<void> {
 
 /**
  * 공통 서버의 로그인 세션을 끊습니다. 서버에 닿지 못해도 호출한 쪽은 로그인을 다시 시작할 수 있도록 실패를 던지지 않습니다.
- * endDeviceLogin은 사용자가 직접 로그아웃할 때 true로, 이 기기의 맛다공 로그인 기록까지 지워 다른 기기에서 로그인할 때
+ * shouldEndDeviceLogin은 사용자가 직접 로그아웃할 때 true로, 이 기기의 맛다공 로그인 기록까지 지워 다른 기기에서 로그인할 때
  * 이 기기를 로그아웃할지 묻지 않게 합니다. 토큰 만료로 다시 로그인할 때는 같은 브라우저 다른 탭을 위해 넘기지 않습니다.
  */
-export async function clearServerSession({ endDeviceLogin = false }: { endDeviceLogin?: boolean } = {}): Promise<void> {
+export async function clearServerSession({
+  shouldEndDeviceLogin = false,
+}: { shouldEndDeviceLogin?: boolean } = {}): Promise<void> {
   try {
-    const query = endDeviceLogin ? "?endDeviceLogin=true" : "";
+    const query = shouldEndDeviceLogin ? "?endDeviceLogin=true" : "";
     await fetch(`${AUTH_API_BASE_URL}/auth/session/clear${query}`, { method: "POST" });
   } catch {
     // 서버에 닿지 못해도 현재 탭의 인증 정보는 지우고 로그인을 다시 시작합니다.

@@ -12,7 +12,7 @@ const FOOD_KIND_OPTIONS: { value: FoodKind; label: string }[] = [
   { value: "CAFE_DESSERT", label: "카페·디저트" },
 ];
 
-/** 3단계 · 취향 태그와 방문 조건(모두 선택 입력) */
+/** 3단계 · 취향 태그와 매장 이용 정보(모두 선택 입력). 태그 분류는 장소 분야(음식점·카페)에 따라 바뀝니다. */
 export default function TasteStep({
   form,
   onRequest,
@@ -21,7 +21,7 @@ export default function TasteStep({
   onRequest: (type: "TAG" | "PLACE_INFO") => void;
 }) {
   return (
-    <section className="r-record-step" aria-label="취향 태그와 방문 조건">
+    <section className="r-record-step" aria-label="취향 태그와 매장 이용 정보">
       <RecordStepTitle lead="모두 선택 입력이에요. 고른 태그는 취향이 맞는 사람에게 추천할 때 쓰여요.">
         어떤 곳이었나요?
       </RecordStepTitle>
@@ -36,18 +36,16 @@ export default function TasteStep({
       <div className="r-record-field">
         <SectionHead
           className="r-record-field-head"
-          title="이럴 때 좋아요"
+          title="취향 태그"
           meta={form.tags.length ? `${form.tags.length}개 선택` : "선택"}
         />
         {form.visibleTasteTags.length ? (
-          <div className="r-record-tags">
-            <TasteTagPicker
-              options={form.visibleTasteTags}
-              value={form.tags}
-              onChange={form.setTags}
-              groupsToShow={groupsForFocus(form.foodKind).filter((group) => group !== "VISIT")}
-            />
-          </div>
+          <TasteTagPicker
+            options={form.visibleTasteTags}
+            value={form.tags}
+            onChange={form.setTags}
+            groups={groupsForFocus(form.foodKind)}
+          />
         ) : (
           <p className="r-record-help" role="status">
             이 분야에서 고를 수 있는 태그가 아직 없어요. 태그 없이도 기록할 수 있어요.
@@ -59,12 +57,12 @@ export default function TasteStep({
       </div>
 
       <div className="r-record-field">
-        <SectionHead className="r-record-field-head" title="방문 조건" meta="직접 확인한 것만" />
+        <SectionHead className="r-record-field-head" title="매장 이용" meta="직접 확인한 것만" />
         {VISIT_CONDITION_GROUPS.map((group) => (
           <div className="r-record-condition" key={group.title} role="group" aria-label={group.title}>
             <span className="r-record-condition__title">
               {group.title}
-              <small>{group.exclusive ? "하나만" : "여러 개"}</small>
+              <small>{group.isExclusive ? "하나만" : "여러 개"}</small>
             </span>
             <div className="r-chips r-chips--wrap">
               {group.conditions.map((condition) => {

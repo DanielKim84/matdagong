@@ -126,7 +126,7 @@ export default function StoryViewer({
             go("profile", group.tasterId);
           }}
         >
-          <Avatar src={group.avatar} fallbackSrc={group.fallbackAvatar} name={group.name} variant={group.variant} />
+          <Avatar src={group.avatar} name={group.name} variant={group.variant} />
           <span>
             <b>{group.name}</b>
             {when && <small>{when}</small>}
@@ -181,7 +181,7 @@ export default function StoryViewer({
           <button
             type="button"
             className={`r-feed-story__like${isLiked ? " is-on" : ""}`}
-            aria-label={isLiked ? "내 맛집 바꾸기" : "내 맛집에 저장"}
+            aria-label={isLiked ? "하트 풀기" : "가볼 곳에 저장"}
             aria-pressed={isLiked}
             onClick={() => void chooseLike()}
           >

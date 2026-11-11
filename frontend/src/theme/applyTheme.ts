@@ -1,13 +1,6 @@
 /** 앱 시작 때 적용할 테마를 골라 문서(data-theme, theme-color, 테마 글꼴)에 반영합니다. */
 import { STORAGE_KEYS, readStorage, removeStorage, writeStorage } from "../utils/storage";
-import {
-  DEFAULT_THEME_ID,
-  THEMES,
-  THEME_SCHEDULE,
-  findTheme,
-  type ThemeDefinition,
-  type ThemeSchedule,
-} from "./themes";
+import { DEFAULT_THEME_ID, THEMES, THEME_SCHEDULE, findTheme, type ThemeDefinition } from "./themes";
 
 const PREVIEW_PARAM = "theme";
 const PREVIEW_STORAGE_KEY = STORAGE_KEYS.themePreview;
@@ -23,9 +16,9 @@ function koreanDate(now: Date): string {
   }).format(now);
 }
 
-function scheduledTheme(now: Date, schedule: readonly ThemeSchedule[] = THEME_SCHEDULE): string | undefined {
+function scheduledTheme(now: Date): string | undefined {
   const today = koreanDate(now);
-  return schedule.find((entry) => entry.start <= today && today < entry.end && findTheme(entry.theme))?.theme;
+  return THEME_SCHEDULE.find((entry) => entry.start <= today && today < entry.end && findTheme(entry.theme))?.theme;
 }
 
 /**
@@ -47,7 +40,8 @@ function resolveTheme(now = new Date()): ThemeDefinition {
   return findTheme(id) ?? THEMES[0];
 }
 
-export function applyTheme(theme: ThemeDefinition = resolveTheme()): void {
+export function applyTheme(): void {
+  const theme = resolveTheme();
   const root = document.documentElement;
   root.dataset.theme = theme.id;
 

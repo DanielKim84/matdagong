@@ -1,18 +1,15 @@
 import { useEffect, useState } from "react";
 import { registerMembership } from "../../services/auth";
 import { ensureMyProfile, getTasteTags, updateMyProfile } from "../../services/community";
-import type { FoodFocus, TasteTag } from "../../models/community";
+import { MAX_NICKNAME_LENGTH, type FoodFocus, type TasteTag } from "../../models/community";
 import { filterTagsForFocus } from "../../models/tasteTags";
 import { errorMessage } from "../../utils/errorMessage";
 import type { LoadState } from "./loadMatches";
 import SignupMatchStep from "./SignupMatchStep";
-import SignupNameStep, { MAX_DISPLAY_NAME_LENGTH } from "./SignupNameStep";
+import SignupNameStep from "./SignupNameStep";
 import SignupTasteStep from "./SignupTasteStep";
 
 type Step = "name" | "taste" | "match";
-
-// 가입 단계에서는 분야를 따로 묻지 않고 모든 분야의 취향을 받습니다. 설정에서 바꿀 수 있습니다.
-const PREFERENCE_FOCUS: FoodFocus = "BOTH";
 
 /** 소셜 로그인 뒤 처음 온 사용자가 닉네임 → 취향 → 입맛 맞는 맛객 순서로 가입을 마칩니다. */
 export default function SignupScreen({
@@ -27,12 +24,14 @@ export default function SignupScreen({
   onComplete: () => void;
 }) {
   const [step, setStep] = useState<Step>("name");
-  const [displayName, setDisplayName] = useState(initialName.slice(0, MAX_DISPLAY_NAME_LENGTH));
+  const [displayName, setDisplayName] = useState(initialName.slice(0, MAX_NICKNAME_LENGTH));
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tasteTags, setTasteTags] = useState<TasteTag[]>([]);
   const [tagsState, setTagsState] = useState<LoadState>("loading");
+  // 찾는 분야는 처음에 모든 분야로 두고, 고르면 그 분야의 태그 분류만 보여 줍니다. 설정에서 다시 바꿀 수 있습니다.
+  const [preferenceFocus, setPreferenceFocus] = useState<FoodFocus>("BOTH");
   const [preferenceTags, setPreferenceTags] = useState<string[]>([]);
   const [isMembershipComplete, setIsMembershipComplete] = useState(false);
 
@@ -72,8 +71,8 @@ export default function SignupScreen({
         tasterFocus: profile.tasterFocus ?? "BOTH",
         activityScope: profile.activityScope ?? "LOCAL",
         activityRegion: profile.activityRegion ?? "",
-        preferenceFocus: PREFERENCE_FOCUS,
-        preferenceTags: filterTagsForFocus(tags, PREFERENCE_FOCUS, tasteTags),
+        preferenceFocus,
+        preferenceTags: filterTagsForFocus(tags, preferenceFocus, tasteTags),
         excludedTags: profile.excludedTags ?? [],
       });
       return true;
@@ -114,6 +113,12 @@ export default function SignupScreen({
       <SignupTasteStep
         tasteTags={tasteTags}
         tagsState={tagsState}
+        focus={preferenceFocus}
+        onFocusChange={(focus) => {
+          setPreferenceFocus(focus);
+          // 숨겨지는 분류의 태그는 고른 목록에서도 뺍니다(프로필 편집과 같은 규칙).
+          setPreferenceTags((current) => filterTagsForFocus(current, focus, tasteTags));
+        }}
         value={preferenceTags}
         onChange={setPreferenceTags}
         error={error}

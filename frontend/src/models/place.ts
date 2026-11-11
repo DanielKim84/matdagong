@@ -12,7 +12,6 @@ export type Place = {
   lotAddress?: string;
   providerPhone?: string;
   providerUrl?: string;
-  visibility?: "private" | "public";
   name: string;
   category: string;
   address: string;
@@ -24,53 +23,60 @@ export type Place = {
   tasters: Taster[];
 };
 
-// 직접 방문해 확인한 운영 시간과 매장 이용 정보를 맛객 기록에 남깁니다.
+/**
+ * 맛객이 직접 다녀와 확인한 매장 이용 정보입니다. 커뮤니티 DB의 VISIT 태그 이름(V39)과 반드시 같아야 합니다.
+ * app/enrichPlaces가 내 "피하고 싶은 조건"(VISIT 태그)과 기록의 매장 이용 정보를 이름으로 비교하기 때문입니다.
+ * 기록하기에서 하나만 고르는 묶음을 나누려고 화면에도 이름을 둡니다. 서버 목록과 함께 고칩니다.
+ */
 const VISIT_CONDITIONS = [
-  "웨이팅 있는 곳",
-  "주차 불가",
-  "주차 공간 협소",
-  "노키즈존",
-  "불친절 경험",
-  "친절 경험",
   "주차 편리",
-  "24시간 영업",
-  "늦게까지 영업",
-  "브레이크타임 있음",
+  "주차 공간 협소",
+  "주차 불가",
   "예약 권장",
+  "웨이팅 있는 곳",
+  "브레이크타임 있음",
+  "늦게까지 영업",
+  "24시간 영업",
+  "반려동물 동반",
+  "노키즈존",
+  "아이 의자 있음",
+  "단체석·룸",
+  "테라스·야외석",
+  "포장 가능",
+  "친절 경험",
+  "불친절 경험",
 ] as const;
 export type VisitCondition = (typeof VISIT_CONDITIONS)[number];
 
-/** 매장 정보는 주제별로 묶고, 서로 반대되는 상태만 한 항목 안에서 하나 고릅니다. */
+/** 매장 이용 정보는 주제별로 묶고, 서로 반대되는 상태만 한 항목 안에서 하나 고릅니다. */
 export const VISIT_CONDITION_GROUPS: {
   title: string;
-  hint: string;
-  exclusive: boolean;
+  isExclusive: boolean;
   conditions: VisitCondition[];
 }[] = [
-  {
-    title: "주차",
-    hint: "가장 가까운 상태 하나를 선택해 주세요.",
-    exclusive: true,
-    conditions: ["주차 편리", "주차 불가", "주차 공간 협소"],
-  },
-  {
-    title: "영업 시간",
-    hint: "특징이 있는 영업 정보만 남겨 주세요.",
-    exclusive: true,
-    conditions: ["24시간 영업", "늦게까지 영업"],
-  },
-  {
-    title: "응대 경험",
-    hint: "방문했을 때 느낀 응대 하나를 선택해 주세요.",
-    exclusive: true,
-    conditions: ["친절 경험", "불친절 경험"],
-  },
+  { title: "주차", isExclusive: true, conditions: ["주차 편리", "주차 공간 협소", "주차 불가"] },
+  { title: "영업 시간", isExclusive: true, conditions: ["늦게까지 영업", "24시간 영업"] },
+  { title: "응대 경험", isExclusive: true, conditions: ["친절 경험", "불친절 경험"] },
   {
     title: "이용 안내",
-    hint: "함께 적용될 수 있는 조건은 여러 개 고를 수 있어요.",
-    exclusive: false,
-    conditions: ["웨이팅 있는 곳", "노키즈존", "브레이크타임 있음", "예약 권장"],
+    isExclusive: false,
+    conditions: ["예약 권장", "웨이팅 있는 곳", "브레이크타임 있음", "포장 가능"],
   },
+  {
+    title: "함께 가기",
+    isExclusive: false,
+    conditions: ["반려동물 동반", "노키즈존", "아이 의자 있음", "단체석·룸", "테라스·야외석"],
+  },
+];
+
+/** 추천 취향의 "피하고 싶은 조건"으로 고를 수 있는 매장 이용 정보입니다. 화면에서만 거릅니다. */
+export const AVOIDABLE_VISIT_CONDITIONS: readonly VisitCondition[] = [
+  "주차 공간 협소",
+  "주차 불가",
+  "웨이팅 있는 곳",
+  "브레이크타임 있음",
+  "노키즈존",
+  "불친절 경험",
 ];
 
 /** 저장해 둔 입력 등 외부 값에서 알려진 매장 이용 정보만 골라낼 때 씁니다. */
@@ -81,16 +87,19 @@ export function isVisitCondition(name: string): name is VisitCondition {
 export type Taster = {
   tasterId: string;
   tasterName: string;
-  tag: string;
+  /**
+   * 맛객 사진 주소(없으면 빈 문자열)와 기본 캐릭터 번호입니다. 장소 응답에는 없어 app/enrichPlaces가 커뮤니티 프로필로
+   * 채웁니다.
+   */
   avatar: string;
   avatarVariant: number;
   note: string;
-  menus?: (string | RecommendedMenu)[];
+  menus?: RecommendedMenu[];
   photos?: string[];
   tags?: string[];
   tagGroups?: Record<string, string>;
   visitConditions?: VisitCondition[];
-  profileCoverUrl?: string | null;
+  /** 커뮤니티 프로필의 배경 사진 주소(올린 순서). 장소 응답의 기록에는 없습니다. */
   profileCoverUrls?: string[];
   tasterFocus?: FoodFocus;
   activityScope?: ActivityScope;
@@ -98,7 +107,7 @@ export type Taster = {
   intro?: string;
   subscriberCount?: number;
   placeCount?: number;
-  /** 기록을 남긴 시각(ISO-8601). 샘플 기록과 브라우저에만 있는 이전 기록은 없습니다. */
+  /** 기록을 남긴 시각(ISO-8601). 커뮤니티 프로필로 만든 맛객에는 없습니다. */
   recordedAt?: string | null;
   profileTags?: string[];
   matchedTags?: string[];
@@ -136,7 +145,6 @@ export function isCafeCategory(category?: string | null): boolean {
 export type RecommendedMenu = { name: string; price?: number; photo?: string };
 
 export type NewPlace = {
-  id: string;
   providerCode?: string;
   providerPlaceId?: string;
   roadAddress?: string;
@@ -155,16 +163,15 @@ export type NewPlace = {
   visitConditions: VisitCondition[];
   photos: string[];
   visibility: "private" | "public";
-  createdAt: string;
   /** 저장할 때의 기기 위치. 새 기록이면 장소 서비스가 가게와 VISIT_RADIUS_METERS 안인지 다시 확인합니다(브라우저에 보관하지 않음). */
   deviceLocation?: { latitude: number; longitude: number } | null;
 };
 
 /**
  * 지도 마커 종류입니다. 맛객 핀: other·subscribed(발견), own(내 기록). 기호 마커(내 지도): liked(가볼 곳),
- * visited(기록 없이 다녀왔어요 하트), search(카카오에서 검색해 고른 가게).
+ * visited(기록 없는 다녀온 곳: 빠른 저장했거나 기록을 지운 곳).
  */
-export type MapKind = "other" | "subscribed" | "liked" | "own" | "visited" | "search";
+export type MapKind = "other" | "subscribed" | "liked" | "own" | "visited";
 export type Screen =
   | "home"
   | "map"
@@ -181,13 +188,12 @@ export type Screen =
   | "settings"
   | "profile-edit"
   | "intro"
-  | "liked"
   | "recent"
   | "feed"
   | "tasters"
   | "wallet"
-  | "my-records"
   | "drafts"
+  | "disliked"
   | "policy";
 
 /**

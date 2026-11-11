@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { isAllowedImageSize, isAllowedImageType } from "./profileImages";
+import { MAX_IMAGE_SIZE_LABEL, isAllowedImageSize, isAllowedImageType } from "./profileImages";
 
 /** 저장 전 프로필 사진 변경(새 파일·기본 캐릭터로 되돌림)과 미리보기 주소를 들고 있습니다. */
 export function useAvatarDraft(onError: (message: string) => void) {
@@ -24,7 +24,7 @@ export function useAvatarDraft(onError: (message: string) => void) {
       return;
     }
     if (!isAllowedImageSize(next)) {
-      onError("이미지는 5MB 이하로 선택해 주세요.");
+      onError(`이미지는 ${MAX_IMAGE_SIZE_LABEL} 이하로 선택해 주세요.`);
       return;
     }
     setFile(next);

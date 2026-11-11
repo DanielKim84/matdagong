@@ -1,9 +1,12 @@
 /** 카카오 지도 SDK 불러오기와 카카오 장소 검색입니다. SDK는 한 번만 불러와 지도와 검색이 함께 씁니다. */
+import { distanceMeters, kakaoPlaceCoordinates, type Coordinates } from "../utils/geo";
+
 let sdkPromise: Promise<void> | undefined;
 
 // 장소 검색 한 번에 받을 결과 수입니다.
 const SEARCH_RESULT_SIZE = 8;
 
+/** 카카오 SDK를 한 번만 불러옵니다. 불러오지 못하면 다음 호출 때 다시 시도합니다. */
 export function loadMapSdk() {
   if (sdkPromise) return sdkPromise;
   const key = import.meta.env.VITE_KAKAO_MAP_APP_KEY?.trim();
@@ -28,13 +31,12 @@ export function loadMapSdk() {
 }
 
 /**
- * 카카오 장소를 키워드로 검색합니다. center를 주면 그 주변 radiusMeters 안에서 찾습니다.
- * 맛집 등록과 빠른 장소 기록에서 쓰며, 결과의 id(카카오 장소 ID)로 같은 장소를 구분합니다.
+ * 카카오 장소를 키워드로 검색합니다. nearby를 주면 그 중심의 반경 안에서 찾습니다.
+ * 내 지도 검색은 지역 없이 바로, 기록하기·빠른 저장은 searchNearbyKakaoPlaces로 부르며, 결과의 id(카카오 장소 ID)로 같은 장소를 구분합니다.
  */
 export async function searchKakaoPlaces(
   keyword: string,
-  center?: { latitude: number; longitude: number },
-  radiusMeters = 1000,
+  nearby?: { center: Coordinates; radiusMeters: number },
 ): Promise<KakaoPlaceResult[]> {
   await loadMapSdk();
   const maps = window.kakao?.maps;
@@ -50,13 +52,23 @@ export async function searchKakaoPlaces(
       },
       {
         size: SEARCH_RESULT_SIZE,
-        ...(center
+        ...(nearby
           ? {
-              location: new maps.LatLng(center.latitude, center.longitude),
-              radius: radiusMeters,
+              location: new maps.LatLng(nearby.center.latitude, nearby.center.longitude),
+              radius: nearby.radiusMeters,
             }
           : {}),
       },
     );
   });
+}
+
+/** 지금 위치 주변 radiusMeters 안의 카카오 장소만 찾습니다. 받은 결과도 좌표로 한 번 더 걸러 반경 밖 가게를 뺍니다. */
+export async function searchNearbyKakaoPlaces(
+  keyword: string,
+  center: Coordinates,
+  radiusMeters: number,
+): Promise<KakaoPlaceResult[]> {
+  const results = await searchKakaoPlaces(keyword, { center, radiusMeters });
+  return results.filter((place) => distanceMeters(center, kakaoPlaceCoordinates(place)) <= radiusMeters);
 }

@@ -8,10 +8,12 @@ import Icon, { type IconName } from "./Icon";
 type TopBarProps = {
   title: string;
   /** 탭 첫 화면이면 뒤로 버튼 없이 큰 제목을 씁니다. */
-  root?: boolean;
+  isRoot?: boolean;
   /** 앱 안 이전 화면이 없을 때 뒤로 버튼이 갈 화면 */
   fallback?: Screen;
   right?: ReactNode;
+  /** 제목 바로 옆에 붙일 작은 칸(맛객 탭의 지역 버튼 등). 기본 바에서만 씁니다. */
+  aside?: ReactNode;
   /** float: 큰 사진 위에 떠 있는 바(상세·프로필). 바탕 없이 둥근 버튼만 보이고, isScrolled면 바탕과 제목이 나타납니다. */
   variant?: "default" | "float";
   isScrolled?: boolean;
@@ -20,13 +22,14 @@ type TopBarProps = {
 /** 화면 상단 바(뒤로 버튼 + 제목 + 오른쪽 칸)입니다. */
 export function TopBar({
   title,
-  root = false,
+  isRoot = false,
   fallback = "home",
   right,
+  aside,
   variant = "default",
   isScrolled = false,
 }: TopBarProps) {
-  const backButton = !root && (
+  const backButton = !isRoot && (
     <button
       type="button"
       className={`r-icon-button ${variant === "float" ? "r-icon-button--float" : ""}`}
@@ -51,9 +54,16 @@ export function TopBar({
     );
   }
   return (
-    <header className={`r-topbar ${root ? "r-topbar--root" : ""}`}>
+    <header className={`r-topbar ${isRoot ? "r-topbar--root" : ""}`}>
       {backButton}
-      <h1>{title}</h1>
+      {aside ? (
+        <div className="r-topbar__heading">
+          <h1>{title}</h1>
+          {aside}
+        </div>
+      ) : (
+        <h1>{title}</h1>
+      )}
       {right}
     </header>
   );
@@ -61,16 +71,16 @@ export function TopBar({
 
 /** 상단 바에 두는 알림 버튼입니다. 읽지 않은 알림이 있으면 점을 표시합니다. */
 export function NotificationButton({ isFloating = false }: { isFloating?: boolean }) {
-  const { unread } = useAppData();
+  const { hasUnread } = useAppData();
   return (
     <button
       type="button"
       className={`r-icon-button ${isFloating ? "r-icon-button--float" : ""}`}
       onClick={() => go("notifications")}
-      aria-label={unread ? "알림, 읽지 않은 알림 있음" : "알림"}
+      aria-label={hasUnread ? "알림, 읽지 않은 알림 있음" : "알림"}
     >
       <Icon name="bell" />
-      {unread && <i className="r-icon-button__dot" aria-hidden="true" />}
+      {hasUnread && <i className="r-icon-button__dot" aria-hidden="true" />}
     </button>
   );
 }
@@ -209,12 +219,12 @@ export function EmptyState({
 export function Skeleton({
   shape = "row",
   count = 1,
-  label = "불러오고 있어요.",
+  label,
   className = "",
 }: {
   shape?: "row" | "card" | "line";
   count?: number;
-  label?: string;
+  label: string;
   className?: string;
 }) {
   return (

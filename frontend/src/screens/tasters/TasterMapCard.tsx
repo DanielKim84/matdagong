@@ -67,7 +67,7 @@ export default function TasterMapCard({ taster, places, isOwn }: { taster: Taste
           subscriptions={app.subscriptionIds}
           onSelect={(place) => go("place", place.id)}
           onPositionChange={setPosition}
-          fitToPlaces
+          shouldFitToPlaces
         />
       </div>
     </section>

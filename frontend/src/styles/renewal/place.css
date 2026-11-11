@@ -149,6 +149,12 @@
   background: var(--color-primary);
   color: var(--on-strong);
 }
+/* 별로였던 곳: 내 맛집이 아니므로 코랄 대신 차분한 회색으로 둡니다. */
+.r-place-pill.is-disliked {
+  border-color: var(--neutral-300);
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+}
 .r-place-address {
   display: flex;
   align-items: center;
@@ -487,7 +493,7 @@
   min-width: 0;
   min-height: 44px;
   flex: 1;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   border: 0;
   background: none;
@@ -518,6 +524,19 @@
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* 이름·날짜 아래 신뢰·취향 칩 */
+.r-place-record__who .r-scores {
+  align-self: flex-start;
+  margin-top: 5px;
+}
+/* 머리 오른쪽 끝의 내 기록·구독 중(이름 줄 높이에 맞춤) */
+.r-place-record__relation {
+  flex: none;
+  align-self: flex-start;
+  height: 24px;
+  margin-top: 2px;
+  padding: 0 9px;
 }
 .r-place-record__note {
   margin: 0;
@@ -707,23 +726,6 @@
 .r-place-actionbar__main {
   min-width: 0;
   flex: 1;
-}
-
-/* 하트를 방문 기록으로 바꿀지 묻는 시트(PlaceConversionSheet) */
-.r-place-sheet p {
-  margin: 0 0 18px;
-  color: var(--color-muted);
-  font-size: 14px;
-  line-height: 1.7;
-}
-.r-place-sheet__actions {
-  display: grid;
-  grid-template-columns: 1fr 1.3fr;
-  gap: 10px;
-}
-.r-place-sheet__actions .r-button {
-  min-height: 48px;
-  padding: 0 12px;
 }
 
 /* ── 전체 화면 사진 보기 ── */

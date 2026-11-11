@@ -726,36 +726,6 @@
   font-size: 12px;
 }
 
-/* 취향 칩 */
-.r-onboarding-taste {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-.r-onboarding-taste__group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.r-onboarding-taste__group h2 {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 13px;
-  font-weight: 700;
-}
-.r-onboarding-taste__group h2 small {
-  color: var(--color-primary);
-  font-size: 12px;
-}
-.r-onboarding-taste .r-chips--wrap {
-  gap: 10px;
-}
-.r-onboarding-taste__chip {
-  height: 44px;
-  border-color: var(--neutral-150);
-  padding: 0 16px;
-}
-
 .r-onboarding-note {
   display: flex;
   align-items: center;

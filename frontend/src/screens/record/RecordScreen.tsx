@@ -29,7 +29,7 @@ export default function RecordScreen() {
     return (
       <main className="r-screen r-record">
         <TopBar title="기록 수정" fallback="my" />
-        {app.loading ? (
+        {app.isLoading ? (
           <EmptyState tone="loading" title="기록을 불러오고 있어요" message="잠시만 기다려 주세요." />
         ) : app.error ? (
           <EmptyState
@@ -49,12 +49,5 @@ export default function RecordScreen() {
     );
   }
 
-  return (
-    <RecordFlow
-      key={route.id ? `edit:${route.id}` : `new:${round}`}
-      editPlace={editPlace}
-      editPlaceId={route.id || undefined}
-      onSaved={setDone}
-    />
-  );
+  return <RecordFlow key={route.id ? `edit:${route.id}` : `new:${round}`} editPlace={editPlace} onSaved={setDone} />;
 }

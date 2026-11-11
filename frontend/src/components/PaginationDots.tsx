@@ -9,13 +9,13 @@ export default function PaginationDots({
   total,
   onSelect,
   className = "",
-  label = "사진 페이지",
+  label,
 }: {
   activeIndex: number;
   total: number;
   onSelect: (index: number) => void;
   className?: string;
-  label?: string;
+  label: string;
 }) {
   const pages = visiblePageIndices(activeIndex, total);
   const startIndex = pages[0] ?? 0;

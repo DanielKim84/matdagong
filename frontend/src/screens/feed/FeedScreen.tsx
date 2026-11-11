@@ -57,8 +57,7 @@ export default function FeedScreen() {
       return {
         tasterId: id,
         name: first?.author.name || profile?.tasterName || subscription.targetNickname || "맛객",
-        avatar: first?.author.avatar ?? avatarSource(id, profile?.avatar),
-        fallbackAvatar: first?.author.fallbackAvatar,
+        avatar: first?.author.avatar ?? avatarSource(profile?.avatar),
         variant: first?.author.variant ?? profile?.avatarVariant ?? 1,
         ...story,
       };
@@ -87,12 +86,12 @@ export default function FeedScreen() {
     setVisibleCount(PAGE_SIZE);
   }
 
-  const isLoading = app.loading && places.length === 0;
-  const hasError = !app.loading && !!app.error && places.length === 0;
+  const isLoading = app.isLoading && places.length === 0;
+  const hasError = !app.isLoading && !!app.error && places.length === 0;
 
   return (
     <main className="r-screen r-feed">
-      <TopBar title="피드" root right={<NotificationButton />} />
+      <TopBar title="피드" isRoot right={<NotificationButton />} />
 
       <nav className="r-feed-stories" aria-label="구독한 맛객 스토리">
         <button type="button" className="r-feed-story-chip" onClick={() => go("tasters")}>
@@ -117,12 +116,7 @@ export default function FeedScreen() {
               }
             >
               <span className="r-feed-story-chip__ring">
-                <Avatar
-                  src={group.avatar}
-                  fallbackSrc={group.fallbackAvatar}
-                  name={group.name}
-                  variant={group.variant}
-                />
+                <Avatar src={group.avatar} name={group.name} variant={group.variant} />
                 {isFresh && (
                   <em className="r-feed-story-chip__count" aria-hidden="true">
                     {group.unseenCount}
@@ -224,9 +218,9 @@ function EmptySubscriptions({ onShowAll }: { onShowAll: () => void }) {
               <TasterAvatar taster={taster} />
               <span className="r-row__copy">
                 <b>{taster.tasterName}</b>
-                <small>{taster.intro || taster.activityRegion || taster.tag || "맛객"}</small>
+                <small>{taster.intro || taster.activityRegion || "맛객"}</small>
+                <TasteScore taster={taster} />
               </span>
-              <TasteScore taster={taster} />
             </button>
           ))}
         </div>

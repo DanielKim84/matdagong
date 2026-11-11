@@ -15,7 +15,7 @@ import type {
 } from "../models/community";
 import type { NewPlace, Place, Taster } from "../models/place";
 
-/** 안내창 종류입니다. error는 위험 색, 나머지는 기본 색으로 보입니다. */
+/** 안내창 종류입니다. 확인창 tone으로 바꿔 띄웁니다(error → danger, 나머지는 같은 이름). */
 export type NoticeKind = "info" | "success" | "error";
 export type AppNotice = { kind: NoticeKind; title: string; message: string };
 /** 서버가 이유를 알려 주지 않은 실패 안내의 기본 문구입니다. */
@@ -45,16 +45,17 @@ export type AppData = {
   myRecords: Place[];
   recentPlaces: Place[];
   likedPlaceIds: string[];
-  /** 직접 다녀온 하트: 입맛에 맞았던 곳과 기록에서 내 맛집으로 옮긴 곳(방문 확인 없이 기록으로 바꿀 수 있음) */
-  visitedLikedPlaceIds: string[];
-  /** 다녀왔지만 별로였던 곳(하트 아님). 맛객 신뢰에만 반영됩니다. */
+  /** 다녀온 곳(빠른 저장·기록한 적 있는 곳). 기록을 지워도 남아 내 지도의 가본 곳에 보입니다. */
+  visitedPlaceIds: string[];
+  /** 다녀왔지만 별로였던 곳(하트 아님). 지도에서 빠지고 맛객 신뢰에 반영됩니다. */
   dislikedPlaceIds: string[];
-  /** 그 가게에 들른 근거(빠른 저장, 기록을 옮긴 하트, 별로였던 곳)가 있는 장소 */
+  /**
+   * 그 가게에 들른 근거(다녀온 곳, 빠른 저장, 별로였던 곳)가 있는 장소.
+   * 이곳은 위치 확인 없이 기록하거나 별로였어요를 고를 수 있습니다.
+   */
   visitProofPlaceIds: string[];
   /** 지금 보고 있는 맛집 상세(#place/<id>)의 장소. 없으면 불러오는 중이거나 찾을 수 없음 */
   activePlace?: Place;
-  /** 이전 버전이 이 브라우저에만 저장한 내 기록(서버로 옮기기 전). 상세의 내 기록으로 씁니다. */
-  legacyOwnRecord?: NewPlace;
   /** 수정할 내 기록(#register/<id>)을 찾습니다. */
   editablePlace: (id: string) => Place | undefined;
 
@@ -76,11 +77,12 @@ export type AppData = {
   subscriptionTarget: Taster | null;
 
   notificationFeed: NotificationFeed;
-  notificationLoading: boolean;
+  isNotificationLoading: boolean;
   notificationError: string;
-  unread: boolean;
+  hasUnread: boolean;
 
-  loading: boolean;
+  /** 공개 장소 목록을 불러오는 중인지와 그 오류 문구 */
+  isLoading: boolean;
   error: string;
   /** 지도 검색어 */
   query: string;
@@ -93,7 +95,7 @@ export type AppData = {
   actions: {
     retry: () => void;
     notify: (notice: AppNotice) => void;
-    /** 하트 버튼: 지금 하트 상태에 맞는 선택 시트를 열고, 고른 것을 저장할 때까지 기다립니다. */
+    /** 하트 버튼: 빈 하트는 바로 가볼 곳으로 저장하고, 찬 하트는 고르는 시트를 열어 저장이 끝날 때까지 기다립니다. */
     chooseLike: (placeId: string) => Promise<void>;
     undoDislike: (placeId: string) => Promise<void>;
     /** 카카오에서 검색한 가게를 가볼 곳으로 저장하고 저장된 장소를 돌려줍니다. 실패하면 오류를 던집니다. */
@@ -104,14 +106,8 @@ export type AppData = {
     cancelTasterSubscription: (tasterId: string) => Promise<void>;
     /** 맛객을 신고합니다. 기록에서 신고했으면 placeId를 넘깁니다. 실패하면 오류를 던집니다. */
     reportTaster: (tasterId: string, reason: TasterReportReason, memo: string, placeId?: string) => Promise<void>;
-    /** 저장된 장소를 돌려줍니다. stayOnScreen이면 새 기록 저장 뒤 상세로 이동하지 않습니다. */
-    register: (
-      place: NewPlace,
-      convertFromPlaceId?: string,
-      visitedConfirmed?: boolean,
-      stayOnScreen?: boolean,
-    ) => Promise<Place>;
-    startRecordConversion: (place: Place) => void;
+    /** 저장된 장소를 돌려줍니다. 새 기록은 부른 화면이 완료 화면을 그리고, 수정은 저장 뒤 상세로 옮깁니다. */
+    register: (place: NewPlace, convertFromPlaceId?: string, isVisitConfirmed?: boolean) => Promise<Place>;
     /** 내 기록의 공개 범위만 바꿉니다. 기록 내용은 그대로 남습니다. */
     changeOwnRecordVisibility: (place: Place, visibility: "PUBLIC" | "PRIVATE") => Promise<void>;
     /** 이 장소의 내 기록을 지웁니다. 지웠으면 true입니다. */

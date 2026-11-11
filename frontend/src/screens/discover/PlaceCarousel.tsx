@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import PlaceThumb from "../../components/PlaceThumb";
-import { placePhoto, type Place } from "../../models/place";
+import { placePhoto, type Place, type Taster } from "../../models/place";
 import { leadTaster, placeSummary, type PlaceContext } from "./discoverModel";
 import TasterLine from "./TasterLine";
 
@@ -25,17 +25,24 @@ function scrollPaddingLeft(list: HTMLElement): number {
 /**
  * 지도 아래에서 가로로 넘기는 장소 카드입니다. 카드를 넘겨 멈춘 카드가 선택되고(지도 핀 강조),
  * 지도에서 핀을 고르면 그 카드로 넘어갑니다. 카드를 누르면 맛집 상세로 갑니다.
+ * 발견과 내 지도가 함께 씁니다. 내 지도는 leadOf로 내 기록을 대표로 고르고, badgeOf로 사진 위에 나와의 관계(내 기록·다녀온 곳·가볼 곳)를 붙입니다.
  */
 export default function PlaceCarousel({
   places,
   ctx,
   focusedId,
   onFocus,
+  leadOf = leadTaster,
+  badgeOf,
 }: {
   places: Place[];
   ctx: PlaceContext;
   focusedId: string | null;
   onFocus: (placeId: string) => void;
+  /** 카드에 보여 줄 대표 맛객(기본: 발견의 대표 맛객 고르기) */
+  leadOf?: (place: Place, ctx: PlaceContext) => Taster | undefined;
+  /** 사진 왼쪽 위에 붙일 이름표 */
+  badgeOf?: (place: Place) => string | undefined;
 }) {
   const { photoFor } = useAppData();
   const list = useRef<HTMLUListElement>(null);
@@ -82,7 +89,8 @@ export default function PlaceCarousel({
   return (
     <ul className="r-discover-carousel" ref={list} onScroll={selectSettledCard} aria-label="지도 주변 맛집 카드">
       {places.map((place) => {
-        const lead = leadTaster(place, ctx);
+        const lead = leadOf(place, ctx);
+        const badge = badgeOf?.(place);
         const note = lead?.note?.trim() || place.recentNote?.trim();
         const isFocused = place.id === focusedId;
         return (
@@ -99,6 +107,7 @@ export default function PlaceCarousel({
                 fallback="icon"
                 className="r-discover-card__thumb"
               />
+              {badge && <span className="r-tag r-tag--mine r-discover-card__badge">{badge}</span>}
               <span className="r-discover-card__copy">
                 <b className="r-discover-card__name">{place.name}</b>
                 <small className="r-muted">{placeSummary(place, ctx)}</small>

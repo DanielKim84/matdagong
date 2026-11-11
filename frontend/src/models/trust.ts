@@ -29,8 +29,8 @@ export function compareByTrust(left: TrustTaster, right: TrustTaster): number {
 }
 
 /**
- * 맛객 옆 작은 점수 표시입니다. 같은 맛집 경험이 있으면 "신뢰 N%", 없으면 "취향 N%"입니다(취향은 시작, 신뢰는 경험으로).
- * 보여 줄 값이 없으면 빈 문자열입니다.
+ * 글자 하나로만 보여 줄 자리(맛집 상세의 맛객 고르기 줄 등)의 점수입니다. 입맛이 다른 편이면 그 이름을, 아니면 같은 맛집 경험이 있을 때 "신뢰 N%", 없을 때 "취향 N%"를 돌려줍니다.
+ * 칩으로 보여 줄 때는 신뢰·취향을 나란히 두는 TasteScore를 씁니다. 보여 줄 값이 없으면 빈 문자열입니다.
  */
 export function tasteScoreLabel(taster: TrustTaster): string {
   if (taster.trustLevel === "DIFFERENT") return TRUST_LEVEL_LABELS.DIFFERENT ?? "";

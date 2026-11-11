@@ -21,19 +21,17 @@ type RecordSubmitResult = { isSaved: true; placeId: string } | { isSaved: false;
 /**
  * 기록하기(새 기록·수정)의 입력 상태를 모읍니다. 장소·사진·메뉴·취향·추천 이유는 각 훅이 맡고,
  * 이 훅은 로그인 만료 대비 보관, 단계 검사, 저장을 맡습니다. 화면은 단계별 컴포넌트로 나눠 이 훅을 씁니다.
+ * 수정할 기록을 아직 불러오는 중이면 RecordScreen이 이 화면을 그리지 않으므로, editPlace에는 늘 내 기록이 있습니다.
  */
-export function useRecordForm({ editPlace, editPlaceId }: { editPlace?: Place; editPlaceId?: string }) {
+export function useRecordForm({ editPlace }: { editPlace?: Place }) {
   const app = useAppData();
   const editRecord = editPlace?.tasters.find(isMyTaster);
   const isEditing = !!editPlace && !!editRecord;
   const draftEditPlaceId = isEditing && editPlace ? editPlace.id : null;
-  // 수정할 기록을 아직 불러오는 중이면 보관한 입력을 복원하거나 저장하지 않습니다.
-  const isEditLoading = !!editPlaceId && !isEditing;
   const accountId = accountIdFromAccessToken(app.accessToken);
   const { restoredDraft, draftNotice, dismissDraftNotice } = useRestoredDraft({
     accountId,
     editPlaceId: draftEditPlaceId,
-    isEditLoading,
   });
   const draft = restoredDraft?.form;
 
@@ -59,19 +57,14 @@ export function useRecordForm({ editPlace, editPlaceId }: { editPlace?: Place; e
     foodKind: tasteForm.foodKind,
     visibility: storyForm.visibility,
     photos: photoForm.photos,
-    convertFromPlaceId: placeForm.convertFromPlaceId,
     visitedConfirmed: placeForm.isVisitConfirmed,
-    conversionNeedsPlaceSearch: placeForm.shouldSearchConversionPlace,
-    conversionSearchName: placeForm.conversionSearchName,
     activeDraftId: placeForm.activeDraftId,
   };
   const { isDirty, persistDraft } = useDraftBackup(draftForm, {
     accountId,
     hasRestoredDraft: !!restoredDraft,
-    isEditLoading,
   });
 
-  /** 단계별 필수값을 검사해 문제가 있으면 안내 문구를 돌려줍니다. */
   function validateStep(step: RecordStep): string {
     return recordStepError(step, {
       isEditing,
@@ -79,9 +72,6 @@ export function useRecordForm({ editPlace, editPlaceId }: { editPlace?: Place; e
       selectedPlace: placeForm.selectedPlace,
       address: placeForm.address,
       coordinates: placeForm.coordinates,
-      shouldSearchConversionPlace: placeForm.shouldSearchConversionPlace,
-      conversionSearchName: placeForm.conversionSearchName,
-      convertFromPlaceId: placeForm.convertFromPlaceId,
       hasSelectedLikedPlace: !!placeForm.selectedLikedPlace,
       isVisitConfirmed: placeForm.isVisitConfirmed,
       isBusy: photoForm.isBusy,
@@ -97,7 +87,7 @@ export function useRecordForm({ editPlace, editPlaceId }: { editPlace?: Place; e
       setError(validateStep(invalidStep));
       return { isSaved: false, step: invalidStep };
     }
-    const { selectedPlace, coordinates, convertFromPlaceId, selectedLikedPlace } = placeForm;
+    const { selectedPlace, coordinates, selectedLikedPlace } = placeForm;
     if (!selectedPlace || !coordinates) return { isSaved: false, step: "place" };
     const newPlace = buildNewPlace({
       selectedPlace,
@@ -117,12 +107,7 @@ export function useRecordForm({ editPlace, editPlaceId }: { editPlace?: Place; e
     setIsSaving(true);
     setError("");
     try {
-      const saved = await app.actions.register(
-        newPlace,
-        convertFromPlaceId ?? selectedLikedPlace?.id,
-        convertFromPlaceId || selectedLikedPlace ? placeForm.isVisitConfirmed : false,
-        true,
-      );
+      const saved = await app.actions.register(newPlace, selectedLikedPlace?.id, placeForm.isVisitConfirmed);
       clearRegisterDraft();
       resetAfterSave();
       return { isSaved: true, placeId: saved.id };

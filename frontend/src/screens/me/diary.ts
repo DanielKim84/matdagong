@@ -1,9 +1,9 @@
 import { placePhoto, type Place, type Taster } from "../../models/place";
 import { formatMonthDay, parseTime } from "../../utils/format";
 
-/** 맛집 다이어리·나 탭·내 기록 공개 설정이 함께 쓰는 내 기록 날짜 묶기와 다이어리 주소 계산입니다. */
+/** 맛집 다이어리·나 탭이 함께 쓰는 내 기록 날짜 묶기와 다이어리 주소 계산입니다. */
 
-/** 다이어리에 쓰는 내 기록 한 건: 장소, 그 장소의 내 기록, 기록 시각(없을 수 있음), 대표 사진. */
+/** 다이어리에 쓰는 내 기록 한 건: 장소, 그 장소의 내 기록, 기록 시각(없을 수 있음), 대표 사진, 공개 여부. */
 export type DiaryEntry = {
   place: Place;
   record?: Taster;
@@ -30,18 +30,25 @@ export function diaryEntries(
         date: time === null ? null : new Date(time),
         // 대표 사진 우선순위는 앱 전체 기준(placePhoto)을 따릅니다: 내 기록 사진 → 다른 기록 사진 → 내가 올린 사진.
         photo: placePhoto(place, record, photoFor(place.id)),
-        isPublic: record ? record.visibility !== "PRIVATE" : place.visibility !== "private",
+        isPublic: record?.visibility !== "PRIVATE",
       };
     })
     .sort((left, right) => (right.date?.getTime() ?? -Infinity) - (left.date?.getTime() ?? -Infinity));
 }
 
+/** 날짜별로 묶을 때 쓰는 키("2026-3-7", 자리 맞춤 없음)입니다. 화면에 보여 주는 값이 아닙니다. */
 export function dayKey(date: Date): string {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }
 
+/** 같은 해·같은 달인지 봅니다. month는 0부터 셉니다. */
 export function isSameMonth(date: Date, year: number, month: number): boolean {
   return date.getFullYear() === year && date.getMonth() === month;
+}
+
+/** 그 달(month는 0부터)에 남긴 기록입니다. 날짜 없는 기록은 빠집니다. */
+export function entriesInMonth(entries: DiaryEntry[], year: number, month: number): DiaryEntry[] {
+  return entries.filter((entry) => entry.date && isSameMonth(entry.date, year, month));
 }
 
 /** "10월 26일 (일)" */

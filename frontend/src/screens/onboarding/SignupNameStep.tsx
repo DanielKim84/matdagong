@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import StepProgress from "../../components/StepProgress";
+import { MAX_NICKNAME_LENGTH } from "../../models/community";
 
-export const MAX_DISPLAY_NAME_LENGTH = 12;
 const MAX_EMAIL_LENGTH = 320;
 
 /** 가입 1단계: 닉네임과 연락용 이메일(선택)을 받습니다. 다음 단계로 넘어갈 때 입력값을 onSubmit으로 넘깁니다. */
@@ -42,15 +42,15 @@ export default function SignupNameStep({
             <input
               id="signup-display-name"
               required
-              maxLength={MAX_DISPLAY_NAME_LENGTH}
+              maxLength={MAX_NICKNAME_LENGTH}
               autoComplete="nickname"
               value={displayName}
               aria-invalid={!!error}
               aria-describedby="signup-display-name-count"
-              onChange={(event) => setDisplayName(event.target.value.slice(0, MAX_DISPLAY_NAME_LENGTH))}
+              onChange={(event) => setDisplayName(event.target.value.slice(0, MAX_NICKNAME_LENGTH))}
             />
             <small id="signup-display-name-count" className="r-muted">
-              {displayName.length}/{MAX_DISPLAY_NAME_LENGTH}자
+              {displayName.length}/{MAX_NICKNAME_LENGTH}자
             </small>
           </div>
           <div className="r-onboarding-field">

@@ -2,6 +2,7 @@ import FoodFocusPicker from "../../components/FoodFocusPicker";
 import Icon, { type IconName } from "../../components/Icon";
 import TasteTagPicker from "../../components/TasteTagPicker";
 import type { ActivityScope } from "../../models/community";
+import { groupsForFocus } from "../../models/tasteTags";
 import ActivityRegionField from "./ActivityRegionField";
 import type { ProfileForm } from "./useProfileForm";
 
@@ -76,7 +77,7 @@ export default function PublicStyleSettings({ form }: { form: ProfileForm }) {
           options={form.positiveOptions}
           value={form.profileTags}
           onChange={form.setProfileTags}
-          focus={form.tasterFocus}
+          groups={groupsForFocus(form.tasterFocus)}
         />
       </div>
     </details>

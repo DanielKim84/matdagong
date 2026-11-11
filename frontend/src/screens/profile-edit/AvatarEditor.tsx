@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
 import { useNotificationDialog } from "../../components/NotificationDialog";
-import { IMAGE_ACCEPT } from "./profileImages";
+import { IMAGE_ACCEPT, MAX_IMAGE_SIZE_LABEL } from "./profileImages";
 import type { ProfileForm } from "./useProfileForm";
 
 /** 프로필 사진 고르기와 기본 캐릭터로 되돌리기입니다. 실제 반영은 프로필 저장 때 합니다. */
@@ -51,7 +51,7 @@ export default function AvatarEditor({ form }: { form: ProfileForm }) {
       <div>
         <b>나를 소개하는 사진</b>
         <small>맛객 목록과 내 프로필에 보여요.</small>
-        <small>JPG, PNG, WEBP · 사진당 5MB 이하</small>
+        <small>JPG, PNG, WEBP · 사진당 {MAX_IMAGE_SIZE_LABEL} 이하</small>
       </div>
       {hasAvatar && (
         <button className="text-action" type="button" onClick={() => void resetToCharacter()}>

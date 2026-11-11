@@ -4,10 +4,10 @@ import Icon from "../../components/Icon";
 import { useNotificationDialog } from "../../components/NotificationDialog";
 import TagGroupList from "../../components/TagGroupList";
 import TasteScore from "../../components/TasteScore";
+import TasterAvatar from "../../components/TasterAvatar";
 import { useSwipe } from "../../hooks/useSwipe";
 import { isMyTaster } from "../../models/place";
 import { formatRelativeTime, formatWon } from "../../utils/format";
-import TasterAvatar from "../../components/TasterAvatar";
 import TasterReportButton from "../tasters/TasterReportButton";
 import { photoIndexOf, recordMenus, recordTagGroups, type PlacePhoto, type PlaceRecord } from "./placeRecords";
 
@@ -38,16 +38,16 @@ export default function PlaceTasterRecord({
   onNext?: () => void;
   /** 내 기록의 공개 범위만 바꿉니다(공개 추천 ↔ 나만 보기). */
   onChangeOwnVisibility: (visibility: "PUBLIC" | "PRIVATE") => void;
-  /** 내 기록을 지웁니다. 지웠으면 true입니다. 서버에 없는 이전 브라우저 기록처럼 지울 수 없으면 넘기지 않습니다. */
-  onDeleteOwn?: () => Promise<boolean>;
+  /** 내 기록을 지웁니다. 지웠으면 true입니다. */
+  onDeleteOwn: () => Promise<boolean>;
 }) {
-  const { subscriptionIds, actions } = useAppData();
+  const { subscriptionIds, tasteTags, actions } = useAppData();
   const { confirm } = useNotificationDialog();
   const swipe = useSwipe({ onLeft: onNext, onRight: onPrevious, isEnabled: !!(onNext || onPrevious) });
   const isMine = isMyTaster(record);
   const isSubscribed = subscriptionIds.includes(record.tasterId);
   const menus = recordMenus(record);
-  const tagGroups = recordTagGroups(record);
+  const tagGroups = recordTagGroups(record, tasteTags);
   const when = formatRelativeTime(record.recordedAt);
   const isPrivate = record.visibility === "PRIVATE";
 
@@ -79,14 +79,16 @@ export default function PlaceTasterRecord({
       confirmLabel: "지울게요",
       tone: "danger",
     });
-    if (isConfirmed) await onDeleteOwn?.();
+    if (isConfirmed) await onDeleteOwn();
   }
+  // 맛객 목록·발견 카드와 같은 배치: 내 기록·구독 중은 머리 오른쪽 끝, 신뢰·취향 칩은 이름·날짜 아래 줄(이름이 잘리지 않게).
   const author = (
     <>
       <TasterAvatar taster={record} />
       <span className="r-place-record__who">
         <b>{record.tasterName}</b>
         {when && <small>{when} 기록</small>}
+        {!isMine && <TasteScore taster={record} />}
       </span>
     </>
   );
@@ -112,13 +114,10 @@ export default function PlaceTasterRecord({
             {author}
           </button>
         )}
-        {isMine ? (
-          <span className="r-tag r-tag--mine">{isPrivate ? "내 기록 · 비공개" : "내 기록"}</span>
-        ) : (
-          <>
-            {isSubscribed && <span className="r-tag r-tag--mine">구독 중</span>}
-            <TasteScore taster={record} />
-          </>
+        {(isMine || isSubscribed) && (
+          <span className="r-tag r-tag--mine r-place-record__relation">
+            {isMine ? (isPrivate ? "내 기록 · 비공개" : "내 기록") : "구독 중"}
+          </span>
         )}
       </header>
 
@@ -186,11 +185,9 @@ export default function PlaceTasterRecord({
             >
               {isPrivate ? "공개 추천으로 바꾸기" : "나만 보기로 바꾸기"}
             </button>
-            {onDeleteOwn && (
-              <button type="button" className="r-place-record__delete" onClick={() => void deleteRecord()}>
-                기록 지우기
-              </button>
-            )}
+            <button type="button" className="r-place-record__delete" onClick={() => void deleteRecord()}>
+              기록 지우기
+            </button>
           </>
         ) : (
           <>

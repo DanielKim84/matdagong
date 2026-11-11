@@ -71,18 +71,11 @@
   font-size: 12px;
   font-weight: 700;
 }
-.r-record-help,
-.r-record-hint {
+.r-record-help {
   margin: 0;
   color: var(--color-muted);
   font-size: 13px;
   line-height: 1.5;
-}
-.r-record-hint {
-  border-radius: var(--radius-control);
-  background: var(--amber-50);
-  padding: 12px 14px;
-  color: var(--amber-800);
 }
 /* 공용 글자 버튼을 기록 화면의 세로 칸 안에서 왼쪽 정렬·좁은 여백으로 씁니다. */
 .r-record .r-text-button {
@@ -554,86 +547,7 @@
   height: 18px;
 }
 
-/* ── 3단계 · 취향 태그(공용 TasteTagPicker를 칩 모양으로)와 방문 조건 ── */
-.r-record-tags .taste-tag-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.r-record-tags .taste-tag-picker > section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border: 0;
-  background: none;
-  padding: 0;
-  box-shadow: none;
-}
-.r-record-tags .taste-tag-group__header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-}
-.r-record-tags .taste-tag-group__icon {
-  display: none;
-}
-.r-record-tags .taste-tag-group__titles {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-}
-.r-record-tags .taste-tag-group__titles b {
-  color: var(--neutral-700);
-  font-size: 13px;
-  font-weight: 800;
-}
-.r-record-tags .taste-tag-group__titles small {
-  display: none;
-}
-.r-record-tags .taste-tag-group__count {
-  border-radius: var(--radius-pill);
-  background: none;
-  padding: 0;
-  color: var(--color-muted);
-  font-size: 12px;
-}
-.r-record-tags .taste-tag-group__count i {
-  font-style: normal;
-}
-.r-record-tags .taste-tag-picker .taste-tag-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.r-record-tags .taste-tag-picker .taste-tag-group .taste-tag-options button {
-  display: inline-flex;
-  width: auto;
-  height: 40px;
-  min-height: 40px;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--neutral-150);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface);
-  padding: 0 15px;
-  color: var(--neutral-700);
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.r-record-tags .taste-tag-picker .taste-tag-group .taste-tag-options button.is-selected {
-  border-color: var(--color-ink);
-  background: var(--color-ink);
-  color: var(--on-strong);
-}
-.r-record-tags .taste-tag-picker .taste-tag-options .taste-tag-label > i {
-  display: none;
-}
-.r-record-tags .taste-tag-picker .taste-tag-options button:disabled {
-  opacity: 0.4;
-}
+/* ── 3단계 · 매장 이용 정보(취향 태그는 공용 TasteTagPicker) ── */
 .r-record-condition {
   display: flex;
   flex-direction: column;

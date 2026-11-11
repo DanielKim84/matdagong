@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { searchKakaoPlaces } from "../../services/kakao";
+import { searchNearbyKakaoPlaces } from "../../services/kakao";
+import { VISIT_RADIUS_METERS } from "../../models/place";
 import { errorMessage } from "../../utils/errorMessage";
-import { distanceMeters, kakaoPlaceCoordinates, type Coordinates } from "../../utils/geo";
-import { NEARBY_RADIUS_METERS } from "./recordModel";
+import type { Coordinates } from "../../utils/geo";
 
 const SEARCH_DELAY_MS = 450;
 const SEARCH_MIN_LENGTH = 2;
@@ -38,9 +38,7 @@ export function usePlaceSearch({
     setIsSearchingPlaces(true);
     setError("");
     try {
-      const nearby = (await searchKakaoPlaces(query, location, NEARBY_RADIUS_METERS)).filter(
-        (result) => distanceMeters(location, kakaoPlaceCoordinates(result)) <= NEARBY_RADIUS_METERS,
-      );
+      const nearby = await searchNearbyKakaoPlaces(query, location, VISIT_RADIUS_METERS);
       if (seq !== searchSeq.current) return;
       setPlaceResults(nearby);
       setHasSearched(true);
@@ -75,7 +73,6 @@ export function usePlaceSearch({
 
   return {
     placeSearch,
-    setPlaceSearch,
     changePlaceSearch,
     placeResults,
     hasSearched,

@@ -6,6 +6,7 @@ import { useNotificationDialog } from "../../components/NotificationDialog";
 import Sheet from "../../components/Sheet";
 import StepProgress from "../../components/StepProgress";
 import type { Place } from "../../models/place";
+import { groupsForFocus } from "../../models/tasteTags";
 import TasteTagRequestSheet from "../TasteTagRequestSheet";
 import MediaStep from "./MediaStep";
 import PlaceStep from "./PlaceStep";
@@ -27,19 +28,17 @@ const NEXT_LABELS: Record<RecordStep, string> = {
   review: "",
 };
 
-/** 장소 → 사진·메뉴 → 취향 태그·방문 조건 → 추천 이유·공개 범위 → 확인 순서로 한 단계씩 기록합니다. */
+/** 장소 → 사진·메뉴 → 취향 태그·매장 이용 → 추천 이유·공개 범위 → 확인 순서로 한 단계씩 기록합니다. */
 export default function RecordFlow({
   editPlace,
-  editPlaceId,
   onSaved,
 }: {
   editPlace?: Place;
-  editPlaceId?: string;
   onSaved: (info: RecordDoneInfo) => void;
 }) {
   const app = useAppData();
   const { confirm } = useNotificationDialog();
-  const form = useRecordForm({ editPlace, editPlaceId });
+  const form = useRecordForm({ editPlace });
   const { steps } = form;
   const [index, setIndex] = useState(0);
   const [requestType, setRequestType] = useState<"TAG" | "PLACE_INFO" | null>(null);
@@ -203,6 +202,7 @@ export default function RecordFlow({
       {requestType && (
         <TasteTagRequestSheet
           requestType={requestType}
+          groups={groupsForFocus(form.foodKind)}
           onClose={() => setRequestType(null)}
           onRequest={app.actions.requestTag}
           onLoad={app.actions.loadTagRequests}

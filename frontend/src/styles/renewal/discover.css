@@ -374,6 +374,7 @@
   scroll-snap-align: start;
 }
 .r-discover-card {
+  position: relative;
   display: flex;
   width: 100%;
   gap: 12px;
@@ -385,6 +386,15 @@
   text-align: left;
   box-shadow: 0 10px 24px color-mix(in srgb, var(--shadow-color) 14%, transparent);
   transition: border-color 0.18s;
+}
+/* 내 지도 카드의 사진 위 이름표(내 기록·다녀온 곳·가볼 곳). 카드 높이가 늘지 않게 사진 위에 겹칩니다. */
+.r-discover-card__badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
 }
 .r-discover-card.is-focused {
   border-color: var(--color-primary);
@@ -433,13 +443,19 @@
   box-shadow: 0 10px 24px color-mix(in srgb, var(--shadow-color) 14%, transparent);
 }
 
-/* 대표 맛객 한 줄 */
+/* 대표 맛객 줄(TasterLine): 위 줄 얼굴·이름·오른쪽 끝 구독 중, 아래 줄 신뢰·취향 칩 */
 .r-discover-taster {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+.r-discover-taster__who {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
 }
 .r-discover-taster .avatar {
   width: 22px;
@@ -449,24 +465,33 @@
 .r-discover-taster .r-avatar-stack .avatar + .avatar {
   margin-left: -7px;
 }
-.r-discover-taster > b {
+.r-discover-taster__who > b {
   overflow: hidden;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* 맛객 목록처럼 구독 중은 줄 오른쪽 끝에 둡니다. */
 .r-discover-taster__sub {
-  flex: none;
-  color: var(--color-primary);
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 700;
-}
-.r-discover-taster .r-match {
   height: 20px;
   flex: none;
+  margin-left: auto;
   padding: 0 7px;
   font-size: 11px;
+  font-style: normal;
+}
+.r-discover-taster > .r-scores {
+  align-self: flex-start;
+}
+/* 카드 안이라 신뢰·취향 칩을 한 단계 작게 씁니다. */
+.r-discover-taster .r-match {
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+.r-discover-taster .r-match .icon {
+  width: 12px;
+  height: 12px;
 }
 
 /* ── 끌어 올리는 목록 시트 ── */
@@ -568,6 +593,7 @@
   overscroll-behavior: contain;
   padding: 6px 20px calc(110px + env(safe-area-inset-bottom));
   scrollbar-width: none;
+  transition: opacity 0.2s;
 }
 .r-discover-sheet__body::-webkit-scrollbar {
   display: none;
@@ -577,9 +603,6 @@
   overflow: hidden;
   visibility: hidden;
   opacity: 0;
-}
-.r-discover-sheet__body {
-  transition: opacity 0.2s;
 }
 
 .r-discover-section {
@@ -754,38 +777,6 @@
 }
 .r-discover-filter__legend + * {
   clear: both;
-}
-.r-discover-filter__icon {
-  display: grid;
-  width: 30px;
-  height: 30px;
-  flex: none;
-  place-items: center;
-  border-radius: 50%;
-}
-.r-discover-filter__icon .icon {
-  width: 16px;
-  height: 16px;
-}
-.r-discover-filter__icon--brand {
-  background: var(--brand-50);
-  color: var(--brand-500);
-}
-.r-discover-filter__icon--blue {
-  background: var(--blue-50);
-  color: var(--blue-500);
-}
-.r-discover-filter__icon--amber {
-  background: var(--amber-50);
-  color: var(--amber-600);
-}
-.r-discover-filter__icon--green {
-  background: var(--green-50);
-  color: var(--green-600);
-}
-.r-discover-filter__icon--berry {
-  background: var(--berry-50);
-  color: var(--berry-500);
 }
 .r-discover-filter__count {
   margin-left: auto;

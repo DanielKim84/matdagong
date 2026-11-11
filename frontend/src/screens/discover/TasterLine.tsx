@@ -1,10 +1,12 @@
-import { Avatar } from "../../components/BrandAssets";
+import TasterAvatar from "../../components/TasterAvatar";
 import TasteScore from "../../components/TasteScore";
 import { isMyTaster, type Taster } from "../../models/place";
-import { isTrustedTaster } from "../../models/trust";
 import type { PlaceContext } from "./discoverModel";
 
-/** 대표 맛객 한 줄: 얼굴, 이름, 구독·신뢰·취향 표시. 믿고 가는 맛객이면 구독 여부보다 신뢰 등급을 보여 줍니다. */
+/**
+ * 대표 맛객 줄(발견·내 지도의 카드·목록): 위 줄에 얼굴·이름과 오른쪽 끝 "구독 중", 아래 줄에 신뢰·취향 칩.
+ * 맛객 목록과 같은 배치로, 칩을 이름 옆에 두지 않아 이름이 잘리지 않게 합니다. 내 기록이면 칩 없이 "내 기록"만 씁니다.
+ */
 export default function TasterLine({
   taster,
   ctx,
@@ -20,23 +22,23 @@ export default function TasterLine({
 }) {
   if (!taster) return null;
   const faces = stack.length > 1 ? stack.slice(0, 3) : [taster];
+  const isMine = isMyTaster(taster);
   const isSubscribed = ctx.subscriptions.has(taster.tasterId);
   return (
     <span className="r-discover-taster">
-      <span className="r-avatar-stack" aria-hidden="true">
-        {faces.map((face) => (
-          <Avatar key={face.tasterId} src={face.avatar} name={face.tasterName} variant={face.avatarVariant} />
-        ))}
+      <span className="r-discover-taster__who">
+        <span className="r-avatar-stack" aria-hidden="true">
+          {faces.map((face) => (
+            <TasterAvatar key={face.tasterId} taster={face} />
+          ))}
+        </span>
+        <b>
+          {isMine ? "내 기록" : taster.tasterName}
+          {others > 0 ? ` 외 ${others}명` : ""}
+        </b>
+        {isSubscribed && !isMine && <em className="r-tag r-tag--mine r-discover-taster__sub">구독 중</em>}
       </span>
-      <b>
-        {isMyTaster(taster) ? "내 기록" : taster.tasterName}
-        {others > 0 ? ` 외 ${others}명` : ""}
-      </b>
-      {isSubscribed && !isTrustedTaster(taster) ? (
-        <em className="r-discover-taster__sub">구독</em>
-      ) : isMyTaster(taster) ? null : (
-        <TasteScore taster={{ ...taster, matchScore: ctx.matchOf(taster) }} />
-      )}
+      {!isMine && <TasteScore taster={{ ...taster, matchScore: ctx.matchOf(taster) }} />}
     </span>
   );
 }

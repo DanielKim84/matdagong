@@ -59,12 +59,14 @@ export function districtFromLabel(label: string): string {
   return label === DIRECT_DISTRICT_LABEL ? DIRECT_DISTRICT : label;
 }
 
+/** 고른 시·도의 시·군·구 목록(화면 이름)입니다. */
 export function districtOptions(regions: RegionData[], sido: string): string[] {
   return (regions.find((region) => region.name === sido)?.districts ?? []).map((district) =>
     districtLabel(district.name),
   );
 }
 
+/** 고른 시·군·구의 읍·면·동 목록입니다. 리 단위는 첫 단어만 남겨 겹치지 않게 합니다. */
 export function dongOptions(regions: RegionData[], { sido, district }: RegionSelection): string[] {
   const dongs =
     regions.find((region) => region.name === sido)?.districts.find((item) => item.name === district)?.dongs ?? [];

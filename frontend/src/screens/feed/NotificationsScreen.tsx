@@ -7,7 +7,7 @@ import PlaceThumb from "../../components/PlaceThumb";
 import { EmptyState, SectionHead, Skeleton, TopBar } from "../../components/ui";
 import type { UserNotification } from "../../models/community";
 import { placePhoto, type Place } from "../../models/place";
-import { DAY_MS, formatRelativeTime, parseTime } from "../../utils/format";
+import { DAY_MS, formatRelativeTime, parseTime, startOfDay } from "../../utils/format";
 
 type NotificationGroup = { label: string; items: UserNotification[] };
 
@@ -16,9 +16,7 @@ const THIS_WEEK_PAST_DAYS = 6;
 
 /** 오늘 / 이번 주 / 이전 으로 묶습니다. 서버가 준 순서는 그대로 둡니다. */
 function groupByDate(items: UserNotification[]): NotificationGroup[] {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const today = startOfToday.getTime();
+  const today = startOfDay();
   const groups: NotificationGroup[] = [
     { label: "오늘", items: [] },
     { label: "이번 주", items: [] },
@@ -54,7 +52,7 @@ function resolveTarget(item: UserNotification): (() => void) | null {
 /** 알림(#notifications). 상단 종 아이콘에서 엽니다. */
 export default function NotificationsScreen() {
   const app = useAppData();
-  const { notificationFeed, notificationLoading, notificationError, actions } = app;
+  const { notificationFeed, isNotificationLoading, notificationError, actions } = app;
   const { items, unreadCount } = notificationFeed;
   const { confirm } = useNotificationDialog();
   const groups = useMemo(() => groupByDate(items), [items]);
@@ -97,7 +95,7 @@ export default function NotificationsScreen() {
       />
 
       <div className="r-feed-noti__body">
-        {notificationLoading ? (
+        {isNotificationLoading ? (
           <Skeleton count={3} label="알림을 불러오고 있어요." className="r-feed-noti__skeletons" />
         ) : notificationError ? (
           <EmptyState

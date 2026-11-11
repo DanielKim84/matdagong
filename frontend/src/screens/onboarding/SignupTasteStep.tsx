@@ -1,10 +1,11 @@
+import { FOOD_FOCUS_OPTIONS } from "../../components/FoodFocusPicker";
 import MascotArt from "../../components/MascotArt";
 import StepProgress from "../../components/StepProgress";
-import { EmptyState } from "../../components/ui";
-import type { TasteTag } from "../../models/community";
-import { MENU_TASTE_TAG_GROUPS } from "../../models/tasteTags";
+import TasteTagPicker from "../../components/TasteTagPicker";
+import { EmptyState, Segmented } from "../../components/ui";
+import type { FoodFocus, TasteTag } from "../../models/community";
+import { groupsForFocus } from "../../models/tasteTags";
 import type { LoadState } from "./loadMatches";
-import TasteChips from "./TasteChips";
 
 // 맛객 추천이 의미 있으려면 취향을 이만큼은 골라야 합니다.
 const MIN_TASTE_TAGS = 3;
@@ -12,6 +13,8 @@ const MIN_TASTE_TAGS = 3;
 type Props = {
   tasteTags: TasteTag[];
   tagsState: LoadState;
+  focus: FoodFocus;
+  onFocusChange: (focus: FoodFocus) => void;
   value: string[];
   onChange: (tags: string[]) => void;
   error: string;
@@ -21,10 +24,12 @@ type Props = {
   onSubmit: (tags: string[]) => void;
 };
 
-/** 가입 2단계: 메뉴 취향 태그를 고릅니다. */
+/** 가입 2단계: 찾는 분야를 고르고, 그 분야의 취향 태그를 고릅니다(나중에 프로필 편집에서 바꿀 수 있음). */
 export default function SignupTasteStep({
   tasteTags,
   tagsState,
+  focus,
+  onFocusChange,
   value,
   onChange,
   error,
@@ -57,11 +62,15 @@ export default function SignupTasteStep({
             message="가입을 먼저 마치고, 설정에서 취향을 골라 주세요."
           />
         ) : (
-          <TasteChips
-            options={tasteTags.filter((tag) => MENU_TASTE_TAG_GROUPS.includes(tag.tagGroup))}
-            value={value}
-            onChange={onChange}
-          />
+          <>
+            <Segmented<FoodFocus>
+              label="찾는 분야"
+              value={focus}
+              onChange={onFocusChange}
+              options={FOOD_FOCUS_OPTIONS}
+            />
+            <TasteTagPicker options={tasteTags} value={value} onChange={onChange} groups={groupsForFocus(focus)} />
+          </>
         )}
         <div className="r-onboarding-note">
           <MascotArt pose={2} className="r-onboarding-note__art" />

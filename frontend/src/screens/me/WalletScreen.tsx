@@ -4,11 +4,11 @@ import { EmptyState, SectionHead, TopBar } from "../../components/ui";
 import { formatMonthDay, formatNumber } from "../../utils/format";
 
 // 포인트는 충전하지 않고 활동(유료 구독 수익 등)으로만 쌓입니다. 쌓인 포인트를 쓰는 방법들입니다.
-const PENDING_ACTIONS: { label: string; icon: IconName; tone: "amber" | "brand" }[] = [
-  { label: "정산 신청", icon: "check", tone: "brand" },
+const PENDING_ACTIONS: { label: string; icon: IconName; tone: "amber" | "default" }[] = [
+  { label: "정산 신청", icon: "check", tone: "default" },
   { label: "구독료로 쓰기", icon: "bookmark", tone: "amber" },
   { label: "상품권 교환", icon: "star", tone: "amber" },
-  { label: "맛객 후원", icon: "heart", tone: "brand" },
+  { label: "맛객 후원", icon: "heart", tone: "default" },
 ];
 
 /** 포인트 지갑(#wallet): 잔액과 적립·사용 내역. 정산·구독료 결제·교환·후원은 준비 중입니다. */
@@ -41,7 +41,7 @@ export default function WalletScreen() {
             <button
               type="button"
               key={action.label}
-              className={`r-card r-me-tile r-me-tile--${action.tone === "amber" ? "amber-icon" : "default"}`}
+              className={`r-card r-me-tile r-me-tile--${action.tone}`}
               onClick={() => notifyPending(action.label)}
             >
               <span className="r-badge-icon r-me-tile__icon">

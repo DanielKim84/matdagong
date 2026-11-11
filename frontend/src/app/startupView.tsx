@@ -12,33 +12,60 @@ import { onboardingCompletedKey, readStorage, writeStorage } from "../utils/stor
 import App from "./App";
 import { logout, readReturnHash } from "./signIn";
 
+function element<K extends keyof HTMLElementTagNameMap>(tag: K, className = "", text = ""): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text) node.textContent = text;
+  return node;
+}
+
+/** 로고 → 캐릭터 무대 → 문구 순서로 화면 가운데에 둡니다. */
 function startupPanel(className: string, ...children: HTMLElement[]): void {
   const root = document.getElementById("root");
   if (!root) return;
-  const panel = document.createElement("main");
-  panel.className = className;
-  panel.append(...children);
+  const logo = element("img", "auth-start-logo");
+  logo.src = "/assets/brand-logo.png";
+  logo.alt = "맛다공";
+  const panel = element("main", `auth-start-screen ${className}`);
+  panel.append(logo, mascotStage(), ...children);
   root.replaceChildren(panel);
 }
 
+/** 접시 위 프라이팬 캐릭터와 바닥 그림자, 접시를 도는 코랄 고리(접속 중일 때만 돎)입니다. 장식이라 읽히지 않습니다. */
+function mascotStage(): HTMLElement {
+  const stage = element("div", "auth-start-stage");
+  stage.setAttribute("aria-hidden", "true");
+  stage.append(
+    element("span", "auth-start-stage__ring"),
+    element("span", "auth-start-stage__plate"),
+    element("span", "auth-start-stage__shadow"),
+    element("span", "auth-start-stage__character"),
+  );
+  return stage;
+}
+
+/** 앱을 그리기 전 접속 중 화면입니다. 문구 아래 점 세 개가 차례로 숨 쉬듯 움직입니다. */
 export function showStartupStatus(message: string): void {
-  const status = document.createElement("p");
-  status.textContent = message;
-  startupPanel("auth-start-screen", status);
+  const status = element("p", "auth-start-message", message);
+  status.setAttribute("role", "status");
+  const dots = element("span", "auth-start-dots");
+  dots.setAttribute("aria-hidden", "true");
+  dots.append(element("i"), element("i"), element("i"));
+  startupPanel("is-loading", status, dots);
 }
 
 export function showSignInError(message: string): void {
-  const title = document.createElement("h1");
-  title.textContent = "로그인을 이어갈 수 없어요";
-  const description = document.createElement("p");
-  description.textContent = message;
-  const retry = document.createElement("button");
+  const retry = element("button", "", "다시 로그인");
   retry.type = "button";
-  retry.textContent = "다시 로그인";
   retry.addEventListener("click", () => {
     window.location.assign(`/${readReturnHash()}`);
   });
-  startupPanel("auth-start-screen auth-start-error", title, description, retry);
+  startupPanel(
+    "auth-start-error",
+    element("h1", "", "로그인을 이어갈 수 없어요"),
+    element("p", "auth-start-message", message),
+    retry,
+  );
 }
 
 /** 가입한 계정은 바로 앱을, 아직 가입하지 않은 계정은 서비스 소개(계정별 한 번)와 가입 화면을 먼저 그립니다. */

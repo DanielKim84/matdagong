@@ -2,8 +2,8 @@ import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
 import { EmptyState } from "../../components/ui";
-import { formatMonthDay, formatRelativeTime } from "../../utils/format";
 import TasterAvatar from "../../components/TasterAvatar";
+import { formatMonthDay, formatRelativeTime } from "../../utils/format";
 import { daysLeft } from "./tasterData";
 
 /**
@@ -77,7 +77,6 @@ export default function IncomingList() {
                 <TasterAvatar
                   className="r-tasters-avatar r-tasters-avatar--md"
                   taster={{
-                    tasterId: subscription.subscriberAccountId,
                     tasterName: subscription.subscriberNickname,
                     avatar,
                     avatarVariant: subscription.avatarVariant,

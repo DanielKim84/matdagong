@@ -3,6 +3,7 @@ import type { useNotificationDialog } from "../../components/NotificationDialog"
 import type { ActiveSubscription, MyProfile } from "../../models/community";
 import type { Place, Taster } from "../../models/place";
 import { shortSidoName } from "../../models/region";
+import { compareByTrust } from "../../models/trust";
 import { DAY_MS, formatMonthDay, parseTime } from "../../utils/format";
 import { distanceMeters, type Coordinates } from "../../utils/geo";
 import { profileCoverFor } from "../../utils/profileMedia";
@@ -15,7 +16,7 @@ export type TasterStats = { count: number };
 export type TasterFocusFilter = "ALL" | "RESTAURANT" | "CAFE_DESSERT";
 
 /**
- * 맛객 탭 추천의 범위(취향 맞는 맛객·맛객 둘러보기가 함께 따름): 전체 지역 · 내 주변(지금 위치 가까이에 기록) ·
+ * 맛객 탭의 지역 조건(분야 조건과 함께 취향 맞는 맛객·맛객 둘러보기가 모두 따름): 전체 지역 · 내 주변(지금 위치 가까이에 기록) ·
  * 내 지역(프로필에 등록한 내 활동 지역) · 여행·드라이브 맛객
  */
 export type TasterScope = "ALL" | "NEARBY" | "MY_AREA" | "TRAVEL";
@@ -23,11 +24,15 @@ export type TasterScope = "ALL" | "NEARBY" | "MY_AREA" | "TRAVEL";
 /** 범위를 거를 때 필요한 값. 내 주변은 position, 내 지역은 myArea가 있어야 거를 수 있습니다. */
 export type ScopeContext = { places: Place[]; position: Coordinates | null; myArea: string | null };
 
-/** 맛객 둘러보기 목록의 분야와 보이는 개수입니다. 범위는 위쪽 공통 칩을 따릅니다. */
-export type BrowseFilter = { focus: TasterFocusFilter; limit: number };
+/** 맛객 둘러보기 정렬: 구독자 많은 순 · 취향 맞는 순(믿고 가는 맛객 → 신뢰 % → 취향 %) · 기록 많은 순 */
+export type BrowseSort = "SUBSCRIBERS" | "TASTE" | "RECORDS";
+
+/** 맛객 둘러보기 목록의 정렬과 보이는 개수입니다. 지역·분야는 위쪽 공통 조건을 따릅니다. */
+export type BrowseFilter = { sort: BrowseSort; limit: number };
 
 /** "내 주변"으로 볼 거리(m). 이 안에 공개 기록이 있는 맛객을 내 주변 맛객으로 봅니다. */
 export const NEARBY_RADIUS_METERS = 5_000;
+export const NEARBY_RADIUS_KM = NEARBY_RADIUS_METERS / 1000;
 
 /** 맛객 둘러보기에서 한 번에 보여 주는 수. "더 보기"도 이만큼씩 늘립니다. */
 export const PAGE_SIZE = 12;
@@ -37,7 +42,7 @@ function recordedTime(value?: string | null): number {
   return parseTime(value) ?? 0;
 }
 
-/** 맛객의 공개 기록을 최근 순으로 모읍니다. 시각이 없는 기록은 뒤로 보냅니다. */
+/** 넘긴 장소 중 이 맛객이 남긴 기록을 최근 순으로 모읍니다(공개 범위는 넘긴 목록을 따름). 시각이 없는 기록은 뒤로 보냅니다. */
 export function recordsOf(places: Place[], isAuthor: (tasterId: string) => boolean): TasterRecord[] {
   return places
     .flatMap((place) => {
@@ -64,6 +69,7 @@ function isTraveler(taster: Taster): boolean {
   return taster.activityScope === "TRAVEL" || taster.activityScope === "BOTH";
 }
 
+/** 여행·드라이브 맛객이 한 명이라도 있는지 봅니다. 없으면 지역 고르기에서 그 항목을 숨깁니다. */
 export function hasTravelers(tasters: Taster[]): boolean {
   return tasters.some(isTraveler);
 }
@@ -120,28 +126,38 @@ export function isInScope(
   return true;
 }
 
+/** 고른 분야(식당·카페·디저트)를 다루는 맛객인지. 둘 다 다루는 맛객은 어느 분야에도 듭니다. */
+export function matchesFocus(taster: Taster, focus: TasterFocusFilter): boolean {
+  return focus === "ALL" || taster.tasterFocus === focus || taster.tasterFocus === "BOTH";
+}
+
 /**
- * 고른 범위·분야에 맞는 맛객을 줄 세웁니다. 내 주변·내 지역은 그 안에 남긴 기록이 많은 순,
- * 그 밖은 구독자 많은 순(같으면 기록 많은 순)입니다.
+ * 고른 지역·분야에 맞는 맛객을 고른 정렬로 줄 세웁니다. 기록 많은 순은 내 주변·내 지역이면 그 안에 남긴 기록 수를 먼저 봅니다.
+ * 기준이 같으면 구독자 많은 순 → 전체 기록 많은 순으로 잇습니다.
  */
 export function filterBrowseTasters(
   tasters: Taster[],
   scope: TasterScope,
   focus: TasterFocusFilter,
+  sort: BrowseSort,
   stats: Map<string, TasterStats>,
   context: ScopeContext,
 ): Taster[] {
   const counts = scopeRecordCounts(scope, context);
-  const countOf = (taster: Taster) => counts?.get(taster.tasterId) ?? 0;
+  const areaCountOf = (taster: Taster) => counts?.get(taster.tasterId) ?? 0;
+  // 목록 줄의 "기록 N곳"과 같은 수로 줄 세웁니다.
+  const totalCountOf = (taster: Taster) => recordCountOf(taster, stats);
+  const bySubscribers = (left: Taster, right: Taster) =>
+    (right.subscriberCount ?? 0) - (left.subscriberCount ?? 0) || totalCountOf(right) - totalCountOf(left);
+  const compare: Record<BrowseSort, (left: Taster, right: Taster) => number> = {
+    SUBSCRIBERS: bySubscribers,
+    TASTE: (left, right) => compareByTrust(left, right) || bySubscribers(left, right),
+    RECORDS: (left, right) =>
+      areaCountOf(right) - areaCountOf(left) || totalCountOf(right) - totalCountOf(left) || bySubscribers(left, right),
+  };
   return tasters
-    .filter((taster) => isInScope(taster, scope, counts, context.myArea))
-    .filter((taster) => focus === "ALL" || taster.tasterFocus === focus || taster.tasterFocus === "BOTH")
-    .sort(
-      (left, right) =>
-        countOf(right) - countOf(left) ||
-        (right.subscriberCount ?? 0) - (left.subscriberCount ?? 0) ||
-        (stats.get(right.tasterId)?.count ?? 0) - (stats.get(left.tasterId)?.count ?? 0),
-    );
+    .filter((taster) => isInScope(taster, scope, counts, context.myArea) && matchesFocus(taster, focus))
+    .sort(compare[sort]);
 }
 
 /** 닉네임·소개·지역·취향 태그에 검색어가 들어간 맛객입니다. keyword는 소문자로 다듬어 넘깁니다. */
@@ -154,8 +170,14 @@ export function searchTasters(tasters: Taster[], keyword: string): Taster[] {
   );
 }
 
+/** 목록 줄의 "기록 N곳"입니다. 지도에 받은 기록이 없으면 서버가 알려 준 기록 수를 씁니다. */
+export function recordCountOf(taster: Taster, stats: Map<string, TasterStats>): number {
+  return stats.get(taster.tasterId)?.count ?? taster.placeCount ?? 0;
+}
+
+/** 대표 배경 사진 한 장(올린 첫 장, 없으면 맛객별 기본 배경)입니다. */
 export function coverOf(taster: Taster): string {
-  return profileCoverFor(taster.tasterId, taster.profileCoverUrls?.[0] ?? taster.profileCoverUrl);
+  return profileCoverFor(taster.tasterId, taster.profileCoverUrls?.[0]);
 }
 
 /** 프로필 위쪽에서 넘겨 볼 배경 사진들입니다. 올린 사진이 없으면 기본 배경 한 장입니다. */
@@ -164,10 +186,12 @@ export function coversOf(taster: Taster): string[] {
   return uploaded.length ? uploaded.map((url) => profileCoverFor(taster.tasterId, url)) : [coverOf(taster)];
 }
 
+/** 소개가 없으면 기본 문구를 보여 줄 소개 한 줄입니다. */
 export function introOf(taster: Taster): string {
-  return taster.intro?.trim() || taster.note?.trim() || "맛있는 장소를 찾아 기록하고 있어요.";
+  return taster.intro?.trim() || "맛있는 장소를 찾아 기록하고 있어요.";
 }
 
+/** 맛객 분야 이름표입니다. 모르면 null이라 칩을 그리지 않습니다. */
 export function focusLabel(focus?: Taster["tasterFocus"]): string | null {
   if (focus === "RESTAURANT") return "식당";
   if (focus === "CAFE_DESSERT") return "카페·디저트";
@@ -183,10 +207,9 @@ export function activityLabel(taster: Taster): string | null {
   return region || null;
 }
 
-/** 맛객의 공개 취향 태그. 프로필 태그가 없으면 예전 tag 문자열을 나눠 씁니다. */
+/** 맛객의 공개 취향 태그(프로필 태그)입니다. 장소 기록에서만 알게 된 맛객은 빈 목록입니다. */
 export function tagsOf(taster: Taster): string[] {
-  if (taster.profileTags?.length) return taster.profileTags;
-  return taster.tag && taster.tag !== "맛객" ? taster.tag.split(" · ").filter(Boolean) : [];
+  return taster.profileTags ?? [];
 }
 
 /** 종료일까지 남은 날짜(오늘 끝나면 0). 종료일이 없으면 null */
@@ -213,7 +236,6 @@ export function subscribedTaster(
     tasterById.get(subscription.targetAccountId) ?? {
       tasterId: subscription.targetAccountId,
       tasterName: subscription.targetNickname,
-      tag: "맛객",
       avatar: "",
       avatarVariant: 1,
       note: "",
@@ -226,12 +248,10 @@ export function tasterFromProfile(profile: MyProfile, nickname: string, subscrib
   return {
     tasterId: profile.accountId,
     tasterName: nickname,
-    tag: profile.profileTags.join(" · ") || "맛객",
     avatar: profile.profileImgUrl ?? "",
     avatarVariant: profile.avatarVariant,
     note: "",
     intro: profile.intro ?? undefined,
-    profileCoverUrl: profile.profileCoverUrl,
     profileCoverUrls: profile.profileCoverUrls,
     tasterFocus: profile.tasterFocus,
     activityScope: profile.activityScope,

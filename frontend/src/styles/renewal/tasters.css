@@ -13,11 +13,18 @@
   flex-direction: column;
   gap: 12px;
 }
+/* 섹션 위 안내 문장: 조건·인원(b)은 진하게, 순서 설명은 흐리게 읽힙니다. */
 .r-tasters-note {
   margin: 0;
   color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+.r-tasters-note b {
+  color: var(--color-ink);
+  font-weight: 700;
 }
 .r-tasters-avatar.avatar {
   border: 0;
@@ -152,12 +159,11 @@
   height: 100%;
   object-fit: cover;
 }
-.r-tasters-rec__cover .r-match {
+/* 신뢰·취향 칩은 다른 화면과 같은 색 그대로 표지 사진 오른쪽 위에 얹습니다. */
+.r-tasters-rec__cover .r-scores {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: var(--color-ink);
-  color: var(--on-strong);
 }
 .r-tasters-rec__copy {
   position: relative;
@@ -192,30 +198,150 @@
   padding: 28px 20px;
 }
 
-/* 지역·분야 칩 */
-.r-tasters-chips {
-  margin: 0 -20px;
-  padding: 0 20px;
-}
 /*
- * 추천 탭의 공통 범위 칩 한 줄. 아래 취향 맞는 맛객·맛객 둘러보기가 모두 이 칩을 따르므로,
- * 내려 봐도 무엇으로 거른 목록인지 보이게 위쪽 바(60px) 바로 아래에 붙여 둡니다.
+ * 제목 옆 지역 버튼(배달 앱 주소 고르기처럼). 늘 코랄 테두리·글자로 눌러 바꿀 수 있는 곳임을 보이고,
+ * 전체 지역이 아니면 코랄로 꽉 채워 좁혀 본 상태임을 알립니다.
  */
-.r-tasters-scope {
-  position: sticky;
-  top: 60px;
-  z-index: 10;
-  margin: -6px -20px 0;
-  background: var(--color-canvas);
-  padding: 6px 20px 8px;
+.r-tasters-region {
+  display: inline-flex;
+  min-width: 0;
+  height: 36px;
+  align-items: center;
+  gap: 4px;
+  border: 1.5px solid var(--brand-300);
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 10px 0 9px;
+  color: var(--color-primary-strong);
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(207, 63, 37, 0.12);
 }
-.r-tasters-chips--small {
-  margin-top: -4px;
+.r-tasters-region .icon {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  color: var(--color-primary);
 }
-.r-tasters-chips--small .r-chip {
-  height: 32px;
-  padding: 0 12px;
-  font-size: 13px;
+.r-tasters-region.is-on {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--neutral-0);
+}
+.r-tasters-region.is-on .icon {
+  color: inherit;
+}
+.r-tasters-region__caret {
+  display: inline-flex;
+  transform: rotate(90deg);
+}
+.r-tasters-region__caret .icon {
+  width: 15px;
+  height: 15px;
+}
+/* 지역 고르기 시트: 줄마다 아이콘, 이름과 한 줄 설명, 고른 줄은 코랄 체크 */
+.r-tasters-region-sheet__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0 0 8px;
+  list-style: none;
+}
+.r-tasters-region-sheet__list button {
+  display: flex;
+  width: 100%;
+  min-height: 64px;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  padding: 8px 10px;
+  color: var(--color-ink);
+  text-align: left;
+}
+.r-tasters-region-sheet__list button.is-on {
+  background: var(--brand-50);
+}
+.r-tasters-region-sheet__list button > .icon {
+  flex: none;
+  color: var(--color-primary);
+}
+.r-tasters-region-sheet__icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--neutral-100);
+  color: var(--color-muted);
+}
+.r-tasters-region-sheet__list button.is-on .r-tasters-region-sheet__icon {
+  background: var(--color-surface);
+  color: var(--color-primary);
+}
+.r-tasters-region-sheet__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-tasters-region-sheet__copy b {
+  font-size: 15px;
+}
+.r-tasters-region-sheet__copy small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+/* 분야 밑줄 탭. 고른 분야는 먹색 굵은 글자와 코랄 밑줄 */
+.r-tasters-focus {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--neutral-150);
+  padding: 0 4px;
+}
+.r-tasters-focus button {
+  min-height: 42px;
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 2.5px solid transparent;
+  background: none;
+  padding: 0 2px;
+  color: var(--color-muted);
+  font-size: 15px;
+  font-weight: 700;
+}
+.r-tasters-focus button[aria-selected="true"] {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-ink);
+  font-weight: 800;
+}
+
+/* 맛객 둘러보기 제목 오른쪽 정렬(발견 목록 시트의 정렬과 같은 모양) */
+.r-tasters-sort {
+  display: inline-flex;
+  flex: none;
+  align-self: center;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-100);
+  padding: 3px;
+}
+.r-section-head .r-tasters-sort > button {
+  min-height: 32px;
+  border-radius: var(--radius-pill);
+  padding: 0 10px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.r-section-head .r-tasters-sort > button.is-on {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--shadow-color) 12%, transparent);
 }
 
 /* 맛객 목록 */
@@ -315,8 +441,8 @@
   border-radius: var(--radius-pill);
   padding: 2px 8px;
   color: var(--color-muted);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 600;
 }
 .r-tasters-plan.is-paid {
   border-color: var(--amber-400);
@@ -378,11 +504,6 @@
   min-width: 0;
   flex: 1;
   border-bottom: 0;
-}
-.r-tasters-plan {
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 600;
 }
 .r-tasters-plan.is-free,
 .r-row__copy small.r-tasters-plan.is-free {

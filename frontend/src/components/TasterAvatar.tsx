@@ -1,9 +1,9 @@
 import type { Taster } from "../models/place";
-import { avatarFallback, avatarSource } from "../utils/profileMedia";
+import { avatarSource } from "../utils/profileMedia";
 import { Avatar } from "./BrandAssets";
 
 /** 맛객 사진에 필요한 값만 받습니다. 구독자처럼 Taster가 아닌 값도 이 모양으로 넘기면 됩니다. */
-export type AvatarTaster = Pick<Taster, "tasterId" | "tasterName" | "avatarVariant"> & { avatar?: string | null };
+type AvatarTaster = Pick<Taster, "tasterName" | "avatarVariant"> & { avatar?: string | null };
 
 /**
  * 맛객 사진 하나의 공통 모양입니다(맛객 탭·프로필·구독 목록·맛집 상세·사진 보기·가입 추천).
@@ -13,8 +13,7 @@ export default function TasterAvatar({ taster, className }: { taster: AvatarTast
   return (
     <Avatar
       className={className}
-      src={avatarSource(taster.tasterId, taster.avatar)}
-      fallbackSrc={avatarFallback(taster.tasterId, taster.avatar)}
+      src={avatarSource(taster.avatar)}
       name={taster.tasterName}
       variant={taster.avatarVariant}
     />

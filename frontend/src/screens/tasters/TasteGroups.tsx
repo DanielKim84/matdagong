@@ -1,10 +1,8 @@
 import { useAppData } from "../../app/AppData";
 import Icon from "../../components/Icon";
-import TagGroupList, { type TagGroupItem } from "../../components/TagGroupList";
+import TagGroupList from "../../components/TagGroupList";
 import { EmptyState } from "../../components/ui";
-import { PROFILE_TASTE_TAG_GROUP_LABELS, TASTE_TAG_GROUPS } from "../../models/tasteTags";
-
-const OTHER_GROUP_KEY = "OTHER";
+import { groupTagsByDictionary } from "../../models/tasteTags";
 
 /**
  * 맛객 프로필 "취향" 탭: 공개 취향 태그를 묶음별로 보여 줍니다(모양은 맛집 상세와 같은 TagGroupList).
@@ -14,13 +12,8 @@ export default function TasteGroups({ tags, matched }: { tags: string[]; matched
   const app = useAppData();
   if (!tags.length) return <EmptyState icon="heart" title="아직 공개한 취향이 없어요" className="r-card" />;
 
-  const groupOf = (tag: string) => app.tasteTags.find((option) => option.name === tag)?.tagGroup ?? OTHER_GROUP_KEY;
-  const groups: TagGroupItem[] = [
-    ...TASTE_TAG_GROUPS.map(({ id }) => ({ key: id, label: PROFILE_TASTE_TAG_GROUP_LABELS[id] })),
-    { key: OTHER_GROUP_KEY, label: "기타" },
-  ]
-    .map((group) => ({ ...group, tags: tags.filter((tag) => groupOf(tag) === group.key) }))
-    .filter((group) => group.tags.length > 0);
+  // 사전에서 빠진 옛 이름은 버리지 않고 "기타" 묶음으로 맨 뒤에 둡니다.
+  const groups = groupTagsByDictionary(tags, (tag) => app.tasteTags.find((option) => option.name === tag)?.tagGroup);
   const matchedCount = matched ? tags.filter((tag) => matched.includes(tag)).length : 0;
 
   return (

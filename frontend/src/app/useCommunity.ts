@@ -13,6 +13,7 @@ import {
   reportTaster,
   saveMyProfile,
 } from "../services/community";
+import { ApiError } from "../services/http";
 import type {
   ActiveSubscription,
   IncomingSubscription,
@@ -24,7 +25,6 @@ import type {
   TasterReportReason,
 } from "../models/community";
 import type { Taster } from "../models/place";
-import { ApiError } from "../services/http";
 import { errorMessage } from "../utils/errorMessage";
 import { RETRY_LATER_MESSAGE, type AppNotice } from "./AppData";
 

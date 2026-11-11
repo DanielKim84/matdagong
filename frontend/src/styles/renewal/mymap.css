@@ -1,14 +1,4 @@
-/* 내 지도(MyMapScreen). 지도·검색창·칩·마커 안내 버튼은 발견 화면(discover.css의 r-discover 규칙)을 같이 씁니다. */
-.r-mymap {
-  /* 아래 영역 = 떠 있는 하단 탭(68px + 아래 여백 14px)과 그 위 간격 */
-  --r-mymap-bottom: calc(96px + env(safe-area-inset-bottom));
-  /* 지도 버튼(내 위치·마커 안내)은 기록하기 버튼 줄 위에 둡니다. 카드가 열리면 카드 높이만큼 더 올립니다. */
-  --r-discover-map-controls: calc(var(--r-mymap-bottom) + 60px);
-}
-.r-mymap[data-card="open"] {
-  --r-discover-map-controls: calc(var(--r-mymap-bottom) + 280px);
-}
-
+/* 내 지도(MyMapScreen). 지도·검색창·칩·마커 안내 버튼·카드·목록 시트는 발견 화면(discover.css의 r-discover 규칙)을 같이 씁니다. */
 .r-mymap-search {
   padding: 0 16px;
 }
@@ -83,66 +73,20 @@
   background: none;
 }
 
-/* 아래쪽 영역: 기록하기 버튼(오른쪽)과 가게 카드 */
-.r-mymap__bottom {
-  position: absolute;
-  right: 16px;
-  bottom: var(--r-mymap-bottom);
-  left: 16px;
-  z-index: 6;
+/* 카드 위 오른쪽의 기록하기 버튼 줄. 버튼 밖 빈 곳은 지도를 그대로 누를 수 있게 합니다. */
+.r-mymap__record {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
+  justify-content: flex-end;
+  padding: 0 16px 10px;
   pointer-events: none;
 }
-.r-mymap__bottom > * {
+.r-mymap__record > * {
   pointer-events: auto;
 }
-.r-mymap__empty {
-  width: 100%;
+/* 떠 있는 덩어리는 기록하기 줄만큼 발견보다 높아서, 덩어리 자체는 누르기를 지도로 흘려보내고 안의 카드·안내만 받습니다. */
+.r-mymap .r-discover__float {
+  pointer-events: none;
 }
-
-.r-mymap-card {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-}
-.r-mymap-card__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-.r-mymap-card__head h2 {
-  margin: 6px 0 4px;
-  color: var(--color-ink);
-  font-size: 20px;
-  font-weight: 400;
-}
-.r-mymap-card__head p {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 13px;
-  line-height: 1.5;
-  word-break: keep-all;
-}
-.r-mymap-card__links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0 4px;
-  margin: -6px -8px 0;
-}
-.r-mymap-card__links > .r-text-button {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-}
-.r-mymap-card__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.r-mymap .r-discover__float > :not(.r-mymap__record) {
+  pointer-events: auto;
 }

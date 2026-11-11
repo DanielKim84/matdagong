@@ -1,5 +1,5 @@
 import type { VisitCondition } from "../../models/place";
-import { readStorageJson, STORAGE_KEYS, writeStorageJson } from "../../utils/storage";
+import { isRecord, readStorageJson, STORAGE_KEYS, writeStorageJson } from "../../utils/storage";
 import {
   DEFAULT_FILTERS,
   FILTER_CONDITIONS,
@@ -11,10 +11,6 @@ import {
 
 /** 발견 화면이 탭 저장소(sessionStorage)에 남기는 화면 상태입니다. 상세 화면을 다녀와도 그대로 이어 봅니다. */
 type StoredState = { filters: DiscoverFilters; sheet: SheetState; sort: SortOrder };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
 
 function isFilterCondition(value: unknown): value is VisitCondition {
   return FILTER_CONDITIONS.some((condition) => condition === value);

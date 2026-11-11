@@ -321,7 +321,7 @@ html.is-page-locked .screen-content {
   pointer-events: none;
 }
 
-/* ── 지도 마커: 기호 마커(내 맛집 하트), 묶음 마커, 맛객 핀(지도와 BrandAssets의 미리 보기 공통) ── */
+/* ── 지도 마커: 기호 마커(내 지도의 가볼 곳·다녀온 곳), 묶음 마커, 맛객 핀(지도와 BrandAssets의 미리 보기 공통) ── */
 .map-category-marker {
   /* 안쪽 핀 모양·기호가 이 버튼 기준으로 자리 잡게 합니다(마커 안내 시트에서도 같은 모양). */
   position: relative;
@@ -344,7 +344,7 @@ html.is-page-locked .screen-content {
 .map-category-marker-shell path {
   stroke-width: 2.7;
 }
-/* 가볼 곳은 초록, 다녀온 곳은 내 기록 핀과 같은 보라, 검색한 가게는 먹색입니다. */
+/* 가볼 곳은 초록, 다녀온 곳은 내 기록 핀과 같은 보라입니다. */
 .map-category-marker--liked .map-category-marker-shell path {
   fill: var(--green-500);
   stroke: var(--green-700);
@@ -352,10 +352,6 @@ html.is-page-locked .screen-content {
 .map-category-marker--visited .map-category-marker-shell path {
   fill: var(--berry-400);
   stroke: var(--berry-600);
-}
-.map-category-marker--search .map-category-marker-shell path {
-  fill: var(--neutral-800);
-  stroke: var(--neutral-900);
 }
 .map-category-marker-glyph {
   position: absolute;
@@ -389,11 +385,7 @@ html.is-page-locked .screen-content {
 .map-category-marker--visited .map-category-marker-glyph > svg {
   stroke-width: 3;
 }
-.map-category-marker--search .map-category-marker-glyph {
-  color: var(--neutral-800);
-}
-.map-category-marker--liked .map-category-marker-glyph > svg,
-.map-category-marker--search .map-category-marker-glyph > svg {
+.map-category-marker--liked .map-category-marker-glyph > svg {
   fill: currentColor;
   stroke: none;
 }

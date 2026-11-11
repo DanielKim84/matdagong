@@ -21,9 +21,6 @@ declare global {
     setBounds(bounds: MapBounds): void;
     panTo(position: MapCoordinate): void;
   }
-  interface MapMarker {
-    setMap(map: MapInstance | null): void;
-  }
   interface MapOverlay {
     setMap(map: MapInstance | null): void;
     setZIndex(zIndex: number): void;
@@ -67,16 +64,6 @@ declare global {
       ) => MapInstance;
       LatLng: new (latitude: number, longitude: number) => MapCoordinate;
       LatLngBounds: new () => MapBounds;
-      Size: new (width: number, height: number) => object;
-      Point: new (x: number, y: number) => object;
-      MarkerImage: new (src: string, size: object, options?: { offset?: object }) => object;
-      Marker: new (options: {
-        map: MapInstance;
-        position: MapCoordinate;
-        clickable?: boolean;
-        image?: object;
-        title?: string;
-      }) => MapMarker;
       CustomOverlay: new (options: {
         map: MapInstance;
         position: MapCoordinate;
@@ -85,7 +72,7 @@ declare global {
         zIndex?: number;
       }) => MapOverlay;
       services: {
-        Status: { OK: string; ZERO_RESULT: string; ERROR: string };
+        Status: { OK: string; ZERO_RESULT: string };
         Places: new () => {
           keywordSearch(
             keyword: string,
@@ -96,16 +83,7 @@ declare global {
         Geocoder: new () => KakaoGeocoder;
       };
       event: {
-        addListener(
-          target: MapInstance | MapMarker,
-          eventName: string,
-          callback: (event?: { latLng: MapCoordinate }) => void,
-        ): void;
-        removeListener(
-          target: MapInstance | MapMarker,
-          eventName: string,
-          callback: (event?: { latLng: MapCoordinate }) => void,
-        ): void;
+        addListener(target: MapInstance, eventName: string, callback: () => void): void;
       };
     };
   }

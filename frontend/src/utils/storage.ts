@@ -19,9 +19,10 @@ export const STORAGE_KEYS = {
   /** local: 첫 소개·가입을 마쳤는지. 계정별 키는 onboardingCompletedKey()를 씁니다. */
   onboardingCompleted: "matdagong.onboarding.completed",
   /** session: 다른 화면이 기록 화면을 열면서 넘기는 일회성 장소 값 */
-  likeConversionHandoff: "matdagong.place-conversion.from-like",
   quickPlaceHandoff: "matdagong.quick-place.selected-place",
   placeDetailHandoff: "matdagong.place-detail.record-place",
+  /** session: 내 지도 검색에서 고른, 맛다공에 아직 없는 카카오 가게(상세로 열기) */
+  kakaoPlaceDetail: "matdagong.place-detail.kakao-place",
   /** session: 로그인 만료 때 보관한 기록 입력과 남은 공간 확인용 값 */
   registerDraft: "matdagong.register.form-draft",
   registerDraftProbe: "matdagong.register.form-draft.probe",
@@ -31,25 +32,11 @@ export const STORAGE_KEYS = {
   discoverState: "matdagong.discover.state",
   /** local: 맛객별로 마지막으로 본 스토리 기록 시각 */
   feedStorySeen: "matdagong.feed.storySeen",
-  /** local(이전 버전): 브라우저에만 남긴 빠른 기록. 계정 임시 목록으로 옮긴 뒤 지웁니다. */
-  legacyQuickDrafts: "matdagong.place-quick-drafts.v1",
-  /** local(이전 버전): 장소 등록·하트·최근 본 장소. 앞의 키가 최신 형식입니다. */
-  legacyActivity: ["matdagong-activity-v4", "matdagong-activity-v3", "matdagong-activity-v2"],
 } as const;
 
 /** local: 계정별 첫 소개·가입 완료 표시 */
 export function onboardingCompletedKey(accountId?: string | null): string {
   return accountId ? `${STORAGE_KEYS.onboardingCompleted}:${accountId}` : STORAGE_KEYS.onboardingCompleted;
-}
-
-/** local: 이전 브라우저 기록(최근 본 장소)을 계정별로 서버에 옮겼는지 */
-export function recentMigrationKey(accountId: string): string {
-  return `matdagong-recent-db-sync-v1:${accountId}`;
-}
-
-/** local: 이전 브라우저 기록(등록·하트)을 계정별로 서버에 옮겼는지 */
-export function placeMigrationKey(accountId: string): string {
-  return `matdagong-place-server-sync-v1:${accountId}`;
 }
 
 /** session은 탭을 닫으면 지워지는 값, local은 브라우저에 남는 값입니다. */
@@ -104,6 +91,16 @@ export function writeStorageJson(key: string, value: unknown, area: StorageArea)
     return false;
   }
   return writeStorage(key, raw, area);
+}
+
+/** 저장했던 값이 객체 모양인지 확인합니다. 그 뒤 필드마다 모양을 다시 확인해 씁니다. */
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+/** 저장했던 값이 지도에서 고를 수 있는 카카오 장소인지(ID·이름·좌표가 있는지) 확인합니다. */
+export function isKakaoPlace(value: unknown): value is KakaoPlaceResult {
+  return isRecord(value) && !!value.id && !!value.place_name && !!value.x && !!value.y;
 }
 
 /** 저장했던 값에서 문자열 항목만 골라 목록으로 돌려줍니다. 배열이 아니면 빈 목록입니다. */

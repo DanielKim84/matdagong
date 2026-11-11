@@ -1,8 +1,8 @@
 import { ProfileCover } from "../../components/BrandAssets";
 import HashTag from "../../components/HashTag";
+import TasterAvatar from "../../components/TasterAvatar";
 import type { Taster } from "../../models/place";
 import { formatNumber } from "../../utils/format";
-import TasterAvatar from "../../components/TasterAvatar";
 import { profileCoverFor } from "../../utils/profileMedia";
 
 /** 카드 한 장에 보여 줄 취향 태그 수 */
@@ -17,7 +17,7 @@ export default function TasterMatchCard({ taster, photos }: { taster: Taster; ph
       aria-label={`${taster.tasterName}, 취향 일치 ${taster.matchScore ?? 0}%`}
     >
       <div className="r-onboarding-match__cover">
-        <ProfileCover src={profileCoverFor(taster.tasterId, taster.profileCoverUrl)} />
+        <ProfileCover src={profileCoverFor(taster.tasterId, taster.profileCoverUrls?.[0])} />
         <span className="r-onboarding-match__score">취향 일치 {taster.matchScore ?? 0}%</span>
       </div>
       <div className="r-onboarding-match__body">

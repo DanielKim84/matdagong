@@ -21,11 +21,6 @@ async function startMatdagong(): Promise<void> {
   const root = document.getElementById("root");
   if (!root) return;
 
-  // 과거에 사용하던 맛다공 /login 주소는 앱 진입 주소로 정리합니다.
-  if (window.location.pathname === "/login") {
-    window.history.replaceState(null, "", "/");
-  }
-
   try {
     const isCallback = window.location.pathname === CALLBACK_PATH;
     showStartupStatus(isCallback ? "로그인 결과를 확인하고 있어요…" : "맛다공에 접속하고 있어요…");
@@ -71,5 +66,4 @@ applyTheme();
 installMouseDragScroll();
 setSessionExpiredHandler(restartExpiredSession);
 
-// 맛다공은 먼저 홈 진입을 시도하고, 유효한 로그인 정보가 없으면 공통 인증을 시작합니다.
 void startMatdagong();

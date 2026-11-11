@@ -19,8 +19,8 @@ export default function DiscoverSheetList({
   recentSubscribed: { place: Place; taster: Taster }[];
   ctx: PlaceContext;
 }) {
-  const { likedPlaceIds, loading, photoFor, actions } = useAppData();
-  // 최근 기록 칸은 모두 구독한 맛객이라 "구독" 표시 대신 취향 점수를 보여 줍니다.
+  const { likedPlaceIds, isLoading, photoFor, actions } = useAppData();
+  // 최근 기록 칸은 모두 구독한 맛객이라 "구독 중" 표시는 뺍니다.
   const recentContext = { ...ctx, subscriptions: new Set<string>() };
 
   return (
@@ -59,7 +59,7 @@ export default function DiscoverSheetList({
         <SectionHead title="지도에 보이는 곳" className="r-discover-section__list-head" />
       )}
 
-      {loading && !places.length ? (
+      {isLoading && !places.length ? (
         <Skeleton shape="row" count={3} label="맛집을 불러오는 중" className="r-discover-rows-skeleton" />
       ) : places.length ? (
         <ul className="r-place-cards">
@@ -86,7 +86,7 @@ export default function DiscoverSheetList({
                         type="button"
                         className={`r-discover-row__save ${isLiked ? "is-on" : ""}`}
                         aria-pressed={isLiked}
-                        aria-label={isLiked ? `${place.name} 내 맛집 바꾸기` : `${place.name} 내 맛집에 저장`}
+                        aria-label={isLiked ? `${place.name} 하트 풀기` : `${place.name} 가볼 곳에 저장`}
                         onClick={() => void actions.chooseLike(place.id)}
                       >
                         <Icon name="heart" filled={isLiked} />

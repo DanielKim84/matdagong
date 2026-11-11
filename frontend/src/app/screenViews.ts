@@ -2,8 +2,8 @@ import type { ComponentType } from "react";
 import CollectionsScreen from "../screens/me/CollectionsScreen";
 import AccountSettingsScreen from "../screens/me/AccountSettingsScreen";
 import DiaryScreen from "../screens/me/DiaryScreen";
+import DislikedPlacesScreen from "../screens/me/DislikedPlacesScreen";
 import MeScreen from "../screens/me/MeScreen";
-import MyRecordsScreen from "../screens/me/MyRecordsScreen";
 import PolicyScreen from "../screens/me/PolicyScreen";
 import QuickDraftsScreen from "../screens/me/QuickDraftsScreen";
 import WalletScreen from "../screens/me/WalletScreen";
@@ -20,7 +20,7 @@ import TastersScreen from "../screens/tasters/TastersScreen";
 import type { Screen } from "../models/place";
 import ProfileEditRoute from "./ProfileEditRoute";
 
-/** 주소(#화면)별로 그릴 화면입니다. 모음 화면(saved·liked·recent)은 CollectionsScreen 하나가 주소를 보고 나눠 그립니다. */
+/** 주소(#화면)별로 그릴 화면입니다. 모음 화면(saved·recent)은 CollectionsScreen 하나가 주소를 보고 나눠 그립니다. */
 export const SCREEN_VIEWS: Record<Screen, ComponentType<{ routeId: string }>> = {
   home: DiscoverScreen,
   map: DiscoverScreen,
@@ -35,14 +35,13 @@ export const SCREEN_VIEWS: Record<Screen, ComponentType<{ routeId: string }>> = 
   my: MeScreen,
   diary: DiaryScreen,
   wallet: WalletScreen,
-  "my-records": MyRecordsScreen,
   drafts: QuickDraftsScreen,
+  disliked: DislikedPlacesScreen,
   notifications: NotificationsScreen,
   settings: AccountSettingsScreen,
   policy: PolicyScreen,
   intro: OnboardingScreen,
   "profile-edit": ProfileEditRoute,
   saved: CollectionsScreen,
-  liked: CollectionsScreen,
   recent: CollectionsScreen,
 };

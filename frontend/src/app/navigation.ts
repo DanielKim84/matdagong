@@ -18,13 +18,12 @@ const SCREENS: Screen[] = [
   "settings",
   "profile-edit",
   "intro",
-  "liked",
   "recent",
   "feed",
   "tasters",
   "wallet",
-  "my-records",
   "drafts",
+  "disliked",
   "policy",
 ];
 
@@ -75,11 +74,12 @@ function syncRouteHistory() {
   routeHistoryIndex += 1;
 }
 
-export function go(screen: Screen, id = "", replace = false) {
+/** 해시 화면으로 이동합니다. 같은 주소면 무시하고, shouldReplace면 기록을 늘리지 않고 바꾼 뒤 hashchange를 직접 알립니다. */
+export function go(screen: Screen, id = "", shouldReplace = false) {
   const next = routeKey(screen, id);
   if (next === currentHashPath()) return;
 
-  if (replace) {
+  if (shouldReplace) {
     window.history.replaceState(window.history.state, "", `#${next}`);
     routeHistory[routeHistoryIndex] = next;
     window.dispatchEvent(new Event("hashchange"));
@@ -105,6 +105,7 @@ export function back(fallback: Screen = "home") {
   go(fallback, "", true);
 }
 
+/** 지금 주소의 화면·ID입니다. 해시가 바뀌거나 뒤로 가면 앱 이동 기록을 맞추고 맨 위로 스크롤합니다. */
 export function useRoute() {
   const [route, setRoute] = useState(currentRoute);
   useEffect(() => {

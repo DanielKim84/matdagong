@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAppData } from "../app/AppData";
-import { Avatar } from "../components/BrandAssets";
 import Icon from "../components/Icon";
 import { useNotificationDialog } from "../components/NotificationDialog";
 import Sheet from "../components/Sheet";
+import TasterAvatar from "../components/TasterAvatar";
 import { createSubscription, getPlanCatalog } from "../services/community";
 import type { PlanCatalog } from "../models/community";
 import { errorMessage } from "../utils/errorMessage";
@@ -124,12 +124,7 @@ export default function SubscriptionOfferSheet() {
         <>
           <span className="r-tasters-offer__handle" aria-hidden="true" />
           <div className="r-tasters-offer__head">
-            <Avatar
-              className="r-tasters-avatar r-tasters-avatar--md"
-              src={taster.avatar}
-              name={taster.tasterName}
-              variant={taster.avatarVariant}
-            />
+            <TasterAvatar className="r-tasters-avatar r-tasters-avatar--md" taster={taster} />
             <span>
               <h2 className="r-display">{taster.tasterName} 구독하기</h2>
               <small>새 기록 알림 · 구독 피드에서 모아 보기</small>
@@ -169,22 +164,19 @@ export default function SubscriptionOfferSheet() {
           {type === "FREE" && isReplacingFree && (
             <div className="r-tasters-offer__swap" aria-label="무료 구독 대상 변경 안내">
               <span>
-                <Avatar
+                <TasterAvatar
                   className="r-tasters-avatar r-tasters-avatar--sm"
-                  src={currentFreeTaster?.avatar}
-                  name={freeName}
-                  variant={currentFreeTaster?.avatarVariant}
+                  taster={{
+                    tasterName: freeName,
+                    avatar: currentFreeTaster?.avatar,
+                    avatarVariant: currentFreeTaster?.avatarVariant ?? 1,
+                  }}
                 />
                 <small>{freeName}</small>
               </span>
               <Icon name="chevron" />
               <span>
-                <Avatar
-                  className="r-tasters-avatar r-tasters-avatar--sm"
-                  src={taster.avatar}
-                  name={taster.tasterName}
-                  variant={taster.avatarVariant}
-                />
+                <TasterAvatar className="r-tasters-avatar r-tasters-avatar--sm" taster={taster} />
                 <small>{taster.tasterName}</small>
               </span>
               <p>무료 구독은 한 명만 가능해서, 신청하면 무료 구독 대상이 바뀌어요.</p>

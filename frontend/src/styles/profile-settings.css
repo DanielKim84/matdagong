@@ -357,39 +357,6 @@
   margin: 0;
 }
 
-/*
- * 취향 태그 고르기(TasteTagPicker, 프로필 편집·맛집 기록 공통)의 뼈대입니다.
- * 색·크기·간격은 design-system.css와 화면별 a/forms.css, renewal/record.css가 정합니다.
- */
-.taste-tag-picker {
-  display: grid;
-}
-.taste-tag-picker > section {
-  display: grid;
-}
-.taste-tag-group__header {
-  display: flex;
-  align-items: center;
-}
-.taste-tag-group__icon {
-  display: grid;
-  flex: none;
-  place-items: center;
-}
-.taste-tag-group__titles {
-  display: grid;
-  flex: 1;
-}
-.taste-tag-options {
-  display: flex;
-  flex-wrap: wrap;
-}
-.taste-tag-options button {
-  display: inline-flex;
-  align-items: center;
-  line-height: 1.2;
-}
-
 /* 태그 제안 입구·저장 줄 */
 .tag-request-entry {
   display: flex;

@@ -2,6 +2,7 @@ import { Avatar } from "../../components/BrandAssets";
 import FoodFocusPicker from "../../components/FoodFocusPicker";
 import Icon from "../../components/Icon";
 import TasteTagPicker from "../../components/TasteTagPicker";
+import { groupsForFocus } from "../../models/tasteTags";
 import type { ProfileForm } from "./useProfileForm";
 
 /** 비공개 추천 취향 탭: 찾는 분야, 좋아하는 태그, 추천에서 뺄 조건입니다. */
@@ -42,7 +43,7 @@ export default function TastePreferenceTab({ form }: { form: ProfileForm }) {
         <TasteTagPicker
           options={form.positiveOptions}
           value={form.preferenceTags}
-          focus={form.preferenceFocus}
+          groups={groupsForFocus(form.preferenceFocus)}
           onChange={form.changePreferenceTags}
         />
       </section>
@@ -55,7 +56,7 @@ export default function TastePreferenceTab({ form }: { form: ProfileForm }) {
         <TasteTagPicker
           options={form.avoidOptions}
           value={form.excludedTags}
-          groupsToShow={["VISIT"]}
+          groups={["VISIT"]}
           onChange={form.changeExcludedTags}
         />
       </section>

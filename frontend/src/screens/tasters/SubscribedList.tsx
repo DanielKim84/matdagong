@@ -4,11 +4,11 @@ import { go } from "../../app/navigation";
 import { useNotificationDialog } from "../../components/NotificationDialog";
 import Sheet from "../../components/Sheet";
 import { EmptyState } from "../../components/ui";
+import TasterAvatar from "../../components/TasterAvatar";
 import type { ActiveSubscription } from "../../models/community";
 import type { Taster } from "../../models/place";
 import { formatMonthDay } from "../../utils/format";
 import { confirmCancelSubscription, daysLeft, planLabel, subscribedTaster } from "./tasterData";
-import TasterAvatar from "../../components/TasterAvatar";
 
 /** 내가 구독 중인 맛객 목록. 각 줄의 "관리"에서 프로필 보기·해지를 고릅니다. */
 export default function SubscribedList() {

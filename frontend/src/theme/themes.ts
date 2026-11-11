@@ -37,7 +37,7 @@ export const THEMES: readonly ThemeDefinition[] = [
   },
 ];
 
-export type ThemeSchedule = {
+type ThemeSchedule = {
   theme: string;
   /** 한국 시간 기준 시작일(포함), YYYY-MM-DD */
   start: string;

@@ -16,11 +16,11 @@ const TAB_OPTIONS: { value: ProfileTab; label: string }[] = [
 /** 프로필 편집 화면입니다. 공개 프로필과 비공개 추천 취향을 탭으로 나누고 한 번에 저장합니다. */
 export default function ProfileSettingsScreen({
   profile,
-  initialTab = "profile",
+  initialTab,
 }: {
   /** 불러온 내 프로필(ProfileEditRoute가 불러온 뒤에만 이 화면을 그립니다) */
   profile: MyProfile;
-  initialTab?: ProfileTab;
+  initialTab: ProfileTab;
 }) {
   const { tasteTags, actions } = useAppData();
   const form = useProfileForm({

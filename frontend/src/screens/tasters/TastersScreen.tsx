@@ -2,43 +2,45 @@ import { useMemo, useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
-import { EmptyState, Segmented, SectionHead, Skeleton, TopBar } from "../../components/ui";
-import IncomingList from "./IncomingList";
+import TasterAvatar from "../../components/TasterAvatar";
+import { EmptyState, SectionHead, Skeleton, TopBar } from "../../components/ui";
 import BrowseTasters from "./BrowseTasters";
 import RecommendCard from "./RecommendCard";
-import SubscribedList from "./SubscribedList";
+import { RecommendNote, TasterFocusTabs, TasterRegionButton } from "./TasterFilters";
 import TasterRows from "./TasterRows";
-import TasterScopeChips, { ScopeNotice, isScopeReady, scopeNote } from "./TasterScopeChips";
+import { ScopeNotice, isScopeReady } from "./TasterScopeNotice";
 import {
   PAGE_SIZE,
   areaKey,
   hasTravelers,
   isInScope,
+  matchesFocus,
   scopeRecordCounts,
   searchTasters,
   statsByTaster,
   subscribedTaster,
   type BrowseFilter,
   type ScopeContext,
+  type TasterFocusFilter,
   type TasterScope,
 } from "./tasterData";
-import TasterAvatar from "../../components/TasterAvatar";
 import { useOnDemandLocation } from "./useOnDemandLocation";
-
-type Tab = "recommend" | "subscribed" | "incoming";
 
 /** 추천 카드 묶음에 보여 줄 최대 맛객 수 */
 const RECOMMEND_LIMIT = 10;
 
-/** 맛객 탭(#tasters): 취향 일치로 맛객을 고르고, 구독 중·나를 구독한 사람을 봅니다. */
+/**
+ * 맛객 탭(#tasters): 취향 일치로 맛객을 고르고 둘러봅니다. 구독 중인 맛객은 위쪽 가로 줄로만 보여 주고,
+ * 구독 중·나를 구독한 사람 목록은 구독 관리(#subscriptions) 한 곳에서 봅니다(같은 목록을 두 군데 두지 않음).
+ */
 export default function TastersScreen() {
   const app = useAppData();
-  const [tab, setTab] = useState<Tab>("recommend");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
-  // 범위 칩은 한 줄만 두고 취향 맞는 맛객과 맛객 둘러보기가 함께 따릅니다(같은 기능을 두 번 고르지 않게).
+  // 지역(제목 옆 버튼)·분야(밑줄 탭) 조건은 한 번만 두고 취향 맞는 맛객과 맛객 둘러보기가 함께 따릅니다(같은 조건을 두 번 고르지 않게).
   const [scope, setScope] = useState<TasterScope>("ALL");
-  const [browseFilter, setBrowseFilter] = useState<BrowseFilter>({ focus: "ALL", limit: PAGE_SIZE });
+  const [focus, setFocus] = useState<TasterFocusFilter>("ALL");
+  const [browseFilter, setBrowseFilter] = useState<BrowseFilter>({ sort: "SUBSCRIBERS", limit: PAGE_SIZE });
   const location = useOnDemandLocation();
   const myArea = app.myProfile?.activityScope === "TRAVEL" ? null : areaKey(app.myProfile?.activityRegion);
   const scopeContext: ScopeContext = { places: app.places, position: location.position, myArea };
@@ -47,18 +49,31 @@ export default function TastersScreen() {
     setScope(next);
     setBrowseFilter((current) => ({ ...current, limit: PAGE_SIZE }));
   }
+  function changeFocus(next: TasterFocusFilter) {
+    setFocus(next);
+    setBrowseFilter((current) => ({ ...current, limit: PAGE_SIZE }));
+  }
 
   const stats = useMemo(() => statsByTaster(app.places), [app.places]);
   const others = app.tasters.filter((taster) => !app.isMyTasterId(taster.tasterId));
   const keyword = query.trim().toLowerCase();
   const searchResults = searchTasters(others, keyword);
-  const isFirstLoad = app.loading && !app.tasters.length;
+  const isFirstLoad = app.isLoading && !app.tasters.length;
 
   return (
     <main className="r-screen r-tasters">
       <TopBar
         title="맛객"
-        root
+        isRoot
+        aside={
+          <TasterRegionButton
+            scope={scope}
+            onScopeChange={changeScope}
+            location={location}
+            myArea={myArea}
+            hasTravel={hasTravelers(others)}
+          />
+        }
         right={
           <button
             type="button"
@@ -101,17 +116,6 @@ export default function TastersScreen() {
           </section>
         ) : (
           <>
-            <Segmented
-              label="맛객 보기"
-              value={tab}
-              onChange={setTab}
-              options={[
-                { value: "recommend", label: "추천" },
-                { value: "subscribed", label: `구독 중 ${app.subscriptions.length}` },
-                { value: "incoming", label: `나를 구독 ${app.incomingSubscriptions.length}` },
-              ]}
-            />
-
             {isFirstLoad ? (
               <Skeleton shape="row" count={4} label="맛객을 불러오고 있어요." />
             ) : app.error && !app.tasters.length ? (
@@ -121,35 +125,24 @@ export default function TastersScreen() {
                 message={app.error}
                 action={{ label: "다시 불러오기", onClick: app.actions.retry }}
               />
-            ) : tab === "subscribed" ? (
-              <section className="r-tasters-section">
-                <SectionHead title="구독 중인 맛객" action="구독 관리" onAction={() => go("subscriptions")} />
-                <SubscribedList />
-              </section>
-            ) : tab === "incoming" ? (
-              <section className="r-tasters-section">
-                <SectionHead title="나를 구독한 사람" action="구독 관리" onAction={() => go("subscriptions")} />
-                <IncomingList />
-              </section>
             ) : (
               <>
                 <SubscribedStrip />
-                <section className="r-tasters-section r-tasters-scope" aria-label="맛객 범위">
-                  <TasterScopeChips
-                    label="맛객 범위"
-                    value={scope}
-                    onChange={changeScope}
-                    location={location}
-                    hasTravel={hasTravelers(others)}
-                  />
-                </section>
+                <TasterFocusTabs focus={focus} onFocusChange={changeFocus} />
                 {isScopeReady(scope, location, myArea) ? (
                   <>
-                    <RecommendSection scope={scope} onScopeChange={changeScope} context={scopeContext} />
+                    <RecommendSection
+                      scope={scope}
+                      onScopeChange={changeScope}
+                      focus={focus}
+                      onFocusChange={changeFocus}
+                      context={scopeContext}
+                    />
                     <BrowseTasters
                       tasters={others}
                       stats={stats}
                       scope={scope}
+                      focus={focus}
                       filter={browseFilter}
                       onFilterChange={setBrowseFilter}
                       context={scopeContext}
@@ -175,7 +168,7 @@ function SubscribedStrip() {
   const subscribedTasters = app.subscriptions.map((subscription) => subscribedTaster(app.tasterById, subscription));
   return (
     <section className="r-tasters-section">
-      <SectionHead title="내가 구독한 맛객" action="관리" onAction={() => go("subscriptions")} />
+      <SectionHead title="내가 구독한 맛객" action="구독 관리" onAction={() => go("subscriptions")} />
       <div className="r-tasters-strip">
         {subscribedTasters.map((taster) => (
           <button type="button" key={taster.tasterId} onClick={() => go("profile", taster.tasterId)}>
@@ -189,23 +182,34 @@ function SubscribedStrip() {
 }
 
 /**
- * 취향이 잘 맞는 맛객 카드 묶음. 위쪽 공통 범위 칩(scope) 안에서 아직 구독하지 않은 맛객을
+ * 취향이 잘 맞는 맛객 카드 묶음. 위쪽 공통 조건(지역·분야) 안에서 아직 구독하지 않은 맛객을
  * 믿고 가는 맛객 → 신뢰 % → 취향 % 순으로 보여 줍니다(models/trust의 compareByTrust). 추천이 없으면 취향 고르기를 권합니다.
  */
 function RecommendSection({
   scope,
   onScopeChange,
+  focus,
+  onFocusChange,
   context,
 }: {
   scope: TasterScope;
   onScopeChange: (scope: TasterScope) => void;
+  focus: TasterFocusFilter;
+  onFocusChange: (focus: TasterFocusFilter) => void;
   context: ScopeContext;
 }) {
   const app = useAppData();
   // 취향을 이미 골랐다면 입맛 맞는 맛객을 모두 구독 중인 경우라 취향 설정 대신 취향 넓히기를 권합니다.
   const hasPreference = !!app.myProfile?.preferenceTags.length;
   const counts = scopeRecordCounts(scope, context);
-  const inScope = app.recommendedTasters.filter((taster) => isInScope(taster, scope, counts, context.myArea));
+  const inScope = app.recommendedTasters.filter(
+    (taster) => isInScope(taster, scope, counts, context.myArea) && matchesFocus(taster, focus),
+  );
+  // 비었을 때는 좁힌 조건부터 풀어 보게 합니다: 지역을 좁혔으면 전체 지역, 아니면 모든 분야.
+  const widen =
+    scope !== "ALL"
+      ? { label: "전체 지역 보기", onClick: () => onScopeChange("ALL"), variant: "soft" as const }
+      : { label: "모든 분야 보기", onClick: () => onFocusChange("ALL"), variant: "soft" as const };
   return (
     <section className="r-tasters-section">
       <SectionHead title="취향이 잘 맞는 맛객" action="취향 수정" onAction={() => go("profile-edit", "taste")} />
@@ -213,9 +217,13 @@ function RecommendSection({
         <>
           {inScope.length ? (
             <>
-              <p className="r-tasters-note">
-                {scopeNote(scope, context.myArea)} · 믿고 가는 맛객·취향 % 순 · {RECOMMEND_LIMIT}명까지
-              </p>
+              <RecommendNote
+                scope={scope}
+                focus={focus}
+                myArea={context.myArea}
+                total={inScope.length}
+                limit={RECOMMEND_LIMIT}
+              />
               <div className="r-tasters-carousel">
                 {inScope.slice(0, RECOMMEND_LIMIT).map((taster) => (
                   <RecommendCard key={taster.tasterId} taster={taster} />
@@ -227,10 +235,10 @@ function RecommendSection({
               title={
                 scope === "MY_AREA"
                   ? `${context.myArea}에는 취향 맞는 맛객이 아직 없어요`
-                  : "이 범위에는 취향 맞는 맛객이 아직 없어요"
+                  : "이 조건에는 취향 맞는 맛객이 아직 없어요"
               }
-              message="전체 지역으로 넓혀 보거나, 아래 맛객 둘러보기에서 찾아보세요."
-              action={{ label: "전체 지역 보기", onClick: () => onScopeChange("ALL"), variant: "soft" }}
+              message="조건을 넓혀 보거나, 아래 맛객 둘러보기에서 찾아보세요."
+              action={widen}
             />
           )}
         </>

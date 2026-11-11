@@ -8,11 +8,6 @@ const SHEET_STATE_LABELS: Record<SheetState, string> = { peek: "접힘", half: "
 const DRAG_START_PX = 6;
 /** 놓은 높이가 원래 단계에 가까워도 이만큼 넘게 끌었으면 끈 방향으로 한 단계 옮깁니다(px). */
 const STEP_DRAG_PX = 40;
-/** 추천순: 믿고 가는 맛객 → 구독 → 취향 맞는 맛객 → 그 밖, 같은 단계에서는 가까운 곳 먼저. */
-const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
-  { value: "priority", label: "추천순" },
-  { value: "distance", label: "가까운 순" },
-];
 
 type Props = {
   state: SheetState;
@@ -25,9 +20,16 @@ type Props = {
   onSortChange: (sort: SortOrder) => void;
   /** 시트 본문(목록 또는 오류·빈 화면) */
   children: ReactNode;
+  /** 화면 읽기용 시트 이름 */
+  label?: string;
+  /**
+   * 기본 정렬(priority)의 이름. 발견은 추천순(믿고 가는 맛객 → 구독 → 취향 맞는 맛객 → 그 밖, 같은 단계에서는 가까운 곳 먼저),
+   * 내 지도는 내 기록 → 다녀온 곳 → 가볼 곳 순서입니다.
+   */
+  priorityLabel?: string;
 };
 
-/** 아래에서 끌어 올리는 목록 시트입니다. 손잡이를 누르거나 끌어 접힘 → 중간 → 펼침으로 바꿉니다. */
+/** 아래에서 끌어 올리는 목록 시트입니다(발견·내 지도). 손잡이를 누르거나 끌어 접힘 → 중간 → 펼침으로 바꿉니다. */
 export default function DiscoverSheet({
   state,
   onStateChange,
@@ -37,7 +39,13 @@ export default function DiscoverSheet({
   canSortByDistance,
   onSortChange,
   children,
+  label = "맛객 기록 목록",
+  priorityLabel = "추천순",
 }: Props) {
+  const sortOptions: { value: SortOrder; label: string }[] = [
+    { value: "priority", label: priorityLabel },
+    { value: "distance", label: "가까운 순" },
+  ];
   const { actions } = useAppData();
   const sheet = useRef<HTMLElement>(null);
   const drag = useRef<{ startY: number; startHeight: number; hasMoved: boolean } | null>(null);
@@ -105,7 +113,7 @@ export default function DiscoverSheet({
   }
 
   return (
-    <section ref={sheet} className="r-discover-sheet" aria-label="맛객 기록 목록">
+    <section ref={sheet} className="r-discover-sheet" aria-label={label}>
       <div
         className="r-discover-sheet__head"
         onPointerDown={startDrag}
@@ -126,7 +134,7 @@ export default function DiscoverSheet({
           <h2>{title}</h2>
           {/* 두 정렬을 나란히 보여 줘 지금 어떤 순서인지, 눌러서 무엇으로 바뀌는지 바로 알 수 있게 합니다. */}
           <div className="r-discover-sheet__sort" role="group" aria-label="목록 정렬">
-            {SORT_OPTIONS.map((option) => (
+            {sortOptions.map((option) => (
               <button
                 key={option.value}
                 type="button"

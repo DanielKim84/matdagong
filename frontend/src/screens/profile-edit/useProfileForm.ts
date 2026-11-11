@@ -1,5 +1,13 @@
 import { useEffect, useState, type FormEvent } from "react";
-import type { ActivityScope, FoodFocus, MyProfile, ProfileChanges, TasteTag } from "../../models/community";
+import {
+  MAX_NICKNAME_LENGTH,
+  type ActivityScope,
+  type FoodFocus,
+  type MyProfile,
+  type ProfileChanges,
+  type TasteTag,
+} from "../../models/community";
+import { AVOIDABLE_VISIT_CONDITIONS } from "../../models/place";
 import { filterTagsForFocus } from "../../models/tasteTags";
 import { errorMessage } from "../../utils/errorMessage";
 import {
@@ -15,7 +23,6 @@ import { useRegionCatalog } from "./useRegionCatalog";
 
 export type ProfileTab = "profile" | "taste";
 
-export const MAX_NICKNAME_LENGTH = 12;
 export const MAX_INTRO_LENGTH = 300;
 
 /** 프로필 편집 화면의 입력 상태와 저장 동작입니다. 두 탭이 한 폼을 함께 저장합니다. */
@@ -36,9 +43,11 @@ export function useProfileForm({
   const { regions, hasCatalogError } = useRegionCatalog();
   const avatar = useAvatarDraft(onError);
   const cover = useCoverDraft(profile, onError);
-  // 실제로 피하고 싶은 조건만 제외 태그로 두고, 나머지는 소개·추천 취향에 씁니다.
+  // 매장 이용(VISIT) 중 피할 만한 조건만 제외 태그로 고르게 하고, 나머지 분류는 소개·추천 취향에 씁니다.
   const positiveOptions = options.filter((tag) => tag.tagGroup !== "VISIT");
-  const avoidOptions = options.filter((tag) => tag.tagGroup === "VISIT");
+  const avoidOptions = options.filter(
+    (tag) => tag.tagGroup === "VISIT" && AVOIDABLE_VISIT_CONDITIONS.some((condition) => condition === tag.name),
+  );
   const [nickname, setNickname] = useState(profile.nickname.slice(0, MAX_NICKNAME_LENGTH));
   const [intro, setIntro] = useState(profile.intro ?? "");
   const [profileTags, setProfileTags] = useState(profile.profileTags ?? []);
@@ -133,12 +142,12 @@ export function useProfileForm({
         activityRegion: savedActivityRegion(),
         preferenceFocus,
         preferenceTags: filterTagsForFocus(preferenceTags, preferenceFocus, positiveOptions),
-        excludedTags,
+        // 사전에서 빠졌거나 이제 고를 수 없는 조건은 저장하지 않습니다(다른 태그와 같은 규칙).
+        excludedTags: excludedTags.filter((tag) => avoidOptions.some((option) => option.name === tag)),
         avatarFile: avatar.file,
         coverFiles: cover.files,
         removedCoverPhotoIds: cover.removedPhotoIds,
-        removeAvatar: avatar.isRemoved,
-        removeCover: cover.isAllRemoved,
+        shouldRemoveAvatar: avatar.isRemoved,
       });
       avatar.reset();
       cover.reset();

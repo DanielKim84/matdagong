@@ -32,7 +32,7 @@ function GuideItem({ art, title, description }: GuideRow) {
 
 /**
  * 지도 마커 종류를 묶음으로 나눠 보여 주는 안내 시트입니다. 실제 지도와 같은 모양의 마커를 그립니다.
- * 발견(variant="discover")은 맛객 기록만, 내 지도(variant="mymap")는 내 기록·다녀온 곳·가볼 곳·검색한 가게를 설명합니다.
+ * 발견(variant="discover")은 맛객 기록만, 내 지도(variant="mymap")는 내 기록·다녀온 곳·가볼 곳을 설명합니다.
  */
 export default function MarkerGuideSheet({
   me,
@@ -93,7 +93,7 @@ export default function MarkerGuideSheet({
         {
           art: <SymbolMarker kind="visited" />,
           title: "다녀온 곳",
-          description: "기록 없이 ‘다녀왔는데 입맛에 맞았어요’로 하트한 곳이에요.",
+          description: "가게에서 빠른 저장했거나 기록을 지운 곳이에요. 가볼 곳에 하트한 뒤 다녀온 곳도 이 표시예요.",
         },
       ],
     },
@@ -103,12 +103,7 @@ export default function MarkerGuideSheet({
         {
           art: <SymbolMarker kind="liked" />,
           title: "가볼 곳",
-          description: "‘가보고 싶어요’로 저장한 곳이에요. 가 보고 기록하면 내 기록으로 바뀌어요.",
-        },
-        {
-          art: <SymbolMarker kind="search" />,
-          title: "검색한 가게",
-          description: "위 검색에서 고른 가게예요. 가보고 싶어요를 누르면 가볼 곳으로 남아요.",
+          description: "하트를 눌러 저장한 곳이에요. 가 보고 기록하면 내 기록으로 바뀌어요.",
         },
       ],
     },

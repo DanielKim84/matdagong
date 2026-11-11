@@ -2,8 +2,8 @@
 import type { Place, Taster } from "../../models/place";
 import type { TrustTaster } from "../../models/trust";
 import { DAY_MS, parseTime } from "../../utils/format";
-import { avatarFallback, avatarSource } from "../../utils/profileMedia";
-import { readStorageJson, STORAGE_KEYS, writeStorageJson } from "../../utils/storage";
+import { avatarSource } from "../../utils/profileMedia";
+import { isRecord, readStorageJson, STORAGE_KEYS, writeStorageJson } from "../../utils/storage";
 
 /** 피드에 보일 기록 한 건(장소 + 기록한 맛객). */
 export type FeedRecord = {
@@ -11,7 +11,7 @@ export type FeedRecord = {
   place: Place;
   taster: Taster;
   /** 작성자 이름·사진·취향·신뢰 점수는 커뮤니티 프로필을 우선합니다. */
-  author: { id: string; name: string; avatar?: string; fallbackAvatar?: string; variant: number } & TrustTaster;
+  author: { id: string; name: string; avatar?: string; variant: number } & TrustTaster;
   /** recordedAt 을 숫자로 바꾼 값. 시각이 없으면 0 */
   time: number;
   photo?: string;
@@ -22,7 +22,6 @@ export type StoryGroup = {
   tasterId: string;
   name: string;
   avatar?: string;
-  fallbackAvatar?: string;
   variant: number;
   /** 스토리로 넘겨 볼 기록. 안 본 최근 기록이 있으면 그것만(오래된 것부터), 없으면 가장 최근 기록 몇 개(최신부터)입니다. */
   records: FeedRecord[];
@@ -64,8 +63,7 @@ export function collectFeedRecords(
         author: {
           id: taster.tasterId,
           name: profile?.tasterName || taster.tasterName || "맛객",
-          avatar: avatarSource(taster.tasterId, rawAvatar),
-          fallbackAvatar: avatarFallback(taster.tasterId, rawAvatar),
+          avatar: avatarSource(rawAvatar),
           variant: profile?.avatarVariant ?? taster.avatarVariant,
           matchScore: profile?.matchScore ?? taster.matchScore,
           trustScore: profile?.trustScore ?? taster.trustScore,
@@ -111,10 +109,10 @@ export function addSeen(seen: StorySeen, tasterId: string, recordKey: string): S
   return { ...seen, [tasterId]: [...current, recordKey].slice(-SEEN_KEEP_LIMIT) };
 }
 
-/** 저장소를 못 쓰거나 값이 깨졌으면 빈 값입니다. 예전 형식(맛객별 마지막 본 시각 숫자)은 버리고 새로 셉니다. */
+/** 저장소를 못 쓰거나 값이 깨졌으면 빈 값입니다. 맛객별 목록이 아닌 값은 버립니다. */
 export function readStorySeen(): StorySeen {
   const value = readStorageJson(STORAGE_KEYS.feedStorySeen, "local");
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  if (!isRecord(value) || Array.isArray(value)) return {};
   const seen: StorySeen = {};
   for (const [tasterId, keys] of Object.entries(value)) {
     if (Array.isArray(keys)) seen[tasterId] = keys.filter((key): key is string => typeof key === "string");

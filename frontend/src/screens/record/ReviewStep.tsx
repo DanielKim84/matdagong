@@ -20,7 +20,7 @@ export default function ReviewStep({ form, onEdit }: { form: RecordForm; onEdit:
     { step: "taste", label: "태그", value: form.tags.length ? form.tags.join(", ") : "없음" },
     {
       step: "taste",
-      label: "방문 조건",
+      label: "매장 이용",
       value: form.visitConditions.length ? form.visitConditions.join(", ") : "없음",
     },
     { step: "story", label: "공개 범위", value: form.visibility === "public" ? "공개 추천" : "나만 보기" },

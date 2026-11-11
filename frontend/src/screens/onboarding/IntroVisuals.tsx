@@ -3,8 +3,8 @@ import Icon from "../../components/Icon";
 import MascotArt from "../../components/MascotArt";
 
 /*
- * 서비스 소개 화면의 장면 그림. 실제 앱 화면 캡처(public/assets/intro/)와 음식 사진(public/assets/sample-food/)으로
- * 만들어 광고 소재로도 쓸 수 있게 합니다. 숫자와 이름은 모두 예시이며, 화면에 "예시"로 표시합니다.
+ * 서비스 소개 화면의 장면 그림. 실제 앱 화면 캡처·예시 맛객 사진(public/assets/intro/)과 음식 사진(public/assets/sample-food/)으로
+ * 만들어 광고 소재로도 쓸 수 있게 합니다. 숫자와 이름은 모두 예시이며, 숫자가 크게 보이는 장면(신뢰·수익)에는 "예시"를 붙입니다.
  * 앱 화면이 크게 바뀌면 캡처를 다시 찍어 같은 이름으로 바꿉니다(docs/ui/current-design.md 참고).
  */
 
@@ -56,7 +56,7 @@ export function TrustVisual() {
     <div className="r-intro-visual r-intro-trust" aria-hidden="true">
       <div className="r-intro-trust__card">
         <div className="r-intro-trust__head">
-          <Avatar src="demo-avatar:1" name="면요리 탐험가" />
+          <Avatar src={`${SHOT}/taster-portrait.jpg`} name="면요리 탐험가" />
           <span className="r-intro-trust__who">
             <b>면요리 탐험가</b>
             <small>국수 · 만두 · 중식</small>

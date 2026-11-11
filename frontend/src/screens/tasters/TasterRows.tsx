@@ -1,19 +1,21 @@
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import TasteScore from "../../components/TasteScore";
-import type { Taster } from "../../models/place";
-import { isTrustedTaster } from "../../models/trust";
-import { formatNumber } from "../../utils/format";
-import { activityLabel, type TasterStats } from "./tasterData";
 import TasterAvatar from "../../components/TasterAvatar";
+import type { Taster } from "../../models/place";
+import { formatNumber } from "../../utils/format";
+import { activityLabel, recordCountOf, type TasterStats } from "./tasterData";
 
-/** 맛객 목록 줄: 아바타, 이름, 기록 수·구독자 수, 오른쪽에 구독 상태나 신뢰·취향 %(믿고 가는 맛객이면 등급 우선) */
+/**
+ * 맛객 목록 줄: 아바타, 이름, 기록 수·구독자 수, 그 아래 신뢰·취향 칩, 오른쪽에 구독 중 표시.
+ * 칩을 이름 옆에 두면 이름이 잘려서 아래 줄에 둡니다.
+ */
 export default function TasterRows({ tasters, stats }: { tasters: Taster[]; stats: Map<string, TasterStats> }) {
   const app = useAppData();
   return (
     <div className="r-card r-tasters-list">
       {tasters.map((taster) => {
-        const count = stats.get(taster.tasterId)?.count ?? taster.placeCount ?? 0;
+        const count = recordCountOf(taster, stats);
         const area = activityLabel(taster);
         const isSubscribed = app.subscriptionIds.includes(taster.tasterId);
         return (
@@ -25,12 +27,9 @@ export default function TasterRows({ tasters, stats }: { tasters: Taster[]; stat
                 기록 {formatNumber(count)}곳 · 구독자 {formatNumber(taster.subscriberCount)}
                 {area ? ` · ${area}` : ""}
               </small>
-            </span>
-            {isSubscribed && !isTrustedTaster(taster) ? (
-              <span className="r-tag r-tag--mine">구독 중</span>
-            ) : (
               <TasteScore taster={taster} />
-            )}
+            </span>
+            {isSubscribed && <span className="r-tag r-tag--mine">구독 중</span>}
           </button>
         );
       })}

@@ -31,10 +31,7 @@ export type RegisterDraftForm = {
   foodKind: "RESTAURANT" | "CAFE_DESSERT";
   visibility: "private" | "public";
   photos: string[];
-  convertFromPlaceId: string | null;
   visitedConfirmed: boolean;
-  conversionNeedsPlaceSearch: boolean;
-  conversionSearchName: string;
   activeDraftId: string | null;
 };
 
@@ -45,7 +42,7 @@ type StoredRegisterDraft = RegisterDraftForm & {
   photosOmitted: boolean;
 };
 
-type RestoredRegisterDraft = { form: RegisterDraftForm; photosOmitted: boolean };
+type RestoredRegisterDraft = { form: RegisterDraftForm; hasOmittedPhotos: boolean };
 
 type RegisterDraftSaveResult = "saved" | "saved-without-photos" | "failed";
 
@@ -80,7 +77,6 @@ export function clearRegisterDraft(): void {
 function writeWithHeadroom(value: string): boolean {
   if (!writeStorage(REGISTER_DRAFT_KEY, value, "session")) return false;
   const hasHeadroom = writeStorage(STORAGE_HEADROOM_PROBE_KEY, "x".repeat(STORAGE_HEADROOM_BYTES), "session");
-  // 확인용 값은 남기지 않습니다.
   removeStorage(STORAGE_HEADROOM_PROBE_KEY, "session");
   return hasHeadroom;
 }
@@ -196,7 +192,7 @@ export function readRegisterDraft(accountId: string | null, editPlaceId: string 
     : [];
 
   return {
-    photosOmitted: value.photosOmitted === true,
+    hasOmittedPhotos: value.photosOmitted === true,
     form: {
       editPlaceId,
       selectedPlace: parseSelectedPlace(value.selectedPlace),
@@ -210,10 +206,7 @@ export function readRegisterDraft(accountId: string | null, editPlaceId: string 
       foodKind: value.foodKind === "CAFE_DESSERT" ? "CAFE_DESSERT" : "RESTAURANT",
       visibility: value.visibility === "public" ? "public" : "private",
       photos: (Array.isArray(value.photos) ? value.photos.filter(isRestorablePhoto) : []).slice(0, MAX_RESTORED_PHOTOS),
-      convertFromPlaceId: stringOrNull(value.convertFromPlaceId),
       visitedConfirmed: value.visitedConfirmed === true,
-      conversionNeedsPlaceSearch: value.conversionNeedsPlaceSearch === true,
-      conversionSearchName: stringOrEmpty(value.conversionSearchName),
       activeDraftId: stringOrNull(value.activeDraftId),
     },
   };

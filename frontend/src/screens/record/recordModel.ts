@@ -1,11 +1,9 @@
 import type { FoodFocus } from "../../models/community";
-import { VISIT_RADIUS_METERS, type Place, type Taster } from "../../models/place";
+import type { Place, Taster } from "../../models/place";
 import { formatNumber } from "../../utils/format";
 
 /** 기록하기(RecordFlow) 단계·입력 한도와 입력 값 변환입니다. 단계 컴포넌트와 입력 훅이 함께 씁니다. */
 
-// 직접 방문한 장소만 기록하도록 현재 위치 VISIT_RADIUS_METERS(1km) 안의 장소만 검색·선택할 수 있습니다.
-export const NEARBY_RADIUS_METERS = VISIT_RADIUS_METERS;
 export const MAX_PHOTOS = 10;
 export const MAX_MENUS = 5;
 export const MENU_NAME_MAX = 30;
@@ -49,11 +47,11 @@ export function formatPriceInput(value: string): string {
 
 /** 수정할 기록의 추천 메뉴를 입력 줄로 바꿉니다. 메뉴가 없으면 빈 줄 하나입니다. */
 export function menuRowsFromRecord(record?: Taster): MenuRow[] {
-  const rows = (record?.menus ?? []).map((menu) =>
-    typeof menu === "string"
-      ? { name: menu, price: "" }
-      : { name: menu.name, price: menu.price != null ? formatNumber(menu.price) : "", photo: menu.photo },
-  );
+  const rows = (record?.menus ?? []).map((menu) => ({
+    name: menu.name,
+    price: menu.price != null ? formatNumber(menu.price) : "",
+    photo: menu.photo,
+  }));
   return rows.length ? rows : [emptyMenu()];
 }
 

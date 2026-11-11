@@ -48,7 +48,7 @@ export function useQuickPlaceDrafts() {
   async function remove(draft: QuickPlaceDraft) {
     const isConfirmed = await confirm({
       title: "빠른 장소 기록을 삭제할까요?",
-      message: `‘${draft.placeName}’ 기록은 삭제하면 복구할 수 없어요.`,
+      message: `‘${draft.placeName}’을(를) 지우면 내 지도의 다녀온 곳에서도 빠지고, 복구할 수 없어요.`,
       confirmLabel: "삭제할게요",
       tone: "danger",
     });
@@ -62,6 +62,8 @@ export function useQuickPlaceDrafts() {
           (item) => item.providerCode !== draft.providerCode || item.providerPlaceId !== draft.providerPlaceId,
         ),
       );
+      // 빠른 저장을 지우면 다녀온 곳에서도 빠지므로 내 지도·내 맛집을 다시 읽게 합니다.
+      window.dispatchEvent(new Event(MY_ACTIVITY_CHANGED_EVENT));
     } catch (cause) {
       setError(errorMessage(cause, "장소 기록을 삭제하지 못했어요."));
     } finally {
