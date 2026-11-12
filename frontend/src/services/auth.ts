@@ -11,7 +11,8 @@ const MEMBERSHIP_URL = `${AUTH_API_BASE_URL}/api/v1/matdagong/membership`;
 
 export type MembershipStatus = {
   registered: boolean;
-  displayName: string;
+  /** 공통 계정 이름. 소셜 별명을 받지 못했고 아직 가입 전이면 null이라, 가입 화면 닉네임 칸을 비워 둡니다. */
+  displayName: string | null;
   email: string | null;
   /** 이 계정에 연결된 소셜 제공자 코드(KAKAO, NAVER). 설정의 연결된 계정에 씁니다. */
   loginProviders: string[];
@@ -94,7 +95,7 @@ function isMembershipStatus(value: unknown): value is MembershipStatus {
     "registered" in value &&
     typeof value.registered === "boolean" &&
     "displayName" in value &&
-    typeof value.displayName === "string" &&
+    (typeof value.displayName === "string" || value.displayName === null) &&
     "loginProviders" in value &&
     Array.isArray(value.loginProviders)
   );

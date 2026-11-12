@@ -30,7 +30,8 @@ export default function SignupScreen({
   email: string;
   /** 로그인한 카카오·네이버 계정의 프로필 사진 주소. 사진 제공에 동의하지 않았으면 null입니다. */
   profileImageUrl: string | null;
-  onComplete: () => void;
+  /** 가입을 마치면 정한 닉네임과 함께 부릅니다(앱이 그 이름으로 시작). */
+  onComplete: (displayName: string) => void;
 }) {
   const [step, setStep] = useState<Step>("name");
   const [displayName, setDisplayName] = useState(initialName.slice(0, MAX_NICKNAME_LENGTH));
@@ -122,7 +123,7 @@ export default function SignupScreen({
   async function submitTaste(tags: string[]) {
     if (!(await finishSignup(tags))) return;
     if (!tags.length) {
-      onComplete();
+      onComplete(displayName.trim());
       return;
     }
     setStep("match");
@@ -167,5 +168,11 @@ export default function SignupScreen({
     );
   }
 
-  return <SignupMatchStep accessToken={accessToken} displayName={displayName} onComplete={onComplete} />;
+  return (
+    <SignupMatchStep
+      accessToken={accessToken}
+      displayName={displayName}
+      onComplete={() => onComplete(displayName.trim())}
+    />
+  );
 }

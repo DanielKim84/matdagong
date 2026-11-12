@@ -71,12 +71,13 @@ export function showSignInError(message: string): void {
 /** 가입한 계정은 바로 앱을, 아직 가입하지 않은 계정은 서비스 소개(계정별 한 번)와 가입 화면을 먼저 그립니다. */
 export function renderMatdagong(root: HTMLElement, accessToken: string, membership: MembershipStatus): void {
   const reactRoot = createRoot(root);
-  const renderApp = () =>
+  // 가입을 마치면 가입 화면에서 정한 닉네임으로 앱을 그립니다(가입 전 계정 이름은 비어 있을 수 있음).
+  const renderApp = (displayName = membership.displayName ?? "") =>
     reactRoot.render(
       <StrictMode>
         <App
           accessToken={accessToken}
-          displayName={membership.displayName}
+          displayName={displayName}
           loginProviders={membership.loginProviders}
           onLogout={() => void logout()}
         />
@@ -91,7 +92,7 @@ export function renderMatdagong(root: HTMLElement, accessToken: string, membersh
       <StrictMode>
         <SignupScreen
           accessToken={accessToken}
-          displayName={membership.displayName}
+          displayName={membership.displayName ?? ""}
           email={membership.email ?? ""}
           profileImageUrl={membership.profileImageUrl}
           onComplete={renderApp}
