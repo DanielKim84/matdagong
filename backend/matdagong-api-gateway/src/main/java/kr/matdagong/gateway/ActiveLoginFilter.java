@@ -48,7 +48,7 @@ public class ActiveLoginFilter implements GlobalFilter, Ordered {
     @Autowired
     public ActiveLoginFilter(
             @Value("${dagong.auth.url}") String authUrl,
-            @Value("${dagong.auth.session-check-cache:PT30S}") Duration cacheTtl) {
+            @Value("${dagong.auth.session-check-cache}") Duration cacheTtl) {
         this(WebClient.builder(), authUrl, cacheTtl);
     }
 

@@ -97,7 +97,8 @@ class TasterServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         TasterModels.TasterView view = viewOf(service.tasters(me, Map.of()), taster);
         TasterModels.TasterView withoutProfile = viewOf(service.tasters(UUID.randomUUID(), Map.of()), taster);
 
-        assertThat(view.profileTags()).containsExactly("국밥, 순대", "한식");
+        // 프로필 태그는 내 프로필 화면과 같은 태그 사전 순서(sort_order)입니다.
+        assertThat(view.profileTags()).containsExactly("한식", "국밥, 순대");
         assertThat(view.matchedTags()).containsExactly("국밥, 순대");
         assertThat(view.matchScore()).isEqualTo(100);
         assertThat(withoutProfile.matchScore()).isZero();

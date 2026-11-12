@@ -180,22 +180,31 @@ export default function MyMapScreen() {
               className="r-discover-empty"
             />
           </div>
+        ) : carousel.length > 0 ? (
+          // 지역이나 칩이 바뀌면 처음 카드부터 다시 보여 줍니다.
+          <PlaceCarousel
+            key={`${scope}:${JSON.stringify(regionBounds)}`}
+            places={carousel}
+            ctx={ctx}
+            focusedId={focusedId}
+            onFocus={setFocusedId}
+            leadOf={myLeadTaster}
+            badgeOf={(place) => {
+              const kind = kinds.get(place.id);
+              return kind && MY_MAP_KIND_LABELS[kind];
+            }}
+          />
         ) : (
-          carousel.length > 0 && (
-            // 지역이나 칩이 바뀌면 처음 카드부터 다시 보여 줍니다.
-            <PlaceCarousel
-              key={`${scope}:${JSON.stringify(regionBounds)}`}
-              places={carousel}
-              ctx={ctx}
-              focusedId={focusedId}
-              onFocus={setFocusedId}
-              leadOf={myLeadTaster}
-              badgeOf={(place) => {
-                const kind = kinds.get(place.id);
-                return kind && MY_MAP_KIND_LABELS[kind];
-              }}
+          // 발견과 같이 이 지역에 카드가 없어도 안내 카드를 둡니다. 카드 자리가 비어 있으면 visibleMapArea가 곧 생길 카드 높이만큼
+          // 계속 가린 것으로 봐서, 지도 아래쪽 띠에 있는 내 장소가 카드·목록에 끝내 들어오지 못합니다.
+          <div className="r-card r-discover__float-card">
+            <EmptyState
+              icon="pin"
+              title="이 지역엔 표시할 내 장소가 없어요"
+              message="지도를 옮기거나 축소해서 주변을 둘러보세요."
+              className="r-discover-empty"
             />
-          )
+          </div>
         )}
       </div>
 

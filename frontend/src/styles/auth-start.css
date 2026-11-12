@@ -164,19 +164,20 @@
   .auth-start-screen > :nth-child(n + 3) {
     animation-delay: 0.16s;
   }
-  .is-loading::before {
+  /* is-loading은 startupView.tsx가 이 화면 루트에만 붙이는 상태라 루트 클래스와 함께 씁니다. */
+  .auth-start-screen.is-loading::before {
     animation: auth-start-drift 9s ease-in-out infinite alternate;
   }
-  .is-loading::after {
+  .auth-start-screen.is-loading::after {
     animation: auth-start-drift 11s ease-in-out -4s infinite alternate-reverse;
   }
-  .is-loading .auth-start-stage__ring {
+  .auth-start-screen.is-loading .auth-start-stage__ring {
     animation: auth-start-spin 1.6s linear infinite;
   }
-  .is-loading .auth-start-stage__character {
+  .auth-start-screen.is-loading .auth-start-stage__character {
     animation: auth-start-float 2.4s ease-in-out infinite;
   }
-  .is-loading .auth-start-stage__shadow {
+  .auth-start-screen.is-loading .auth-start-stage__shadow {
     animation: auth-start-shadow 2.4s ease-in-out infinite;
   }
   .auth-start-dots i {

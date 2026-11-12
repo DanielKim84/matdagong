@@ -1,4 +1,3 @@
-import type { TasteTag } from "../../models/community";
 import { isMyTaster, type Place, type RecommendedMenu, type Taster } from "../../models/place";
 import { groupTagsByDictionary, isTasteTagGroup, type TagGroupSection } from "../../models/tasteTags";
 import { compareByTrust, isTrustedTaster, tasteScoreLabel } from "../../models/trust";
@@ -28,15 +27,15 @@ export function recordMenus(record: PlaceRecord): RecommendedMenu[] {
 
 /**
  * 한 맛객의 취향 태그와 매장 이용 정보를 사전의 분류 순서대로 묶습니다(매장 이용은 취향 태그 뒤).
- * 분류는 기록에 저장된 값을 먼저 쓰고, 없으면 태그 사전에서 찾습니다. 둘 다 모르는 옛 태그는 "기타"로 둡니다.
+ * 분류는 기록에 태그마다 저장된 값(tagGroups)을 씁니다. 장소 서비스가 분류 없는 태그를 받지 않으므로(DB도 막음)
+ * 태그 사전을 다시 찾지 않습니다.
  */
-export function recordTagGroups(record: PlaceRecord, dictionary: TasteTag[]): TagGroupSection[] {
+export function recordTagGroups(record: PlaceRecord): TagGroupSection[] {
   const visitConditions: string[] = record.visitConditions ?? [];
   return groupTagsByDictionary([...(record.tags ?? []), ...visitConditions], (tag) => {
     if (visitConditions.includes(tag)) return "VISIT";
     const saved = record.tagGroups?.[tag];
-    if (isTasteTagGroup(saved) && saved !== "VISIT") return saved;
-    return dictionary.find((item) => item.name === tag)?.tagGroup;
+    return isTasteTagGroup(saved) && saved !== "VISIT" ? saved : undefined;
   });
 }
 

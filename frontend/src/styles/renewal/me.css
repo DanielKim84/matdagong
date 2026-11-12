@@ -237,7 +237,7 @@
 /* 아직 오지 않은 날은 칸을 비워 두고 날짜만 흐리게 둡니다. */
 .r-me-week__col.is-future .r-me-week__date {
   background: color-mix(in srgb, var(--color-surface) 55%, transparent);
-  color: var(--color-subtle);
+  color: var(--color-muted);
   box-shadow: none;
 }
 .r-me-diary-card__total {
@@ -399,15 +399,6 @@
   color: var(--color-subtle);
 }
 
-.r-me-error {
-  margin: 0;
-  border-radius: var(--radius-sm);
-  background: var(--brand-50);
-  padding: 10px 12px;
-  color: var(--brand-700);
-  font-size: 13px;
-}
-
 /* ── 빠른 장소 기록(#drafts): 저장한 날로 묶은 카드. 위는 이름·분류·주소, 아래 한 줄은 저장 시간·삭제·이어 쓰기 ── */
 .r-me-drafts__hint {
   display: flex;
@@ -417,6 +408,7 @@
   color: var(--color-muted);
   font-size: 13px;
   line-height: 1.6;
+  word-break: keep-all;
 }
 .r-me-drafts__hint .icon {
   width: 16px;
@@ -428,18 +420,7 @@
 .r-me-drafts__group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-.r-me-drafts__group-title {
-  margin: 4px 4px 0;
-  font-size: 15px;
-  font-weight: 800;
-}
-.r-me-drafts__group-title small {
-  margin-left: 4px;
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 600;
+  gap: 8px;
 }
 .r-me-drafts__list {
   display: flex;
@@ -530,12 +511,7 @@
   flex: none;
 }
 .r-me-draft-card__delete {
-  color: var(--color-subtle);
-}
-.r-me-draft-card__foot .r-button {
-  min-height: 38px;
-  padding: 0 14px;
-  font-size: 14px;
+  color: var(--color-muted);
 }
 .r-me-draft-card__foot .r-button .icon {
   width: 16px;
@@ -554,6 +530,7 @@
   color: var(--neutral-700);
   font-size: 13px;
   line-height: 1.6;
+  word-break: keep-all;
 }
 .r-me-disliked__notice .icon {
   width: 18px;
@@ -635,11 +612,6 @@
   color: var(--color-muted);
   font-size: 12px;
   font-weight: 600;
-}
-.r-me-select-bar .r-button {
-  min-height: 34px;
-  padding: 0 14px;
-  font-size: 13px;
 }
 .r-me-check {
   display: grid;
@@ -968,7 +940,7 @@
   font-weight: 800;
 }
 .r-me-amount.is-plus {
-  color: var(--green-600);
+  color: var(--color-success-text);
 }
 .r-me-amount.is-minus {
   color: var(--color-ink);
@@ -1004,17 +976,7 @@
   font-weight: 700;
 }
 .r-me-setting__state.is-ok {
-  color: var(--green-600);
-}
-.r-me-setting__action {
-  min-height: 44px;
-  border: 0;
-  background: none;
-  padding: 0 4px;
-  color: var(--color-muted);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 700;
+  color: var(--color-success-text);
 }
 .r-me-provider {
   display: grid;
@@ -1032,10 +994,6 @@
 }
 .r-me-provider--naver {
   background: var(--green-500);
-  color: var(--on-strong);
-}
-.r-me-provider--apple {
-  background: var(--neutral-900);
   color: var(--on-strong);
 }
 .r-me-switch {
@@ -1088,10 +1046,11 @@
 
 /* 설정 맨 아래 탈퇴: 실수로 누르지 않게 목록 밖 작은 글자 버튼입니다. */
 .r-me-withdraw {
+  min-height: 44px;
   align-self: center;
   border: 0;
   background: none;
-  padding: 8px 12px;
+  padding: 0 12px;
   color: var(--color-muted);
   font-family: var(--font-body);
   font-size: 13px;
@@ -1109,7 +1068,7 @@
 .r-me-policy__draft {
   margin: 0;
   padding: 10px 14px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
   color: var(--color-primary-strong);
   font-size: 13px;
@@ -1165,7 +1124,8 @@
 
 /* 신고가 쌓여 가려졌을 때 나 화면 맨 위 안내 */
 .r-me-hidden-notice {
-  margin: 0 16px 12px;
+  /* 바로 아래 프로필 카드(.r-me-profile)와 같은 좌우 20px */
+  margin: 0 20px 12px;
   word-break: keep-all;
   border-radius: var(--radius-md);
   background: var(--color-primary-soft);

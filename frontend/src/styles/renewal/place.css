@@ -234,6 +234,7 @@
   color: var(--color-muted);
   font-size: 13px;
   line-height: 1.6;
+  word-break: keep-all;
 }
 .r-place-note--disliked {
   display: flex;
@@ -623,12 +624,13 @@
   flex-wrap: wrap;
   gap: 8px;
 }
-/* 내 기록 지우기: 되돌릴 수 없는 동작이라 큰 버튼 대신 아래에 작은 글자 버튼으로 둡니다. */
+/* 내 기록 지우기: 되돌릴 수 없는 동작이라 큰 버튼 대신 아래에 작은 글자 버튼으로 둡니다. 누르는 높이는 옆 신고하기(r-text-button)와 같은 44px */
 .r-place-record__delete {
   width: 100%;
+  min-height: 44px;
   border: 0;
   background: none;
-  padding: 6px 0 0;
+  padding: 0;
   color: var(--color-muted);
   font-family: var(--font-body);
   font-size: 13px;
@@ -698,16 +700,10 @@
   font-size: 13px;
   font-weight: 700;
 }
+/* 공용 글자 버튼(r-text-button)을 정보 카드 왼쪽에 붙여 둡니다. */
 .r-place-report {
-  min-height: 44px;
   align-self: flex-start;
-  border: 0;
-  background: none;
   padding: 0;
-  color: var(--color-primary-strong);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 700;
 }
 
 /* ── 하단 고정 동작 바 ── */
@@ -894,7 +890,7 @@
   flex: none;
   overflow: hidden;
   border: 2px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--neutral-800);
   padding: 0;
   opacity: 0.6;
@@ -919,10 +915,4 @@
 }
 .r-place-skeleton .r-skeleton:last-of-type {
   width: 55%;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .r-place-viewer__track {
-    transition: none;
-  }
 }

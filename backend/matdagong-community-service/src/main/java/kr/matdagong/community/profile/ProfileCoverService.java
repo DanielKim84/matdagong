@@ -16,7 +16,9 @@ import org.springframework.web.server.ResponseStatusException;
 /** 맛객 프로필의 배경 사진 갤러리(최대 10장)를 순서와 함께 저장·삭제합니다. 순번(sort_no)은 늘 0부터 빈틈없이 둡니다. */
 @Service
 public class ProfileCoverService {
+    /** 배경 사진 최대 장수입니다. 화면 profile-edit/profileImages.ts의 MAX_COVER_COUNT와 맞춥니다. */
     private static final int MAX_COVER_PHOTOS = 10;
+
     private static final long MAX_TOTAL_BYTES = 30L * 1024 * 1024;
     private static final String TOO_MANY_COVERS = "배경 사진은 최대 10장까지 등록할 수 있어요.";
 

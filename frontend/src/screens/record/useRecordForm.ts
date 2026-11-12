@@ -87,7 +87,7 @@ export function useRecordForm({ editPlace }: { editPlace?: Place }) {
       setError(validateStep(invalidStep));
       return { isSaved: false, step: invalidStep };
     }
-    const { selectedPlace, coordinates, selectedLikedPlace } = placeForm;
+    const { selectedPlace, coordinates } = placeForm;
     if (!selectedPlace || !coordinates) return { isSaved: false, step: "place" };
     const newPlace = buildNewPlace({
       selectedPlace,
@@ -99,7 +99,6 @@ export function useRecordForm({ editPlace }: { editPlace?: Place }) {
       tags: tasteForm.tags,
       tasteTags: app.tasteTags,
       visitConditions: tasteForm.visitConditions,
-      foodKind: tasteForm.foodKind,
       photos: photoForm.photos,
       visibility: storyForm.visibility,
     });
@@ -107,7 +106,7 @@ export function useRecordForm({ editPlace }: { editPlace?: Place }) {
     setIsSaving(true);
     setError("");
     try {
-      const saved = await app.actions.register(newPlace, selectedLikedPlace?.id, placeForm.isVisitConfirmed);
+      const saved = await app.actions.register(newPlace);
       clearRegisterDraft();
       resetAfterSave();
       return { isSaved: true, placeId: saved.id };

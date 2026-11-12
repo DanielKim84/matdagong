@@ -41,15 +41,20 @@ class ProfileModelsTest {
     }
 
     @Test
-    void 수정_요청은_공백을_정리하고_비운_분야는_기본값으로_채운다() {
-        UpdateProfileRequest request =
-                new UpdateProfileRequest(" 국밥러 ", "  ", null, null, null, " 서울 마포구 ", List.of(), List.of(), List.of());
+    void 수정_요청은_닉네임과_활동_지역의_공백을_정리하고_공백뿐인_소개는_비운다() {
+        UpdateProfileRequest request = new UpdateProfileRequest(
+                " 국밥러 ",
+                "  ",
+                FoodFocus.BOTH,
+                FoodFocus.BOTH,
+                ActivityScope.LOCAL,
+                " 서울 마포구 ",
+                List.of(),
+                List.of(),
+                List.of());
 
         assertThat(request.nickname()).isEqualTo("국밥러");
         assertThat(request.intro()).isNull();
-        assertThat(request.tasterFocus()).isEqualTo(FoodFocus.BOTH);
-        assertThat(request.preferenceFocus()).isEqualTo(FoodFocus.BOTH);
-        assertThat(request.activityScope()).isEqualTo(ActivityScope.LOCAL);
         assertThat(request.activityRegion()).isEqualTo("서울 마포구");
     }
 }

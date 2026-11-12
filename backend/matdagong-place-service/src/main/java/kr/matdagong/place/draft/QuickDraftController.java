@@ -5,7 +5,6 @@ import static kr.matdagong.place.draft.QuickDraftModels.*;
 import jakarta.validation.Valid;
 import java.util.List;
 import kr.matdagong.common.security.AuthenticatedAccount;
-import kr.matdagong.place.catalog.PlaceIdentifiers;
 import kr.matdagong.place.kakao.KakaoPlaceVerifier;
 import kr.matdagong.place.kakao.KakaoPlaceVerifier.PlaceInfo;
 import org.springframework.http.HttpStatus;
@@ -56,9 +55,7 @@ public class QuickDraftController {
     @DeleteMapping("/{providerPlaceId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDraft(
-            @AuthenticationPrincipal Jwt jwt,
-            @PathVariable String providerPlaceId,
-            @RequestParam(defaultValue = PlaceIdentifiers.DEFAULT_PROVIDER) String providerCode) {
+            @AuthenticationPrincipal Jwt jwt, @PathVariable String providerPlaceId, @RequestParam String providerCode) {
         drafts.discardDraft(AuthenticatedAccount.id(jwt), providerCode, providerPlaceId);
     }
 }

@@ -8,15 +8,8 @@ import java.util.UUID;
 public final class PointModels {
     private PointModels() {}
 
-    /** 원장 항목 종류입니다. DB의 event_type 값과 같습니다. */
-    public enum PointEventType {
-        EARN,
-        SPEND,
-        ADJUST
-    }
-
     public record PointAccount(long balance, List<PointEntry> history) {}
 
-    public record PointEntry(
-            UUID historyId, PointEventType eventType, String title, String memo, int amount, Instant createdAt) {}
+    /** 원장 한 줄입니다. 적립·사용은 amount 부호로 구분하므로 원장 종류(event_type)는 보내지 않습니다. */
+    public record PointEntry(UUID historyId, String title, String memo, int amount, Instant createdAt) {}
 }

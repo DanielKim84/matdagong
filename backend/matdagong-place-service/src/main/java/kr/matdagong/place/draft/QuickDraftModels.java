@@ -23,7 +23,7 @@ public final class QuickDraftModels {
      * (deviceLocation)가 가게 1km 안일 때만 저장합니다.
      */
     public record QuickPlaceDraftRequest(
-            @Size(max = 20) String providerCode,
+            @NotBlank @Size(max = 20) String providerCode,
             @NotBlank @Size(max = 80) String providerPlaceId,
             @NotBlank @Size(max = 120) String placeName,
             @Size(max = 200) String category,

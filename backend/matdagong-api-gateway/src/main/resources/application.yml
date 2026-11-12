@@ -19,7 +19,7 @@ spring:
               uri: ${COMMUNITY_SERVICE_URL:http://localhost:5844}
               predicates:
                 - Path=/api/v1/users/**,/api/v1/tasters,/api/v1/tasters/**,/api/v1/taste-tags,/api/v1/taste-tags/**,/api/v1/subscriptions,/api/v1/subscriptions/**,/api/v1/notifications/**,/api/v1/points,/media/profiles/**
-              # 프로필·배경 사진 업로드의 multipart 최대 크기(55MB)보다 큰 요청은 서비스로 보내지 않습니다.
+              # 커뮤니티 서비스의 multipart 요청 최대 크기(spring.servlet.multipart.max-request-size, 55MB)와 맞춥니다.
               filters:
                 - name: RequestSize
                   args:

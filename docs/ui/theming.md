@@ -17,10 +17,10 @@ frontend/src/theme/
 
 화면 모양은 테마 토큰만 쓰는 아래 파일에 있습니다. 시즌 테마는 이 파일들을 고치지 않고 토큰 값만 바꿉니다.
 
-- `frontend/src/styles/renewal/ui.css`: 공통 부품(상단 바, 버튼, 칩, 카드, 빈 화면, 스켈레톤, 시트, 확인·안내창, 하단 탭)
+- `frontend/src/styles/renewal/ui.css`: 공통 부품(상단 바, 버튼, 칩, 카드, 빈 화면, 스켈레톤, 사진 페이지 점, 시트, 확인·안내창, 하단 탭)
 - `frontend/src/styles/renewal/<영역>.css`: 발견·내 지도·맛집 상세·피드·기록·맛객·나·시작 화면
 - `frontend/src/styles/app.css`, `design-system.css`: 리뉴얼 전부터 쓰는 앱 틀·아바타·지도 마커 등 공통 규칙
-- `frontend/src/styles/profile-settings.css`, `photo-tag-detail.css`, `a/forms.css`: 프로필 편집, 취향 태그 선택, 태그 제안
+- `frontend/src/styles/profile-settings.css`, `a/forms.css`: 프로필 편집, 취향 태그 선택, 태그 제안
 - `frontend/src/styles/auth-start.css`: 로그인 시작·오류 화면
 
 반경은 `--radius-xs`(4) · `--radius-sm`(12) · `--radius-md`(14) · `--radius-control`(16) · `--radius-card`(22) · `--radius-sheet`(28) · `--radius-pill` 토큰을 씁니다.

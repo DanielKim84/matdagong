@@ -23,6 +23,21 @@ public final class ProfileQueries {
                 WHERE c.account_id = p.account_id ORDER BY c.sort_no
             ) AS cover_photo_ids""";
 
+    /**
+     * 프로필 태그 이름 배열(태그 사전 sort_order 순) 칼럼입니다. 내 프로필과 맛객 목록에서 태그가 같은 순서로 보이도록 둘 다
+     * 이 조각을 씁니다. 프로필 테이블 별칭이 p인 SELECT 목록에 넣습니다.
+     */
+    public static final String PROFILE_TAG_NAMES =
+            """
+            ARRAY(
+                SELECT tag.tag_name FROM user_profile_tags selected
+                JOIN taste_tags tag ON tag.tag_id = selected.tag_id
+                WHERE selected.account_id = p.account_id ORDER BY tag.sort_order
+            ) AS profile_tags""";
+
+    /** 프로필 사진이 있는지 칼럼입니다. 프로필 테이블 별칭이 p인 SELECT 목록에 넣고 {@link #avatarUrl}로 읽습니다. */
+    public static final String HAS_AVATAR = "p.profile_img_data IS NOT NULL AS has_avatar";
+
     private ProfileQueries() {}
 
     /**
@@ -37,6 +52,11 @@ public final class ProfileQueries {
     /** {@link #COVER_PHOTO_IDS} 칼럼을 같은 순서의 배경 사진 주소로 읽습니다. */
     public static List<String> coverUrls(ResultSet rs, UUID accountId) throws SQLException {
         return ProfileMediaUrls.coverPhotos(accountId, JdbcArrays.uuids(rs, "cover_photo_ids"));
+    }
+
+    /** {@link #HAS_AVATAR} 칼럼을 프로필 사진 주소로 읽습니다. 사진이 없으면 null이고 화면이 기본 캐릭터를 그립니다. */
+    public static String avatarUrl(ResultSet rs, UUID accountId) throws SQLException {
+        return rs.getBoolean("has_avatar") ? ProfileMediaUrls.avatar(accountId) : null;
     }
 
     public static boolean exists(JdbcTemplate jdbc, UUID accountId) {

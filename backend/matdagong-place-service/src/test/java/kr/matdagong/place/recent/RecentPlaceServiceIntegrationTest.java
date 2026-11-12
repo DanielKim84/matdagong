@@ -8,7 +8,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import kr.matdagong.common.test.EmbeddedPostgresTestSupport;
-import kr.matdagong.place.catalog.PlaceQueryService;
 import kr.matdagong.place.catalog.PlaceViewLoader;
 import kr.matdagong.place.media.MediaUrlSigner;
 import kr.matdagong.place.profile.TestHiddenTasters;
@@ -29,8 +28,7 @@ class RecentPlaceServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         truncate("restaurant_places, user_recent_places");
         PlaceViewLoader loader = new PlaceViewLoader(
                 jdbc, new MediaUrlSigner("integration-key", Duration.ofHours(6)), TestHiddenTasters.none());
-        recentPlaces =
-                new RecentPlaceService(jdbc, loader, new PlaceQueryService(jdbc, loader, TestHiddenTasters.none()));
+        recentPlaces = new RecentPlaceService(jdbc, loader);
     }
 
     @Test

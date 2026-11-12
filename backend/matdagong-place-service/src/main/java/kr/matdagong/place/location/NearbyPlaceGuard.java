@@ -14,8 +14,13 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Component
 public class NearbyPlaceGuard {
-    /** 화면의 "현재 위치 1km 안의 가게" 기준과 같은 값입니다. */
+    /**
+     * 직접 다녀온 곳으로 인정하는 기기와 가게 사이 거리(m)입니다. 화면 models/place.ts의 VISIT_RADIUS_METERS, 약관
+     * (policyDocuments.ts)의 안내와 맞춥니다. 안내 문구는 숫자를 따로 쓰지 않고 MAX_VISIT_DISTANCE_LABEL을 씁니다.
+     */
     public static final double MAX_VISIT_DISTANCE_METERS = 1000;
+    /** 오류 문구에 넣는 거리 표시("1km")입니다. */
+    public static final String MAX_VISIT_DISTANCE_LABEL = Math.round(MAX_VISIT_DISTANCE_METERS / 1000) + "km";
 
     public static final String LOCATION_REQUIRED = "현재 위치를 확인할 수 없어요. 위치 권한을 켜고 다시 시도해 주세요.";
 

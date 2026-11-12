@@ -26,8 +26,8 @@ public class CommunityProfileClient {
     @Autowired
     public CommunityProfileClient(
             @Value("${dagong.community-service.url}") String baseUrl,
-            @Value("${dagong.community-service.connect-timeout:PT2S}") Duration connectTimeout,
-            @Value("${dagong.community-service.read-timeout:PT5S}") Duration readTimeout) {
+            @Value("${dagong.community-service.connect-timeout}") Duration connectTimeout,
+            @Value("${dagong.community-service.read-timeout}") Duration readTimeout) {
         this(RestClients.create(baseUrl, connectTimeout, readTimeout));
     }
 

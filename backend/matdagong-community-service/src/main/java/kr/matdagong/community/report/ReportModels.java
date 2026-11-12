@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
-/** 맛객 신고 API의 요청·응답 자료형입니다. */
+/** 맛객 신고 API의 요청 자료형입니다. */
 public final class ReportModels {
     private ReportModels() {}
 
@@ -21,6 +21,9 @@ public final class ReportModels {
     }
 
     /**
+     * 설명 500자는 화면 TasterReportSheet의 MEMO_MAX, DB taster_reports.memo(VARCHAR(500))와 맞춥니다. 설명이 꼭 필요한지는
+     * TasterReportService가 확인합니다(DB ck_taster_reports_memo도 막음).
+     *
      * @param placeId 맛집 기록에서 신고했을 때 그 장소 ID. 프로필에서 신고했으면 null입니다.
      */
     public record ReportRequest(
@@ -31,6 +34,4 @@ public final class ReportModels {
             memo = memo == null ? "" : memo.trim();
         }
     }
-
-    public record ReportResponse(String reportId) {}
 }

@@ -170,9 +170,9 @@ export function searchTasters(tasters: Taster[], keyword: string): Taster[] {
   );
 }
 
-/** 목록 줄의 "기록 N곳"입니다. 지도에 받은 기록이 없으면 서버가 알려 준 기록 수를 씁니다. */
+/** 목록 줄의 "기록 N곳"입니다. 지도에 받은 공개 장소에서 센 수이고, 받은 기록이 없으면 0입니다. */
 export function recordCountOf(taster: Taster, stats: Map<string, TasterStats>): number {
-  return stats.get(taster.tasterId)?.count ?? taster.placeCount ?? 0;
+  return stats.get(taster.tasterId)?.count ?? 0;
 }
 
 /** 대표 배경 사진 한 장(올린 첫 장, 없으면 맛객별 기본 배경)입니다. */

@@ -5,6 +5,7 @@ import { reportPlace, type PlaceReportReason } from "../../services/places";
 import type { Place } from "../../models/place";
 import { errorMessage } from "../../utils/errorMessage";
 
+/** 제보 설명 최대 글자 수. 장소 서비스 PlaceReportModels.PlaceReportRequest, DB place_reports.memo(VARCHAR(500))와 같습니다. */
 const MEMO_MAX = 500;
 
 const REASONS: { value: PlaceReportReason; label: string }[] = [
@@ -45,7 +46,7 @@ export default function PlaceReportSheet({ place, onClose }: { place: Place; onC
       });
       onClose();
     } catch (cause) {
-      setError(errorMessage(cause, "제보를 보내지 못했어요. 잠시 뒤 다시 시도해 주세요."));
+      setError(errorMessage(cause, "제보를 보내지 못했어요. 잠시 후 다시 시도해 주세요."));
       setIsSending(false);
     }
   }
@@ -86,7 +87,7 @@ export default function PlaceReportSheet({ place, onClose }: { place: Place; onC
           </small>
         </label>
         {error && (
-          <p className="r-report-sheet__error" role="alert">
+          <p className="r-error-text" role="alert">
             {error}
           </p>
         )}

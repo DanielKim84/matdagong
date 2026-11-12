@@ -25,8 +25,8 @@ public class PlaceTrustClient {
     @Autowired
     public PlaceTrustClient(
             @Value("${dagong.place-service.url}") String baseUrl,
-            @Value("${dagong.place-service.connect-timeout:PT2S}") Duration connectTimeout,
-            @Value("${dagong.place-service.read-timeout:PT5S}") Duration readTimeout) {
+            @Value("${dagong.place-service.connect-timeout}") Duration connectTimeout,
+            @Value("${dagong.place-service.read-timeout}") Duration readTimeout) {
         this(RestClients.create(baseUrl, connectTimeout, readTimeout));
     }
 

@@ -11,7 +11,7 @@ import { isSessionExpiring } from "../services/http";
 import {
   getPlace,
   getRecentPlaces,
-  getVisitProofPlaceIds,
+  getVisitedPlaceIds,
   rememberRecentPlace,
   saveWishPlace as requestWishPlace,
 } from "../services/places";
@@ -68,21 +68,21 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
   const search = usePlaceSearch(accessToken, route.screen);
   const { setPlaces } = search;
   const myPlaces = useMyPlaces({ accessToken, screen: route.screen, notify, setPlaces, refreshCommunity });
-  const { setMyPlaceRecords, setRecentPlaces, setLikedPlaceIds, setDislikedPlaceIds, setVisitProofPlaceIds } = myPlaces;
+  const { setMyPlaceRecords, setRecentPlaces, setLikedPlaceIds, setVisitedPlaceIds, setDislikedPlaceIds } = myPlaces;
   /** 장소 응답의 작성자가 나인지 확인합니다. 프로필 응답 전에도 JWT subject로 알아봅니다. */
   const isMyTasterId = (tasterId: string) =>
     tasterId === MY_TASTER_ID || tasterId === authenticatedAccountId || tasterId === myProfile?.accountId;
 
   /**
-   * 하트·기록이 바뀌면 같은 맛집을 둔 맛객 신뢰 %와 가게에 들른 근거가 달라지므로 그 둘만 다시 받습니다.
+   * 하트·기록이 바뀌면 같은 맛집을 둔 맛객 신뢰 %와 다녀온 곳(가게에 들른 근거)이 달라지므로 그 둘만 다시 받습니다.
    * 실패해도 다음 새로고침에 맞춰집니다.
    */
   const refreshTasters = useCallback(() => {
     reloadTasters();
-    getVisitProofPlaceIds(accessToken)
-      .then(setVisitProofPlaceIds)
+    getVisitedPlaceIds(accessToken)
+      .then(setVisitedPlaceIds)
       .catch(() => {});
-  }, [accessToken, reloadTasters, setVisitProofPlaceIds]);
+  }, [accessToken, reloadTasters, setVisitedPlaceIds]);
 
   useEffect(() => {
     let active = true;
@@ -194,7 +194,6 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
 
   const appData: AppData = {
     accessToken,
-    displayName,
     loginProviders,
     myProfile,
     nickname: myProfile?.nickname ?? displayName,

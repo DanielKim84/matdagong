@@ -92,7 +92,7 @@
   left: 16px;
   z-index: 3;
   display: inline-flex;
-  min-height: 40px;
+  min-height: var(--pill-height);
   align-items: center;
   gap: 6px;
   border: 0;
@@ -127,6 +127,7 @@
   color: var(--color-muted);
   font-size: 14px;
   line-height: 1.6;
+  word-break: keep-all;
 }
 /* 맛객 기록 · 내 기록 · 그 밖에 묶음마다 작은 제목과 흰 카드로 나눕니다(필터 시트와 같은 카드 모양). */
 .r-discover-guide__group + .r-discover-guide__group {
@@ -285,14 +286,7 @@
   padding: 3px 16px 6px;
 }
 .r-discover-chips .r-chip {
-  position: relative;
   box-shadow: 0 2px 6px color-mix(in srgb, var(--shadow-color) 8%, transparent);
-}
-/* 칩 높이는 38px이지만 누르는 영역은 44px로 넓힙니다. */
-.r-discover-chips .r-chip::after {
-  position: absolute;
-  inset: -3px 0;
-  content: "";
 }
 .r-discover-chips__filter i {
   display: inline-grid;
@@ -333,7 +327,12 @@
   font-weight: 800;
 }
 
-/* ── 지도 위에서 넘기는 장소 카드(접힘 상태에서만) ── */
+/*
+ * ── 지도 위에서 넘기는 장소 카드(접힘 상태에서만) ──
+ * visibleMapArea.ts가 .r-discover-carousel·.r-discover__float-card·.r-discover-float-skeleton으로 카드가 가리는 지도 범위를 잽니다.
+ * 카드 줄 높이(사진 96px + 카드 안쪽 여백 10px·테두리 2px 위아래 + 줄 위아래 여백 4px·14px = 138px)는
+ * 그 파일의 CARD_STRIP_PX와 같아야 하므로, 아래 값을 바꾸면 함께 고칩니다.
+ */
 .r-discover__float {
   position: absolute;
   right: 0;
@@ -569,7 +568,7 @@
   padding: 3px;
 }
 .r-discover-sheet__sort > button {
-  min-height: 38px;
+  min-height: var(--pill-height);
   border: 0;
   border-radius: var(--radius-pill);
   background: none;
@@ -737,16 +736,6 @@
   padding: 22px 20px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .r-discover-sheet,
-  .r-discover__float,
-  .r-discover .map-location,
-  .r-discover .taster-map-marker,
-  .r-discover .map-category-marker {
-    transition: none;
-  }
-}
-
 /* ── 필터 시트 ── */
 .r-discover-filter__groups {
   display: flex;
@@ -834,6 +823,7 @@
 /*
  * 조건이 많아 시트가 길어져도 적용 버튼은 아래에 붙어 있습니다. 시트 좌우·아래 여백(.r-sheet)까지 덮어
  * 스크롤한 내용이 버튼 줄 밑으로 비치지 않게 하고, 위쪽 구분선과 옅은 그림자로 목록과 나눕니다.
+ * 취향 태그 고르기 시트의 완료 줄(ui.css .r-taste-picker-sheet__actions)도 같은 값이라 함께 고칩니다.
  */
 .r-discover-filter__actions {
   position: sticky;

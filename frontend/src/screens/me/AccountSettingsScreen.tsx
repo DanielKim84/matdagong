@@ -11,11 +11,11 @@ import type { NotificationSettings } from "../../models/community";
 import { errorMessage } from "../../utils/errorMessage";
 import { useNotificationSettings } from "./useNotificationSettings";
 
-// code는 인증 서버가 알려 주는 소셜 제공자 코드입니다. Apple은 앱 출시 뒤 붙일 예정입니다.
+// code는 인증 서버가 알려 주는 소셜 제공자 코드입니다. 공통 로그인 화면(dagong-auth LoginPage)과 같은 제공자만 둡니다.
+// Apple은 아이폰 앱을 출시할 때 iOS에서만 붙일 예정이라 지금은 두지 않습니다.
 const PROVIDERS = [
-  { key: "kakao", code: "KAKAO", label: "카카오", mark: "K", isReady: true },
-  { key: "naver", code: "NAVER", label: "네이버", mark: "N", isReady: true },
-  { key: "apple", code: "APPLE", label: "Apple", mark: "A", isReady: false },
+  { key: "kakao", code: "KAKAO", label: "카카오", mark: "K" },
+  { key: "naver", code: "NAVER", label: "네이버", mark: "N" },
 ] as const;
 
 const NOTIFICATION_OPTIONS: { key: keyof NotificationSettings; label: string; description: string }[] = [
@@ -30,10 +30,6 @@ export default function AccountSettingsScreen() {
   const { confirm } = useNotificationDialog();
   const notificationSettings = useNotificationSettings();
   const [isWithdrawing, setIsWithdrawing] = useState(false);
-
-  function notifyPending(title: string, message: string) {
-    app.actions.notify({ kind: "info", title, message });
-  }
 
   // 이전 인증 서버처럼 제공자를 알려 주지 않으면 카카오 하나로 봅니다(그때는 카카오만 있었음).
   const connectedCodes: readonly string[] = app.loginProviders.length > 0 ? app.loginProviders : ["KAKAO"];
@@ -75,7 +71,7 @@ export default function AccountSettingsScreen() {
       app.actions.notify({
         kind: "error",
         title: "탈퇴를 마치지 못했어요",
-        message: errorMessage(cause, "잠시 뒤 다시 시도해 주세요. 이미 지운 정보는 다시 지워도 괜찮아요."),
+        message: errorMessage(cause, "잠시 후 다시 시도해 주세요. 이미 지운 정보는 다시 지워도 괜찮아요."),
       });
       return;
     }
@@ -99,22 +95,9 @@ export default function AccountSettingsScreen() {
                 <span className="r-me-setting__label">{provider.label}</span>
                 {connectedCodes.includes(provider.code) ? (
                   <span className="r-me-setting__state is-ok">연결됨</span>
-                ) : provider.isReady ? (
+                ) : (
                   // 한 계정에 다른 소셜 계정을 더 잇는 기능은 아직 없어, 다른 제공자로 로그인하면 새 계정이 됩니다.
                   <small className="r-me-setting__state">연결 안 됨</small>
-                ) : (
-                  <button
-                    type="button"
-                    className="r-me-setting__action"
-                    onClick={() =>
-                      notifyPending(
-                        `${provider.label} 연결은 준비 중이에요`,
-                        "지금은 카카오나 네이버 계정으로 로그인할 수 있어요.",
-                      )
-                    }
-                  >
-                    준비 중
-                  </button>
                 )}
               </div>
             ))}

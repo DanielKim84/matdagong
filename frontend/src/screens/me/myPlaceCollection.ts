@@ -1,3 +1,4 @@
+import { useAppData } from "../../app/AppData";
 import { isMyTaster, type Place } from "../../models/place";
 import { myMapPlaces, type MyMapKind, type MyPlaceSources } from "../mymap/myMapModel";
 
@@ -22,9 +23,23 @@ function isPrivateRecord(place: Place): boolean {
   return place.tasters.some((taster) => isMyTaster(taster) && taster.visibility === "PRIVATE");
 }
 
-export function myPlaceEntries(sources: MyPlaceSources): MyPlaceEntry[] {
+function myPlaceEntries(sources: MyPlaceSources): MyPlaceEntry[] {
   return myMapPlaces(sources).map(({ place, kind }) => ({
     place,
     group: kind === "own" ? (isPrivateRecord(place) ? "private" : "mine") : GROUP_OF_KIND[kind],
   }));
+}
+
+/**
+ * 지금 앱 데이터로 만든 내 맛집 모음입니다. 나 탭의 "내 맛집 모음" 타일과 모음 화면이 같은 수를 보이도록 둘 다 이것을 씁니다.
+ * 별로였던 곳은 "다녀왔는데 별로였어요"라 다녀온 곳으로도 셉니다(다녀온 곳 기록 없이 가게 근처에서 고른 곳 포함).
+ */
+export function useMyPlaceEntries(): MyPlaceEntry[] {
+  const app = useAppData();
+  return myPlaceEntries({
+    myRecords: app.myRecords,
+    knownPlaces: [...app.places, ...app.privatePlaces, ...app.myRecords, ...app.recentPlaces],
+    likedPlaceIds: app.likedPlaceIds,
+    visitedPlaceIds: [...new Set([...app.visitedPlaceIds, ...app.dislikedPlaceIds])],
+  });
 }

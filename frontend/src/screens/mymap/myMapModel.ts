@@ -1,4 +1,4 @@
-import { isMyTaster, type MapKind, type Place, type Taster } from "../../models/place";
+import { isMyTaster, isSameKakaoPlace, type MapKind, type Place, type Taster } from "../../models/place";
 import { leadTaster, type PlaceContext } from "../discover/discoverModel";
 
 /**
@@ -59,5 +59,5 @@ export function isInScope(entry: MyMapPlace, scope: MyMapScope): boolean {
 
 /** 같은 카카오 가게가 맛다공에 이미 있으면 그 장소입니다(맛객 기록이 있으면 그 기록을 보여 주는 상세로 잇기 위해). */
 export function knownPlaceOf(result: KakaoPlaceResult, knownPlaces: Place[]): Place | undefined {
-  return knownPlaces.find((place) => place.providerPlaceId === result.id);
+  return knownPlaces.find((place) => isSameKakaoPlace(place, result.id));
 }

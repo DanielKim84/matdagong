@@ -30,8 +30,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * 다녀온 근거(빠른 저장·새 맛집 기록)는 기기 위치가 가게 1km 안일 때만 남기고, 이미 근거가 있는 가게(다녀온 곳·빠른 저장·
- * 내 기록·예전 다녀왔어요 하트)는 위치 없이 기록하는지 실제 스키마로 확인합니다.
+ * 다녀온 근거(빠른 저장·새 맛집 기록)는 기기 위치가 가게 1km 안일 때만 남기고, 이미 다녀온 가게(빠른 저장·내 기록·지운 기록)는
+ * 위치 없이 기록하는지 실제 스키마로 확인합니다.
  */
 class PlaceVisitDistanceIntegrationTest extends EmbeddedPostgresTestSupport {
     private static final String PNG =
@@ -133,22 +133,13 @@ class PlaceVisitDistanceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
-    void 가_보고_싶은_하트나_다른_가게의_하트로는_위치_없이_새_기록을_만들_수_없다() {
-        PlaceView other =
-                records.createRecord(SECOND, AUTHOR, place(37.566, 126.991, false), recordRequest("1001", NEAR));
+    void 가_보고_싶은_하트만으로는_위치_없이_새_기록을_만들_수_없다() {
         PlaceView wished =
                 records.createRecord(SECOND, AUTHOR, place(37.566, 126.991, false), recordRequest("2002", NEAR));
-        like(other.id());
         like(wished.id());
 
         assertStatus(
-                () -> records.convertLikeToRecord(
-                        FIRST, AUTHOR, place(37.566, 126.991, false), wished.id(), recordRequest("2002", null), true),
-                HttpStatus.BAD_REQUEST,
-                NearbyPlaceGuard.LOCATION_REQUIRED);
-        assertStatus(
-                () -> records.convertLikeToRecord(
-                        FIRST, AUTHOR, place(37.566, 126.991, false), other.id(), recordRequest("3003", null), true),
+                () -> records.createRecord(FIRST, AUTHOR, place(37.566, 126.991, false), recordRequest("2002", null)),
                 HttpStatus.BAD_REQUEST,
                 NearbyPlaceGuard.LOCATION_REQUIRED);
     }

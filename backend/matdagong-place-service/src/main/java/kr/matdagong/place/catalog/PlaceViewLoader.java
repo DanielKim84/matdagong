@@ -19,8 +19,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * DB에 저장된 장소와 맛객별 기록을 화면 응답으로 조립합니다.
- * DB가 멀리 있어 쿼리를 오가는 횟수가 응답 시간을 좌우하므로, 장소(기록 수 포함) 한 번, 기록(메뉴·태그·방문 조건·사진·
- * 작성자 기록 수 포함) 한 번, 모두 두 번만 조회합니다. 사진 바이트는 읽지 않고 주소만 응답에 담습니다.
+ * DB가 멀리 있어 쿼리를 오가는 횟수가 응답 시간을 좌우하므로, 장소(기록 수 포함) 한 번, 기록(메뉴·태그·방문 조건·사진
+ * 포함) 한 번, 모두 두 번만 조회합니다. 사진 바이트는 읽지 않고 주소만 응답에 담습니다.
  * 신고가 쌓여 가려진 맛객의 기록은 본인에게만 보입니다.
  */
 @Component
@@ -85,7 +85,6 @@ public class PlaceViewLoader {
             PlaceRow place = places.get(placeId);
             if (place == null) continue;
             List<TasterRecordView> authors = authorsByPlace.getOrDefault(placeId, List.of());
-            String latestNote = authors.isEmpty() ? "" : authors.get(0).note();
             List<String> conditions = authors.stream()
                     .flatMap(author -> author.visitConditions().stream())
                     .distinct()
@@ -97,7 +96,6 @@ public class PlaceViewLoader {
                     place.address(),
                     place.latitude(),
                     place.longitude(),
-                    latestNote,
                     place.recordCount(),
                     conditions,
                     authors,
@@ -113,9 +111,7 @@ public class PlaceViewLoader {
 
     /**
      * 기록과 하위 데이터(메뉴·태그·방문 조건·사진)를 기록마다 배열로 모아 한 번에 읽습니다. 각 하위 표는 record_id로
-     * 시작하는 색인이 있어 기록별 LATERAL 조회가 색인으로 끝납니다. 장소마다 최신 기록부터 담습니다.
-     * 작성자 장소 수(place_count)는 계정마다 장소 하나에 기록이 하나뿐이라(uk_restaurant_records_owner_place) 기록 수와 같고,
-     * 같은 색인(account_id, place_id)으로 셉니다.
+     * 시작하는 색인이 있어 기록별 LATERAL 조회가 색인으로 끝납니다. 장소마다 최신 기록부터 담습니다(화면은 첫 기록을 대표로 씀).
      */
     private Map<UUID, List<TasterRecordView>> loadRecords(
             String[] placeIds, UUID viewerId, RecordScope scope, String[] hiddenIds) {
@@ -124,10 +120,7 @@ public class PlaceViewLoader {
                 """
                 SELECT r.record_id, r.place_id, r.account_id, r.author_name, r.reason, r.visibility, r.reg_dt,
                        menus.menu_ids, menus.menu_names, menus.prices, menus.has_photos,
-                       tags.tag_names, tags.tag_groups, conditions.condition_names, photos.photo_ids,
-                       (SELECT count(*) FROM restaurant_records other
-                        WHERE other.account_id = r.account_id
-                          AND (other.visibility = 'PUBLIC' OR other.account_id = ?)) AS place_count
+                       tags.tag_names, tags.tag_groups, conditions.condition_names, photos.photo_ids
                 FROM restaurant_records r
                 LEFT JOIN LATERAL (
                     SELECT array_agg(m.menu_id ORDER BY m.sort_no) AS menu_ids,
@@ -199,7 +192,6 @@ public class PlaceViewLoader {
                 JdbcArrays.strings(rs, "condition_names"),
                 photos,
                 visibility,
-                rs.getInt("place_count"),
                 rs.getObject("reg_dt", OffsetDateTime.class).toString());
     }
 
@@ -233,11 +225,11 @@ public class PlaceViewLoader {
                 : new Object[] {viewerId, hiddenIds, placeIds};
     }
 
-    /** 기록 쿼리 자리표시자: 작성자 기록 수의 조회자 ID, 장소 ID, [기록 필터의 조회자 ID], 가려진 맛객 ID. */
+    /** 기록 쿼리 자리표시자: 장소 ID, [기록 필터의 조회자 ID], 가려진 맛객 ID. PUBLIC_ONLY만 조회자 ID가 없습니다. */
     private static Object[] recordArgs(String[] placeIds, UUID viewerId, RecordScope scope, String[] hiddenIds) {
         return scope == RecordScope.PUBLIC_ONLY
-                ? new Object[] {viewerId, placeIds, hiddenIds}
-                : new Object[] {viewerId, placeIds, viewerId, hiddenIds};
+                ? new Object[] {placeIds, hiddenIds}
+                : new Object[] {placeIds, viewerId, hiddenIds};
     }
 
     private record PlaceRow(

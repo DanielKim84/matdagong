@@ -45,7 +45,7 @@ public class QuickDraftService {
             rs.getString("lot_address"),
             rs.getObject("reg_dt", OffsetDateTime.class));
 
-    private static final String TOO_FAR = "현재 위치 1km 안의 장소만 저장할 수 있어요.";
+    private static final String TOO_FAR = "현재 위치 " + NearbyPlaceGuard.MAX_VISIT_DISTANCE_LABEL + " 안의 장소만 저장할 수 있어요.";
     /** restaurant_places.category 칸 길이입니다. 빠른 저장의 분류(최대 200자)를 장소 행에 넣을 때 자릅니다. */
     private static final int PLACE_CATEGORY_LENGTH = 120;
 
@@ -180,6 +180,7 @@ public class QuickDraftService {
                 accountId);
     }
 
+    /** 분류는 카카오가 준 글자 그대로 넣습니다. 장소 행 칸(120자)에 맞게 자르고, 없으면 빈 글자입니다(칸이 NOT NULL). */
     private static String placeCategory(String draftCategory) {
         if (draftCategory == null) return "";
         return draftCategory.substring(0, Math.min(draftCategory.length(), PLACE_CATEGORY_LENGTH));

@@ -75,7 +75,7 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
 | 필요한 것 | 쓸 것 |
 |---|---|
 | 상단 바 / 떠 있는 상단 바 | `TopBar`, `TopBar variant="float"` |
-| 섹션 제목(+오른쪽 링크·개수) | `SectionHead` (`action`, `meta`, `children`) |
+| 섹션 제목(+오른쪽 링크·개수) / 날짜 묶음 머리("오늘 3개") | `SectionHead` (`action`, `meta`, `children`) / `SectionHead className="r-section-head--date"` |
 | 빈 화면·오류·불러오는 중 | `EmptyState`(`tone`, `action.variant`), `Skeleton` — 다시 시도 문구는 "다시 불러오기" |
 | 시트·확인창·안내 | `Sheet`, `useNotificationDialog().confirm/alert`, `actions.notify` (위험한 동작은 `tone: "danger"` 확인) |
 | 사진 칸 / 대표 사진 | `PlaceThumb`, `placePhoto()` |
@@ -86,11 +86,12 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
 | 맛객 사진 | `TasterAvatar`, `avatarSource()` |
 | 진행 막대, 캐릭터, 페이지 점 | `StepProgress`, `MascotArt`, `PaginationDots` |
 | 모달 잠금, 스와이프 | `useModalLock`, `useSwipe` |
-| 시각·날짜·숫자·원·거리·분류 표시 | `utils/format.ts` (`formatRelativeTime`, `formatMonthDay`, `formatNumber`, `formatWon`, `formatDistance`, `categoryLabel`, `DAY_MS`, `startOfDay` …). `toLocaleString`을 화면에서 직접 쓰지 않음 |
-| 길찾기·공유·카카오맵 주소 | `utils/placeLinks.ts` (`openDirections`, `sharePlace`, `kakaoPlaceUrl`) |
-| 내 기록 판별 | `isMyTaster()`, `MY_TASTER_ID` |
+| 시각·날짜·숫자·원·거리·분류 표시 | `utils/format.ts` (`formatRelativeTime`, `formatMonthDay`, `formatNumber`, `formatWon`, `formatDistance`, `categoryLabel`·`shortCategory`(가게 분류는 제공처 글자 그대로 저장되어 있어 화면에서만 "카페 · 커피전문점"처럼 줄임), `DAY_MS`, `startOfDay` …). `toLocaleString`을 화면에서 직접 쓰지 않음 |
+| 길찾기·공유(안내 포함)·카카오맵 주소 | `utils/placeLinks.ts` (`openDirections`, `sharePlaceWithNotice`, `kakaoPlaceUrl`) |
+| 내 기록 판별, 고른 카카오 가게와 같은 장소인지 | `isMyTaster()`, `MY_TASTER_ID`, `isSameKakaoPlace()`, `KAKAO_PROVIDER_CODE` (`models/place.ts`) |
 | 취향 분류 이름·한도·분야별 분류, 분류별로 묶기 | `models/tasteTags.ts` (`TASTE_TAG_GROUPS`, `groupsForFocus`, `groupTagsByDictionary`) |
 | 취향 태그 고르기(분류 줄 + 분류별 시트) / 분류 아이콘·색 | `TasteTagPicker`, `GroupIcon`(`tagGroupLook`) |
+| 닉네임 입력(겹치는지 미리 확인) | `useNicknameCheck` + `NicknameCheckNote` |
 | 브라우저 저장소 | `utils/storage.ts` (`STORAGE_KEYS`, `readStorage`/`writeStorage`/`readStorageJson` …). `localStorage`·`sessionStorage`를 직접 쓰지 않음. 새 키 이름은 `matdagong.<영역>.<이름>` |
 
 ## 4. CSS (`frontend/src/styles`, `frontend/src/theme`)
@@ -98,7 +99,9 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
 - 새 화면 스타일은 `styles/renewal/<영역>.css`에 둡니다. 공통 부품은 `styles/renewal/ui.css`.
 - 클래스 이름: `r-<영역>-<블록>__<요소>--<변형>` (예: `r-discover-sheet__title`), 상태는 `is-on`, `is-selected`처럼 `is-`로 시작. 화면 최상위는 `<main className="r-screen r-<영역>">`(하위 화면은 `r-<영역>-<화면>`, `-screen` 접미사 없음).
 - 색·글꼴·반경·그림자는 **테마 토큰만** 씁니다(`var(--color-primary)`, `var(--neutral-100)`, `var(--font-display)`). 반경 토큰: `--radius-xs`(4) · `--radius-sm`(12) · `--radius-md`(14) · `--radius-control`(16) · `--radius-card`(22) · `--radius-sheet`(28) · `--radius-pill`. 맞는 토큰이 없을 때만 숫자를 쓰고 이유를 주석으로 남깁니다. 자세한 내용은 [테마 관리](ui/theming.md).
-- 애니메이션·스켈레톤·글자 버튼은 공용(`r-pulse`, `.r-skeleton`, `.r-text-button`, `.visually-hidden`)을 씁니다.
+- 애니메이션·스켈레톤·글자 버튼·오류 안내는 공용(`r-pulse`, `.r-skeleton`, `.r-text-button`, `.visually-hidden`, 상자형 `.r-error-box`·글자형 `.r-error-text`)을 씁니다.
+- 칩(`.r-chip`)과 작은 둥근 버튼(`.r-button--pill`, 정렬·지역 고르기 같은 둥근 버튼)의 높이는 `--pill-height`(40px) 하나입니다. 영역 CSS에서 높이를 따로 줄이지 않습니다(칩은 누르는 영역을 44px로 넓혀 둠).
+- 글자색 대비: 읽어야 하는 글자·placeholder·뜻 있는 아이콘은 `--color-muted` 이상, `--color-subtle`은 비활성·장식에만 씁니다. 초록 글자는 `--color-success-text`, 진한 색 바탕 흰 글자는 600 단계 이상(앰버 바탕에는 `--amber-900` 글자)입니다.
 - 강조색은 뜻에 따라 정해진 것만 씁니다([현재 UI 기준 · 색 역할](ui/current-design.md#색-역할)). 정보 태그는 `.r-tag`, 나와의 관계(내 기록·구독 중·나와 같아요)는 `.r-tag--mine`, 지금 고른 상태는 먹색(`.r-chip.is-on`, `.r-segmented`)입니다. 영역 CSS에서 태그·선택 색을 새로 만들지 않습니다.
 - 공용 부품(`.r-empty`, `.r-button` 등)의 모양을 바꿀 때는 영역 클래스 아래로 한정합니다(`.r-me-empty .r-button`). 전역으로 덮어쓰지 않습니다.
 - 밝은 분위기를 유지합니다(다크 테마는 별도 요청이 있을 때만).
@@ -112,7 +115,8 @@ npx tsc --noEmit -p .              # frontend 폴더(타입 검사)
   - **Controller**: HTTP 입출력만. `JdbcTemplate`·`@Transactional`을 쓰지 않습니다.
   - **Service**: 규칙, DB 작업, 트랜잭션. 조회만 하는 메서드는 `@Transactional(readOnly = true)`, 데이터를 바꾸는 메서드만 `@Transactional`.
   - **`XxxModels`**: 그 기능의 요청·응답 `record`를 한 파일에 모읍니다. `import static …XxxModels.*`는 이 묶음에만 씁니다.
-- **서비스 공통 코드는 `backend/matdagong-common`**(인증 계정 꺼내기, JWT 검증, 서비스 간 RestClient, 이미지 형식 검사, 오류 처리 기반, 시각 변환, LIKE 검색어 이스케이프(`LikePatterns`), 배열 칼럼(`ARRAY(...)`·`array_agg`)을 목록으로 읽기와 `= ANY(?::uuid[])` 값 만들기(`jdbc/JdbcArrays`), 테스트용 embedded PostgreSQL과 동시 요청 재현 도우미). 서비스마다 같은 코드를 복사하지 않습니다.
+- **서비스 공통 코드는 `backend/matdagong-common`**(인증 계정 꺼내기, JWT 검증, 서비스 간 RestClient, 이미지 형식 검사, 오류 처리 기반, 같은 상황의 공통 오류(`web/ApiErrors`), 시각 변환, LIKE 검색어 이스케이프(`LikePatterns`), 배열 칼럼(`ARRAY(...)`·`array_agg`)을 목록으로 읽기와 `= ANY(?::uuid[])` 값 만들기(`jdbc/JdbcArrays`), 빈 선택 입력을 NULL로 바꾸기(`text/Texts.blankToNull`), 테스트용 embedded PostgreSQL과 동시 요청 재현 도우미). 서비스마다 같은 코드를 복사하지 않습니다.
+- **서비스 안 공용 조회**: 커뮤니티의 프로필 SQL 조각·조회(배경 사진·프로필 태그 배열, 프로필 사진 주소, 존재 확인·잠금·닉네임, 신고로 가림 조건)는 `profile/ProfileQueries`, 장소의 장소 응답 조립은 `catalog/PlaceViewLoader`, 가게 행 저장은 `catalog/PlaceUpserts`(분류는 제공처 글자 그대로 저장), 방문 거리 확인과 거리 문구(`MAX_VISIT_DISTANCE_LABEL`)는 `location/NearbyPlaceGuard`를 씁니다.
 - **오류 응답**: `ResponseStatusException`(한국어 문구)을 던지고, 서비스마다 하나 있는 `@RestControllerAdvice`가 `ProblemDetail`의 `detail`로 내보냅니다. 화면(`services/http.ts`)은 `detail`을 그대로 보여 줍니다. 같은 상황은 같은 상태 코드·문구(상수)로 답합니다(예: 프로필이 먼저 필요 → 409 "맛객 프로필을 먼저 만들어 주세요.").
 - **검증**: 형식(길이·패턴·범위)은 record 애너테이션과 `@Valid`, 정해진 값 목록은 enum으로 받습니다. 공백 제거 같은 값 정리는 record의 compact constructor에서 검증 전에 합니다. Service는 업무 규칙만 확인합니다.
 - **상태 값**은 enum으로 다룹니다(DB·JSON 값은 그대로).

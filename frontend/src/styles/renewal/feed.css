@@ -391,6 +391,7 @@
 .r-feed-story__bars span.is-done {
   background: var(--on-strong);
 }
+/* 진행 막대가 끝나면(animationend) StoryViewer.tsx가 다음 기록으로 넘깁니다. 6s가 기록 한 장을 보여 주는 시간입니다. */
 .r-feed-story__bars i {
   display: block;
   width: 100%;
@@ -398,6 +399,19 @@
   background: var(--on-strong);
   transform-origin: left center;
   animation: r-feed-story-progress 6s linear forwards;
+}
+/*
+ * 움직임 줄이기에서도 진행 막대만은 남깁니다. app.css의 전체 끄기 규칙이 이 막대까지 멈추면
+ * animationend가 오지 않아 다음 기록으로 넘어가지 않고, 막대도 다 찬 것처럼 보이기 때문입니다.
+ * 제자리에서 차오르기만 하는 막대라 화면이 움직이지 않습니다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .r-feed-story__bars i {
+    animation: r-feed-story-progress 6s linear forwards !important;
+  }
+  .r-feed-story__bars i.is-paused {
+    animation-play-state: paused !important;
+  }
 }
 .r-feed-story__bars i.is-paused {
   animation-play-state: paused;
@@ -552,10 +566,6 @@
   flex-direction: column;
   gap: 8px;
 }
-.r-feed-noti__label h2 {
-  color: var(--color-muted);
-  font-size: 13px;
-}
 .r-feed-noti__list {
   margin: 0;
   padding: 0 4px 0 14px;
@@ -637,7 +647,7 @@
   background: var(--color-primary);
 }
 .r-icon-button.r-feed-noti__delete {
-  color: var(--color-subtle);
+  color: var(--color-muted);
 }
 .r-icon-button.r-feed-noti__delete .icon {
   width: 18px;

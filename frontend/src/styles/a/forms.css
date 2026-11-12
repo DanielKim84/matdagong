@@ -61,7 +61,7 @@
   line-height: 1.45;
 }
 .profile-settings .profile-edit-avatar-section .text-action {
-  min-height: 36px;
+  min-height: var(--pill-height);
   flex: none;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-pill);
@@ -80,7 +80,7 @@
   box-shadow: var(--forms-card-shadow);
 }
 .profile-settings .profile-edit-cover > button {
-  min-height: 40px;
+  min-height: var(--pill-height);
   gap: 6px;
   border: 0;
   border-radius: var(--radius-pill);
@@ -187,7 +187,7 @@
 .profile-settings .profile-edit-field > span > small,
 .tag-request-form .profile-edit-field > span > small {
   margin-left: 6px;
-  color: var(--color-subtle);
+  color: var(--color-muted);
   font-size: 12px;
   font-weight: 500;
 }
@@ -220,7 +220,7 @@
 .profile-settings .profile-edit-field textarea::placeholder,
 .tag-request-form .profile-edit-field input::placeholder,
 .tag-request-form .profile-edit-field textarea::placeholder {
-  color: var(--color-subtle);
+  color: var(--color-muted);
 }
 .profile-settings .profile-edit-field > input:focus,
 .profile-settings .profile-edit-field > textarea:focus,
@@ -316,7 +316,7 @@
   border-radius: var(--radius-md);
   background: var(--color-canvas);
   padding: 10px 14px;
-  color: var(--green-500);
+  color: var(--color-success-text);
   font-size: 13px;
   font-weight: 600;
 }
@@ -333,7 +333,7 @@
 }
 .profile-settings .activity-region-field > legend small {
   margin-left: 6px;
-  color: var(--color-subtle);
+  color: var(--color-muted);
   font-size: 12px;
   font-weight: 500;
 }
@@ -597,7 +597,7 @@
 }
 .tag-request-sheet .tag-request-category label > span {
   display: inline-flex;
-  height: 38px;
+  height: var(--pill-height);
   align-items: center;
   gap: 6px;
   border: 1px solid var(--color-line);
@@ -628,15 +628,6 @@
 .tag-request-sheet .tag-request-category input:focus-visible + span {
   outline: 2px solid var(--brand-400);
   outline-offset: 2px;
-}
-.tag-request-sheet .tag-request-error {
-  border-radius: var(--radius-md);
-  background: var(--brand-50);
-  padding: 12px 14px;
-  color: var(--brand-700);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.5;
 }
 .tag-request-sheet .tag-request-form > .primary-button,
 .tag-request-sheet .tag-request-success > .primary-button {
@@ -714,7 +705,7 @@
   font-size: 13px;
 }
 .tag-request-sheet .proposal-history-empty button {
-  min-height: 36px;
+  min-height: var(--pill-height);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-pill);
   background: var(--color-surface);

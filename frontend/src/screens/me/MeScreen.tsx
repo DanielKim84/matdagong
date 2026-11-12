@@ -6,6 +6,7 @@ import { TopBar } from "../../components/ui";
 import { formatNumber } from "../../utils/format";
 import MeDiaryCard from "./MeDiaryCard";
 import MeTile, { MeTilePair } from "./MeTile";
+import { useMyPlaceEntries } from "./myPlaceCollection";
 import { useDiaryEntries } from "./useDiaryEntries";
 import { useQuickPlaceDrafts } from "./useQuickPlaceDrafts";
 
@@ -25,12 +26,8 @@ export default function MeScreen() {
   const publicCount = entries.filter((entry) => entry.isPublic).length;
   const paidCount = app.incomingSubscriptions.filter((item) => item.subscriptionType === "PAID").length;
   const freeCount = app.incomingSubscriptions.length - paidCount;
-  // 내 기록·다녀온 곳·하트의 장소 ID 수입니다(겹치면 한 번). 모음 화면과 달리 별로였던 곳은 세지 않습니다.
-  const myPlaceCount = new Set([
-    ...app.myRecords.map((place) => place.id),
-    ...app.visitedPlaceIds,
-    ...app.likedPlaceIds,
-  ]).size;
+  // 모음 화면과 같은 목록의 수라, 타일을 눌러 들어가도 숫자가 같습니다.
+  const myPlaceCount = useMyPlaceEntries().length;
 
   return (
     <main className="r-screen r-me">

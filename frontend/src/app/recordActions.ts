@@ -3,7 +3,6 @@ import { createPlaceRegisteredNotification } from "../services/community";
 import {
   MY_ACTIVITY_CHANGED_EVENT,
   changeRecordVisibility,
-  convertLikedPlaceToRecord,
   createPlaceRecord,
   deleteMyPlaceRecord,
   getMyPlaceRecords,
@@ -32,21 +31,19 @@ type Context = {
   setDislikedPlaceIds: Dispatch<SetStateAction<string[]>>;
 };
 
-/** 내 기록 저장(하트한 곳은 기록으로 바꾸기)·공개 범위 바꾸기·기록 지우기 동작입니다. App이 그릴 때마다 현재 상태로 만듭니다. */
+/** 내 기록 저장·공개 범위 바꾸기·기록 지우기 동작입니다. App이 그릴 때마다 현재 상태로 만듭니다. */
 export function recordActions(context: Context) {
   const { accessToken, route, notify } = context;
 
-  /** 기록을 저장하고 저장된 장소를 돌려줍니다. 새 기록은 상세로 옮기지 않고 호출한 화면이 완료 화면을 그리며, 수정은 상세로 옮깁니다. */
-  async function register(place: NewPlace, convertFromPlaceId?: string, isVisitConfirmed = false): Promise<Place> {
+  /**
+   * 기록을 저장하고 저장된 장소를 돌려줍니다. 새 기록은 상세로 옮기지 않고 호출한 화면이 완료 화면을 그리며, 수정은 상세로 옮깁니다.
+   * 하트한 곳이면 기록하기 화면이 직접 다녀왔는지 먼저 확인합니다(recordValidation).
+   */
+  async function register(place: NewPlace): Promise<Place> {
     // 등록 화면 주소에 기록 ID가 있으면(#register/<id>) 기존 기록 수정입니다.
     const isEditing = route.screen === "register" && !!route.id;
     try {
-      if (convertFromPlaceId && !isVisitConfirmed) {
-        throw new Error("직접 방문을 확인한 뒤 등록해 주세요.");
-      }
-      const created = convertFromPlaceId
-        ? await convertLikedPlaceToRecord(accessToken, convertFromPlaceId, place)
-        : await createPlaceRecord(accessToken, place);
+      const created = await createPlaceRecord(accessToken, place);
       // 수정은 새 알림을 만들지 않으므로 알림 저장 실패로 보지 않습니다.
       let isNotificationSaved = true;
       if (!isEditing) {
@@ -56,11 +53,9 @@ export function recordActions(context: Context) {
           isNotificationSaved = false;
         }
       }
-      if (convertFromPlaceId) {
-        context.setLikedPlaceIds((current) => current.filter((item) => item !== convertFromPlaceId));
-      }
       context.setMyPlaceRecords((current) => [created, ...current.filter((item) => item.id !== created.id)]);
-      // 기록은 입맛에 맞았다는 뜻이라 서버가 별로였던 곳 표시를 지웠고, 같은 맛집 맛객과의 신뢰도 달라집니다.
+      // 내 기록이 있는 곳은 하트·별로였던 곳으로 두지 않아 서버가 둘 다 지웠습니다. 같은 맛집 맛객과의 신뢰도 달라집니다.
+      context.setLikedPlaceIds((current) => current.filter((item) => item !== created.id));
       context.setDislikedPlaceIds((current) => current.filter((item) => item !== created.id));
       context.refreshTasters();
       if (place.visibility === "public")

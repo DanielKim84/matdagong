@@ -14,7 +14,8 @@
   align-items: center;
   gap: 12px;
   background: var(--color-canvas);
-  padding: 8px 20px 8px 8px;
+  /* 위쪽 안전 영역은 공용 상단 바(.r-topbar)와 같게 더합니다. */
+  padding: calc(8px + env(safe-area-inset-top)) 20px 8px 8px;
 }
 .r-record-head__progress {
   flex: 1;
@@ -46,6 +47,7 @@
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
+  word-break: keep-all;
 }
 .r-record-field {
   display: flex;
@@ -76,21 +78,12 @@
   color: var(--color-muted);
   font-size: 13px;
   line-height: 1.5;
+  word-break: keep-all;
 }
 /* 공용 글자 버튼을 기록 화면의 세로 칸 안에서 왼쪽 정렬·좁은 여백으로 씁니다. */
 .r-record .r-text-button {
   align-self: flex-start;
   padding: 0 4px;
-}
-.r-record-error {
-  margin: 0;
-  border-radius: var(--radius-control);
-  background: var(--brand-50);
-  padding: 12px 14px;
-  color: var(--color-primary-strong);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.5;
 }
 .r-record-notice {
   display: flex;
@@ -186,7 +179,7 @@
   font-size: 16px;
 }
 .r-record-search input::placeholder {
-  color: var(--color-subtle);
+  color: var(--color-muted);
 }
 .r-record-search__state {
   padding-right: 8px;
@@ -293,7 +286,7 @@
   color: var(--color-muted);
 }
 .r-record-location.is-ready > .icon {
-  color: var(--green-600);
+  color: var(--color-success-text);
 }
 .r-record-location span {
   flex: 1;
@@ -310,7 +303,7 @@
 }
 .r-record-picked .r-badge-icon {
   background: var(--green-50);
-  color: var(--green-600);
+  color: var(--color-success-text);
 }
 .r-record-picked__copy {
   display: flex;
@@ -506,7 +499,7 @@
   font-weight: 700;
 }
 .r-record-dish__fields input::placeholder {
-  color: var(--color-subtle);
+  color: var(--color-muted);
   font-weight: 500;
 }
 .r-record-dish__price {
@@ -566,9 +559,6 @@
   font-size: 12px;
   font-weight: 600;
 }
-.r-record .r-chip {
-  height: 40px;
-}
 
 /* ── 4단계 · 한 줄 추천과 공개 범위 ── */
 .r-record-headline {
@@ -592,7 +582,7 @@
   caret-color: var(--color-primary);
 }
 .r-record-headline textarea::placeholder {
-  color: var(--color-subtle);
+  color: var(--color-muted);
 }
 .r-record-headline small,
 .r-record-detail > small {
@@ -699,7 +689,7 @@
   height: 160px;
   place-items: center;
   background: var(--neutral-100);
-  color: var(--color-subtle);
+  color: var(--color-muted);
   object-fit: cover;
 }
 .r-record-preview__empty .icon {
@@ -821,15 +811,16 @@
   min-height: 28px;
   align-items: center;
   gap: 5px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--neutral-100);
   padding: 0 12px;
   color: var(--neutral-800);
   font-size: 13px;
   font-weight: 800;
 }
+/* 흰 글자 대비(4.5:1)를 맞춘 주요 코랄(--color-primary)로 채웁니다. 관계 배지(.r-tag--mine)와 같은 색입니다. */
 .r-record-done__badge.is-public {
-  background: var(--brand-500);
+  background: var(--color-primary);
   color: var(--on-strong);
 }
 .r-record-done__badge .icon {
@@ -887,6 +878,7 @@
   color: var(--neutral-700);
   font-size: 14px;
   line-height: 1.6;
+  word-break: keep-all;
 }
 .r-record-sheet__actions {
   display: grid;
@@ -899,7 +891,7 @@
 .r-record-quick .r-record-results {
   margin-top: 12px;
 }
-.r-record-quick .r-record-error {
+.r-record-quick .r-error-box {
   margin-top: 12px;
 }
 .r-record-quick .r-record-location {

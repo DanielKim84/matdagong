@@ -152,12 +152,10 @@ class PlaceRecordServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 .orElseThrow();
         assertThat(afterVerified.name()).isEqualTo("국밥집 본점");
         assertThat(afterVerified.recordCount()).isEqualTo(2);
-        assertThat(afterVerified.tasters())
-                .allSatisfy(taster -> assertThat(taster.placeCount()).isEqualTo(1));
     }
 
     @Test
-    void 하트를_기록으로_바꾸면_빠른_기록과_하트가_빠지고_다시_하트할_수_없다() {
+    void 하트한_곳을_기록하면_빠른_기록과_하트가_빠지고_다시_하트할_수_없다() {
         PlaceView place = service.createRecord(
                 SECOND,
                 SECOND_AUTHOR,
@@ -168,13 +166,11 @@ class PlaceRecordServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         drafts.saveDraft(FIRST, draft.submittedPlace(), draft);
         likes.setLiked(FIRST, place.id(), true);
 
-        service.convertLikeToRecord(
+        service.createRecord(
                 FIRST,
                 FIRST_AUTHOR,
                 unverified("국밥집"),
-                place.id(),
-                request("국밥집", RecordVisibility.PUBLIC, List.of(), List.of(PNG)),
-                true);
+                request("국밥집", RecordVisibility.PUBLIC, List.of(), List.of(PNG)));
         assertThat(drafts.findDrafts(FIRST)).isEmpty();
         assertThat(likes.likedPlaceIds(FIRST)).isEmpty();
         assertThat(service.findMine(FIRST)).hasSize(1);

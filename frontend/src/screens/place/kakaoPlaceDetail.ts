@@ -4,7 +4,7 @@
  * 하트(가볼 곳 저장)를 누르면 그때 맛다공 장소로 저장하고 진짜 장소 ID의 상세로 바꿉니다.
  */
 import { go } from "../../app/navigation";
-import type { Place } from "../../models/place";
+import { KAKAO_PROVIDER_CODE, type Place } from "../../models/place";
 import { kakaoPlaceAddress, kakaoPlaceCoordinates } from "../../utils/geo";
 import { isKakaoPlace, readStorageJson, STORAGE_KEYS, writeStorageJson } from "../../utils/storage";
 
@@ -31,17 +31,17 @@ export function kakaoPlaceForRoute(id: string): Place | null {
 function placeFromKakao(result: KakaoPlaceResult): Place {
   return {
     id: `${KAKAO_PLACE_ID_PREFIX}${result.id}`,
-    providerCode: "KAKAO",
+    providerCode: KAKAO_PROVIDER_CODE,
     providerPlaceId: result.id,
     name: result.place_name,
+    // 저장된 가게처럼 카카오 분류 글자 그대로 둡니다(화면은 categoryLabel로 줄여 보여 줌).
     category: result.category_name,
     address: kakaoPlaceAddress(result),
-    roadAddress: result.road_address_name || undefined,
-    lotAddress: result.address_name || undefined,
-    providerPhone: result.phone || undefined,
-    providerUrl: result.place_url || undefined,
+    roadAddress: result.road_address_name || null,
+    lotAddress: result.address_name || null,
+    providerPhone: result.phone || null,
+    providerUrl: result.place_url || null,
     ...kakaoPlaceCoordinates(result),
-    recentNote: "",
     recordCount: 0,
     tasters: [],
   };

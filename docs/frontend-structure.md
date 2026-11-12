@@ -18,7 +18,7 @@ index.html → src/main.tsx → app/signIn.ts (로그인·가입 확인) → app
 | `src/app/signIn.ts` | 공통 인증(Authorization Code + PKCE) 로그인 시작·완료, 로그아웃, 로그인 전 주소 기억·복원 |
 | `src/app/startupView.tsx` | 로그인 중·오류·소개·가입·앱 중 무엇을 그릴지 정하고 렌더링 |
 | `src/app/App.tsx` | 아래 훅들이 불러온 서버 데이터를 `AppData`로 묶고, 해시 주소에 맞는 화면과 하단 탭을 그림 |
-| `src/app/useCommunity.ts`, `useMyPlaces.ts`, `usePlaceSearch.ts`, `recordActions.ts`, `screenViews.ts`, `ProfileEditRoute.tsx` | App에서 나눈 부분: 내 프로필·맛객·구독·포인트 / 내 기록·최근 본 곳·하트·다녀온 곳·별로였던 곳·방문 근거 / 공개 장소 검색 / 기록 저장·하트→기록·공개 범위 바꾸기 / 주소별 화면 표(`SCREEN_VIEWS`) / 프로필 설정 주소(`#profile-edit`, `#profile-edit/taste`) |
+| `src/app/useCommunity.ts`, `useMyPlaces.ts`, `usePlaceSearch.ts`, `recordActions.ts`, `screenViews.ts`, `ProfileEditRoute.tsx` | App에서 나눈 부분: 내 프로필·맛객·구독·포인트 / 내 기록·최근 본 곳·하트·다녀온 곳·별로였던 곳(둘을 합친 방문 근거) / 공개 장소 검색 / 기록 저장·공개 범위 바꾸기·기록 지우기 / 주소별 화면 표(`SCREEN_VIEWS`) / 프로필 설정 주소(`#profile-edit`, `#profile-edit/taste`) |
 | `src/app/AppData.tsx` | 화면들이 함께 쓰는 데이터와 동작(하트·별로였어요, 구독, 기록 저장, 프로필 저장, 알림 등). 화면은 props 대신 `useAppData()`로 꺼내 씀 |
 | `src/app/useNotifications.ts`, `useLikeChoice.ts`·`LikeChoiceSheet.tsx`, `enrichPlaces.ts`, `accountRole.ts`, `useSignedInDeviceCheck.ts` | App에서 나눈 알림 상태, 하트(빈 하트는 바로 가볼 곳 저장, 찬 하트는 별로였어요·빼기 시트, 별로였던 곳 되돌리기), 장소에 작성자 정보 합치기, 계정 역할 계산, 앱으로 돌아올 때 이 기기 로그인이 아직 유효한지 확인 |
 | `src/app/navigation.ts` | 해시 주소(`#화면/ID`)와 앱 내부 뒤로 가기 기록. 화면 목록은 `SCREENS` |

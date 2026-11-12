@@ -385,17 +385,7 @@
   }
 }
 
-/* 태그 제안 시트(프로필 편집·맛집 기록 공통) */
-.tag-request-sheet {
-  max-width: 390px;
-  border: 0;
-  border-radius: var(--radius-card);
-  padding: 22px;
-}
-.tag-request-sheet > header h2 {
-  color: var(--neutral-700);
-  font-size: 20px;
-}
+/* 태그 제안 시트(프로필 편집·맛집 기록 공통). 시트 틀·제목 모양은 공용 Sheet(.r-sheet)를 그대로 씁니다. */
 .tag-request-lead {
   margin: 0;
 }
@@ -422,7 +412,8 @@
   display: block;
   text-align: center;
 }
-.tag-request-error {
+/* 공용 오류 상자(r-error-box)의 margin: 0보다 뒤에 와도 이기도록 두 단계로 씁니다. */
+.tag-request-sheet .tag-request-error {
   margin: 12px 0 0;
 }
 .tag-request-history > p {

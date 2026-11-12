@@ -4,6 +4,8 @@
  * 개인정보 항목은 지금 서버·화면이 실제로 저장하는 것과 맞춰 두었으므로, 저장하는 항목이 바뀌면 함께 고칩니다.
  */
 
+import { VISIT_RADIUS_LABEL } from "../../models/place";
+
 export type PolicyKey = "terms" | "privacy";
 
 /** 문단 하나입니다. 문자열은 보통 문단, 문자열 배열은 점 목록으로 그립니다. */
@@ -12,7 +14,6 @@ type PolicyBlock = string | string[];
 type PolicySection = { title: string; blocks: PolicyBlock[] };
 
 type PolicyDocument = {
-  key: PolicyKey;
   title: string;
   /** 본문 위 한 줄 안내 */
   summary: string;
@@ -24,7 +25,6 @@ const CONTACT_EMAIL = "[문의 이메일]";
 const EFFECTIVE_DATE = "[시행일: 정식 출시일]";
 
 const TERMS: PolicyDocument = {
-  key: "terms",
   title: "이용약관",
   summary: "맛다공을 쓰는 동안 서로 지킬 약속이에요.",
   sections: [
@@ -78,7 +78,7 @@ const TERMS: PolicyDocument = {
       title: "제6조 기록과 방문 확인",
       blocks: [
         "맛다공은 직접 다녀온 곳의 기록을 모으는 서비스예요. 가 보지 않은 곳을 다녀온 것처럼 기록하면 안 돼요.",
-        "기록을 남길 때 기기의 위치로 그 장소에서 1km 안에 있는지 확인해요. 위치는 이 확인에만 쓰고 저장하지 않아요.",
+        `기록을 남길 때 기기의 위치로 그 장소에서 ${VISIT_RADIUS_LABEL} 안에 있는지 확인해요. 위치는 이 확인에만 쓰고 저장하지 않아요.`,
         "돈, 무료 음식, 할인 등 대가를 받고 남기는 기록(광고·협찬)은 올릴 수 없어요.",
       ],
     },
@@ -171,7 +171,6 @@ const TERMS: PolicyDocument = {
 };
 
 const PRIVACY: PolicyDocument = {
-  key: "privacy",
   title: "개인정보 처리방침",
   summary: "맛다공이 어떤 정보를 왜 모으고, 언제 지우는지 알려 드려요.",
   sections: [
@@ -201,7 +200,7 @@ const PRIVACY: PolicyDocument = {
       title: "2. 위치 정보",
       blocks: [
         [
-          "기록이나 빠른 기록을 남길 때 기기의 위치를 보내 그 장소 1km 안에 있는지 확인해요. 확인에만 쓰고 저장하지 않아요.",
+          `기록이나 빠른 기록을 남길 때 기기의 위치를 보내 그 장소 ${VISIT_RADIUS_LABEL} 안에 있는지 확인해요. 확인에만 쓰고 저장하지 않아요.`,
           "지도의 내 위치와 '내 주변' 보기는 기기 화면 안에서만 쓰고 맛다공 서버에 보내지 않아요.",
           "장소를 검색할 때는 가까운 곳부터 찾도록 카카오 장소 검색에 지금 위치를 함께 보낼 수 있어요.",
           "기록 사진은 긴 변 960px로 다시 만들어 올리며, 이때 사진 속 촬영 위치 같은 부가 정보는 빠져요.",

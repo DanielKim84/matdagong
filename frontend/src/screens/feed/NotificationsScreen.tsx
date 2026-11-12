@@ -121,7 +121,7 @@ export default function NotificationsScreen() {
           <>
             {groups.map((group) => (
               <section className="r-feed-noti__group" key={group.label} aria-label={group.label}>
-                <SectionHead title={group.label} className="r-feed-noti__label" />
+                <SectionHead title={group.label} meta={`${group.items.length}개`} className="r-section-head--date" />
                 <ul className="r-card r-feed-noti__list">
                   {group.items.map((item) => {
                     const kind = describeKind(item);

@@ -16,7 +16,7 @@ public final class WishModels {
 
     /** 카카오 장소 검색에서 고른 가게입니다. 서버가 카카오에서 다시 확인한 값으로 저장합니다. */
     public record WishPlaceRequest(
-            @Size(max = 20) String providerCode,
+            @NotBlank @Size(max = 20) String providerCode,
             @NotBlank @Size(max = 80) String providerPlaceId,
             @NotBlank @Size(max = 120) String placeName,
             @NotBlank @Size(max = 120) String category,

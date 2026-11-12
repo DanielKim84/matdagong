@@ -24,7 +24,7 @@ final class SubscriptionPlans {
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> new PaidPlan(entry.getKey(), entry.getValue()))
                 .toList();
-        return new PlanCatalog("KRW", true, BigDecimal.ZERO, paidPlans);
+        return new PlanCatalog(true, paidPlans);
     }
 
     /** 무료 구독은 기간을 고르지 않고(null), 유료 구독은 요금표에 있는 기간만 받습니다. */

@@ -31,11 +31,6 @@ public class PlaceLikeController {
         return likes.likedPlaceIds(AuthenticatedAccount.id(jwt));
     }
 
-    @GetMapping("/visit-proofs")
-    public List<String> visitProofs(@AuthenticationPrincipal Jwt jwt) {
-        return likes.visitProofPlaceIds(AuthenticatedAccount.id(jwt));
-    }
-
     @PutMapping("/{placeId}/like")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void setLike(

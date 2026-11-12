@@ -1,6 +1,6 @@
-import { isMyTaster, type Place } from "../../models/place";
+import { isMyTaster, isSameKakaoPlace, type Place } from "../../models/place";
 import type { Coordinates } from "../../utils/geo";
-import { REASON_MAX, REASON_MIN, isSameKakaoPlace, type RecordStep } from "./recordModel";
+import { REASON_MAX, REASON_MIN, type RecordStep } from "./recordModel";
 
 type RecordCheckInput = {
   isEditing: boolean;

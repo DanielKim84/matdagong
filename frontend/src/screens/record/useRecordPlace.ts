@@ -3,10 +3,9 @@ import { useAppData } from "../../app/AppData";
 import { useCurrentLocation } from "../../hooks/useCurrentLocation";
 import { kakaoPlaceFromPlace, kakaoPlaceFromQuickDraft, type QuickPlaceDraft } from "../../services/places";
 import { clearRegisterDraft, type RegisterDraftForm } from "../../services/registerDraft";
-import { VISIT_RADIUS_LABEL, VISIT_RADIUS_METERS, type Place } from "../../models/place";
+import { VISIT_RADIUS_LABEL, VISIT_RADIUS_METERS, isSameKakaoPlace, type Place } from "../../models/place";
 import { distanceMeters, kakaoPlaceAddress, kakaoPlaceCoordinates, type Coordinates } from "../../utils/geo";
 import { hasPlaceHandoff, takePlaceDetailHandoff, takeQuickPlaceHandoff } from "./recordHandoff";
-import { isSameKakaoPlace } from "./recordModel";
 import { usePlaceSearch } from "./usePlaceSearch";
 import { useQuickDrafts } from "./useQuickDrafts";
 

@@ -91,7 +91,7 @@ export default function PlaceCarousel({
       {places.map((place) => {
         const lead = leadOf(place, ctx);
         const badge = badgeOf?.(place);
-        const note = lead?.note?.trim() || place.recentNote?.trim();
+        const note = lead?.note?.trim() || place.tasters[0]?.note.trim();
         const isFocused = place.id === focusedId;
         return (
           <li key={place.id} data-place-id={place.id}>

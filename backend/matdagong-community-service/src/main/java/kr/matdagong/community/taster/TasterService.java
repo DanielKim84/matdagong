@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.UUID;
 import kr.matdagong.common.jdbc.JdbcArrays;
 import kr.matdagong.common.tag.TasteTagGroup;
-import kr.matdagong.community.profile.ProfileMediaUrls;
 import kr.matdagong.community.profile.ProfileModels.ActivityScope;
 import kr.matdagong.community.profile.ProfileModels.FoodFocus;
 import kr.matdagong.community.profile.ProfileQueries;
@@ -52,20 +51,19 @@ public class TasterService {
         List<TasterView> views = jdbc.query(
                 """
                 SELECT p.account_id, p.nickname, p.avatar_variant, p.taster_focus,
-                       p.activity_scope, p.activity_region, p.intro,
-                       p.profile_img_data IS NOT NULL AS has_avatar, %s,
+                       p.activity_scope, p.activity_region, p.intro, %s, %s,
                        (SELECT count(*) FROM user_subscriptions s
                         WHERE s.target_account_id = p.account_id AND s.subscription_st = 'ACTIVE') AS subscriber_count,
-                       ARRAY(
-                           SELECT tag.tag_name FROM user_profile_tags selected
-                           JOIN taste_tags tag ON tag.tag_id = selected.tag_id
-                           WHERE selected.account_id = p.account_id ORDER BY tag.tag_name
-                       ) AS profile_tags
+                       %s
                 FROM user_profiles p
                 WHERE p.account_id <> ? AND NOT %s
                 ORDER BY subscriber_count DESC, p.nickname
                 """
-                        .formatted(ProfileQueries.COVER_PHOTO_IDS, ProfileQueries.hiddenByReports("p.account_id")),
+                        .formatted(
+                                ProfileQueries.HAS_AVATAR,
+                                ProfileQueries.COVER_PHOTO_IDS,
+                                ProfileQueries.PROFILE_TAG_NAMES,
+                                ProfileQueries.hiddenByReports("p.account_id")),
                 (rs, row) -> {
                     UUID accountId = rs.getObject("account_id", UUID.class);
                     List<String> coverUrls = ProfileQueries.coverUrls(rs, accountId);
@@ -76,7 +74,7 @@ public class TasterService {
                     return new TasterView(
                             accountId.toString(),
                             rs.getString("nickname"),
-                            rs.getBoolean("has_avatar") ? ProfileMediaUrls.avatar(accountId) : null,
+                            ProfileQueries.avatarUrl(rs, accountId),
                             rs.getInt("avatar_variant"),
                             coverUrls,
                             tasterFocus,

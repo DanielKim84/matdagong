@@ -5,7 +5,7 @@ import Icon, { type IconName } from "../../components/Icon";
 import PlaceTile, { type PlaceTileBadge } from "../../components/PlaceTile";
 import { EmptyState, Segmented, Skeleton, TopBar } from "../../components/ui";
 import CollectionSelectBar from "./CollectionSelectBar";
-import { MY_PLACE_GROUP_LABELS, myPlaceEntries, type MyPlaceGroup } from "./myPlaceCollection";
+import { MY_PLACE_GROUP_LABELS, useMyPlaceEntries, type MyPlaceGroup } from "./myPlaceCollection";
 import { useRecordVisibilityChange } from "./useRecordVisibilityChange";
 
 type Tab = "saved" | "recent";
@@ -53,14 +53,7 @@ export default function CollectionsScreen() {
   const [selected, setSelected] = useState<string[] | null>(null);
   const { changed, isSaving, applyChange } = useRecordVisibilityChange();
 
-  // 별로였던 곳은 "다녀왔는데 별로였어요"라 다녀온 곳으로도 셉니다(다녀온 곳 기록 없이 가게 근처에서 고른 곳 포함).
-  const visitedPlaceIds = [...new Set([...app.visitedPlaceIds, ...app.dislikedPlaceIds])];
-  const entries = myPlaceEntries({
-    myRecords: app.myRecords,
-    knownPlaces: [...app.places, ...app.privatePlaces, ...app.myRecords, ...app.recentPlaces],
-    likedPlaceIds: app.likedPlaceIds,
-    visitedPlaceIds,
-  }).map((entry) =>
+  const entries = useMyPlaceEntries().map((entry) =>
     (entry.group === "mine" || entry.group === "private") && entry.place.id in changed
       ? { ...entry, group: changed[entry.place.id] ? ("mine" as const) : ("private" as const) }
       : entry,
@@ -77,7 +70,9 @@ export default function CollectionsScreen() {
   const shouldMakePublic = filter === "private";
   // 하트·다녀온 곳인데 장소 정보를 아직 받지 못한 곳이 있으면 불러오는 중이거나 불러오기에 실패한 것입니다.
   const recordIds = new Set(app.myRecords.map((place) => place.id));
-  const savedIds = new Set([...app.likedPlaceIds, ...visitedPlaceIds].filter((id) => !recordIds.has(id)));
+  const savedIds = new Set(
+    [...app.likedPlaceIds, ...app.visitedPlaceIds, ...app.dislikedPlaceIds].filter((id) => !recordIds.has(id)),
+  );
   const savedShown = entries.filter((entry) => entry.group === "wish" || entry.group === "visited").length;
   const hasMissingLikes = savedIds.size > savedShown;
 

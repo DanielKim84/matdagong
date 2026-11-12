@@ -60,17 +60,21 @@ export function formatDistance(meters: number | null | undefined): string {
   return `${(meters / 1000).toFixed(meters < 10_000 ? 1 : 0)}km`;
 }
 
-/** 카카오 분류("음식점 > 한식 > 해물")의 마지막 단계("해물")입니다. 비어 있으면 "맛집"입니다. */
+/** 가게 분류 이름입니다(shortCategory). 비어 있으면 "맛집"입니다. */
 export function categoryLabel(category?: string | null): string {
-  return (category ?? "").split(">").pop()?.trim() || "맛집";
+  return shortCategory(category) || "맛집";
 }
 
-/** 카카오 분류에서 "음식점"을 빼고 마지막 두 단계를 "한식 · 해물"처럼 보여 줍니다. 비어 있으면 빈 문자열입니다. */
+/**
+ * 가게 분류는 제공처가 준 글자 그대로 저장되어 있어(카카오 "음식점 > 카페 > 커피전문점 > 블루보틀"), 화면에서만 줄입니다.
+ * ">"로 나눠 맨 앞 "음식점"을 빼고 앞의 두 단계만 "카페 · 커피전문점"처럼 잇습니다. 넷째 단계는 가게 이름(프랜차이즈)일 때가
+ * 많아 뺍니다. 띄어쓰기 없는 ">"(네이버 지역 검색 "한식>육류,고기요리")도 같은 규칙으로 읽습니다. 비어 있으면 빈 문자열입니다.
+ */
 export function shortCategory(category?: string | null): string {
   return (category ?? "")
     .split(">")
     .map((part) => part.trim())
     .filter((part) => part && part !== "음식점")
-    .slice(-2)
+    .slice(0, 2)
     .join(" · ");
 }

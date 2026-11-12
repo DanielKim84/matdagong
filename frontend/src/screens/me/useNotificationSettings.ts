@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAppData } from "../../app/AppData";
+import { RETRY_LATER_MESSAGE, useAppData } from "../../app/AppData";
 import { getNotificationSettings, updateNotificationSettings } from "../../services/community";
 import type { NotificationSettings } from "../../models/community";
 import { errorMessage } from "../../utils/errorMessage";
@@ -40,7 +40,7 @@ export function useNotificationSettings() {
       app.actions.notify({
         kind: "error",
         title: "알림 설정을 바꾸지 못했어요",
-        message: errorMessage(cause, "잠시 후 다시 시도해 주세요."),
+        message: errorMessage(cause, RETRY_LATER_MESSAGE),
       });
     } finally {
       setSavingKey(null);

@@ -6,7 +6,7 @@ import { searchNearbyKakaoPlaces } from "../services/kakao";
 import { MY_ACTIVITY_CHANGED_EVENT, checkQuickPlaceDuplicate, saveQuickPlaceDraft } from "../services/places";
 import { VISIT_RADIUS_LABEL, VISIT_RADIUS_METERS } from "../models/place";
 import { errorMessage } from "../utils/errorMessage";
-import { formatDistance } from "../utils/format";
+import { formatDistance, shortCategory } from "../utils/format";
 import { distanceMeters, kakaoPlaceAddress, kakaoPlaceCoordinates } from "../utils/geo";
 import Icon from "./Icon";
 import { useNotificationDialog } from "./NotificationDialog";
@@ -120,7 +120,7 @@ export default function QuickPlaceSheet({ onClose }: { onClose: () => void }) {
         </button>
       </label>
       {error && (
-        <p className="r-record-error" role="status">
+        <p className="r-error-box" role="status">
           {error}
         </p>
       )}
@@ -129,7 +129,7 @@ export default function QuickPlaceSheet({ onClose }: { onClose: () => void }) {
           <span className="r-record-results__label">지금 있는 곳 근처 · 눌러서 저장</span>
           {results.map((place, index) => {
             const distance = location ? distanceMeters(location, kakaoPlaceCoordinates(place)) : null;
-            const category = place.category_name.split(">").at(-1)?.trim() || "장소";
+            const category = shortCategory(place.category_name) || "장소";
             return (
               <button
                 className="r-row r-record-result"

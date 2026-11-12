@@ -35,8 +35,8 @@ type TasterResponse = {
   profileTags: string[];
   matchedTags: string[];
   matchScore: number;
-  trustScore?: number | null;
-  trustLevel?: TrustLevel | null;
+  trustScore: number | null;
+  trustLevel: TrustLevel | null;
 };
 
 /** 커뮤니티 API도 공통 요청 도구를 거쳐 로그인 만료, 204 응답, 오류 메시지를 같게 처리합니다. */
@@ -57,13 +57,14 @@ export async function getTasters(accessToken: string): Promise<Taster[]> {
     activityRegion: taster.activityRegion,
     // note는 장소 기록의 한마디 자리라 커뮤니티 프로필에서는 비워 둡니다.
     note: "",
-    intro: taster.intro ?? "맛있는 장소를 찾아 기록하고 있어요.",
+    // 소개를 비운 맛객은 화면이 tasterData.introOf의 기본 문구를 보여 줍니다.
+    intro: taster.intro ?? undefined,
     subscriberCount: taster.subscriberCount,
     profileTags: taster.profileTags,
     matchedTags: taster.matchedTags,
     matchScore: taster.matchScore,
-    trustScore: taster.trustScore ?? null,
-    trustLevel: taster.trustLevel ?? null,
+    trustScore: taster.trustScore,
+    trustLevel: taster.trustLevel,
   }));
 }
 
@@ -82,9 +83,23 @@ export function createTagRequest(accessToken: string, input: TagRequestInput): P
   });
 }
 
-/** 맛다공 탈퇴: 커뮤니티 서비스의 내 프로필·취향·구독·알림·포인트 내역을 모두 지웁니다. */
+/** 맛다공 탈퇴: 커뮤니티 서비스의 내 프로필·취향·구독·알림·포인트 내역·태그 제안·내가 한 신고를 모두 지웁니다. */
 export function deleteMyCommunityData(accessToken: string): Promise<void> {
   return request("/users/me", accessToken, { method: "DELETE", errorMessage: "내 프로필 정보를 지우지 못했어요." });
+}
+
+/** 닉네임을 쓸 수 있는지 미리 묻습니다(지금 내 닉네임은 쓸 수 있음). 응답은 커뮤니티 서버 ProfileModels.NicknameAvailability입니다. */
+export async function checkNicknameAvailable(
+  accessToken: string,
+  nickname: string,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  const response = await request<{ available: boolean }>(
+    `/users/me/profile/nickname-availability?nickname=${encodeURIComponent(nickname)}`,
+    accessToken,
+    { signal },
+  );
+  return response.available;
 }
 
 export function ensureMyProfile(accessToken: string, nickname: string): Promise<MyProfile> {
@@ -129,12 +144,11 @@ async function uploadProfileImage(accessToken: string, file: File): Promise<void
 async function uploadProfileCovers(accessToken: string, files: File[]): Promise<string[]> {
   const form = new FormData();
   files.forEach((file) => form.append("files", file));
-  const urls = await request<string[] | undefined>("/users/me/profile/covers", accessToken, {
+  return request<string[]>("/users/me/profile/covers", accessToken, {
     method: "POST",
     body: form,
     errorMessage: "배경 사진을 저장하지 못했어요.",
   });
-  return urls ?? [];
 }
 
 async function removeProfileAvatar(accessToken: string): Promise<void> {
@@ -241,7 +255,8 @@ export function deleteAllNotifications(accessToken: string): Promise<void> {
 
 /**
  * 프로필 설정 화면의 변경 내용을 순서대로 저장하고, 화면 상태에 바로 쓸 프로필을 돌려줍니다.
- * 사진 업로드 응답에는 프로필 전체가 없으므로 바뀐 사진 주소만 직접 맞춥니다.
+ * 사진 업로드 응답에는 프로필 전체가 없으므로 바뀐 사진 주소만 직접 맞춥니다. 주소 형식(/media/profiles/<계정>/avatar,
+ * …/covers/<사진 ID>)은 커뮤니티 서비스 ProfileMediaUrls와 같게 둡니다.
  */
 export async function saveMyProfile(accessToken: string, changes: ProfileChanges): Promise<MyProfile> {
   const savedProfile = await updateMyProfile(accessToken, {
@@ -279,19 +294,19 @@ export async function saveMyProfile(accessToken: string, changes: ProfileChanges
 }
 
 /**
- * 맛객을 신고합니다. 기록에서 신고했으면 그 장소 ID(placeId)를 함께 보냅니다.
+ * 맛객을 신고합니다. 기록에서 신고했으면 그 장소 ID(placeId)를 함께 보냅니다. 설명은 꼭 적어야 합니다(화면이 먼저 막음).
  * 확인 전인 신고가 이미 있으면 409(ApiError)로 답합니다.
  */
-export function reportTaster(
+export async function reportTaster(
   accessToken: string,
   tasterId: string,
   reason: TasterReportReason,
   memo: string,
   placeId?: string,
-): Promise<{ reportId: string }> {
-  return request(`/tasters/${encodeURIComponent(tasterId)}/reports`, accessToken, {
+): Promise<void> {
+  await request<void>(`/tasters/${encodeURIComponent(tasterId)}/reports`, accessToken, {
     method: "POST",
-    body: JSON.stringify({ reason, memo: memo.trim() || null, placeId: placeId ?? null }),
+    body: JSON.stringify({ reason, memo: memo.trim(), placeId: placeId ?? null }),
     errorMessage: "신고를 보내지 못했어요.",
   });
 }

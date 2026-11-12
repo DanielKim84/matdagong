@@ -41,13 +41,13 @@ export default function PlaceTasterRecord({
   /** 내 기록을 지웁니다. 지웠으면 true입니다. */
   onDeleteOwn: () => Promise<boolean>;
 }) {
-  const { subscriptionIds, tasteTags, actions } = useAppData();
+  const { subscriptionIds, actions } = useAppData();
   const { confirm } = useNotificationDialog();
   const swipe = useSwipe({ onLeft: onNext, onRight: onPrevious, isEnabled: !!(onNext || onPrevious) });
   const isMine = isMyTaster(record);
   const isSubscribed = subscriptionIds.includes(record.tasterId);
   const menus = recordMenus(record);
-  const tagGroups = recordTagGroups(record, tasteTags);
+  const tagGroups = recordTagGroups(record);
   const when = formatRelativeTime(record.recordedAt);
   const isPrivate = record.visibility === "PRIVATE";
 

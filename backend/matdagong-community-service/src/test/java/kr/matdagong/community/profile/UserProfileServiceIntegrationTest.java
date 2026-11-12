@@ -74,13 +74,26 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
+    void 닉네임_미리_확인은_다른_맛객이_쓰는_이름과_빈_이름_한도를_넘는_이름만_막고_내_이름은_통과시킨다() {
+        profiles.ensureProfile(FIRST, "국밥러");
+
+        assertThat(profiles.isNicknameAvailable(" 국밥러 ", SECOND)).isFalse();
+        assertThat(profiles.isNicknameAvailable("국밥러", FIRST)).isTrue();
+        assertThat(profiles.isNicknameAvailable("냉면러", SECOND)).isTrue();
+        assertThat(profiles.isNicknameAvailable("  ", SECOND)).isFalse();
+        assertThat(profiles.isNicknameAvailable("가".repeat(ProfileModels.MAX_NICKNAME_LENGTH + 1), SECOND))
+                .isFalse();
+    }
+
+    @Test
     void 닉네임을_바꾸는_사이에_다른_계정이_같은_닉네임을_먼저_저장하면_409로_안내한다() {
         profiles.ensureProfile(SECOND, "냉면러");
 
         assertStatus(
                 () -> callBlockedByUncommitted(
                         other -> other.update(INSERT_PROFILE, THIRD, "국밥러"),
-                        () -> profiles.updateProfile(SECOND, request("국밥러", null, List.of(), List.of(), List.of()))),
+                        () -> profiles.updateProfile(
+                                SECOND, request("국밥러", FoodFocus.BOTH, List.of(), List.of(), List.of()))),
                 HttpStatus.CONFLICT,
                 UserProfileService.NICKNAME_TAKEN);
         assertThat(profiles.findProfile(SECOND).orElseThrow().nickname()).isEqualTo("냉면러");
@@ -137,11 +150,20 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     void 여행_위주_맛객은_활동_지역을_저장하지_않는다() {
         profiles.ensureProfile(FIRST, "국밥러");
 
-        ProfileView local = profiles.updateProfile(FIRST, request("국밥러", null, List.of(), List.of(), List.of()));
+        ProfileView local =
+                profiles.updateProfile(FIRST, request("국밥러", FoodFocus.BOTH, List.of(), List.of(), List.of()));
         ProfileView travel = profiles.updateProfile(
                 FIRST,
                 new UpdateProfileRequest(
-                        "국밥러", null, null, null, ActivityScope.TRAVEL, "마포", List.of(), List.of(), List.of()));
+                        "국밥러",
+                        null,
+                        FoodFocus.BOTH,
+                        FoodFocus.BOTH,
+                        ActivityScope.TRAVEL,
+                        "마포",
+                        List.of(),
+                        List.of(),
+                        List.of()));
 
         assertThat(local.activityRegion()).isEqualTo("마포");
         assertThat(travel.activityRegion()).isNull();
@@ -154,7 +176,7 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         profiles.ensureProfile(SECOND, "냉면러");
 
         assertStatus(
-                () -> profiles.updateProfile(SECOND, request("국밥러", null, List.of(), List.of(), List.of())),
+                () -> profiles.updateProfile(SECOND, request("국밥러", FoodFocus.BOTH, List.of(), List.of(), List.of())),
                 HttpStatus.CONFLICT,
                 UserProfileService.NICKNAME_TAKEN);
     }
@@ -165,7 +187,7 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         TasteTagRequestService tagRequests = new TasteTagRequestService(jdbc);
 
         assertStatus(
-                () -> profiles.updateProfile(FIRST, request("국밥러", null, List.of(), List.of(), List.of())),
+                () -> profiles.updateProfile(FIRST, request("국밥러", FoodFocus.BOTH, List.of(), List.of(), List.of())),
                 HttpStatus.CONFLICT,
                 ApiErrors.PROFILE_REQUIRED);
         assertStatus(() -> images.saveAvatar(FIRST, image), HttpStatus.CONFLICT, ApiErrors.PROFILE_REQUIRED);

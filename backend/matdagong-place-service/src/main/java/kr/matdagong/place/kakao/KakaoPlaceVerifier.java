@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.regex.Pattern;
 import kr.matdagong.common.http.RestClients;
+import kr.matdagong.common.text.Texts;
 import kr.matdagong.place.catalog.PlaceIdentifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,16 +33,17 @@ public class KakaoPlaceVerifier {
     /** 카카오 키워드 검색이 한 번에 돌려주는 최대 개수입니다. 반경 안의 같은 이름 가게 중에서 장소 ID를 찾습니다. */
     private static final int SEARCH_RESULT_SIZE = 15;
 
+    private static final String KAKAO_LOCAL_API_URL = "https://dapi.kakao.com";
+
     private final RestClient client;
     private final String restApiKey;
 
     @Autowired
     public KakaoPlaceVerifier(
-            @Value("${dagong.kakao.local-api-url:https://dapi.kakao.com}") String baseUrl,
-            @Value("${dagong.kakao.rest-api-key:}") String restApiKey,
-            @Value("${dagong.kakao.connect-timeout:PT2S}") Duration connectTimeout,
-            @Value("${dagong.kakao.read-timeout:PT3S}") Duration readTimeout) {
-        this(RestClients.create(baseUrl, connectTimeout, readTimeout), restApiKey);
+            @Value("${dagong.kakao.rest-api-key}") String restApiKey,
+            @Value("${dagong.kakao.connect-timeout}") Duration connectTimeout,
+            @Value("${dagong.kakao.read-timeout}") Duration readTimeout) {
+        this(RestClients.create(KAKAO_LOCAL_API_URL, connectTimeout, readTimeout), restApiKey);
     }
 
     KakaoPlaceVerifier(RestClient client, String restApiKey) {
@@ -59,9 +61,7 @@ public class KakaoPlaceVerifier {
      * @param submitted 요청 본문의 가게 정보입니다. verified는 false여야 합니다.
      */
     public PlaceInfo verify(String providerCode, String providerPlaceId, PlaceInfo submitted) {
-        boolean isKakaoPlace = providerCode == null
-                || providerCode.isBlank()
-                || PlaceIdentifiers.DEFAULT_PROVIDER.equalsIgnoreCase(providerCode.trim());
+        boolean isKakaoPlace = PlaceIdentifiers.KAKAO.equals(PlaceIdentifiers.providerCode(providerCode));
         if (!isKakaoPlace || restApiKey.isEmpty()) return submitted;
         KeywordSearchResponse response;
         try {
@@ -92,14 +92,14 @@ public class KakaoPlaceVerifier {
     }
 
     private static PlaceInfo verified(KakaoDocument document) {
-        String road = blankToNull(document.roadAddressName());
-        String lot = blankToNull(document.addressName());
+        String road = Texts.blankToNull(document.roadAddressName());
+        String lot = Texts.blankToNull(document.addressName());
         return new PlaceInfo(
                 document.placeName(),
                 road != null ? road : lot,
                 Double.parseDouble(document.y()),
                 Double.parseDouble(document.x()),
-                blankToNull(document.phone()),
+                Texts.blankToNull(document.phone()),
                 safeUrl(document.placeUrl()),
                 road,
                 lot,
@@ -111,10 +111,6 @@ public class KakaoPlaceVerifier {
         if (value == null) return null;
         String trimmed = value.trim();
         return KAKAO_PLACE_URL.matcher(trimmed).matches() ? trimmed : null;
-    }
-
-    private static String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
     }
 
     /** verified가 true이면 카카오에서 직접 확인한 값이라 공용 가게 정보를 갱신해도 됩니다. */

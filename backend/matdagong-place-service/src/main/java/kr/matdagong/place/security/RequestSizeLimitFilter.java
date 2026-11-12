@@ -36,7 +36,7 @@ public class RequestSizeLimitFilter extends OncePerRequestFilter {
 
     private final long maxBytes;
 
-    public RequestSizeLimitFilter(@Value("${dagong.place.max-request-size:30MB}") DataSize maxRequestSize) {
+    public RequestSizeLimitFilter(@Value("${dagong.place.max-request-size}") DataSize maxRequestSize) {
         this.maxBytes = maxRequestSize.toBytes();
     }
 

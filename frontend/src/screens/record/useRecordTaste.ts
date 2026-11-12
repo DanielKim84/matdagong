@@ -11,7 +11,7 @@ import {
 import { filterTagsForFocus, groupsForFocus } from "../../models/tasteTags";
 import { initialFoodKind, type FoodKind } from "./recordModel";
 
-/** 장소 분야(음식점·카페), 취향 태그, 매장 이용 정보 고르기입니다. 사전·목록에 없는 옛 이름은 처음부터 뺍니다. */
+/** 장소 분야(음식점·카페), 취향 태그, 매장 이용 정보 고르기입니다. 지금 사전·목록에 없는 이름은 처음부터 뺍니다. */
 export function useRecordTaste({
   draft,
   editPlace,
@@ -26,7 +26,7 @@ export function useRecordTaste({
   const [foodKind, setFoodKind] = useState<FoodKind>(() =>
     draft ? draft.foodKind : initialFoodKind(editPlace?.category, app.myProfile?.tasterFocus ?? "BOTH"),
   );
-  // 보관해 둔 입력·수정할 기록에 사전에서 빠진 옛 태그 이름이 있으면 고른 태그에서 뺍니다.
+  // 보관해 둔 입력·수정할 기록에 지금 분야·사전에 없는 태그 이름이 있으면 고른 태그에서 뺍니다.
   const [tags, setTags] = useState<string[]>(() =>
     filterTagsForFocus(draft ? draft.tags : (editRecord?.tags ?? []), foodKind, tasteTags),
   );

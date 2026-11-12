@@ -11,24 +11,20 @@ export function useModalLock(
   {
     initialFocus,
     onKeyDown,
-    isEnabled = true,
   }: {
     /** 열릴 때 포커스를 줄 요소(보통 닫기 버튼). 없으면 포커스를 옮기지 않습니다. */
     initialFocus?: RefObject<HTMLElement | null>;
     /** Esc 말고 더 받을 키(좌우 화살표 등) */
     onKeyDown?: (event: KeyboardEvent) => void;
-    /** false면 아무것도 잠그지 않습니다. 창을 조건부로 열 때 씁니다. */
-    isEnabled?: boolean;
   } = {},
 ): void {
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   const keyDownRef = useRef(onKeyDown);
   keyDownRef.current = onKeyDown;
-  usePageScrollLock(isEnabled);
+  usePageScrollLock(true);
 
   useEffect(() => {
-    if (!isEnabled) return;
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     initialFocus?.current?.focus({ preventScroll: true });
     function closeOrForwardKey(event: KeyboardEvent) {
@@ -40,5 +36,5 @@ export function useModalLock(
       document.removeEventListener("keydown", closeOrForwardKey);
       previous?.focus({ preventScroll: true });
     };
-  }, [isEnabled, initialFocus]);
+  }, [initialFocus]);
 }

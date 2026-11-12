@@ -16,9 +16,12 @@ import { RETRY_LATER_MESSAGE, type AppNotice } from "./AppData";
 const REFRESH_INTERVAL_MS = 60_000;
 const EMPTY_FEED: NotificationFeed = { items: [], unreadCount: 0 };
 
-/** 눌러서 이동할 곳이 없는 알림입니다. 알림함을 열면 바로 읽음으로 표시합니다. */
+/**
+ * 눌러서 이동할 곳이 없는 알림입니다. 알림함을 열면 바로 읽음으로 표시합니다.
+ * 서버 NotificationService.markPassiveRead와 같은 기준(target_type이 비어 있음)입니다.
+ */
 function isPassiveUnread(item: UserNotification): boolean {
-  return !item.readAt && !(item.targetType === "PLACE" && item.targetId) && item.targetType !== "MY_SUBSCRIBERS";
+  return !item.readAt && item.targetType === null;
 }
 
 /**

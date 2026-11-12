@@ -32,8 +32,8 @@ public class MediaUrlSigner {
 
     @Autowired
     public MediaUrlSigner(
-            @Value("${dagong.place.media-signing-key:}") String configuredKey,
-            @Value("${dagong.place.media-url-ttl:PT6H}") Duration ttl) {
+            @Value("${dagong.place.media-signing-key}") String configuredKey,
+            @Value("${dagong.place.media-url-ttl}") Duration ttl) {
         this(configuredKey, ttl, Clock.systemUTC());
     }
 

@@ -1,10 +1,10 @@
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
 import PlaceCard from "../../components/PlaceCard";
-import { formatRelativeTime } from "../../utils/format";
+import { categoryLabel, formatRelativeTime } from "../../utils/format";
 import { formatDay, type DiaryEntry } from "./diary";
 
-/** 다이어리 기록 한 줄: 사진, 장소 이름, 날짜, 내가 남긴 한마디. 공용 맛집 카드 모양입니다. */
+/** 다이어리 기록 한 줄: 사진, 장소 이름, 날짜, 내가 남긴 한마디(없으면 분류 · 주소). 공용 맛집 카드 모양입니다. */
 export default function DiaryEntryCard({
   entry,
   shouldShowRelative = false,
@@ -26,7 +26,9 @@ export default function DiaryEntryCard({
       }
       detail={
         <span className="r-place-card__note">
-          {record?.note ? `“${record.note}”` : `${place.category}${place.address ? ` · ${place.address}` : ""}`}
+          {record?.note
+            ? `“${record.note}”`
+            : [categoryLabel(place.category), place.address].filter(Boolean).join(" · ")}
         </span>
       }
       trailing={<Icon name="chevron" />}

@@ -1,11 +1,11 @@
 import { useId, useRef, useState } from "react";
-import { useAppData } from "../../app/AppData";
+import { RETRY_LATER_MESSAGE, useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
 import { EmptyState, SectionHead, Skeleton, TopBar, type EmptyStateAction } from "../../components/ui";
 import { useScrolledPast } from "../../hooks/useScrolledPast";
 import { isMyTaster, type Place } from "../../models/place";
-import { sharePlace } from "../../utils/placeLinks";
+import { sharePlaceWithNotice } from "../../utils/placeLinks";
 import { isKakaoOnlyPlaceId } from "./kakaoPlaceDetail";
 import PhotoViewer from "./PhotoViewer";
 import PlaceHero from "./PlaceHero";
@@ -35,7 +35,7 @@ export default function PlaceDetailScreen() {
           <EmptyState
             tone="error"
             title="맛집을 불러오지 못했어요"
-            message="잠시 후 다시 시도해 주세요."
+            message={RETRY_LATER_MESSAGE}
             action={{ label: "다시 불러오기", onClick: app.actions.retry }}
             secondaryAction={home}
           />
@@ -80,14 +80,6 @@ function PlaceDetail({ place }: { place: Place }) {
   // 큰 사진이 화면 밖으로 나가면 위쪽 버튼 줄에 바탕과 가게 이름을 깔아 줍니다.
   const isScrolled = useScrolledPast(heroEnd);
 
-  const notify = (message: string) => actions.notify({ kind: "info", title: "맛다공에서 알려드려요", message });
-
-  async function share() {
-    const result = await sharePlace(place);
-    if (result === "copied") notify("맛집 링크를 복사했어요.");
-    else if (result === "failed") notify("주소창의 링크를 복사해 공유해 주세요.");
-  }
-
   function editOwnRecord() {
     go("register", place.id);
   }
@@ -117,7 +109,12 @@ function PlaceDetail({ place }: { place: Place }) {
         right={
           // 맛다공에 아직 없는 카카오 가게는 다른 사람이 열 수 있는 주소가 없어 공유를 숨깁니다.
           !isKakaoOnly && (
-            <button type="button" className="r-icon-button r-icon-button--float" onClick={share} aria-label="맛집 공유">
+            <button
+              type="button"
+              className="r-icon-button r-icon-button--float"
+              onClick={() => void sharePlaceWithNotice(place, actions.notify)}
+              aria-label="맛집 공유"
+            >
               <Icon name="share" />
             </button>
           )

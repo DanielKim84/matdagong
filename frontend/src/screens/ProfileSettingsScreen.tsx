@@ -22,8 +22,9 @@ export default function ProfileSettingsScreen({
   profile: MyProfile;
   initialTab: ProfileTab;
 }) {
-  const { tasteTags, actions } = useAppData();
+  const { accessToken, tasteTags, actions } = useAppData();
   const form = useProfileForm({
+    accessToken,
     profile,
     options: tasteTags,
     initialTab,

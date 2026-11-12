@@ -102,7 +102,7 @@ export default function SignupMatchStep({
           </div>
         )}
         {error && (
-          <p className="r-onboarding-error" role="alert">
+          <p className="r-error-text" role="alert">
             {error}
           </p>
         )}

@@ -1,6 +1,6 @@
 import { visiblePageIndices } from "../utils/pagination";
 
-// 점 하나가 차지하는 가로 칸(px)입니다(누르는 영역은 photo-tag-detail.css에서 세로 44px).
+// 점 하나가 차지하는 가로 칸(px)입니다(누르는 영역은 styles/renewal/ui.css의 .photo-slide-indicators에서 세로 44px).
 const DOT_WIDTH_PX = 20;
 
 /** 사진·기록 카드의 페이지 점입니다. 점이 많으면 현재 위치 주변만 보이게 밀어 줍니다. */

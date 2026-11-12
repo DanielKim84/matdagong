@@ -62,7 +62,7 @@ export default function DiscoverScreen() {
 
   useEffect(() => saveStoredState({ filters, sheet, sort }), [filters, sheet, sort]);
 
-  // 탭 저장소에 예전 사전의 태그 이름이 남아 있으면, 사전을 받은 뒤 필터 묶음에 지금 있는 이름만 남깁니다.
+  // 탭 저장소에 태그 사전이 바뀌기 전 이름이 남아 있으면, 사전을 받은 뒤 필터 묶음에 지금 있는 이름만 남깁니다.
   useEffect(() => {
     if (!app.tasteTags.length) return;
     setFilters((current) => {

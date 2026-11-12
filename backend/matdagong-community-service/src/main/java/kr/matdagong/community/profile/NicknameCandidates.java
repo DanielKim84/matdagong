@@ -6,8 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /** 프로필을 처음 만들 때 로그인 계정 이름에서 자동으로 정하는 닉네임 후보입니다. 앞 후보가 겹치면 다음 후보를 씁니다. */
 final class NicknameCandidates {
-    /** user_profiles.nickname 칼럼 길이입니다. */
-    private static final int MAX_STORED_NICKNAME_LENGTH = 30;
+
     /** 닉네임이 겹칠 때 붙이는 접미사(계정 ID 앞자리·무작위 16진수) 글자 수입니다. */
     private static final int SUFFIX_LENGTH = 6;
     /** 요청한 닉네임이 공백뿐일 때 쓰는 기본 닉네임입니다. */
@@ -29,7 +28,8 @@ final class NicknameCandidates {
     }
 
     private static String withSuffix(String base, String suffix) {
-        int prefixLength = MAX_STORED_NICKNAME_LENGTH - suffix.length();
+        // 접미사를 붙여도 수정 요청의 닉네임 한도 안에 들어가야, 가입 직후 그 이름 그대로 프로필을 저장할 수 있습니다.
+        int prefixLength = ProfileModels.MAX_NICKNAME_LENGTH - suffix.length();
         return base.substring(0, Math.min(base.length(), prefixLength)) + suffix;
     }
 }

@@ -4,6 +4,7 @@ import static kr.matdagong.community.subscription.SubscriptionModels.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import java.util.UUID;
 import kr.matdagong.common.test.EmbeddedPostgresTestSupport;
 import kr.matdagong.community.notification.NotificationModels.NotificationType;
@@ -38,13 +39,14 @@ class SubscriptionServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     void 무료_구독을_신청하면_현재_구독에_보이고_맛객에게_새_구독자_알림이_간다() {
         SubscribeResult result = service.subscribe(ME, free(FIRST_TASTER, false));
 
-        assertThat(result.subscription().subscriptionType()).isEqualTo(SubscriptionType.FREE);
-        assertThat(result.subscription().endAt()).isNull();
-        assertThat(service.subscriptions(ME)).singleElement().satisfies(view -> assertThat(view.targetNickname())
-                .isEqualTo("골목맛객"));
+        assertThat(result.replacedFreeNickname()).isNull();
+        SubscriptionView subscription = only(service.subscriptions(ME));
+        assertThat(subscription.targetNickname()).isEqualTo("골목맛객");
+        assertThat(subscription.subscriptionType()).isEqualTo(SubscriptionType.FREE);
+        assertThat(subscription.endAt()).isNull();
         assertThat(service.subscribers(FIRST_TASTER)).singleElement().satisfies(view -> {
             assertThat(view.subscriberNickname()).isEqualTo("나");
-            assertThat(view.startAt()).isEqualTo(result.subscription().startAt());
+            assertThat(view.startAt()).isEqualTo(subscription.startAt());
         });
         assertThat(notifications.list(FIRST_TASTER).items()).singleElement().satisfies(item -> {
             assertThat(item.notificationType()).isEqualTo(NotificationType.NEW_SUBSCRIBER);
@@ -100,22 +102,26 @@ class SubscriptionServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
-    void 잠글_프로필이_없는_구독자의_동시_신청은_활성_회차_제약에서_409로_끝난다() {
+    void 프로필이_없는_사용자의_구독_신청은_프로필을_먼저_만들라고_안내한다() {
         UUID withoutProfile = UUID.fromString("10000000-0000-0000-0000-000000000009");
 
         assertStatus(
-                () -> callBlockedByUncommitted(
-                        other -> openPaidSubscription(other, withoutProfile),
-                        () -> service.subscribe(withoutProfile, paid(FIRST_TASTER))),
+                () -> service.subscribe(withoutProfile, paid(FIRST_TASTER)),
                 HttpStatus.CONFLICT,
-                "이미 처리 중인 구독이에요.");
-        assertThat(activeHistoryCount()).isEqualTo(1);
+                "맛객 프로필을 먼저 만들어 주세요.");
+        assertThat(activeHistoryCount()).isZero();
     }
 
     @Test
     void 만료된_유료_회차는_목록에서_빠지고_같은_맛객을_다시_구독할_수_있다() {
-        SubscribeResult first = service.subscribe(ME, paid(FIRST_TASTER));
-        SubscribeResult free = service.subscribe(ME, free(SECOND_TASTER, false));
+        service.subscribe(ME, paid(FIRST_TASTER));
+        UUID first = only(service.subscriptions(ME)).subscriptionId();
+        service.subscribe(ME, free(SECOND_TASTER, false));
+        UUID free = service.subscriptions(ME).stream()
+                .filter(view -> view.targetAccountId().equals(SECOND_TASTER))
+                .findFirst()
+                .orElseThrow()
+                .subscriptionId();
         jdbc.update(
                 """
                 UPDATE user_subscription_history
@@ -126,30 +132,34 @@ class SubscriptionServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         // 끝난 유료 구독만 빠지고, 기간이 없는 무료 구독은 그대로 이용 중입니다.
         assertThat(service.subscriptions(ME))
                 .extracting(SubscriptionView::subscriptionId)
-                .containsExactly(free.subscription().subscriptionId());
+                .containsExactly(free);
         assertThat(jdbc.queryForObject(
                         "SELECT subscription_st FROM user_subscriptions WHERE subscription_id = ?",
                         String.class,
-                        first.subscription().subscriptionId()))
+                        first))
                 .isEqualTo("INACTIVE");
-        SubscribeResult again = service.subscribe(ME, paid(FIRST_TASTER));
+        service.subscribe(ME, paid(FIRST_TASTER));
 
-        assertThat(again.subscription().subscriptionId())
-                .isEqualTo(first.subscription().subscriptionId());
-        assertThat(service.subscriptions(ME)).hasSize(2);
+        // 같은 맛객과의 관계 행은 하나라 끝난 구독 행을 다시 켭니다.
+        assertThat(service.subscriptions(ME))
+                .extracting(SubscriptionView::subscriptionId)
+                .containsExactlyInAnyOrder(first, free);
     }
 
     @Test
     void 취소하면_구독이_끝나고_없는_구독은_404로_안내한다() {
-        SubscribeResult result = service.subscribe(ME, paid(FIRST_TASTER));
+        service.subscribe(ME, paid(FIRST_TASTER));
+        UUID subscriptionId = only(service.subscriptions(ME)).subscriptionId();
 
-        service.cancelSubscription(ME, result.subscription().subscriptionId());
+        service.cancelSubscription(ME, subscriptionId);
 
         assertThat(service.subscriptions(ME)).isEmpty();
-        assertStatus(
-                () -> service.cancelSubscription(ME, result.subscription().subscriptionId()),
-                HttpStatus.NOT_FOUND,
-                "취소할 구독을 찾을 수 없습니다.");
+        assertStatus(() -> service.cancelSubscription(ME, subscriptionId), HttpStatus.NOT_FOUND, "취소할 구독을 찾을 수 없습니다.");
+    }
+
+    private static SubscriptionView only(List<SubscriptionView> views) {
+        assertThat(views).hasSize(1);
+        return views.get(0);
     }
 
     private static SubscribeRequest free(UUID target, boolean confirmReplacement) {

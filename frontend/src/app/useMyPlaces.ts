@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
   MY_ACTIVITY_CHANGED_EVENT,
   getDislikedPlaceIds,
@@ -6,7 +6,6 @@ import {
   getMyPlaceRecords,
   getPlaces,
   getRecentPlaces,
-  getVisitProofPlaceIds,
   getVisitedPlaceIds,
 } from "../services/places";
 import type { Place, Screen } from "../models/place";
@@ -38,7 +37,12 @@ export function useMyPlaces({ accessToken, screen, notify, setPlaces, refreshCom
   const [likedPlaceIds, setLikedPlaceIds] = useState<string[]>([]);
   const [visitedPlaceIds, setVisitedPlaceIds] = useState<string[]>([]);
   const [dislikedPlaceIds, setDislikedPlaceIds] = useState<string[]>([]);
-  const [visitProofPlaceIds, setVisitProofPlaceIds] = useState<string[]>([]);
+  // 가게에 들른 근거: 다녀온 곳(빠른 저장·기록이 늘 함께 남김)과 별로였던 곳입니다.
+  // 장소 서비스 PlaceLikeService.requireVisitProof가 같은 두 목록으로 다시 확인합니다.
+  const visitProofPlaceIds = useMemo(
+    () => [...new Set([...visitedPlaceIds, ...dislikedPlaceIds])],
+    [visitedPlaceIds, dislikedPlaceIds],
+  );
 
   useEffect(() => {
     let active = true;
@@ -56,13 +60,12 @@ export function useMyPlaces({ accessToken, screen, notify, setPlaces, refreshCom
             message: errorMessage(cause, RETRY_LATER_MESSAGE),
           });
       });
-    // 다녀온 곳·별로였던 곳·가게에 들른 근거는 못 받아도 다른 내 맛집 목록은 보이도록 따로 받습니다.
-    Promise.all([getVisitedPlaceIds(accessToken), getDislikedPlaceIds(accessToken), getVisitProofPlaceIds(accessToken)])
-      .then(([visitedIds, dislikedIds, proofIds]) => {
+    // 다녀온 곳·별로였던 곳은 못 받아도 다른 내 맛집 목록은 보이도록 따로 받습니다.
+    Promise.all([getVisitedPlaceIds(accessToken), getDislikedPlaceIds(accessToken)])
+      .then(([visitedIds, dislikedIds]) => {
         if (!active) return;
         setVisitedPlaceIds(visitedIds);
         setDislikedPlaceIds(dislikedIds);
-        setVisitProofPlaceIds(proofIds);
       })
       .catch(() => {});
     return () => {
@@ -90,14 +93,12 @@ export function useMyPlaces({ accessToken, screen, notify, setPlaces, refreshCom
   }, [accessToken, notify]);
 
   const refreshMySummary = useCallback(async () => {
-    const [records, likedIds, visitedIds, dislikedIds, proofIds, recent, placeList] = await Promise.allSettled([
+    const [records, likedIds, visitedIds, dislikedIds, recent, placeList] = await Promise.allSettled([
       getMyPlaceRecords(accessToken),
       getLikedPlaceIds(accessToken),
-      // 빠른 저장·기록을 하면 다녀온 곳이 되므로 함께 다시 읽습니다.
+      // 빠른 저장·기록을 하면 다녀온 곳이 되므로 함께 다시 읽어, 그 가게를 바로 기록하거나 '별로였어요'를 고를 수 있게 합니다.
       getVisitedPlaceIds(accessToken),
       getDislikedPlaceIds(accessToken),
-      // 빠른 저장을 하면 이 이벤트로 다시 읽어, 그 가게를 바로 기록하거나 '별로였어요'를 고를 수 있게 합니다.
-      getVisitProofPlaceIds(accessToken),
       getRecentPlaces(accessToken),
       getPlaces(accessToken, ""),
     ]);
@@ -105,7 +106,6 @@ export function useMyPlaces({ accessToken, screen, notify, setPlaces, refreshCom
     if (likedIds.status === "fulfilled") setLikedPlaceIds(likedIds.value);
     if (visitedIds.status === "fulfilled") setVisitedPlaceIds(visitedIds.value);
     if (dislikedIds.status === "fulfilled") setDislikedPlaceIds(dislikedIds.value);
-    if (proofIds.status === "fulfilled") setVisitProofPlaceIds(proofIds.value);
     if (recent.status === "fulfilled") setRecentPlaces(recent.value);
     if (placeList.status === "fulfilled") setPlaces(placeList.value);
     await refreshCommunity();
@@ -126,9 +126,9 @@ export function useMyPlaces({ accessToken, screen, notify, setPlaces, refreshCom
     likedPlaceIds,
     setLikedPlaceIds,
     visitedPlaceIds,
+    setVisitedPlaceIds,
     dislikedPlaceIds,
     setDislikedPlaceIds,
     visitProofPlaceIds,
-    setVisitProofPlaceIds,
   };
 }

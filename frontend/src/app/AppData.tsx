@@ -28,8 +28,6 @@ export type AccountRole = "ADMIN" | "SUPER_TASTER" | "TASTER" | "USER";
  */
 export type AppData = {
   accessToken: string;
-  /** 공통 계정 가입 때 받은 이름. 맛객 프로필이 없을 때 대신 씁니다. */
-  displayName: string;
   /** 로그인에 쓴 소셜 제공자 코드(KAKAO, NAVER). 설정의 연결된 계정에 씁니다. */
   loginProviders: string[];
   myProfile: MyProfile | null;
@@ -50,8 +48,8 @@ export type AppData = {
   /** 다녀왔지만 별로였던 곳(하트 아님). 지도에서 빠지고 맛객 신뢰에 반영됩니다. */
   dislikedPlaceIds: string[];
   /**
-   * 그 가게에 들른 근거(다녀온 곳, 빠른 저장, 별로였던 곳)가 있는 장소.
-   * 이곳은 위치 확인 없이 기록하거나 별로였어요를 고를 수 있습니다.
+   * 그 가게에 들른 근거(다녀온 곳, 별로였던 곳)가 있는 장소. 이곳은 위치 확인 없이 별로였어요를 고를 수 있습니다.
+   * 기록은 다녀온 곳만 위치 확인 없이 남길 수 있습니다(장소 서비스 PlaceRecordService).
    */
   visitProofPlaceIds: string[];
   /** 지금 보고 있는 맛집 상세(#place/<id>)의 장소. 없으면 불러오는 중이거나 찾을 수 없음 */
@@ -107,7 +105,7 @@ export type AppData = {
     /** 맛객을 신고합니다. 기록에서 신고했으면 placeId를 넘깁니다. 실패하면 오류를 던집니다. */
     reportTaster: (tasterId: string, reason: TasterReportReason, memo: string, placeId?: string) => Promise<void>;
     /** 저장된 장소를 돌려줍니다. 새 기록은 부른 화면이 완료 화면을 그리고, 수정은 저장 뒤 상세로 옮깁니다. */
-    register: (place: NewPlace, convertFromPlaceId?: string, isVisitConfirmed?: boolean) => Promise<Place>;
+    register: (place: NewPlace) => Promise<Place>;
     /** 내 기록의 공개 범위만 바꿉니다. 기록 내용은 그대로 남습니다. */
     changeOwnRecordVisibility: (place: Place, visibility: "PUBLIC" | "PRIVATE") => Promise<void>;
     /** 이 장소의 내 기록을 지웁니다. 지웠으면 true입니다. */

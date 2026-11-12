@@ -32,7 +32,7 @@ public class PointService {
                 accountId);
         List<PointEntry> history = jdbc.query(
                 """
-                SELECT point_history_id, event_type, title, memo, point_amt, reg_dt
+                SELECT point_history_id, title, memo, point_amt, reg_dt
                 FROM user_point_history
                 WHERE account_id = ?
                 ORDER BY reg_dt DESC, point_history_id DESC
@@ -40,7 +40,6 @@ public class PointService {
                 """,
                 (rs, row) -> new PointEntry(
                         rs.getObject("point_history_id", UUID.class),
-                        PointEventType.valueOf(rs.getString("event_type")),
                         rs.getString("title"),
                         rs.getString("memo"),
                         rs.getInt("point_amt"),

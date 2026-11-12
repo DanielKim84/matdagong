@@ -17,8 +17,9 @@ export const TASTE_TAG_GROUP_LABELS: Record<TasteTagGroup, string> = {
 export type TasteTagGroupInfo = { id: TasteTagGroup; label: string; hint: string; limit: number };
 
 /**
- * 분류의 표시 순서·이름·안내·한 분류에서 고를 수 있는 수입니다. 한도는 커뮤니티 서비스 TasteTagGroup.maxSelections와
- * 같게 둡니다(서버가 같은 값으로 다시 검사). 겹쳐 골라도 되는 큰 분류는 10개, 요점만 고르면 되는 분류는 5개입니다.
+ * 분류의 표시 순서·이름·안내·한 분류에서 고를 수 있는 수입니다. 한도는 서버 공통 모듈(matdagong-common)의
+ * TasteTagGroup.maxSelections와 같게 둡니다(커뮤니티 서비스가 프로필 저장 때 같은 값으로 다시 검사하고, 장소 서비스는 기록
+ * 태그의 전체 수만 봄). 겹쳐 골라도 되는 큰 분류는 10개, 요점만 고르면 되는 분류는 5개입니다.
  * 가입 취향 단계·프로필 편집·기록하기가 모두 이 값을 써서 가입 때 고른 태그가 설정 화면에서도 그대로 이어집니다.
  */
 export const TASTE_TAG_GROUPS: readonly TasteTagGroupInfo[] = [
@@ -48,13 +49,13 @@ export function groupsForFocus(focus: FoodFocus): TasteTagGroup[] {
   return GROUPS_BY_FOCUS[focus];
 }
 
-/** 고른 태그 중 사전에 있고 그 분야에서 보이는 분류의 것만 남깁니다. 사전에서 빠진 옛 이름도 여기서 빠집니다. */
+/** 고른 태그 중 사전에 있고 그 분야에서 보이는 분류의 것만 남깁니다(분야를 바꾸면 다른 분야 태그가 빠짐). */
 export function filterTagsForFocus(tags: string[], focus: FoodFocus, options: TasteTag[]): string[] {
   const visibleGroups = groupsForFocus(focus);
   return tags.filter((name) => options.some((tag) => tag.name === name && visibleGroups.includes(tag.tagGroup)));
 }
 
-/** 묶음을 알 수 없는 태그(사전에서 빠진 옛 이름 등)를 모아 맨 뒤에 보여 줄 묶음 열쇠입니다. */
+/** 묶음을 알 수 없는 태그(태그 사전을 아직 못 받았거나 사전에서 빠진 이름)를 모아 맨 뒤에 보여 줄 묶음 열쇠입니다. */
 const OTHER_TAG_GROUP = "OTHER";
 
 export type TagGroupSection = { key: TasteTagGroup | typeof OTHER_TAG_GROUP; label: string; tags: string[] };

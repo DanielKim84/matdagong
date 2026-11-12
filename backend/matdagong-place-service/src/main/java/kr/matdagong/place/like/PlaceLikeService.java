@@ -1,10 +1,8 @@
 package kr.matdagong.place.like;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import kr.matdagong.common.jdbc.JdbcArrays;
 import kr.matdagong.place.catalog.PlaceIdentifiers;
 import kr.matdagong.place.location.DeviceLocation;
 import kr.matdagong.place.location.NearbyPlaceGuard;
@@ -16,24 +14,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * 계정별 하트(가볼 곳)와 별로였던 곳을 저장합니다. 한 장소는 하트와 별로였던 곳 중 하나만 되고, 내 기록이 있는 장소는
- * 둘 다 남기지 않으므로 기록을 남기거나 하트를 기록으로 바꿀 때도 이 목록을 갱신합니다.
+ * 둘 다 남기지 않으므로 기록을 남길 때도(PlaceRecordService) 이 목록을 갱신합니다.
  */
 @Service
 public class PlaceLikeService {
     private static final String INVALID_PLACE = "저장할 맛집을 확인해 주세요.";
-    private static final String VISIT_PROOF_REQUIRED = "직접 다녀온 곳만 별로였다고 남길 수 있어요. 가게 근처(1km)에서 다시 골라 주세요.";
-    /** 방문 근거가 있는 장소입니다. ? 세 개 모두 같은 계정 ID를 넣습니다. */
-    private static final String VISIT_PROOFS_SQL =
-            """
-            SELECT place_id FROM user_place_visits WHERE account_id = ?
-            UNION
-            SELECT place_id FROM user_place_dislikes WHERE account_id = ?
-            UNION
-            SELECT p.place_id
-            FROM place_quick_drafts d
-            JOIN restaurant_places p ON p.provider_code = d.provider_code AND p.provider_place_id = d.provider_place_id
-            WHERE d.account_id = ?
-            """;
+    private static final String VISIT_PROOF_REQUIRED =
+            "직접 다녀온 곳만 별로였다고 남길 수 있어요. 가게 근처(" + NearbyPlaceGuard.MAX_VISIT_DISTANCE_LABEL + ")에서 다시 골라 주세요.";
 
     private final JdbcTemplate jdbc;
     private final NearbyPlaceGuard nearby;
@@ -52,15 +39,6 @@ public class PlaceLikeService {
     public List<String> dislikedPlaceIds(UUID accountId) {
         return placeIds(
                 "SELECT place_id FROM user_place_dislikes WHERE account_id = ? ORDER BY reg_dt DESC", accountId);
-    }
-
-    /**
-     * 위치 확인 없이 '별로였어요'를 고를 수 있는, 직접 들른 근거가 있는 장소입니다. 근거는 다녀온 곳(빠른 저장·기록한 적 있는 곳),
-     * 빠른 저장(가게 1km 안에서만 저장됨), 이미 남긴 별로였던 곳입니다.
-     */
-    @Transactional(readOnly = true)
-    public List<String> visitProofPlaceIds(UUID accountId) {
-        return placeIds(VISIT_PROOFS_SQL, accountId, accountId, accountId);
     }
 
     /**
@@ -106,22 +84,15 @@ public class PlaceLikeService {
                 placeId);
     }
 
-    /** 하트를 기록으로 바꿀 때 원래 장소와 저장된 장소의 하트를 함께 지웁니다. */
-    @Transactional
-    public void removeLikes(UUID accountId, Collection<UUID> placeIds) {
-        jdbc.update(
-                "DELETE FROM user_place_likes WHERE account_id = ? AND place_id = ANY(?::uuid[])",
-                accountId,
-                JdbcArrays.uuidParam(placeIds));
-    }
-
     /** 다시 하트하거나 기록을 남긴 장소는 더 이상 별로였던 곳이 아니므로 표시를 지웁니다. */
     @Transactional
     public void removeDislike(UUID accountId, UUID placeId) {
         jdbc.update("DELETE FROM user_place_dislikes WHERE account_id = ? AND place_id = ?", accountId, placeId);
     }
 
-    private void removeLike(UUID accountId, UUID placeId) {
+    /** 하트를 풀거나, 별로였던 곳·내 기록으로 남긴 장소는 가볼 곳에서 뺍니다. */
+    @Transactional
+    public void removeLike(UUID accountId, UUID placeId) {
         jdbc.update("DELETE FROM user_place_likes WHERE account_id = ? AND place_id = ?", accountId, placeId);
     }
 
@@ -129,14 +100,20 @@ public class PlaceLikeService {
         return jdbc.query(sql, (rs, row) -> rs.getObject("place_id", UUID.class).toString(), args);
     }
 
-    /** 화면도 거리를 먼저 확인하지만, 요청을 그대로 믿지 않도록 서버가 다시 확인합니다. */
+    /**
+     * 화면도 거리를 먼저 확인하지만, 요청을 그대로 믿지 않도록 서버가 다시 확인합니다. 방문 근거는 다녀온 곳(빠른 저장·기록이
+     * 늘 함께 남김)과 이미 남긴 별로였던 곳입니다. 화면 useMyPlaces의 visitProofPlaceIds도 같은 두 목록을 합쳐 씁니다.
+     */
     private void requireVisitProof(UUID accountId, UUID placeId, DeviceLocation device) {
         if (nearby.isNearby(device, placeId)) return;
         boolean hasProof = Boolean.TRUE.equals(jdbc.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM (" + VISIT_PROOFS_SQL + ") proof WHERE place_id = ?)",
+                """
+                SELECT EXISTS (SELECT 1 FROM user_place_visits WHERE account_id = ? AND place_id = ?)
+                    OR EXISTS (SELECT 1 FROM user_place_dislikes WHERE account_id = ? AND place_id = ?)
+                """,
                 Boolean.class,
                 accountId,
-                accountId,
+                placeId,
                 accountId,
                 placeId));
         if (!hasProof) throw new ResponseStatusException(HttpStatus.CONFLICT, VISIT_PROOF_REQUIRED);

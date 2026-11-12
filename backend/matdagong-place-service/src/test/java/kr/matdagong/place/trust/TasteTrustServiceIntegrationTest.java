@@ -123,7 +123,9 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         likes.setLiked(ME, unvisitedPlace, true);
 
         assertThat(likes.likedPlaceIds(ME)).containsExactly(unvisitedPlace);
-        assertThat(likes.visitProofPlaceIds(ME)).containsExactly(visitedPlace);
+        // 빠른 저장한 곳은 다녀온 곳이 되어 위치 없이 별로였어요를 고를 수 있습니다.
+        likes.setDisliked(ME, visitedPlace, true, NO_LOCATION);
+        assertThat(likes.dislikedPlaceIds(ME)).containsExactly(visitedPlace);
     }
 
     @Test
@@ -205,11 +207,19 @@ class TasteTrustServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     /** 현재 위치 1km 안에서만 되는 빠른 저장으로 그 가게에 들른 근거를 남깁니다. */
+    /** 실제 빠른 저장(QuickDraftService.saveDraft)처럼 빠른 기록과 다녀온 곳(QUICK_SAVE)을 함께 남깁니다. 가게가 먼저 있어야 합니다. */
     private static void quickSave(UUID accountId, String providerPlaceId) {
         jdbc.update(
                 """
                 INSERT INTO place_quick_drafts(account_id, provider_place_id, place_name, address, latitude, longitude)
                 VALUES (?, ?, '국밥집', '서울 중구 을지로 1', 37.566, 126.991)
+                """,
+                accountId,
+                providerPlaceId);
+        jdbc.update(
+                """
+                INSERT INTO user_place_visits(account_id, place_id, visit_source)
+                SELECT ?, place_id, 'QUICK_SAVE' FROM restaurant_places WHERE provider_code = 'KAKAO' AND provider_place_id = ?
                 """,
                 accountId,
                 providerPlaceId);

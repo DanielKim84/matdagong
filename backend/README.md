@@ -70,9 +70,9 @@ kr.matdagong.community/
 
 kr.matdagong.place/
 ├─ catalog/         # 장소 검색·상세, 장소 응답 조립(PlaceViewLoader)
-├─ record/          # 맛집 기록 저장·수정·지우기·공개 범위, 하트→기록 전환
+├─ record/          # 맛집 기록 저장·수정·지우기·공개 범위(하트한 곳을 기록하면 하트를 지움)
 ├─ draft/           # 빠른 저장(나중에 이어 쓸 장소)
-├─ like/            # 하트(가볼 곳), 별로였던 곳, 방문 근거(visit-proofs)
+├─ like/            # 하트(가볼 곳), 별로였던 곳(방문 근거 확인)
 ├─ visit/           # 다녀온 곳(빠른 저장·기록한 적 있는 곳)
 ├─ wish/            # 카카오 가게를 가볼 곳으로 저장
 ├─ trust/           # 경험 신뢰 재료(인정·엇갈림·태그 일치)

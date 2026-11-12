@@ -3,7 +3,7 @@
   padding: 0 16px;
 }
 .r-mymap-search__submit {
-  min-height: 40px;
+  min-height: var(--pill-height);
   flex: none;
   border: 0;
   border-radius: var(--radius-pill);

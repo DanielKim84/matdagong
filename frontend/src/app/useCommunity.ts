@@ -46,7 +46,7 @@ export function useCommunity(accessToken: string, displayName: string, notify: (
   const refreshCommunity = useCallback(async () => {
     const profile = await ensureMyProfile(accessToken, displayName);
     setMyProfile(profile);
-    // 부가 API 하나가 새 버전으로 아직 배포되지 않았어도 맛객과 태그 로드는 계속합니다.
+    // 맛객 목록만 꼭 있어야 하고, 나머지(구독·태그·포인트·신고 내역)는 하나가 실패해도 받은 것은 반영합니다.
     const results = await Promise.allSettled([
       getTasters(accessToken),
       getSubscriptions(accessToken),

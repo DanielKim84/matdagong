@@ -1,3 +1,4 @@
+import NicknameCheckNote from "../../components/NicknameCheckNote";
 import AvatarEditor from "./AvatarEditor";
 import CoverEditor from "./CoverEditor";
 import PublicStyleSettings from "./PublicStyleSettings";
@@ -25,10 +26,12 @@ export default function PublicProfileTab({ form }: { form: ProfileForm }) {
               maxLength={MAX_NICKNAME_LENGTH}
               required={isActive}
               placeholder="맛다공에서 사용할 이름"
+              aria-invalid={form.nicknameCheck === "taken"}
             />
             <small>
               {form.nickname.length}/{MAX_NICKNAME_LENGTH}자 · 다른 맛객과 겹치지 않는 이름으로 정해 주세요.
             </small>
+            <NicknameCheckNote check={form.nicknameCheck} />
           </label>
           <label className="profile-edit-field">
             <span>

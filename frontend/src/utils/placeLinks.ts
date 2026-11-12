@@ -1,4 +1,5 @@
 /** 맛집을 밖으로 여는 주소(카카오맵 장소·길찾기)와 이 앱의 상세 주소 공유입니다. */
+import { RETRY_LATER_MESSAGE, type AppNotice } from "../app/AppData";
 import type { Place } from "../models/place";
 
 // 길찾기 출발지는 오래 기다리지 않고(5초), 1분 안에 얻은 위치면 그대로 씁니다.
@@ -35,8 +36,8 @@ export function openDirections(place: Pick<Place, "name" | "latitude" | "longitu
 /** shared: 공유 창으로 보냄, copied: 링크 복사, cancelled: 사용자가 공유 창을 닫음, failed: 둘 다 못 함 */
 type ShareResult = "shared" | "copied" | "cancelled" | "failed";
 
-/** 장소 링크를 공유하거나(지원 기기) 복사합니다. 결과에 맞는 안내는 부르는 화면이 띄웁니다. */
-export async function sharePlace(place: Pick<Place, "id" | "name">): Promise<ShareResult> {
+/** 장소 링크를 공유하거나(지원 기기) 복사합니다. 화면에서는 안내까지 함께 띄우는 sharePlaceWithNotice를 씁니다. */
+async function sharePlace(place: Pick<Place, "id" | "name">): Promise<ShareResult> {
   const url = placeUrl(place);
   try {
     if (navigator.share) {
@@ -48,5 +49,21 @@ export async function sharePlace(place: Pick<Place, "id" | "name">): Promise<Sha
   } catch (cause) {
     if (cause instanceof DOMException && cause.name === "AbortError") return "cancelled";
     return "failed";
+  }
+}
+
+/**
+ * 장소를 공유하고, 링크를 복사했거나 실패했을 때 안내를 띄웁니다. 피드 카드와 맛집 상세가 같은 문구를 쓰도록 여기서만 정합니다.
+ * 공유 창으로 보냈거나 사용자가 닫았으면 따로 알리지 않습니다.
+ */
+export async function sharePlaceWithNotice(
+  place: Pick<Place, "id" | "name">,
+  notify: (notice: AppNotice) => void,
+): Promise<void> {
+  const result = await sharePlace(place);
+  if (result === "copied") {
+    notify({ kind: "success", title: "링크를 복사했어요", message: `${place.name} 링크를 붙여 넣어 공유해 보세요.` });
+  } else if (result === "failed") {
+    notify({ kind: "error", title: "공유하지 못했어요", message: RETRY_LATER_MESSAGE });
   }
 }

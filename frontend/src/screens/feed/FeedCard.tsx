@@ -6,7 +6,7 @@ import Icon from "../../components/Icon";
 import PlaceThumb from "../../components/PlaceThumb";
 import TasteScore from "../../components/TasteScore";
 import { formatRelativeTime } from "../../utils/format";
-import { openDirections, sharePlace } from "../../utils/placeLinks";
+import { openDirections, sharePlaceWithNotice } from "../../utils/placeLinks";
 import { NEW_BADGE_MS, shortArea, type FeedRecord } from "./feedRecords";
 
 /** 카드 한 장에 보여 줄 취향 태그 수 */
@@ -21,18 +21,6 @@ export default function FeedCard({ record }: { record: FeedRecord }) {
   const isNew = record.time > 0 && Date.now() - record.time < NEW_BADGE_MS;
   const area = shortArea(place);
   const tags = (taster.tags ?? []).slice(0, CARD_TAG_LIMIT);
-
-  async function share() {
-    const result = await sharePlace(place);
-    if (result === "copied")
-      actions.notify({
-        kind: "success",
-        title: "링크를 복사했어요",
-        message: `${place.name} 링크를 붙여 넣어 공유해 보세요.`,
-      });
-    else if (result === "failed")
-      actions.notify({ kind: "error", title: "공유하지 못했어요", message: "잠시 후 다시 시도해 주세요." });
-  }
 
   return (
     <article className="r-card r-feed-card">
@@ -106,7 +94,7 @@ export default function FeedCard({ record }: { record: FeedRecord }) {
             type="button"
             className="r-feed-act r-feed-act--icon"
             aria-label={`${place.name} 공유`}
-            onClick={() => void share()}
+            onClick={() => void sharePlaceWithNotice(place, actions.notify)}
           >
             <Icon name="share" />
           </button>

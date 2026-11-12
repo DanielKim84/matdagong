@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { RETRY_LATER_MESSAGE } from "../../app/AppData";
+import { NICKNAME_TAKEN_MESSAGE } from "../../components/NicknameCheckNote";
 import { registerMembership } from "../../services/auth";
+import { ApiError } from "../../services/http";
 import { ensureMyProfile, getTasteTags, updateMyProfile } from "../../services/community";
 import { MAX_NICKNAME_LENGTH, type FoodFocus, type TasteTag } from "../../models/community";
 import { filterTagsForFocus } from "../../models/tasteTags";
@@ -10,6 +13,9 @@ import SignupNameStep from "./SignupNameStep";
 import SignupTasteStep from "./SignupTasteStep";
 
 type Step = "name" | "taste" | "match";
+
+/** 가입 마지막 프로필 저장에서 닉네임이 겹친 경우입니다(회원 가입 등 다른 요청의 409와 구분). */
+class NicknameTakenError extends Error {}
 
 /** 소셜 로그인 뒤 처음 온 사용자가 닉네임 → 취향 → 입맛 맞는 맛객 순서로 가입을 마칩니다. */
 export default function SignupScreen({
@@ -63,21 +69,30 @@ export default function SignupScreen({
         setIsMembershipComplete(true);
       }
       // 취향은 선택 사항입니다. 고르지 않아도 같은 가입 절차로 진행합니다.
+      // 1단계에서 확인한 뒤 다른 맛객이 같은 닉네임을 먼저 쓰면, 프로필은 서버가 접미사를 붙여 만들고 아래 수정이 409로
+      // 알립니다. 그때는 1단계로 돌아가 다시 고르게 합니다(다시 시도하면 만든 프로필에 고른 이름을 저장).
       const profile = await ensureMyProfile(accessToken, displayName.trim());
       await updateMyProfile(accessToken, {
-        nickname: profile.nickname,
+        nickname: displayName.trim(),
         intro: profile.intro ?? "",
-        profileTags: profile.profileTags ?? [],
-        tasterFocus: profile.tasterFocus ?? "BOTH",
-        activityScope: profile.activityScope ?? "LOCAL",
+        profileTags: profile.profileTags,
+        tasterFocus: profile.tasterFocus,
+        activityScope: profile.activityScope,
         activityRegion: profile.activityRegion ?? "",
         preferenceFocus,
         preferenceTags: filterTagsForFocus(tags, preferenceFocus, tasteTags),
-        excludedTags: profile.excludedTags ?? [],
+        excludedTags: profile.excludedTags,
+      }).catch((cause: unknown) => {
+        throw cause instanceof ApiError && cause.status === 409 ? new NicknameTakenError() : cause;
       });
       return true;
     } catch (cause) {
-      setError(errorMessage(cause, "잠시 후 다시 시도해 주세요."));
+      if (cause instanceof NicknameTakenError) {
+        setError(`${NICKNAME_TAKEN_MESSAGE} 다른 이름을 정해 주세요.`);
+        setStep("name");
+        return false;
+      }
+      setError(errorMessage(cause, RETRY_LATER_MESSAGE));
       return false;
     } finally {
       setIsSubmitting(false);
@@ -105,7 +120,15 @@ export default function SignupScreen({
   }
 
   if (step === "name") {
-    return <SignupNameStep initialName={displayName} initialEmail={email} error={error} onSubmit={submitName} />;
+    return (
+      <SignupNameStep
+        accessToken={accessToken}
+        initialName={displayName}
+        initialEmail={email}
+        error={error}
+        onSubmit={submitName}
+      />
+    );
   }
 
   if (step === "taste") {

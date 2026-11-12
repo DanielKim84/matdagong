@@ -36,7 +36,9 @@ public class UserProfileService {
 
     /**
      * 공통 계정 ID로 프로필이 이미 있으면 사용자가 맛다공에서 정한 닉네임을 덮어쓰지 않고 그대로 돌려줍니다.
-     * 닉네임은 로그인 계정 이름에서 자동으로 정하므로, 겹치면 사용자에게 묻지 않고 접미사를 바꿔 가며 다시 시도합니다.
+     * 닉네임이 겹치면 사용자에게 묻지 않고 접미사를 바꿔 가며 다시 시도합니다. 가입 화면은 미리 확인(isNicknameAvailable)한
+     * 이름을 보내고 곧바로 프로필 수정으로 그 이름을 다시 저장하므로, 그 사이 다른 맛객이 먼저 썼다면 수정 요청이 409로
+     * 알려 사용자가 고칩니다. 접미사 이름이 그대로 남는 것은 가입 도중 끊겨 앱이 로그인 이름으로 프로필을 만든 경우뿐입니다.
      * ON CONFLICT DO NOTHING은 계정 ID와 닉네임 유일 제약을 모두 받아 주므로, 확인과 저장 사이에 같은 닉네임이 먼저
      * 저장되어도 오류(트랜잭션 중단) 없이 다음 후보로 넘어갑니다.
      */
@@ -69,14 +71,9 @@ public class UserProfileService {
         return jdbc
                 .query(
                         """
-                        SELECT p.account_id, p.nickname, p.profile_img_data IS NOT NULL AS has_avatar,
+                        SELECT p.account_id, p.nickname, %s,
                                p.avatar_variant, p.taster_focus, p.preference_focus, p.activity_scope,
-                               p.activity_region, p.intro, %s,
-                               ARRAY(
-                                   SELECT tag.tag_name FROM user_profile_tags selected
-                                   JOIN taste_tags tag ON tag.tag_id = selected.tag_id
-                                   WHERE selected.account_id = p.account_id ORDER BY tag.sort_order
-                               ) AS profile_tags,
+                               p.activity_region, p.intro, %s, %s,
                                ARRAY(
                                    SELECT tag.tag_name FROM user_preference_tags selected
                                    JOIN taste_tags tag ON tag.tag_id = selected.tag_id
@@ -94,13 +91,16 @@ public class UserProfileService {
                         WHERE p.account_id = ?
                         """
                                 .formatted(
-                                        ProfileQueries.COVER_PHOTO_IDS, ProfileQueries.hiddenByReports("p.account_id")),
+                                        ProfileQueries.HAS_AVATAR,
+                                        ProfileQueries.COVER_PHOTO_IDS,
+                                        ProfileQueries.PROFILE_TAG_NAMES,
+                                        ProfileQueries.hiddenByReports("p.account_id")),
                         (rs, row) -> {
                             List<String> coverUrls = ProfileQueries.coverUrls(rs, accountId);
                             return new ProfileView(
                                     accountId,
                                     rs.getString("nickname"),
-                                    rs.getBoolean("has_avatar") ? ProfileMediaUrls.avatar(accountId) : null,
+                                    ProfileQueries.avatarUrl(rs, accountId),
                                     rs.getInt("avatar_variant"),
                                     coverUrls,
                                     FoodFocus.valueOf(rs.getString("taster_focus")),
@@ -224,6 +224,15 @@ public class UserProfileService {
 
     private static ResponseStatusException nicknameTaken() {
         return new ResponseStatusException(HttpStatus.CONFLICT, NICKNAME_TAKEN);
+    }
+
+    /** 앞뒤 공백을 뺀 닉네임이 비지 않고 한도 안이며 다른 맛객이 쓰지 않으면 true입니다. 수정 요청과 같은 기준입니다. */
+    @Transactional(readOnly = true)
+    public boolean isNicknameAvailable(String nickname, UUID accountId) {
+        String trimmed = nickname.trim();
+        return !trimmed.isEmpty()
+                && trimmed.length() <= ProfileModels.MAX_NICKNAME_LENGTH
+                && !isNicknameTaken(trimmed, accountId);
     }
 
     private boolean isNicknameTaken(String nickname, UUID accountId) {

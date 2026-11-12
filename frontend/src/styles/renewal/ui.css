@@ -32,7 +32,8 @@
   align-items: center;
   gap: 6px;
   background: var(--color-canvas);
-  padding: 8px 12px 8px 8px;
+  /* 위쪽 안전 영역은 떠 있는 상단 바(.r-topbar--float)와 같게 더합니다. */
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px 8px;
 }
 .r-topbar h1 {
   flex: 1;
@@ -54,7 +55,7 @@
   flex: none;
 }
 .r-topbar--root {
-  padding: 14px 20px 8px;
+  padding: calc(14px + env(safe-area-inset-top)) 20px 8px;
 }
 .r-topbar--root h1 {
   font-size: 28px;
@@ -167,6 +168,17 @@
   font-weight: 600;
   white-space: nowrap;
 }
+/* 날짜 묶음 머리("오늘 3개", "최근 7일 2곳"): 알림과 빠른 장소 기록이 같은 모양을 씁니다. 제목을 낮춰 목록이 먼저 보이게 합니다. */
+.r-section-head--date {
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 4px 4px 0;
+}
+.r-section-head--date h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 15px;
+}
 .r-label {
   color: var(--color-primary);
   font-size: 13px;
@@ -222,13 +234,52 @@
   width: 100%;
 }
 .r-button--pill {
-  min-height: 40px;
+  min-height: var(--pill-height);
   border-radius: var(--radius-pill);
   padding: 0 16px;
   font-size: 14px;
 }
 .r-button:disabled {
   opacity: 0.5;
+}
+/*
+ * ── 오류 안내 두 가지(화면마다 따로 만들지 않음) ──
+ * r-error-box: 폼·시트 아래의 연한 코랄 상자(기록하기, 빠른 저장, 태그 제안, 빠른 장소 기록).
+ * r-error-text: 버튼 바로 위나 입력칸 아래에 붙는 바탕 없는 빨간 글자(가입 단계, 신고·제보, 구독 시트).
+ */
+.r-error-box {
+  margin: 0;
+  border-radius: var(--radius-md);
+  background: var(--brand-50);
+  padding: 12px 14px;
+  color: var(--brand-700);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+.r-error-text {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+/* 닉네임 미리 확인(NicknameCheckNote): 확인 중(흐림)·쓸 수 있음(초록)·겹침(오류색, r-error-text와 같은 색) */
+.r-nickname-check {
+  display: block;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.r-nickname-check.is-ok {
+  color: var(--color-success-text);
+}
+.r-nickname-check.is-taken {
+  color: var(--color-danger);
 }
 /* 글자만 있는 작은 버튼("모두 읽음", "다시 고르기") */
 .r-text-button {
@@ -262,8 +313,9 @@
   overflow: visible;
 }
 .r-chip {
+  position: relative;
   display: inline-flex;
-  height: 38px;
+  height: var(--pill-height);
   flex: none;
   align-items: center;
   gap: 6px;
@@ -276,6 +328,12 @@
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
+}
+/* 칩은 40px로 보이지만 위아래로 2px씩 넓혀 누르는 영역을 44px로 둡니다. */
+.r-chip::after {
+  position: absolute;
+  inset: -2px 0;
+  content: "";
 }
 .r-chip .icon {
   width: 16px;
@@ -458,7 +516,7 @@
 }
 .r-group-icon--green {
   background: var(--green-50);
-  color: var(--green-600);
+  color: var(--color-success-text);
 }
 .r-group-icon--clay {
   background: var(--clay-100);
@@ -639,18 +697,84 @@
   border-color: var(--neutral-100);
   background: var(--color-surface);
 }
-/* 칩이 많아 시트가 길어져도 완료 버튼은 시트 바닥에 붙습니다(발견 필터의 적용 줄과 같은 방식). */
+/*
+ * 칩이 많아 시트가 길어져도 완료 버튼은 시트 바닥에 붙습니다. 발견 필터의 적용 줄(.r-discover-filter__actions)과
+ * 같은 모양입니다. -20px·-24px은 .r-sheet의 좌우·아래 안쪽 여백과 맞춘 값이라 그 여백을 바꾸면 함께 고칩니다.
+ */
 .r-taste-picker-sheet__actions {
   position: sticky;
   bottom: calc(-24px - env(safe-area-inset-bottom));
   display: flex;
-  margin: 18px -20px calc(-24px - env(safe-area-inset-bottom));
+  gap: 10px;
+  margin: 16px -20px calc(-24px - env(safe-area-inset-bottom));
   border-top: 1px solid var(--neutral-100);
   background: var(--color-canvas);
   padding: 12px 20px calc(16px + env(safe-area-inset-bottom));
+  box-shadow: 0 -6px 16px color-mix(in srgb, var(--shadow-color) 6%, transparent);
 }
 .r-taste-picker-sheet__actions > .r-button {
   flex: 1;
+}
+
+/*
+ * 사진 페이지 점(components/PaginationDots). 양 끝 점은 작게 그려 더 넘길 사진이 있음을 보여 줍니다.
+ * 버튼은 가로 20px(점 간격) × 세로 44px로 눌리게 하고, 늘어난 세로 13.5px씩은 음수 여백으로 상쇄해
+ * 보이는 자리와 점 크기는 그대로 둡니다.
+ */
+.photo-slide-indicators {
+  display: block;
+  overflow: hidden;
+}
+.photo-slide-indicators-track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  transition: transform 0.38s cubic-bezier(0.22, 0.7, 0.25, 1);
+  will-change: transform;
+}
+.photo-slide-indicators--below {
+  margin: -6.5px auto -13.5px;
+}
+.photo-slide-indicators button {
+  display: grid;
+  width: 20px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.photo-slide-indicators button > span {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--neutral-300);
+  box-shadow: none;
+  filter: none;
+  transition:
+    width 0.38s cubic-bezier(0.22, 0.7, 0.25, 1),
+    height 0.38s cubic-bezier(0.22, 0.7, 0.25, 1),
+    background-color 0.3s ease,
+    transform 0.38s cubic-bezier(0.22, 0.7, 0.25, 1);
+}
+.photo-slide-indicators button.is-edge:not(.is-active) > span {
+  width: 4px;
+  height: 4px;
+}
+.photo-slide-indicators button.is-near-edge:not(.is-active) > span {
+  width: 5px;
+  height: 5px;
+}
+.photo-slide-indicators button.is-active > span {
+  width: 10px;
+  height: 10px;
+  background: var(--brand-500);
+  transform: scale(1.02);
 }
 
 /* ── 탭 전환(세그먼트) ── */
@@ -664,7 +788,7 @@
   min-height: 40px;
   flex: 1;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: none;
   color: var(--color-muted);
   font-family: var(--font-body);
@@ -693,7 +817,7 @@
   height: 44px;
   flex: none;
   place-items: center;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--brand-50);
   color: var(--color-primary);
 }
@@ -945,6 +1069,9 @@
   gap: 10px;
   padding: 40px 24px;
   text-align: center;
+  /* 가운데 정렬한 안내 문장이 낱자 단위로 끊기지 않게 합니다(확인창 문구와 같음). 긴 검색어는 어디서든 줄을 바꿉니다. */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .r-empty b {
   font-size: 16px;
@@ -981,11 +1108,6 @@
 @keyframes r-pulse {
   50% {
     opacity: 0.55;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .r-skeleton {
-    animation: none;
   }
 }
 
@@ -1048,13 +1170,6 @@
   font-weight: 700;
   text-align: right;
 }
-@media (prefers-reduced-motion: reduce) {
-  .r-step-progress__bar i,
-  .r-topbar--float,
-  .r-topbar__title {
-    transition: none;
-  }
-}
 
 /* ── 맛다공 캐릭터 그림(MascotArt). 크기는 감싸는 칸이나 className으로 정합니다. ── */
 .r-mascot {
@@ -1115,7 +1230,7 @@
   align-items: center;
   justify-content: space-around;
   margin: 0 auto;
-  border-radius: 34px;
+  border-radius: var(--radius-pill);
   background: var(--color-surface);
   padding: 0 6px;
   box-shadow: 0 10px 30px color-mix(in srgb, var(--shadow-color) 18%, transparent);
@@ -1213,7 +1328,7 @@
   height: 52px;
   flex: none;
   place-items: center;
-  border-radius: 16px;
+  border-radius: var(--radius-control);
   background: var(--brand-50);
   color: var(--color-primary);
 }
@@ -1262,6 +1377,7 @@
   border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   outline: 0;
   background: var(--color-canvas);
+  /* 좌우 20px·아래 24px은 시트 바닥에 붙는 버튼 줄(.r-taste-picker-sheet__actions, .r-discover-filter__actions)의 음수 여백과 짝입니다. */
   padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
   box-shadow: 0 -8px 32px color-mix(in srgb, var(--shadow-color) 16%, transparent);
   animation: r-sheet-in 0.22s ease-out both;
@@ -1519,12 +1635,6 @@
   align-self: flex-end;
   color: var(--color-muted);
   font-size: 12px;
-  font-weight: 600;
-}
-.r-report-sheet__error {
-  margin: 0;
-  color: var(--brand-700);
-  font-size: 13px;
   font-weight: 600;
 }
 /* 안내 문장이 낱자 단위로 끊기지 않게 낱말 단위로 줄을 바꿉니다. */

@@ -155,7 +155,7 @@ export default function RecordFlow({
         {step === "review" && <ReviewStep form={form} onEdit={goToStep} />}
 
         {form.error && (
-          <p className="r-record-error" role="alert">
+          <p className="r-error-box" role="alert">
             {form.error}
           </p>
         )}

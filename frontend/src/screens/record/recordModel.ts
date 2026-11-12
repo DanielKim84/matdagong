@@ -1,12 +1,15 @@
 import type { FoodFocus } from "../../models/community";
-import type { Place, Taster } from "../../models/place";
+import type { Taster } from "../../models/place";
 import { formatNumber } from "../../utils/format";
 
 /** 기록하기(RecordFlow) 단계·입력 한도와 입력 값 변환입니다. 단계 컴포넌트와 입력 훅이 함께 씁니다. */
 
+// 사진·메뉴 수, 메뉴 이름·추천 이유 길이는 장소 서비스 PlaceRecordModels(CreatePlaceRecordRequest·MenuInput)의 검증과
+// 같은 값입니다. 사진·메뉴 수는 입력 보관(services/registerDraft.ts)도 맞춥니다. 함께 바꿉니다.
 export const MAX_PHOTOS = 10;
 export const MAX_MENUS = 5;
 export const MENU_NAME_MAX = 30;
+/** 추천 이유 첫 줄(한 줄 요약) 길이입니다. 화면에서만 나눠 쓰고 서버는 추천 이유 전체(REASON_MAX)만 봅니다. */
 export const HEADLINE_MAX = 60;
 export const REASON_MIN = 5;
 export const REASON_MAX = 500;
@@ -59,9 +62,4 @@ export function initialFoodKind(category: string | undefined, defaultFocus: Food
   return category?.includes("카페") || category?.includes("디저트") || defaultFocus === "CAFE_DESSERT"
     ? "CAFE_DESSERT"
     : "RESTAURANT";
-}
-
-/** 맛다공 장소가 고른 카카오 장소와 같은 곳인지 확인합니다(제공처가 비어 있으면 카카오). */
-export function isSameKakaoPlace(place: Place, kakaoPlaceId: string): boolean {
-  return (place.providerCode ?? "KAKAO") === "KAKAO" && place.providerPlaceId === kakaoPlaceId;
 }

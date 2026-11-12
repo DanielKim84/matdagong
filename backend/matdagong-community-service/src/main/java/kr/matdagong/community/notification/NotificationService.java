@@ -19,8 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class NotificationService {
+    /** 설정 행이 없는 계정의 값입니다. user_notification_settings 칼럼 기본값(V35)과 같게 둡니다. */
     private static final NotificationSettings DEFAULT_SETTINGS = new NotificationSettings(true, true, false);
-    // 알림을 눌렀을 때 이동할 대상 종류(target_type)입니다. 화면이 이 값으로 장소 상세·내 구독자 화면을 엽니다.
+    // 알림을 눌렀을 때 이동할 대상 종류(target_type)입니다. 화면(models/community.ts UserNotification.targetType)이 이 값으로
+    // 장소 상세·내 구독자 화면을 열고, DB ck_user_notifications_target_type도 같은 값만 받습니다.
     private static final String PLACE_TARGET = "PLACE";
     private static final String MY_SUBSCRIBERS_TARGET = "MY_SUBSCRIBERS";
     /** 기록한 맛객의 프로필을 찾지 못했을 때 구독자 알림에 쓰는 이름입니다. */
@@ -233,7 +235,10 @@ public class NotificationService {
         jdbc.update("DELETE FROM user_notifications WHERE expires_at <= now()");
     }
 
-    /** 이 맛객을 지금 이용 중인 회차로 구독하고, 구독 맛객 새 기록 알림을 끄지 않은 사용자입니다. */
+    /**
+     * 이 맛객을 지금 이용 중인 회차로 구독하고, 구독 맛객 새 기록 알림을 끄지 않은 사용자입니다. 알림을 만드는 쓰기 중에
+     * 만료 정리(SubscriptionService.expireEndedSubscriptions)를 따로 돌리지 않도록, 끝난 유료 회차는 end_dt로 직접 거릅니다.
+     */
     private List<UUID> subscribersToNotify(UUID tasterId) {
         return jdbc.query(
                 """

@@ -33,7 +33,7 @@ public class TasterReportService {
     }
 
     @Transactional
-    public ReportResponse report(UUID reporterId, UUID targetId, ReportRequest request) {
+    public void report(UUID reporterId, UUID targetId, ReportRequest request) {
         if (reporterId.equals(targetId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "내 프로필은 신고할 수 없어요.");
         }
@@ -46,23 +46,21 @@ public class TasterReportService {
         if (!ProfileQueries.lock(jdbc, targetId))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "맛객 정보를 찾을 수 없어요.");
 
-        List<String> created = jdbc.queryForList(
+        // 확인 전 신고가 이미 있으면 uk_taster_reports_pending 때문에 아무것도 넣지 않습니다(0건).
+        int created = jdbc.update(
                 """
                 INSERT INTO taster_reports (report_id, target_account_id, reporter_account_id, reason, memo, place_id)
                 VALUES (?, ?, ?, ?, ?, ?)
                 ON CONFLICT (reporter_account_id, target_account_id) WHERE status = 'PENDING' DO NOTHING
-                RETURNING report_id::text
                 """,
-                String.class,
                 UUID.randomUUID(),
                 targetId,
                 reporterId,
                 request.reason().name(),
                 request.memo(),
                 request.placeId());
-        if (created.isEmpty()) throw new ResponseStatusException(HttpStatus.CONFLICT, ALREADY_REPORTED);
+        if (created == 0) throw new ResponseStatusException(HttpStatus.CONFLICT, ALREADY_REPORTED);
         applyThresholds(targetId);
-        return new ReportResponse(created.get(0));
     }
 
     /** 내가 신고했고 아직 확인 전인 맛객 ID입니다. 화면은 이 맛객의 신고 버튼을 막습니다. */

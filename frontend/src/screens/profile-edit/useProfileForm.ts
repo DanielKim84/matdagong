@@ -1,4 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { RETRY_LATER_MESSAGE } from "../../app/AppData";
+import { NICKNAME_TAKEN_MESSAGE } from "../../components/NicknameCheckNote";
+import { useNicknameCheck } from "../../hooks/useNicknameCheck";
 import {
   MAX_NICKNAME_LENGTH,
   type ActivityScope,
@@ -23,16 +26,19 @@ import { useRegionCatalog } from "./useRegionCatalog";
 
 export type ProfileTab = "profile" | "taste";
 
+/** 소개 최대 글자 수. 커뮤니티 서비스 ProfileModels.UpdateProfileRequest의 intro 검증과 같습니다. */
 export const MAX_INTRO_LENGTH = 300;
 
 /** 프로필 편집 화면의 입력 상태와 저장 동작입니다. 두 탭이 한 폼을 함께 저장합니다. */
 export function useProfileForm({
+  accessToken,
   profile,
   options,
   initialTab,
   onSave,
   onError,
 }: {
+  accessToken: string;
   profile: MyProfile;
   options: TasteTag[];
   initialTab: ProfileTab;
@@ -48,16 +54,18 @@ export function useProfileForm({
   const avoidOptions = options.filter(
     (tag) => tag.tagGroup === "VISIT" && AVOIDABLE_VISIT_CONDITIONS.some((condition) => condition === tag.name),
   );
-  const [nickname, setNickname] = useState(profile.nickname.slice(0, MAX_NICKNAME_LENGTH));
+  const [nickname, setNickname] = useState(profile.nickname);
   const [intro, setIntro] = useState(profile.intro ?? "");
-  const [profileTags, setProfileTags] = useState(profile.profileTags ?? []);
-  const [preferenceTags, setPreferenceTags] = useState(profile.preferenceTags ?? []);
-  const [excludedTags, setExcludedTags] = useState(profile.excludedTags ?? []);
-  const [tasterFocus, setTasterFocus] = useState<FoodFocus>(profile.tasterFocus ?? "BOTH");
-  const [activityScope, setActivityScope] = useState<ActivityScope>(profile.activityScope ?? "LOCAL");
+  // 지금 내 닉네임은 묻지 않습니다. 겹치면 입력칸 아래에 알리고 저장을 막습니다(저장 요청도 서버에서 다시 확인).
+  const nicknameCheck = useNicknameCheck(accessToken, nickname, profile.nickname);
+  const [profileTags, setProfileTags] = useState(profile.profileTags);
+  const [preferenceTags, setPreferenceTags] = useState(profile.preferenceTags);
+  const [excludedTags, setExcludedTags] = useState(profile.excludedTags);
+  const [tasterFocus, setTasterFocus] = useState<FoodFocus>(profile.tasterFocus);
+  const [activityScope, setActivityScope] = useState<ActivityScope>(profile.activityScope);
   const [activityRegion, setActivityRegion] = useState<RegionSelection>(EMPTY_REGION_SELECTION);
   const [hasRegionChanged, setHasRegionChanged] = useState(false);
-  const [preferenceFocus, setPreferenceFocus] = useState<FoodFocus>(profile.preferenceFocus ?? "BOTH");
+  const [preferenceFocus, setPreferenceFocus] = useState<FoodFocus>(profile.preferenceFocus);
   const [isSaving, setIsSaving] = useState(false);
   const [copyNotice, setCopyNotice] = useState("");
 
@@ -126,6 +134,11 @@ export function useProfileForm({
       onError("맛객 닉네임을 입력해 주세요.");
       return;
     }
+    if (nicknameCheck === "taken") {
+      setActiveTab("profile");
+      onError(`${NICKNAME_TAKEN_MESSAGE} 다른 이름을 정해 주세요.`);
+      return;
+    }
     if (activityScope !== "TRAVEL" && hasRegionChanged && isIncompleteRegion(activityRegion)) {
       setActiveTab("profile");
       onError("주 활동 지역은 시·도, 시·군·구, 읍·면·동까지 선택해 주세요.");
@@ -152,7 +165,7 @@ export function useProfileForm({
       avatar.reset();
       cover.reset();
     } catch (cause) {
-      onError(errorMessage(cause, "잠시 후 다시 시도해 주세요."));
+      onError(errorMessage(cause, RETRY_LATER_MESSAGE));
     } finally {
       setIsSaving(false);
     }
@@ -170,6 +183,7 @@ export function useProfileForm({
     avoidOptions,
     nickname,
     changeNickname,
+    nicknameCheck,
     intro,
     changeIntro,
     profileTags,

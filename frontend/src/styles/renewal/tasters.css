@@ -74,7 +74,7 @@
   font-size: 15px;
 }
 .r-tasters-search input::placeholder {
-  color: var(--color-subtle);
+  color: var(--color-muted);
 }
 
 /* 내가 구독한 맛객 줄 */
@@ -205,7 +205,7 @@
 .r-tasters-region {
   display: inline-flex;
   min-width: 0;
-  height: 36px;
+  height: var(--pill-height);
   align-items: center;
   gap: 4px;
   border: 1.5px solid var(--brand-300);
@@ -216,7 +216,7 @@
   font-size: 15px;
   font-weight: 800;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(207, 63, 37, 0.12);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--brand-600) 12%, transparent);
 }
 .r-tasters-region .icon {
   width: 17px;
@@ -227,7 +227,7 @@
 .r-tasters-region.is-on {
   border-color: var(--color-primary);
   background: var(--color-primary);
-  color: var(--neutral-0);
+  color: var(--on-strong);
 }
 .r-tasters-region.is-on .icon {
   color: inherit;
@@ -255,7 +255,7 @@
   align-items: center;
   gap: 12px;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: none;
   padding: 8px 10px;
   color: var(--color-ink);
@@ -305,7 +305,7 @@
   padding: 0 4px;
 }
 .r-tasters-focus button {
-  min-height: 42px;
+  min-height: 44px;
   margin-bottom: -1px;
   border: 0;
   border-bottom: 2.5px solid transparent;
@@ -331,7 +331,7 @@
   padding: 3px;
 }
 .r-section-head .r-tasters-sort > button {
-  min-height: 32px;
+  min-height: var(--pill-height);
   border-radius: var(--radius-pill);
   padding: 0 10px;
   color: var(--color-muted);
@@ -400,7 +400,7 @@
 }
 .r-tasters-incoming-summary__paid .r-tasters-incoming-summary__icon {
   background: var(--amber-400);
-  color: var(--neutral-0);
+  color: var(--on-strong);
 }
 .r-tasters-incoming-summary__paid b {
   color: var(--amber-800);
@@ -423,7 +423,7 @@
   border: 2px solid var(--color-surface);
   border-radius: 50%;
   background: var(--amber-400);
-  color: var(--neutral-0);
+  color: var(--on-strong);
 }
 .r-tasters-incoming__avatar > i .icon {
   width: 11px;
@@ -444,10 +444,11 @@
   font-size: 12px;
   font-weight: 600;
 }
+/* 유료 구독 배지: 허니 바탕에 진한 갈색 글자(흰 글자는 대비 1.8이라 읽기 어려움, 이 조합은 7.8) */
 .r-tasters-plan.is-paid {
   border-color: var(--amber-400);
   background: var(--amber-400);
-  color: var(--neutral-0);
+  color: var(--amber-900);
 }
 .r-tasters-incoming.is-paid small {
   color: var(--amber-800);
@@ -512,7 +513,7 @@
 }
 .r-tasters-sub-row__manage {
   min-width: 56px;
-  min-height: 44px;
+  min-height: var(--pill-height);
   flex: none;
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-pill);
@@ -549,7 +550,7 @@
   font-size: 16px;
 }
 .r-tasters-summary__link {
-  min-height: 36px;
+  min-height: var(--pill-height);
   flex: none;
   border: 1px solid var(--brand-200);
   border-radius: var(--radius-pill);
@@ -862,11 +863,6 @@
   padding: 0 14px;
   scrollbar-width: none;
 }
-.r-tasters-map-card__scopes .r-chip {
-  height: 34px;
-  padding: 0 13px;
-  font-size: 13px;
-}
 .r-tasters-map-card__scopes .r-chip:not(.is-on) {
   border-color: transparent;
   background: var(--neutral-50);
@@ -912,38 +908,16 @@
   color: var(--color-primary);
 }
 
-/* ── 구독 시트 ── */
-.r-tasters-offer {
-  position: fixed;
+/*
+ * ── 구독 시트: 공용 시트(components/Sheet 기본 모양: 막·손잡이·그림자·등장 움직임·넓은 화면 가운데 카드)를 그대로 쓰고
+ * 머리(header)만 맛객 사진·이름으로 바꿉니다. 스토리 보기처럼 다른 시트 위에서도 열리므로 공용 막(90)보다 한 단계 위에 둡니다.
+ */
+.r-sheet-backdrop.r-tasters-offer {
   z-index: 100;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background: color-mix(in srgb, var(--shadow-color) 36%, transparent);
 }
 .r-tasters-offer__panel {
-  display: flex;
-  width: min(var(--app-width), 100%);
-  max-height: calc(100dvh - 40px);
-  flex-direction: column;
   gap: 16px;
-  overflow: auto;
-  border: 0;
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-  outline: 0;
-  background: var(--color-canvas);
-  padding: 0 20px calc(24px + env(safe-area-inset-bottom));
-  box-shadow: 0 -10px 30px color-mix(in srgb, var(--shadow-color) 14%, transparent);
   color: var(--color-ink);
-}
-.r-tasters-offer__handle {
-  width: 40px;
-  height: 5px;
-  flex: none;
-  margin: 10px auto 0;
-  border-radius: var(--radius-pill);
-  background: var(--neutral-200);
 }
 .r-tasters-offer__head {
   display: flex;
@@ -1069,7 +1043,7 @@
 }
 .r-tasters-offer__plans del {
   display: block;
-  color: var(--color-subtle);
+  color: var(--color-muted);
   text-align: center;
 }
 .r-tasters-offer__swap {
@@ -1117,12 +1091,6 @@
 .r-tasters-offer__status {
   padding: 24px 0;
   text-align: center;
-}
-.r-tasters-offer__error {
-  margin: 0;
-  color: var(--color-danger);
-  font-size: 13px;
-  font-weight: 600;
 }
 
 /* 맛객 프로필 맨 아래 신고하기(하단 고정 버튼 줄에 가리지 않게 본문 끝에 둡니다) */

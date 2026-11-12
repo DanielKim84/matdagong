@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * 로그인 사용자의 맛집 기록 저장·조회·삭제와 하트→기록 전환 API를 제공합니다.
+ * 로그인 사용자의 맛집 기록 저장·조회·삭제 API를 제공합니다. 하트한 곳을 기록할 때도 같은 저장 API를 씁니다.
  * 작성자 프로필 조회와 카카오 장소 확인은 외부 호출이므로 DB 트랜잭션(Service)에 들어가기 전에 여기서 먼저 끝냅니다.
  */
 @RestController
@@ -53,19 +53,6 @@ public class PlaceRecordController {
         UUID accountId = AuthenticatedAccount.id(jwt);
         return records.createRecord(
                 accountId, profiles.findMyProfile(jwt.getTokenValue()), verifiedPlace(request), request);
-    }
-
-    @PostMapping("/from-like")
-    public PlaceView convertLikeToRecord(
-            @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody LikeToRecordRequest request) {
-        UUID accountId = AuthenticatedAccount.id(jwt);
-        return records.convertLikeToRecord(
-                accountId,
-                profiles.findMyProfile(jwt.getTokenValue()),
-                verifiedPlace(request.record()),
-                request.sourcePlaceId(),
-                request.record(),
-                request.visitedConfirmed());
     }
 
     /** 내 기록 여러 곳을 한 번에 공개하거나 나만 보기로 바꿉니다. */

@@ -44,6 +44,15 @@ public class UserProfileController {
         return profiles.ensureProfile(AuthenticatedAccount.id(jwt), request.nickname());
     }
 
+    /**
+     * 닉네임을 쓸 수 있는지 미리 알려 줍니다. 가입 1단계(SignupNameStep)와 프로필 편집이 입력하는 동안 묻고, 저장할 때는
+     * 저장 요청이 한 번 더 확인합니다(그 사이 다른 맛객이 먼저 쓸 수 있음). 지금 내 닉네임은 쓸 수 있다고 답합니다.
+     */
+    @GetMapping("/nickname-availability")
+    public NicknameAvailability nicknameAvailability(@AuthenticationPrincipal Jwt jwt, @RequestParam String nickname) {
+        return new NicknameAvailability(profiles.isNicknameAvailable(nickname, AuthenticatedAccount.id(jwt)));
+    }
+
     /** 장소 서비스가 기록 작성자 정보를 확인할 때도 사용하며, 프로필이 없으면 404로 알립니다. */
     @GetMapping
     public ProfileView profile(@AuthenticationPrincipal Jwt jwt) {

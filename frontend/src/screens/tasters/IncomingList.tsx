@@ -97,9 +97,7 @@ export default function IncomingList() {
                 </span>
                 <small>{period}</small>
               </span>
-              {subscription.startAt && (
-                <small className="r-tasters-since">{formatRelativeTime(subscription.startAt)} 구독</small>
-              )}
+              <small className="r-tasters-since">{formatRelativeTime(subscription.startAt)} 구독</small>
             </>
           );
           const className = `r-row r-tasters-incoming ${isPaid ? "is-paid" : ""}`;

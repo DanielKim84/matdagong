@@ -13,8 +13,8 @@ import org.springframework.web.server.ResponseStatusException;
 public final class PlaceIdentifiers {
     /** 요청으로 받는 장소 ID 문자열의 최대 길이입니다. UUID는 36자라 넉넉하게 둔 입력 상한입니다. */
     public static final int MAX_PLACE_ID_LENGTH = 100;
-    /** 지도 제공자 코드를 보내지 않은 요청의 기본값입니다. 현재 화면은 카카오 장소만 고릅니다. */
-    public static final String DEFAULT_PROVIDER = "KAKAO";
+    /** 카카오 장소의 제공자 코드입니다. 화면은 지금 카카오 장소만 고르고 늘 이 값을 보냅니다(services/places.ts). */
+    public static final String KAKAO = "KAKAO";
 
     private PlaceIdentifiers() {}
 
@@ -27,11 +27,9 @@ public final class PlaceIdentifiers {
         }
     }
 
-    /** 제공자별 ID namespace를 분리해 지도 제공자를 바꿔도 장소 중복을 섞지 않습니다. 비어 있으면 KAKAO입니다. */
+    /** 제공자별 ID namespace를 분리해 지도 제공자를 바꿔도 장소 중복을 섞지 않습니다. 비었거나 형식이 다르면 400입니다. */
     public static String providerCode(String value) {
-        String normalized = value == null || value.isBlank()
-                ? DEFAULT_PROVIDER
-                : value.trim().toUpperCase(Locale.ROOT);
+        String normalized = value == null ? "" : value.trim().toUpperCase(Locale.ROOT);
         if (!normalized.matches("[A-Z0-9_]{2,20}")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지도 정보 제공자를 확인해 주세요.");
         }

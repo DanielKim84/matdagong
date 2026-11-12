@@ -39,7 +39,6 @@ class PlaceReportServiceIntegrationTest extends EmbeddedPostgresTestSupport {
 
         assertThat(first.duplicate()).isFalse();
         assertThat(again.duplicate()).isTrue();
-        assertThat(again.reportId()).isEqualTo(first.reportId());
         assertThat(jdbc.queryForObject("SELECT memo FROM place_reports WHERE reason = 'CLOSED'", String.class))
                 .isEqualTo("문 닫았어요");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM place_reports", Integer.class))

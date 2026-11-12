@@ -1,6 +1,6 @@
 import { go } from "../../app/navigation";
 import Icon from "../../components/Icon";
-import { EmptyState, Skeleton, TopBar } from "../../components/ui";
+import { EmptyState, SectionHead, Skeleton, TopBar } from "../../components/ui";
 import { kakaoPlaceFromQuickDraft, type QuickPlaceDraft } from "../../services/places";
 import { isCafeCategory } from "../../models/place";
 import { DAY_MS, categoryLabel, formatRelativeTime, startOfDay } from "../../utils/format";
@@ -45,7 +45,7 @@ export default function QuickDraftsScreen() {
           가게에서 장소만 먼저 저장해 둔 곳이에요. 기록을 완성하면 이 목록에서 자동으로 빠져요.
         </p>
         {error && (
-          <p className="r-me-error" role="alert">
+          <p className="r-error-box" role="alert">
             {error}
           </p>
         )}
@@ -54,9 +54,7 @@ export default function QuickDraftsScreen() {
         ) : drafts.length ? (
           groups.map(({ group, drafts: grouped }) => (
             <section key={group} className="r-me-drafts__group" aria-label={group}>
-              <h2 className="r-me-drafts__group-title">
-                {group} <small>{grouped.length}곳</small>
-              </h2>
+              <SectionHead title={group} meta={`${grouped.length}곳`} className="r-section-head--date" />
               <ul className="r-me-drafts__list">
                 {grouped.map((draft) => (
                   <DraftCard

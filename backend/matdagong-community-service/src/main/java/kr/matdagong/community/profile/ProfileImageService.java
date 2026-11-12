@@ -20,6 +20,10 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Service
 public class ProfileImageService {
+    /**
+     * 사진 한 장 최대 크기입니다. 화면 profile-edit/profileImages.ts의 MAX_IMAGE_MB, application.yml의
+     * spring.servlet.multipart.max-file-size와 맞춥니다.
+     */
     private static final long MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
     private final JdbcTemplate jdbc;

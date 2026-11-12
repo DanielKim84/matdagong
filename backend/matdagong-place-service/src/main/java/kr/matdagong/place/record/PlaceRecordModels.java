@@ -18,7 +18,7 @@ import kr.matdagong.place.kakao.KakaoPlaceVerifier;
 import kr.matdagong.place.kakao.KakaoPlaceVerifier.PlaceInfo;
 import kr.matdagong.place.location.DeviceLocation;
 
-/** 맛집 기록 저장과 하트→기록 전환 API의 요청 자료형입니다. */
+/** 맛집 기록 저장·공개 범위 변경 API의 요청·응답 자료형입니다. */
 public final class PlaceRecordModels {
     /** 5MB 사진의 base64 data URL 길이에 여유를 둔 값입니다. 실제 바이트 수는 디코딩 후 다시 확인합니다. */
     public static final int MAX_PHOTO_CHARS = 7_000_000;
@@ -53,13 +53,13 @@ public final class PlaceRecordModels {
 
     private static final String INVALID_COORDINATE = "장소 좌표를 확인해 주세요.";
     private static final String INVALID_VISIBILITY = "공개 범위를 확인해 주세요.";
-    private static final String INVALID_SOURCE_PLACE = "전환할 내 맛집을 확인해 주세요.";
 
     private PlaceRecordModels() {}
 
     /**
      * Kakao에서 고른 한 장소에 사용자가 작성한 추천 내용을 저장합니다.
      * 작성자 이름은 받지 않고 커뮤니티 프로필에서, 가게 기본정보는 가능하면 카카오 Local API에서 다시 확인합니다.
+     * 사진 10장·메뉴 5개·추천 이유 5~500자·메뉴 이름 30자는 화면 screens/record/recordModel.ts의 한도와 같게 맞춥니다.
      *
      * @param tags 태그와 방문 조건은 DB 칼럼(VARCHAR(40)) 길이에 맞춥니다. 빈 값은 저장할 때 건너뜁니다.
      * @param tagGroups 태그 이름 → 분류(TasteTagGroup 이름, VISIT 제외). 태그마다 있어야 하고, 없으면 400입니다.
@@ -71,7 +71,7 @@ public final class PlaceRecordModels {
      *     수정, 빠른 저장에서 이어 쓰기처럼 이미 근거가 있으면 보내지 않아도 됩니다.
      */
     public record CreatePlaceRecordRequest(
-            @Size(max = 20) String providerCode,
+            @NotBlank @Size(max = 20) String providerCode,
             @NotBlank @Size(max = 80) String providerPlaceId,
             @NotBlank @Size(max = 120) String placeName,
             @NotBlank @Size(max = 120) String category,
@@ -114,7 +114,7 @@ public final class PlaceRecordModels {
     }
 
     public record MenuInput(
-            @NotBlank(message = "메뉴 이름을 입력해 주세요.") @Size(max = 60) String name,
+            @NotBlank(message = "메뉴 이름을 입력해 주세요.") @Size(max = 30, message = "메뉴 이름은 30자 이하로 입력해 주세요.") String name,
             @Min(0) @Max(10_000_000) Integer price,
             @Size(max = MAX_PHOTO_CHARS) String photo) {}
 
@@ -126,12 +126,4 @@ public final class PlaceRecordModels {
 
     /** changed는 실제로 바뀐 내 기록 수입니다. */
     public record ChangeVisibilityResponse(int changed) {}
-
-    /** visitedConfirmed는 사용자가 직접 방문했다고 확인했는지입니다. 확인하지 않으면 기록으로 바꾸지 않습니다. */
-    public record LikeToRecordRequest(
-            @NotBlank(message = INVALID_SOURCE_PLACE)
-                    @Size(max = PlaceIdentifiers.MAX_PLACE_ID_LENGTH, message = INVALID_SOURCE_PLACE)
-                    String sourcePlaceId,
-            @NotNull @Valid CreatePlaceRecordRequest record,
-            boolean visitedConfirmed) {}
 }

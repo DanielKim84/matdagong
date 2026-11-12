@@ -1,12 +1,10 @@
 /** 장소 서비스(맛집 목록·내 기록·빠른 저장·하트·다녀온 곳·별로였던 곳) API 요청입니다. */
-import type { NewPlace, Place, Taster } from "../models/place";
+import { KAKAO_PROVIDER_CODE, type NewPlace, type Place, type Taster } from "../models/place";
 import { kakaoPlaceAddress, kakaoPlaceCoordinates, type Coordinates } from "../utils/geo";
 import { API_BASE_URL, apiRequest, type ApiRequestOptions } from "./http";
 
 /** 빠른 장소 기록처럼 마이 화면 숫자가 바뀌는 저장을 마친 뒤 window에 알리는 이벤트입니다. */
 export const MY_ACTIVITY_CHANGED_EVENT = "matdagong:my-activity-changed";
-/** 장소 정보 제공처 코드입니다. 지금은 카카오만 씁니다. */
-const KAKAO_PROVIDER_CODE = "KAKAO";
 
 export type QuickPlaceDraft = {
   providerCode: string;
@@ -24,8 +22,13 @@ export type QuickPlaceDraft = {
 };
 type QuickPlaceDuplicate = { alreadyRegistered: boolean; alreadySaved: boolean; placeName: string | null };
 
-/** 장소 응답(서버 PlaceView)입니다. 기록(TasterRecordView)마다 작성자 사진·캐릭터는 담겨 있지 않습니다. */
-type PlaceResponse = Omit<Place, "tasters"> & { tasters: Omit<Taster, "avatar" | "avatarVariant">[] };
+/** 기록 응답(서버 TasterRecordView)입니다. 작성자 사진·캐릭터와 커뮤니티 프로필 값은 담겨 있지 않습니다. */
+type TasterRecordResponse = Pick<
+  Taster,
+  "tasterId" | "tasterName" | "note" | "menus" | "photos" | "tags" | "tagGroups" | "visitConditions" | "visibility"
+> & { recordedAt: string };
+/** 장소 응답(서버 PlaceView)입니다. */
+type PlaceResponse = Omit<Place, "tasters"> & { tasters: TasterRecordResponse[] };
 
 /**
  * 장소 응답을 화면용 장소로 바꿉니다. 작성자 사진은 빈 값·1번 캐릭터로 두고 app/enrichPlaces가 커뮤니티 프로필로 채웁니다.
@@ -50,24 +53,25 @@ export function kakaoPlaceFromQuickDraft(draft: QuickPlaceDraft): KakaoPlaceResu
     place_name: draft.placeName,
     category_name: draft.category ?? "",
     phone: draft.providerPhone ?? "",
+    // 도로명 주소가 없는 가게에 지번 주소를 도로명 자리로 넣지 않습니다(대표 주소는 kakaoPlaceAddress가 고름).
     address_name: draft.lotAddress ?? draft.address,
-    road_address_name: draft.roadAddress ?? draft.address,
+    road_address_name: draft.roadAddress ?? "",
     x: String(draft.longitude),
     y: String(draft.latitude),
     place_url: draft.providerUrl ?? "",
   };
 }
 
-/** 카카오 장소 ID가 있는 맛집을 등록 화면의 선택 장소 형식으로 바꿉니다. 장소 ID가 없으면 null입니다. */
+/** 카카오 장소인 맛집을 등록 화면의 선택 장소 형식으로 바꿉니다. 다른 제공처 장소면 null입니다. */
 export function kakaoPlaceFromPlace(place: Place): KakaoPlaceResult | null {
-  if (!place.providerPlaceId) return null;
+  if (place.providerCode !== KAKAO_PROVIDER_CODE) return null;
   return {
     id: place.providerPlaceId,
     place_name: place.name,
     category_name: place.category,
     phone: place.providerPhone ?? "",
     address_name: place.lotAddress ?? place.address,
-    road_address_name: place.roadAddress ?? place.address,
+    road_address_name: place.roadAddress ?? "",
     x: String(place.longitude),
     y: String(place.latitude),
     place_url: place.providerUrl ?? "",
@@ -131,7 +135,7 @@ function kakaoPlaceBody(place: KakaoPlaceResult) {
   };
 }
 
-/** 가게에서 빠른 저장을 합니다. deviceLocation은 지금 기기 위치로, 장소 서비스가 가게와 1km 안인지 다시 확인합니다. */
+/** 가게에서 빠른 저장을 합니다. deviceLocation은 지금 기기 위치로, 장소 서비스가 가게와 VISIT_RADIUS_METERS 안인지 다시 확인합니다. */
 export function saveQuickPlaceDraft(
   accessToken: string,
   place: KakaoPlaceResult,
@@ -168,13 +172,16 @@ export function deleteQuickPlaceDraft(
   );
 }
 
-/** 새 기록 등록과 하트→기록 전환이 같은 기록 본문(CreatePlaceRecordRequest)을 보내도록 화면 입력을 바꿉니다. */
+/**
+ * 새 기록·수정을 장소 서비스 CreatePlaceRecordRequest 본문으로 바꿉니다. 하트한 곳을 기록해도 같은 본문이고, 서버가
+ * 그 장소의 하트·별로였던 곳 표시를 지웁니다.
+ */
 function placeRecordBody(place: NewPlace) {
   return {
-    providerCode: place.providerCode ?? KAKAO_PROVIDER_CODE,
+    providerCode: place.providerCode,
     providerPlaceId: place.providerPlaceId,
     placeName: place.name,
-    category: place.category ?? "음식점",
+    category: place.category,
     address: place.address,
     roadAddress: place.roadAddress ?? null,
     lotAddress: place.lotAddress ?? null,
@@ -186,7 +193,7 @@ function placeRecordBody(place: NewPlace) {
     visibility: place.visibility === "public" ? "PUBLIC" : "PRIVATE",
     menus: place.menus,
     tags: place.tags,
-    tagGroups: place.tagGroups ?? {},
+    tagGroups: place.tagGroups,
     visitConditions: place.visitConditions,
     photos: place.photos,
     deviceLocation: place.deviceLocation ?? null,
@@ -197,13 +204,6 @@ export function createPlaceRecord(accessToken: string, place: NewPlace): Promise
   return requestPlace("/records", accessToken, {
     method: "POST",
     body: JSON.stringify(placeRecordBody(place)),
-  });
-}
-
-export function convertLikedPlaceToRecord(accessToken: string, sourcePlaceId: string, place: NewPlace): Promise<Place> {
-  return requestPlace("/records/from-like", accessToken, {
-    method: "POST",
-    body: JSON.stringify({ sourcePlaceId, visitedConfirmed: true, record: placeRecordBody(place) }),
   });
 }
 
@@ -236,7 +236,7 @@ export function reportPlace(
   placeId: string,
   reason: PlaceReportReason,
   memo: string,
-): Promise<{ reportId: string; duplicate: boolean }> {
+): Promise<{ duplicate: boolean }> {
   return request(`/${encodeURIComponent(placeId)}/reports`, accessToken, {
     method: "POST",
     body: JSON.stringify({ reason, memo: memo.trim() || null }),
@@ -244,7 +244,7 @@ export function reportPlace(
   });
 }
 
-/** 맛다공 탈퇴: 장소 서비스에 남은 내 기록·하트·최근 본 장소·빠른 기록·제보를 모두 지웁니다. */
+/** 맛다공 탈퇴: 장소 서비스에 남은 내 기록·하트·다녀온 곳·별로였던 곳·최근 본 장소·빠른 기록·제보를 모두 지웁니다. */
 export function deleteMyPlaceData(accessToken: string): Promise<void> {
   return request("/me", accessToken, { method: "DELETE", errorMessage: "내 맛집 기록을 지우지 못했어요." });
 }
@@ -263,18 +263,10 @@ export function setPlaceLiked(accessToken: string, placeId: string, isLiked: boo
 
 /**
  * 다녀온 곳: 빠른 저장했거나 기록한 적이 있는 장소입니다. 기록을 지워도 남고, 빠른 저장을 지우면 빠집니다(기록한 적이 없을 때).
- * 이 장소는 위치 확인 없이 언제든 기록할 수 있습니다.
+ * 이 장소는 위치 확인 없이 언제든 기록할 수 있고, 별로였던 곳과 함께 '별로였어요'의 방문 근거가 됩니다(useMyPlaces).
  */
 export function getVisitedPlaceIds(accessToken: string): Promise<string[]> {
   return request("/visits", accessToken);
-}
-
-/**
- * 그 가게에 들른 근거(다녀온 곳, 빠른 저장, 별로였던 곳)가 있는 장소입니다.
- * 이 장소는 위치 확인 없이 기록하거나 하트에서 '별로였어요'를 고를 수 있습니다(내 기록이 있는 곳은 하트를 쓰지 않음).
- */
-export function getVisitProofPlaceIds(accessToken: string): Promise<string[]> {
-  return request("/visit-proofs", accessToken);
 }
 
 /** 다녀왔지만 별로였던 곳입니다. 발견·내 지도의 지도 마커에서 빠지고 맛객 신뢰에 엇갈림으로 반영됩니다(피드에는 그대로). */
@@ -282,7 +274,7 @@ export function getDislikedPlaceIds(accessToken: string): Promise<string[]> {
   return request("/dislikes", accessToken);
 }
 
-/** deviceLocation은 방문 근거(빠른 저장 등)가 없을 때 보내는 지금 위치로, 서버가 가게 1km 안인지 다시 확인합니다. */
+/** deviceLocation은 방문 근거(다녀온 곳 등)가 없을 때 보내는 지금 위치로, 서버가 가게 VISIT_RADIUS_METERS 안인지 다시 확인합니다. */
 export function setPlaceDisliked(
   accessToken: string,
   placeId: string,

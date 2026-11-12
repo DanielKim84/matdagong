@@ -7,12 +7,7 @@
 }
 .profile-settings {
   color: var(--color-ink);
-  font-family:
-    "Pretendard",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Noto Sans KR",
-    sans-serif;
+  font-family: var(--font-body);
 }
 .profile-settings :is(h1, h2, h3, b, legend) {
   color: var(--color-ink);
@@ -58,7 +53,7 @@
   border: 2px solid var(--neutral-0);
   border-radius: 50%;
   background: var(--amber-400);
-  color: white;
+  color: var(--on-strong);
 }
 .taste-settings-mascot > i .icon {
   width: 10px;

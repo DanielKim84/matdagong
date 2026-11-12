@@ -30,7 +30,7 @@ export default function MyMapSearch({ onSelect }: { onSelect: (result: KakaoPlac
     try {
       setResults(await searchKakaoPlaces(keyword));
     } catch (cause) {
-      setError(errorMessage(cause, "가게를 찾지 못했어요. 잠시 뒤 다시 시도해 주세요."));
+      setError(errorMessage(cause, "가게를 찾지 못했어요. 잠시 후 다시 시도해 주세요."));
       setResults(null);
     } finally {
       setIsSearching(false);

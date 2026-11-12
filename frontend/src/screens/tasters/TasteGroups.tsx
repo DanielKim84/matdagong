@@ -12,7 +12,7 @@ export default function TasteGroups({ tags, matched }: { tags: string[]; matched
   const app = useAppData();
   if (!tags.length) return <EmptyState icon="heart" title="아직 공개한 취향이 없어요" className="r-card" />;
 
-  // 사전에서 빠진 옛 이름은 버리지 않고 "기타" 묶음으로 맨 뒤에 둡니다.
+  // 태그 사전을 못 받았거나 사전에서 빠진 이름도 버리지 않고 "기타" 묶음으로 맨 뒤에 둡니다.
   const groups = groupTagsByDictionary(tags, (tag) => app.tasteTags.find((option) => option.name === tag)?.tagGroup);
   const matchedCount = matched ? tags.filter((tag) => matched.includes(tag)).length : 0;
 

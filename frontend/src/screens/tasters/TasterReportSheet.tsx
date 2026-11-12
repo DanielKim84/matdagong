@@ -5,6 +5,7 @@ import { ApiError } from "../../services/http";
 import type { TasterReportReason } from "../../models/community";
 import { errorMessage } from "../../utils/errorMessage";
 
+/** 신고 설명 최대 글자 수. 커뮤니티 서비스 ReportModels.ReportRequest, DB taster_reports.memo(VARCHAR(500))와 같습니다. */
 const MEMO_MAX = 500;
 
 const REASONS: { value: TasterReportReason; label: string }[] = [
@@ -59,7 +60,7 @@ export default function TasterReportSheet({
         onClose();
         return;
       }
-      setError(errorMessage(cause, "신고를 보내지 못했어요. 잠시 뒤 다시 시도해 주세요."));
+      setError(errorMessage(cause, "신고를 보내지 못했어요. 잠시 후 다시 시도해 주세요."));
       setIsSending(false);
     }
   }
@@ -103,7 +104,7 @@ export default function TasterReportSheet({
           </small>
         </label>
         {error && (
-          <p className="r-report-sheet__error" role="alert">
+          <p className="r-error-text" role="alert">
             {error}
           </p>
         )}

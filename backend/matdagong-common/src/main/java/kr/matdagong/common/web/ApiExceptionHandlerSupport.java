@@ -58,8 +58,8 @@ public abstract class ApiExceptionHandlerSupport extends ResponseEntityException
         return super.handleExceptionInternal(exception, body, headers, statusCode, request);
     }
 
-    /** 서비스별 핸들러가 특정 예외의 문구를 바꿀 때 덮어씁니다. */
-    protected String detailFor(Exception exception, HttpStatusCode status) {
+    /** 서버가 정한 한국어 사유, 검증 문구, 상태별 기본 문구 순서로 응답 detail을 고릅니다. */
+    private String detailFor(Exception exception, HttpStatusCode status) {
         if (exception instanceof ResponseStatusException statusException
                 && statusException.getReason() != null
                 && !statusException.getReason().isBlank()) {

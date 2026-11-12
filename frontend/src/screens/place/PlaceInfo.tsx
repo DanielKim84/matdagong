@@ -58,7 +58,7 @@ export default function PlaceInfo({ place }: { place: Place }) {
         </a>
       </div>
 
-      <button type="button" className="r-place-report" onClick={() => setIsReportOpen(true)}>
+      <button type="button" className="r-text-button r-place-report" onClick={() => setIsReportOpen(true)}>
         잘못된 정보 알려주기
       </button>
       {isReportOpen && <PlaceReportSheet place={place} onClose={() => setIsReportOpen(false)} />}

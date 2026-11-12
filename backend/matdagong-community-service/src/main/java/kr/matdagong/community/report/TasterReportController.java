@@ -25,12 +25,12 @@ public class TasterReportController {
         this.reports = reports;
     }
 
-    /** 이미 확인 전인 신고가 있으면 409로 답합니다. */
+    /** 접수하면 본문 없이 204로, 이미 확인 전인 신고가 있으면 409로 답합니다. */
     @PostMapping("/api/v1/tasters/{tasterId}/reports")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ReportResponse report(
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void report(
             @AuthenticationPrincipal Jwt jwt, @PathVariable UUID tasterId, @Valid @RequestBody ReportRequest request) {
-        return reports.report(AuthenticatedAccount.id(jwt), tasterId, request);
+        reports.report(AuthenticatedAccount.id(jwt), tasterId, request);
     }
 
     @GetMapping("/api/v1/users/me/taster-reports")

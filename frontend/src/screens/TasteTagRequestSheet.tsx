@@ -7,9 +7,10 @@ import { TASTE_TAG_GROUP_LABELS, TASTE_TAG_GROUPS, type TasteTagGroup } from "..
 import { errorMessage } from "../utils/errorMessage";
 import { formatFullDate } from "../utils/format";
 
+// 이름 30자·이유 300자는 커뮤니티 서비스 TasteTagModels.TagRequest의 검증과 같은 값입니다(DB tag_name VARCHAR(30)).
 const MAX_NAME_LENGTH = 30;
 const MAX_REASON_LENGTH = 300;
-/** 내 제안 내역에 보여 줄 최근 제안 수 */
+/** 내 제안 내역에 보여 줄 최근 제안 수. 서버(TasteTagRequestService.RECENT_REQUEST_LIMIT)도 20건만 돌려줍니다. */
 const HISTORY_LIMIT = 20;
 
 const STATUS_LABELS: Record<TagRequest["status"], string> = {
@@ -92,7 +93,7 @@ export default function TasteTagRequestSheet({
       setRequests((current) => [saved, ...current]);
       setSent(saved);
     } catch (cause) {
-      setError(errorMessage(cause, "요청을 보내지 못했어요. 다시 시도해 주세요."));
+      setError(errorMessage(cause, "요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요."));
     } finally {
       setIsSending(false);
     }
@@ -185,7 +186,7 @@ export default function TasteTagRequestSheet({
             </small>
           </label>
           {error && (
-            <p className="tag-request-error" role="alert">
+            <p className="r-error-box tag-request-error" role="alert">
               {error}
             </p>
           )}

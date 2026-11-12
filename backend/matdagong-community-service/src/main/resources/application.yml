@@ -3,6 +3,9 @@ server:
 
 spring:
   servlet:
+    # 사진 한 장 5MB(ProfileImageService·화면 profileImages.ts와 같은 값). 요청 전체는 배경 사진 10장을 한 번에 올려도
+    # 서버까지 들어오게 넉넉히 두고, 실제 배경 사진 합계 30MB 한도는 ProfileCoverService가 한국어 안내와 함께 막습니다.
+    # 게이트웨이 RequestSize(55MB)와 맞춥니다.
     multipart:
       max-file-size: 5MB
       max-request-size: 55MB
@@ -18,8 +21,6 @@ spring:
     url: ${COMMUNITY_DB_URL:jdbc:postgresql://localhost:54329/matdagong_community}
     username: ${COMMUNITY_DB_USERNAME:mdg}
     password: ${COMMUNITY_DB_PASSWORD:mdg_local}
-  flyway:
-    enabled: true
 
 dagong:
   auth:

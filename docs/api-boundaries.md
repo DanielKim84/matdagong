@@ -13,10 +13,11 @@
 
 공통 로그인은 `dagong-auth`가 처리합니다. 맛다공은 로그인 토큰의 공통 계정 UUID로 커뮤니티 API를 호출해 프로필·취향·구독 상태를 읽고, 지도와 장소 정보는 Gateway를 거쳐 장소 API에서 가져옵니다. 장소 기록·하트·다녀온 곳·별로였던 곳·최근 본 장소는 계정별로 장소 DB에 저장되어 기기 간에 공유됩니다(화면은 이 값들을 브라우저에 따로 두지 않습니다).
 
-서비스 간 직접 호출은 세 가지입니다.
+서비스 간 직접 호출은 네 가지입니다.
 
 - 장소 → 커뮤니티 `GET /api/v1/users/me/profile`: 기록을 저장할 때 사용자의 토큰으로 작성자 닉네임과 신고로 가려졌는지(`hiddenByReports`)를 가져옵니다. 요청 본문의 작성자 정보는 받지 않고, 작성자 캐릭터·사진은 화면이 커뮤니티 프로필에서 채웁니다.
 - 커뮤니티 → 장소 `GET /api/v1/places/{id}`: 화면이 보낸 장소 ID로 본인 기록과 공개 여부를 확인한 뒤 맛집 등록 알림을 만듭니다. 알림 제목·내용·중복 방지 키는 서버가 정합니다.
+- 커뮤니티 → 장소 `GET /api/v1/places/trust-stats`: 맛객 목록을 만들 때 사용자의 토큰으로 같은 맛집 경험 신뢰 재료(인정·엇갈림·태그 일치)를 받습니다. 화면은 이 경로를 직접 부르지 않고 `GET /tasters`의 `trustScore`만 읽습니다.
 - 장소 → 커뮤니티 `GET /internal/v1/hidden-tasters`: 30초마다 신고로 가린 맛객 목록을 받습니다(아래 [신고로 가린 맛객](#커뮤니티-db의-주요-테이블) 설명).
 
 ### 직접 다녀온 곳 확인
@@ -24,9 +25,8 @@
 직접 다녀온 곳만 근거로 남기도록, 장소 서비스는 요청의 `deviceLocation`(`{ latitude, longitude }`)이 가게와 1km 안인지 다시 확인합니다(`location/NearbyPlaceGuard`, 가게 좌표는 카카오 확인 값 → DB 값 → 요청 값 순).
 
 - **빠른 저장**(`POST /api/v1/places/drafts`): 늘 1km 안이어야 합니다. 저장하면 다녀온 곳(`user_place_visits`, `QUICK_SAVE`)이 됩니다.
-- **새 기록**(`POST /api/v1/places/records`, `/records/from-like`): 아래 근거가 있으면 위치 없이 받고, 없으면 1km 안이어야 합니다. 기록하면 다녀온 곳(`RECORD`)이 됩니다.
-  - 다녀온 곳(빠른 저장·기록한 적 있는 곳, 기록을 지운 곳 포함), 이 가게의 내 기록(수정), 같은 가게의 빠른 저장
-- **별로였어요**(`PUT /api/v1/places/{placeId}/dislike`): 방문 근거(`GET /api/v1/places/visit-proofs`: 다녀온 곳·빠른 저장·이미 남긴 별로였던 곳)가 있거나 1km 안이어야 합니다. 내 기록이 있는 곳은 고를 수 없습니다.
+- **새 기록**(`POST /api/v1/places/records`): 이 가게가 다녀온 곳이면 위치 없이 받고, 아니면 1km 안이어야 합니다. 빠른 저장과 기록은 늘 다녀온 곳을 함께 남기므로 빠른 저장에서 이어 쓰기, 내 기록 수정, 지운 기록 다시 남기기가 모두 여기에 듭니다. 기록하면 다녀온 곳(`RECORD`)이 되고, 같은 장소의 빠른 저장·하트·별로였던 곳 표시는 지웁니다(하트한 곳을 기록할 때는 화면이 직접 다녀왔는지 먼저 묻습니다).
+- **별로였어요**(`PUT /api/v1/places/{placeId}/dislike`): 방문 근거(다녀온 곳·이미 남긴 별로였던 곳)가 있거나 1km 안이어야 합니다. 화면은 `GET /places/visits`와 `GET /places/dislikes`를 합쳐 같은 근거를 알아봅니다(`useMyPlaces`). 내 기록이 있는 곳은 고를 수 없습니다.
 
 기기 위치는 결국 브라우저가 보내는 값이라 위치 조작까지는 막지 못하고, 화면을 거치지 않은 요청을 걸러 냅니다.
 
@@ -53,7 +53,7 @@
 | `user_subscriptions` | 사용자와 맛객 사이의 현재 구독 관계 |
 | `user_subscription_history` | 구독 회차별 유형·기간·금액 이력 |
 | `user_point_history` | 포인트 적립·사용·조정 원장. 잔액은 거래 합계로 계산 |
-| `user_notifications` | 사용자별 알림 스냅샷과 읽음 상태. 90일 보관 |
+| `user_notifications` | 사용자별 알림 스냅샷과 읽음 상태. 90일 보관, 사용자가 지울 수 있고 탈퇴하면 받은 알림과 그 계정을 가리키는 새 구독자 알림을 지움 |
 | `user_notification_settings` | 알림 종류별 받기 설정. 행이 없으면 새 기록·새 구독자 켬, 서비스 소식 끔. 끈 종류의 알림은 서버가 만들지 않음 |
 | `taster_reports` | 맛객 신고(이유·설명·신고한 기록의 장소). 설명은 모든 이유에서 꼭 받고 DB도 빈 설명을 막습니다(V43). 기록에서 신고해도 올린 맛객에게 쌓고, 확인 전(PENDING) 신고는 신고한 사람·맛객마다 한 건 |
 | `taster_moderations` | 신고 누적 처리 상태. 확인 전 신고 3명(불법·음란 사진은 1건)이면 `review_requested_at`(관리자 확인 목록), 5명이면 `hidden_at`(자동 가림) |
@@ -88,21 +88,22 @@
 | 서비스 | 경로(`/api/v1` 아래) | 하는 일 |
 | --- | --- | --- |
 | 장소 | `GET /places?q=`, `GET /places/{id}` | 검색, 상세 |
-| 장소 | `GET /places/records/mine`, `POST /places/records`, `POST /places/records/from-like` | 내 기록 목록, 새 기록·수정, 하트를 기록으로 바꾸기 |
+| 장소 | `GET /places/records/mine`, `POST /places/records` | 내 기록 목록, 새 기록·수정(하트한 곳도 같은 경로) |
 | 장소 | `PUT /places/records/visibility`(`{ placeIds, visibility }`), `DELETE /places/records/{placeId}` | 여러 기록의 공개 범위 한 번에 바꾸기, 내 기록 지우기(가게 정보·하트는 남음) |
 | 장소 | `GET /places/likes`, `PUT /places/{placeId}/like`, `POST /places/wishes` | 하트(가볼 곳) 목록·저장·풀기, 카카오 가게를 가볼 곳으로 저장 |
 | 장소 | `GET /places/dislikes`, `PUT /places/{placeId}/dislike` | 별로였던 곳 목록·남기기·되돌리기 |
-| 장소 | `GET /places/visits`, `GET /places/visit-proofs` | 다녀온 곳, 방문 근거가 있는 장소 |
+| 장소 | `GET /places/visits` | 다녀온 곳 |
 | 장소 | `GET /places/drafts`, `GET /places/drafts/check`, `POST /places/drafts`, `DELETE /places/drafts/{providerPlaceId}` | 빠른 저장 목록·중복 확인·저장·지우기 |
 | 장소 | `GET`·`POST /places/recent` | 최근 본 장소 |
-| 장소 | `GET /places/trust-stats` | 경험 신뢰 재료(인정·엇갈림·태그 일치) |
-| 장소 | `POST /places/{placeId}/reports`(`{ reason, memo }`) | 가게 정보 제보 |
+| 장소 | `POST /places/{placeId}/reports`(`{ reason, memo }`) | 가게 정보 제보. 응답 `{ duplicate }`는 확인 전 같은 제보가 이미 있었는지 |
 | 장소 | `DELETE /places/me` | 탈퇴: 내 장소 데이터 지우기 |
-| 커뮤니티 | `/users/me/profile`(`GET`·`POST`·`PUT`, `avatar`, `covers`), `DELETE /users/me` | 내 프로필·사진·배경, 탈퇴 |
+| 커뮤니티 | `/users/me/profile`(`GET`·`POST`·`PUT`, `avatar`, `covers`, `nickname-availability`), `DELETE /users/me` | 내 프로필·사진·배경, 닉네임 미리 확인, 탈퇴 |
 | 커뮤니티 | `GET /tasters`, `GET /taste-tags`, `/taste-tags/requests` | 맛객 목록·취향 일치율, 태그 사전, 태그 제안 |
 | 커뮤니티 | `/subscriptions`(`plans`, `subscribers`, `POST`, `DELETE /{subscriptionId}`), `GET /points` | 구독·요금·나를 구독, 포인트 내역 |
 | 커뮤니티 | `/notifications`(`settings`, `place-recorded`, 읽음·지우기) | 알림함, 알림 설정(`{ tasterNewPlace, newSubscriber, serviceNews }`), 맛집 등록 알림 만들기 |
-| 커뮤니티 | `POST /tasters/{tasterId}/reports`(`{ reason, memo, placeId }`), `GET /users/me/taster-reports` | 맛객 신고, 내가 신고한(확인 전) 맛객 |
+| 커뮤니티 | `POST /tasters/{tasterId}/reports`(`{ reason, memo, placeId }`, 204), `GET /users/me/taster-reports` | 맛객 신고, 내가 신고한(확인 전) 맛객 |
+
+`GET /places/trust-stats`는 커뮤니티 서비스만 부르는 서비스 간 경로입니다(위 [현재 흐름](#현재-흐름)). 사용자의 토큰으로 그 사람 자신의 재료만 돌려주므로 게이트웨이 `/api/v1/places/**`에 함께 열려 있어도 다른 사람 데이터는 보이지 않습니다.
 
 ## 탈퇴
 

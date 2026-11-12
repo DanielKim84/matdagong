@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -35,7 +34,11 @@ public abstract class EmbeddedPostgresTestSupport {
         postgres = EmbeddedPostgres.start();
         dataSource = postgres.getPostgresDatabase();
         jdbc = new JdbcTemplate(dataSource);
-        migrate(dataSource, null);
+        Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:db/migration")
+                .load()
+                .migrate();
     }
 
     @AfterAll
@@ -47,12 +50,6 @@ public abstract class EmbeddedPostgresTestSupport {
     /** 여러 테이블은 쉼표로 이어 적습니다. 참조하는 하위 테이블도 함께 비웁니다. */
     protected static void truncate(String tables) {
         jdbc.execute("TRUNCATE " + tables + " CASCADE");
-    }
-
-    /** 마이그레이션 자체를 확인할 때 쓰는 빈 DB입니다. 같은 embedded 서버 안에 새 DB를 만듭니다. */
-    protected static DataSource emptyDatabase(String name) {
-        jdbc.execute("CREATE DATABASE " + name);
-        return postgres.getDatabase("postgres", name);
     }
 
     /**
@@ -87,13 +84,5 @@ public abstract class EmbeddedPostgresTestSupport {
             if (waiting != null && waiting > 0) return;
             Thread.sleep(LOCK_POLL_MILLIS);
         }
-    }
-
-    /** version이 null이면 마지막 버전까지 적용합니다. */
-    protected static void migrate(DataSource target, String version) {
-        FluentConfiguration configuration =
-                Flyway.configure().dataSource(target).locations("classpath:db/migration");
-        if (version != null) configuration.target(version);
-        configuration.load().migrate();
     }
 }

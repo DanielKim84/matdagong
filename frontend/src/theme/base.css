@@ -6,6 +6,7 @@
 :root {
   --color-ink: var(--neutral-800);
   --color-muted: var(--neutral-500);
+  /* 비활성 글자·장식 아이콘 전용입니다. 대비가 2.7이라 읽어야 하는 글자·placeholder·뜻 있는 아이콘에는 --color-muted를 씁니다. */
   --color-subtle: var(--neutral-400);
   --color-line: var(--neutral-150);
   --color-canvas: var(--neutral-50);
@@ -16,8 +17,12 @@
   --color-primary-soft: var(--brand-50);
   --color-danger: var(--brand-600);
   --color-success: var(--green-500);
+  /* 흰·크림 바탕 위 작은 초록 글자(완료·쓸 수 있음 안내). 500 단계는 글자로 쓰기엔 대비가 낮아 한 단계 진하게 둡니다. */
+  --color-success-text: var(--green-600);
 
   --app-width: 430px;
+  /* 칩(.r-chip)·작은 둥근 버튼(.r-button--pill, 정렬·지역 고르기 등) 높이. 화면마다 따로 정하지 않고 이 값을 씁니다. */
+  --pill-height: 40px;
   font-family: var(--font-body);
   color: var(--color-ink);
   background: var(--color-canvas);

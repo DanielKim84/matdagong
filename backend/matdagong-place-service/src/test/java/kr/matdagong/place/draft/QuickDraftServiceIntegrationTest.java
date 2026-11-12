@@ -31,7 +31,8 @@ class QuickDraftServiceIntegrationTest extends EmbeddedPostgresTestSupport {
 
     @Test
     void 처음_보는_가게는_중복이_아니고_이름도_없다() {
-        assertThat(drafts.checkDuplicate(ME, null, "1001")).isEqualTo(new QuickPlaceDuplicateView(false, false, null));
+        assertThat(drafts.checkDuplicate(ME, "KAKAO", "1001"))
+                .isEqualTo(new QuickPlaceDuplicateView(false, false, null));
     }
 
     @Test

@@ -79,7 +79,7 @@ export default function SignupTasteStep({
           </p>
         </div>
         {error && (
-          <p className="r-onboarding-error" role="alert">
+          <p className="r-error-text" role="alert">
             {error}
           </p>
         )}

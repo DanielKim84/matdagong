@@ -77,7 +77,8 @@ p {
     min-height: 0;
     overflow: hidden;
     border: 1px solid var(--neutral-300);
-    border-radius: 23px;
+    /* 앱 밖에서 그리는 시작 화면 틀(onboarding.css의 #root > .r-onboarding)과 같은 반경입니다. */
+    border-radius: var(--radius-card);
   }
   .screen-content {
     height: 100%;
@@ -203,7 +204,7 @@ html.is-page-locked .screen-content {
   align-items: center;
   gap: 4px;
   border: 1px solid var(--color-line);
-  border-radius: 16px;
+  border-radius: var(--radius-control);
   background: color-mix(in srgb, var(--neutral-0) 95%, transparent);
   padding: 7px 9px;
   color: var(--slate-500);
@@ -217,6 +218,7 @@ html.is-page-locked .screen-content {
 }
 .map-location > small {
   max-width: 180px;
+  /* 작은 안내 상자라 --radius-sm(12px)이면 알약처럼 보여 8px을 씁니다(.r-match와 같은 이유). */
   border-radius: 8px;
   background: color-mix(in srgb, var(--neutral-0) 95%, transparent);
   padding: 6px;
@@ -228,7 +230,7 @@ html.is-page-locked .screen-content {
   display: block;
   width: 18px;
   height: 18px;
-  border: 3px solid white;
+  border: 3px solid var(--neutral-0);
   border-radius: 50%;
   background: var(--blue-400);
   box-shadow:
@@ -297,12 +299,6 @@ html.is-page-locked .screen-content {
     transform: scale(2.4);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .my-position-marker__character,
-  .my-position-marker__ground::after {
-    animation: none;
-  }
-}
 .map-error {
   position: absolute;
   top: 50%;
@@ -311,7 +307,7 @@ html.is-page-locked .screen-content {
   width: 85%;
   transform: translate(-50%, -50%);
   border: 1px solid var(--color-line);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--neutral-0) 95%, transparent);
   padding: 18px;
   color: var(--slate-500);
@@ -377,7 +373,7 @@ html.is-page-locked .screen-content {
 }
 .map-category-marker--liked .map-category-marker-glyph {
   background: var(--neutral-100);
-  color: var(--green-600);
+  color: var(--color-success-text);
 }
 .map-category-marker--visited .map-category-marker-glyph {
   color: var(--berry-600);
@@ -396,7 +392,8 @@ html.is-page-locked .screen-content {
   place-items: center;
   border: 3px solid var(--neutral-0);
   border-radius: 50%;
-  background: var(--brand-400);
+  /* 흰 숫자가 읽히도록 주요 버튼과 같은 600 단계(400은 대비 2.75) */
+  background: var(--color-primary);
   box-shadow: 0 3px 12px color-mix(in srgb, var(--shadow-color) 25%, transparent);
   color: var(--on-strong);
   font-size: 14px;
@@ -532,7 +529,11 @@ html.is-page-locked .screen-content {
   height: 11px;
 }
 
-/* 움직임 줄이기를 켠 사용자에게는 모든 애니메이션·전환을 끕니다. 화면 CSS보다 항상 우선해야 합니다. */
+/*
+ * 움직임 줄이기를 켠 사용자에게는 모든 애니메이션·전환을 끕니다. 화면 CSS보다 항상 우선해야 합니다.
+ * 이 규칙 하나로 앱 전체를 덮으므로 영역 CSS에 같은 미디어 쿼리를 따로 두지 않습니다.
+ * 예외는 시간을 재는 데 애니메이션을 쓰는 곳뿐입니다(feed.css 스토리 진행 막대).
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

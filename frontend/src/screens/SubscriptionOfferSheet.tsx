@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAppData } from "../app/AppData";
+import { RETRY_LATER_MESSAGE, useAppData } from "../app/AppData";
 import Icon from "../components/Icon";
 import { useNotificationDialog } from "../components/NotificationDialog";
 import Sheet from "../components/Sheet";
@@ -84,7 +84,7 @@ export default function SubscriptionOfferSheet() {
         actions.notify({
           kind: "error",
           title: "구독 정보를 새로고침하지 못했어요",
-          message: errorMessage(cause, "잠시 후 다시 시도해 주세요."),
+          message: errorMessage(cause, RETRY_LATER_MESSAGE),
         }),
       );
       actions.notify({
@@ -117,12 +117,10 @@ export default function SubscriptionOfferSheet() {
     <Sheet
       title={`${taster.tasterName} 구독하기`}
       onClose={actions.closeSubscription}
-      variant="plain"
       backdropClassName="r-tasters-offer"
       className="r-tasters-offer__panel"
       header={
         <>
-          <span className="r-tasters-offer__handle" aria-hidden="true" />
           <div className="r-tasters-offer__head">
             <TasterAvatar className="r-tasters-avatar r-tasters-avatar--md" taster={taster} />
             <span>
@@ -235,7 +233,7 @@ export default function SubscriptionOfferSheet() {
       )}
 
       {error && (
-        <p className="r-tasters-offer__error" role="alert">
+        <p className="r-error-text" role="alert">
           {error}
         </p>
       )}

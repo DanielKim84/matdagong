@@ -9,10 +9,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import kr.matdagong.common.jdbc.JdbcTimes;
+import kr.matdagong.common.web.ApiErrors;
 import kr.matdagong.community.notification.NotificationService;
-import kr.matdagong.community.profile.ProfileMediaUrls;
 import kr.matdagong.community.profile.ProfileQueries;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -27,10 +26,6 @@ import org.springframework.web.server.ResponseStatusException;
 public class SubscriptionService {
     /** 결제 연동 전에는 유료 플랜도 무료로 제공해 회차 금액을 0으로 남깁니다. 요금표는 화면 안내용입니다(SubscriptionPlans). */
     private static final BigDecimal PRELAUNCH_PRICE = BigDecimal.ZERO;
-    /** 구독자 프로필이 없을 때 새 구독자 알림에 쓰는 이름입니다. */
-    private static final String UNKNOWN_SUBSCRIBER_NAME = "새 사용자";
-
-    private static final String SUBSCRIPTION_IN_PROGRESS = "이미 처리 중인 구독이에요.";
 
     private final JdbcTemplate jdbc;
     private final NotificationService notifications;
@@ -75,8 +70,7 @@ public class SubscriptionService {
         expireEndedSubscriptions();
         return jdbc.query(
                 """
-                SELECT s.subscription_id, s.subscriber_id, p.nickname, p.avatar_variant,
-                       p.profile_img_data IS NOT NULL AS has_avatar,
+                SELECT s.subscription_id, s.subscriber_id, p.nickname, p.avatar_variant, %s,
                        s.subscription_type, period.term_months, period.start_dt, period.end_dt
                 FROM user_subscriptions s
                 JOIN user_profiles p ON p.account_id = s.subscriber_id
@@ -84,14 +78,15 @@ public class SubscriptionService {
                   ON period.subscription_id = s.subscription_id AND period.period_st = 'ACTIVE'
                 WHERE s.target_account_id = ? AND s.subscription_st = 'ACTIVE'
                 ORDER BY s.reg_dt DESC
-                """,
+                """
+                        .formatted(ProfileQueries.HAS_AVATAR),
                 (rs, row) -> {
                     UUID subscriberId = rs.getObject("subscriber_id", UUID.class);
                     return new IncomingSubscriptionView(
                             rs.getObject("subscription_id", UUID.class),
                             subscriberId,
                             rs.getString("nickname"),
-                            rs.getBoolean("has_avatar") ? ProfileMediaUrls.avatar(subscriberId) : null,
+                            ProfileQueries.avatarUrl(rs, subscriberId),
                             rs.getInt("avatar_variant"),
                             SubscriptionType.valueOf(rs.getString("subscription_type")),
                             rs.getObject("term_months", Integer.class),
@@ -130,13 +125,15 @@ public class SubscriptionService {
         if (subscriberId.equals(targetId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "자기 프로필은 구독할 수 없습니다.");
         }
-        String targetNickname = ProfileQueries.nickname(jdbc, targetId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "구독할 맛객을 찾을 수 없습니다."));
-        String subscriberNickname = ProfileQueries.nickname(jdbc, subscriberId).orElse(UNKNOWN_SUBSCRIBER_NAME);
+        if (!ProfileQueries.exists(jdbc, targetId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "구독할 맛객을 찾을 수 없습니다.");
+        }
+        // 한 구독자의 신청을 하나씩 처리해 무료 자리가 둘 생기거나, 두 번 누른 유료 신청이 동시에 열리지 않게 합니다(뒤 요청은 409).
+        // 신고·태그 제안처럼 구독도 내 프로필이 있어야 하므로 잠글 프로필이 없으면 막습니다.
+        if (!ProfileQueries.lock(jdbc, subscriberId)) throw ApiErrors.profileRequired();
+        String subscriberNickname = ProfileQueries.nickname(jdbc, subscriberId).orElseThrow(ApiErrors::profileRequired);
 
         boolean isFree = request.subscriptionType() == SubscriptionType.FREE;
-        // 한 구독자의 신청을 하나씩 처리해 무료 자리가 둘 생기거나, 두 번 누른 유료 신청이 동시에 열리지 않게 합니다(뒤 요청은 409).
-        ProfileQueries.lock(jdbc, subscriberId);
         Integer termMonths = SubscriptionPlans.validatedTerm(request);
         if (isSubscribed(subscriberId, targetId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 구독 중인 맛객입니다.");
@@ -149,33 +146,24 @@ public class SubscriptionService {
                 ? null
                 : start.atZone(ZoneOffset.UTC).plusMonths(termMonths).toInstant();
         UUID historyId = UUID.randomUUID();
-        UUID subscriptionId;
-        try {
-            subscriptionId = activate(subscriberId, targetId, request.subscriptionType());
-            jdbc.update(
-                    """
-                    INSERT INTO user_subscription_history (
-                        subscription_history_id, subscription_id, subscription_type,
-                        term_months, period_st, price_amt, start_dt, end_dt
-                    ) VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?, ?)
-                    """,
-                    historyId,
-                    subscriptionId,
-                    request.subscriptionType().name(),
-                    termMonths,
-                    PRELAUNCH_PRICE,
-                    start.atOffset(ZoneOffset.UTC),
-                    end == null ? null : end.atOffset(ZoneOffset.UTC));
-        } catch (DuplicateKeyException exception) {
-            // 프로필이 없어 위 잠금이 걸리지 않은 구독자가 동시에 신청하면, 활성 회차·무료 자리 유일 제약이 마지막으로 막습니다.
-            throw new ResponseStatusException(HttpStatus.CONFLICT, SUBSCRIPTION_IN_PROGRESS);
-        }
+        UUID subscriptionId = activate(subscriberId, targetId, request.subscriptionType());
+        jdbc.update(
+                """
+                INSERT INTO user_subscription_history (
+                    subscription_history_id, subscription_id, subscription_type,
+                    term_months, period_st, price_amt, start_dt, end_dt
+                ) VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?, ?)
+                """,
+                historyId,
+                subscriptionId,
+                request.subscriptionType().name(),
+                termMonths,
+                PRELAUNCH_PRICE,
+                start.atOffset(ZoneOffset.UTC),
+                end == null ? null : end.atOffset(ZoneOffset.UTC));
 
         notifications.newSubscriber(targetId, subscriberId, subscriberNickname, historyId);
-
-        SubscriptionView view = new SubscriptionView(
-                subscriptionId, targetId, targetNickname, request.subscriptionType(), termMonths, start, end);
-        return new SubscribeResult(view, replacedNickname);
+        return new SubscribeResult(replacedNickname);
     }
 
     /**

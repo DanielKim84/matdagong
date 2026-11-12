@@ -11,7 +11,6 @@ import "./styles/app.css";
 import "./styles/auth-start.css";
 import "./styles/profile-settings.css";
 import "./styles/design-system.css";
-import "./styles/photo-tag-detail.css";
 import "./styles/a/forms.css";
 import "./styles/renewal/index.css";
 
