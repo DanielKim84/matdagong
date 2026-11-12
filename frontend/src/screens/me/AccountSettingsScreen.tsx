@@ -31,9 +31,7 @@ export default function AccountSettingsScreen() {
   const notificationSettings = useNotificationSettings();
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
-  // 이전 인증 서버처럼 제공자를 알려 주지 않으면 카카오 하나로 봅니다(그때는 카카오만 있었음).
-  const connectedCodes: readonly string[] = app.loginProviders.length > 0 ? app.loginProviders : ["KAKAO"];
-  const connectedLabel = PROVIDERS.filter((provider) => connectedCodes.includes(provider.code))
+  const connectedLabel = PROVIDERS.filter((provider) => app.loginProviders.includes(provider.code))
     .map((provider) => provider.label)
     .join("·");
 
@@ -93,7 +91,7 @@ export default function AccountSettingsScreen() {
                   {provider.mark}
                 </span>
                 <span className="r-me-setting__label">{provider.label}</span>
-                {connectedCodes.includes(provider.code) ? (
+                {app.loginProviders.includes(provider.code) ? (
                   <span className="r-me-setting__state is-ok">연결됨</span>
                 ) : (
                   // 한 계정에 다른 소셜 계정을 더 잇는 기능은 아직 없어, 다른 제공자로 로그인하면 새 계정이 됩니다.

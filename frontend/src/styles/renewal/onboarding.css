@@ -683,6 +683,44 @@
 }
 
 /* 닉네임 입력 */
+/* 가입 1단계의 소셜 프로필 사진 카드. "이 사진 쓰기"를 끄면 사진을 흐리게 둡니다. */
+.r-onboarding-photo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 12px;
+}
+.r-onboarding-photo img {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: opacity 0.2s;
+}
+.r-onboarding-photo.is-off img {
+  opacity: 0.4;
+}
+.r-onboarding-photo__text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-onboarding-photo__text strong {
+  color: var(--color-ink);
+  font-size: 14px;
+}
+.r-onboarding-photo__text small {
+  font-size: 12px;
+}
+.r-onboarding-photo .r-chip {
+  flex: none;
+}
 .r-onboarding-field {
   display: flex;
   flex-direction: column;

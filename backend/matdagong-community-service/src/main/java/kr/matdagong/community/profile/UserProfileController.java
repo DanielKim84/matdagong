@@ -31,11 +31,17 @@ public class UserProfileController {
     private final UserProfileService profiles;
     private final ProfileImageService images;
     private final ProfileCoverService covers;
+    private final SocialAvatarDownloader socialAvatars;
 
-    public UserProfileController(UserProfileService profiles, ProfileImageService images, ProfileCoverService covers) {
+    public UserProfileController(
+            UserProfileService profiles,
+            ProfileImageService images,
+            ProfileCoverService covers,
+            SocialAvatarDownloader socialAvatars) {
         this.profiles = profiles;
         this.images = images;
         this.covers = covers;
+        this.socialAvatars = socialAvatars;
     }
 
     @PostMapping
@@ -71,6 +77,16 @@ public class UserProfileController {
     public void uploadAvatar(@AuthenticationPrincipal Jwt jwt, @RequestParam("file") MultipartFile file)
             throws IOException {
         images.saveAvatar(AuthenticatedAccount.id(jwt), file);
+    }
+
+    /**
+     * 가입 마지막 단계(SignupScreen)에서 카카오·네이버 프로필 사진을 내려받아 프로필 사진으로 둡니다. 사용자가 그 제공자에
+     * 사진 제공을 동의했고 가입 화면에서 쓰기로 둔 때만 부릅니다. 이미 프로필 사진이 있으면 그대로 둡니다.
+     */
+    @PutMapping("/avatar/social")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void importSocialAvatar(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody SocialAvatarRequest request) {
+        images.saveSocialAvatar(AuthenticatedAccount.id(jwt), socialAvatars.download(request.imageUrl()));
     }
 
     @DeleteMapping("/avatar")

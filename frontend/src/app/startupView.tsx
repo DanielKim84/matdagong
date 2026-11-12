@@ -77,7 +77,7 @@ export function renderMatdagong(root: HTMLElement, accessToken: string, membersh
         <App
           accessToken={accessToken}
           displayName={membership.displayName}
-          loginProviders={membership.loginProviders ?? []}
+          loginProviders={membership.loginProviders}
           onLogout={() => void logout()}
         />
       </StrictMode>,
@@ -93,6 +93,7 @@ export function renderMatdagong(root: HTMLElement, accessToken: string, membersh
           accessToken={accessToken}
           displayName={membership.displayName}
           email={membership.email ?? ""}
+          profileImageUrl={membership.profileImageUrl}
           onComplete={renderApp}
         />
       </StrictMode>,

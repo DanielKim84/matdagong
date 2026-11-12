@@ -151,6 +151,18 @@ async function uploadProfileCovers(accessToken: string, files: File[]): Promise<
   });
 }
 
+/**
+ * 가입할 때 카카오·네이버 프로필 사진을 맛객 프로필 사진으로 가져옵니다. 커뮤니티 서버가 그 주소에서 내려받아 저장하고,
+ * 이미 프로필 사진이 있으면 그대로 둡니다(UserProfileController.importSocialAvatar).
+ */
+export async function importSocialAvatar(accessToken: string, imageUrl: string): Promise<void> {
+  await request<void>("/users/me/profile/avatar/social", accessToken, {
+    method: "PUT",
+    body: JSON.stringify({ imageUrl }),
+    errorMessage: "프로필 사진을 가져오지 못했어요.",
+  });
+}
+
 async function removeProfileAvatar(accessToken: string): Promise<void> {
   await request<void>("/users/me/profile/avatar", accessToken, {
     method: "DELETE",

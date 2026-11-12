@@ -21,10 +21,10 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class ProfileImageService {
     /**
-     * 사진 한 장 최대 크기입니다. 화면 profile-edit/profileImages.ts의 MAX_IMAGE_MB, application.yml의
+     * 사진 한 장 최대 크기입니다. 소셜 사진 가져오기(SocialAvatarDownloader)도 같은 한도를 씁니다. 화면 profile-edit/profileImages.ts의 MAX_IMAGE_MB, application.yml의
      * spring.servlet.multipart.max-file-size와 맞춥니다.
      */
-    private static final long MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+    static final long MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
     private final JdbcTemplate jdbc;
 
@@ -70,6 +70,24 @@ public class ProfileImageService {
     public void saveAvatar(UUID accountId, MultipartFile file) throws IOException {
         ProfileImage image = validate(file);
         updateAvatar(accountId, image.data(), image.mimeType());
+    }
+
+    /**
+     * 가입할 때 가져온 소셜 프로필 사진을 저장합니다. 이미 프로필 사진이 있으면 덮어쓰지 않습니다(가입을 다시 이어 하거나
+     * 같은 요청이 두 번 와도 직접 고른 사진을 지키기 위해서).
+     */
+    @Transactional
+    public void saveSocialAvatar(UUID accountId, ProfileImage image) {
+        int updated = jdbc.update(
+                """
+                UPDATE user_profiles
+                SET profile_img_data = ?, profile_img_mime_type = ?, upd_dt = now()
+                WHERE account_id = ? AND profile_img_data IS NULL
+                """,
+                image.data(),
+                image.mimeType(),
+                accountId);
+        if (updated == 0 && !ProfileQueries.exists(jdbc, accountId)) throw ApiErrors.profileRequired();
     }
 
     @Transactional

@@ -182,6 +182,21 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
+    void 소셜_프로필_사진은_프로필_사진이_없을_때만_채운다() {
+        insertProfile(FIRST, "국밥러");
+        images.saveSocialAvatar(FIRST, new ProfileImage(PNG, "image/png"));
+        assertThat(images.findAvatar(FIRST))
+                .hasValueSatisfying(saved -> assertThat(saved.data()).isEqualTo(PNG));
+
+        // 직접 고른 사진이 있으면 가입을 다시 이어 해도 소셜 사진으로 덮어쓰지 않습니다.
+        byte[] otherPng = PNG.clone();
+        otherPng[otherPng.length - 1] = 1;
+        images.saveSocialAvatar(FIRST, new ProfileImage(otherPng, "image/png"));
+        assertThat(images.findAvatar(FIRST))
+                .hasValueSatisfying(saved -> assertThat(saved.data()).isEqualTo(PNG));
+    }
+
+    @Test
     void 프로필이_없으면_수정_이미지_태그_제안을_같은_409_문구로_안내한다() {
         MockMultipartFile image = new MockMultipartFile("file", "a.png", "image/png", PNG);
         TasteTagRequestService tagRequests = new TasteTagRequestService(jdbc);
@@ -191,6 +206,10 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                 HttpStatus.CONFLICT,
                 ApiErrors.PROFILE_REQUIRED);
         assertStatus(() -> images.saveAvatar(FIRST, image), HttpStatus.CONFLICT, ApiErrors.PROFILE_REQUIRED);
+        assertStatus(
+                () -> images.saveSocialAvatar(FIRST, new ProfileImage(PNG, "image/png")),
+                HttpStatus.CONFLICT,
+                ApiErrors.PROFILE_REQUIRED);
         assertStatus(() -> covers.addCovers(FIRST, List.of(image)), HttpStatus.CONFLICT, ApiErrors.PROFILE_REQUIRED);
         assertStatus(
                 () -> tagRequests.create(FIRST, new TagRequest(TagRequestType.TAG, "새 태그", TasteTagGroup.TASTE, null)),

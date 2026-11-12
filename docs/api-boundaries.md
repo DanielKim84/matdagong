@@ -97,7 +97,7 @@
 | 장소 | `GET`·`POST /places/recent` | 최근 본 장소 |
 | 장소 | `POST /places/{placeId}/reports`(`{ reason, memo }`) | 가게 정보 제보. 응답 `{ duplicate }`는 확인 전 같은 제보가 이미 있었는지 |
 | 장소 | `DELETE /places/me` | 탈퇴: 내 장소 데이터 지우기 |
-| 커뮤니티 | `/users/me/profile`(`GET`·`POST`·`PUT`, `avatar`, `covers`, `nickname-availability`), `DELETE /users/me` | 내 프로필·사진·배경, 닉네임 미리 확인, 탈퇴 |
+| 커뮤니티 | `/users/me/profile`(`GET`·`POST`·`PUT`, `avatar`, `avatar/social`, `covers`, `nickname-availability`), `DELETE /users/me` | 내 프로필·사진·배경, 가입 때 소셜 프로필 사진 가져오기, 닉네임 미리 확인, 탈퇴 |
 | 커뮤니티 | `GET /tasters`, `GET /taste-tags`, `/taste-tags/requests` | 맛객 목록·취향 일치율, 태그 사전, 태그 제안 |
 | 커뮤니티 | `/subscriptions`(`plans`, `subscribers`, `POST`, `DELETE /{subscriptionId}`), `GET /points` | 구독·요금·나를 구독, 포인트 내역 |
 | 커뮤니티 | `/notifications`(`settings`, `place-recorded`, 읽음·지우기) | 알림함, 알림 설정(`{ tasterNewPlace, newSubscriber, serviceNews }`), 맛집 등록 알림 만들기 |

@@ -13,8 +13,13 @@ export type MembershipStatus = {
   registered: boolean;
   displayName: string;
   email: string | null;
-  /** 이 계정에 연결된 소셜 제공자 코드(KAKAO, NAVER). 이전 인증 서버는 보내지 않습니다. */
-  loginProviders?: string[];
+  /** 이 계정에 연결된 소셜 제공자 코드(KAKAO, NAVER). 설정의 연결된 계정에 씁니다. */
+  loginProviders: string[];
+  /**
+   * 이번에 로그인한 카카오·네이버 계정의 프로필 사진 주소(dagong-auth MembershipStatus.profileImageUrl). 사진 제공에
+   * 동의하지 않았거나 기본 사진이면 null입니다. 가입 화면이 맛객 프로필 사진으로 가져옵니다(importSocialAvatar).
+   */
+  profileImageUrl: string | null;
 };
 
 /** 인가 코드를 access token으로 바꿉니다. 받은 토큰은 탭 저장소에 보관합니다. */
@@ -89,7 +94,9 @@ function isMembershipStatus(value: unknown): value is MembershipStatus {
     "registered" in value &&
     typeof value.registered === "boolean" &&
     "displayName" in value &&
-    typeof value.displayName === "string"
+    typeof value.displayName === "string" &&
+    "loginProviders" in value &&
+    Array.isArray(value.loginProviders)
   );
 }
 

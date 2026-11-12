@@ -8,23 +8,31 @@ const MAX_EMAIL_LENGTH = 320;
 
 /**
  * 가입 1단계: 닉네임과 연락용 이메일(선택)을 받습니다. 다음 단계로 넘어갈 때 입력값을 onSubmit으로 넘깁니다.
+ * 카카오·네이버에서 프로필 사진을 받았으면 보여 주고, 그 사진을 맛객 프로필 사진으로 쓸지 고르게 합니다(저장은 가입 마지막에).
  * 입력하는 동안 다른 맛객이 쓰는 닉네임인지 확인하고, 겹치거나 확인 중이면 다음으로 넘어가지 않습니다.
  */
 export default function SignupNameStep({
   accessToken,
   initialName,
   initialEmail,
+  socialPhotoUrl,
+  usesSocialPhoto,
+  onUsesSocialPhotoChange,
   error,
   onSubmit,
 }: {
   accessToken: string;
   initialName: string;
   initialEmail: string;
+  socialPhotoUrl: string | null;
+  usesSocialPhoto: boolean;
+  onUsesSocialPhotoChange: (usesPhoto: boolean) => void;
   error: string;
   onSubmit: (displayName: string, email: string) => void;
 }) {
   const [displayName, setDisplayName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
+  const [hasPhotoError, setHasPhotoError] = useState(false);
   const nicknameCheck = useNicknameCheck(accessToken, displayName);
   const canSubmit = !!displayName.trim() && nicknameCheck !== "taken" && nicknameCheck !== "checking";
 
@@ -46,6 +54,31 @@ export default function SignupNameStep({
             </h1>
             <p className="r-muted">맛객 프로필과 기록에 보이는 이름이에요.</p>
           </header>
+          {socialPhotoUrl && !hasPhotoError && (
+            <div className={`r-onboarding-photo${usesSocialPhoto ? "" : " is-off"}`}>
+              <img
+                src={socialPhotoUrl}
+                alt="로그인한 계정의 프로필 사진"
+                referrerPolicy="no-referrer"
+                onError={() => {
+                  setHasPhotoError(true);
+                  onUsesSocialPhotoChange(false);
+                }}
+              />
+              <div className="r-onboarding-photo__text">
+                <strong>프로필 사진</strong>
+                <small className="r-muted">로그인한 계정의 사진이에요. 나중에 바꿀 수 있어요.</small>
+              </div>
+              <button
+                type="button"
+                className={`r-chip${usesSocialPhoto ? " is-on" : ""}`}
+                aria-pressed={usesSocialPhoto}
+                onClick={() => onUsesSocialPhotoChange(!usesSocialPhoto)}
+              >
+                이 사진 쓰기
+              </button>
+            </div>
+          )}
           <div className="r-onboarding-field">
             <label htmlFor="signup-display-name">닉네임</label>
             <input

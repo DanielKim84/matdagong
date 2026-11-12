@@ -126,6 +126,12 @@ public final class ProfileModels {
             List<String> excludedTags,
             boolean hiddenByReports) {}
 
+    /**
+     * 소셜 프로필 사진 가져오기 요청입니다. 주소는 공통 로그인 가입 상태의 profileImageUrl(dagong-auth, 1000자까지)이고,
+     * 화면 services/community.ts importSocialAvatar와 맞춥니다.
+     */
+    public record SocialAvatarRequest(@NotBlank @Size(max = 1000) String imageUrl) {}
+
     /** 검증을 마친 이미지 파일 데이터와 MIME 형식입니다. */
     public record ProfileImage(byte[] data, String mimeType) {}
 }

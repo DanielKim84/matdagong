@@ -3,7 +3,7 @@ import { RETRY_LATER_MESSAGE } from "../../app/AppData";
 import { NICKNAME_TAKEN_MESSAGE } from "../../components/NicknameCheckNote";
 import { registerMembership } from "../../services/auth";
 import { ApiError } from "../../services/http";
-import { ensureMyProfile, getTasteTags, updateMyProfile } from "../../services/community";
+import { ensureMyProfile, getTasteTags, importSocialAvatar, updateMyProfile } from "../../services/community";
 import { MAX_NICKNAME_LENGTH, type FoodFocus, type TasteTag } from "../../models/community";
 import { filterTagsForFocus } from "../../models/tasteTags";
 import { errorMessage } from "../../utils/errorMessage";
@@ -22,16 +22,21 @@ export default function SignupScreen({
   accessToken,
   displayName: initialName,
   email: initialEmail,
+  profileImageUrl,
   onComplete,
 }: {
   accessToken: string;
   displayName: string;
   email: string;
+  /** 로그인한 카카오·네이버 계정의 프로필 사진 주소. 사진 제공에 동의하지 않았으면 null입니다. */
+  profileImageUrl: string | null;
   onComplete: () => void;
 }) {
   const [step, setStep] = useState<Step>("name");
   const [displayName, setDisplayName] = useState(initialName.slice(0, MAX_NICKNAME_LENGTH));
   const [email, setEmail] = useState(initialEmail);
+  // 소셜 프로필 사진은 처음에 쓰기로 두고, 1단계에서 빼거나 사진을 불러오지 못하면 쓰지 않습니다.
+  const [usesSocialPhoto, setUsesSocialPhoto] = useState(!!profileImageUrl);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tasteTags, setTasteTags] = useState<TasteTag[]>([]);
@@ -59,7 +64,7 @@ export default function SignupScreen({
     };
   }, [accessToken]);
 
-  /** 회원 가입 → 맛객 프로필 만들기 → 취향 저장 순서입니다. 실패하면 같은 단계에서 다시 시도하고, 끝난 회원 가입은 건너뜁니다. */
+  /** 회원 가입 → 맛객 프로필 만들기 → 취향 저장 → (고른 경우) 소셜 프로필 사진 가져오기 순서입니다. 실패하면 같은 단계에서 다시 시도하고, 끝난 회원 가입은 건너뜁니다. */
   async function finishSignup(tags: string[]): Promise<boolean> {
     setIsSubmitting(true);
     setError("");
@@ -85,6 +90,10 @@ export default function SignupScreen({
       }).catch((cause: unknown) => {
         throw cause instanceof ApiError && cause.status === 409 ? new NicknameTakenError() : cause;
       });
+      // 사진은 덤이라 가져오지 못해도 가입은 마칩니다(나중에 프로필 편집에서 올릴 수 있음).
+      if (profileImageUrl && usesSocialPhoto) {
+        await importSocialAvatar(accessToken, profileImageUrl).catch(() => undefined);
+      }
       return true;
     } catch (cause) {
       if (cause instanceof NicknameTakenError) {
@@ -125,6 +134,9 @@ export default function SignupScreen({
         accessToken={accessToken}
         initialName={displayName}
         initialEmail={email}
+        socialPhotoUrl={profileImageUrl}
+        usesSocialPhoto={usesSocialPhoto}
+        onUsesSocialPhotoChange={setUsesSocialPhoto}
         error={error}
         onSubmit={submitName}
       />

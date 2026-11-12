@@ -93,7 +93,7 @@ git -C C:\workspace\dagong-matdagong pull
 - 카카오 앱에는 이미 아래가 등록되어 있어 PC가 바뀌어도 그대로 동작합니다(둘 다 `localhost`라서). 새로 등록할 필요 없습니다.
   - 카카오 로그인 Redirect URI: `http://localhost:4840/login/oauth2/code/kakao`
   - 플랫폼 Web 도메인: `http://localhost:4845`
-- 네이버 앱에는 **API 설정 → 네이버 로그인 → PC 웹**에 서비스 URL `http://localhost:4840`, Callback URL `http://localhost:4840/login/oauth2/code/naver`를 등록하고, 제공 정보로 **별명**을 고릅니다. 검수 전에는 **멤버관리**에 등록한 네이버 아이디만 로그인할 수 있습니다.
+- 네이버 앱에는 **API 설정 → 네이버 로그인 → PC 웹**에 서비스 URL `http://localhost:4840`, Callback URL `http://localhost:4840/login/oauth2/code/naver`를 등록하고, 제공 정보로 **별명**과 **프로필 사진**(둘 다 추가·선택)을 고릅니다. 카카오 앱 **동의항목**도 닉네임·프로필 사진을 "선택 동의"로 둡니다(사진은 가입할 때 맛객 프로필 사진으로 가져옴). 검수 전에는 **멤버관리**에 등록한 네이버 아이디만 로그인할 수 있습니다.
 
 ---
 
