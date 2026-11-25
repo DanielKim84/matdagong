@@ -122,7 +122,8 @@ export default function DiscoverScreen() {
     setFocusedId(place.id);
   }
   function openPlace(place: Place) {
-    prepareMapReturn("discover", place.id);
+    // 지도가 보일 때만 돌아올 지도 자리를 기억합니다. 검색 결과 목록에서 열었으면 돌아와도 같은 목록(검색어 유지)을 보여 줍니다.
+    if (showsMap) prepareMapReturn("discover", place.id);
     go("place", place.id);
   }
   /** 목록 줄: 처음 누르면 지도를 그 가게로 옮겨 보여 주고(지도 카드까지 올림), 한 번 더 누르면 상세로 갑니다(마커와 같은 규칙). */
