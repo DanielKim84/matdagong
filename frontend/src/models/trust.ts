@@ -7,7 +7,7 @@ import type { Taster } from "./place";
 export type TrustLevel = "LEARNING" | "NORMAL" | "TRUSTED" | "DIFFERENT";
 
 /** 등급마다 화면에 쓰는 이름입니다. 나머지 등급은 따로 이름을 보여 주지 않습니다. */
-export const TRUST_LEVEL_LABELS: Partial<Record<TrustLevel, string>> = {
+const TRUST_LEVEL_LABELS: Partial<Record<TrustLevel, string>> = {
   TRUSTED: "믿고 가는 맛객",
   DIFFERENT: "입맛이 다른 편",
 };

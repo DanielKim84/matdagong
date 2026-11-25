@@ -45,9 +45,13 @@ public class PlaceViewLoader {
 
     /** 요청한 순서를 유지해 장소 목록을 반환하며, 없는 장소 ID는 결과에서 빠집니다. */
     public List<PlaceView> load(List<UUID> placeIds, UUID viewerId, RecordScope scope) {
+        return placeIds.isEmpty() ? List.of() : load(placeIds, viewerId, scope, hiddenTasters.idsExcept(viewerId));
+    }
+
+    /** 가려진 맛객 목록(HiddenTasters.idsExcept)을 이미 읽은 호출자가 커뮤니티 모듈을 한 번 더 부르지 않도록 넘겨받습니다. */
+    public List<PlaceView> load(List<UUID> placeIds, UUID viewerId, RecordScope scope, String[] hiddenIds) {
         if (placeIds.isEmpty()) return List.of();
         String[] placeIdArray = JdbcArrays.uuidParam(placeIds);
-        String[] hiddenIds = hiddenTasters.idsExcept(viewerId);
 
         Map<UUID, PlaceRow> places = new HashMap<>();
         jdbc.query(
@@ -119,7 +123,7 @@ public class PlaceViewLoader {
         Map<UUID, List<TasterRecordView>> authorsByPlace = new LinkedHashMap<>();
         jdbc.query(
                 """
-                SELECT r.record_id, r.place_id, r.account_id, r.author_name, r.reason, r.visibility, r.reg_dt,
+                SELECT r.place_id, r.account_id, r.author_name, r.reason, r.visibility, r.reg_dt,
                        menus.menu_ids, menus.menu_names, menus.prices, menus.has_photos,
                        tags.tag_names, tags.tag_groups, conditions.condition_names, photos.photo_ids
                 FROM restaurant_records r

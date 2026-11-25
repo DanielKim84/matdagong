@@ -13,7 +13,7 @@ export type LoadState = "loading" | "ready" | "error";
 export type Recommendation = { taster: Taster; recordCount: number; reason: "taste" | "popular" };
 
 /** 가입 때 보여 줄 추천 맛객 수입니다. 고르기 쉽게 한 화면 안팎으로 둡니다. */
-export const RECOMMEND_LIMIT = 5;
+const RECOMMEND_LIMIT = 5;
 
 /**
  * 공개 기록이 있는 맛객 중에서 추천합니다. 취향이 겹치는 맛객을 취향 % 순으로 먼저 넣고, 모자라면(취향을 안 골랐거나 겹치는 맛객이

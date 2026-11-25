@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 /** 로그인한 계정의 맛다공 프로필, 취향 설정과 이미지 변경 요청을 처리합니다. */
 @RestController
@@ -57,13 +56,6 @@ public class UserProfileController {
     @GetMapping("/nickname-availability")
     public NicknameAvailability nicknameAvailability(@AuthenticationPrincipal Jwt jwt, @RequestParam String nickname) {
         return new NicknameAvailability(profiles.isNicknameAvailable(nickname, AuthenticatedAccount.id(jwt)));
-    }
-
-    /** 프로필이 없으면 404로 알립니다. */
-    @GetMapping
-    public ProfileView profile(@AuthenticationPrincipal Jwt jwt) {
-        return profiles.findProfile(AuthenticatedAccount.id(jwt))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "맛객 프로필이 없습니다."));
     }
 
     @PutMapping

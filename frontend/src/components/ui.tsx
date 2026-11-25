@@ -7,8 +7,6 @@ import Icon, { type IconName } from "./Icon";
 
 type TopBarProps = {
   title: string;
-  /** 탭 첫 화면이면 뒤로 버튼 없이 큰 제목을 씁니다. */
-  isRoot?: boolean;
   /** 앱 안 이전 화면이 없을 때 뒤로 버튼이 갈 화면 */
   fallback?: Screen;
   right?: ReactNode;
@@ -16,49 +14,17 @@ type TopBarProps = {
   aside?: ReactNode;
   /** 탭 첫 화면(발견·피드·맛객)에서 제목 글자 대신 맛다공 로고를 보여 줍니다. 제목은 로고의 대체 글자로 읽습니다. */
   isBrand?: boolean;
-  /**
-   * float: 큰 사진 위에 떠 있는 바(상세·프로필). 바탕 없이 둥근 버튼만 보이고, isScrolled면 바탕과 제목이 나타납니다.
-   * plain: 뒤로 버튼(과 오른쪽 칸)만 있는 바(보드 14·16처럼 제목을 본문 위 PageIntro에 크게 두는 화면). 제목은 화면 읽기용으로만 둡니다.
-   */
-  variant?: "default" | "float" | "plain";
-  isScrolled?: boolean;
+  /** plain: 뒤로 버튼(과 오른쪽 칸)만 있는 바(보드 14·16처럼 제목을 본문 위 PageIntro에 크게 두는 화면). 제목은 화면 읽기용으로만 둡니다. */
+  variant?: "default" | "plain";
 };
 
 /** 화면 상단 바(뒤로 버튼 + 제목 + 오른쪽 칸)입니다. */
-export function TopBar({
-  title,
-  isRoot = false,
-  fallback = "home",
-  right,
-  aside,
-  isBrand = false,
-  variant = "default",
-  isScrolled = false,
-}: TopBarProps) {
-  const backButton = !isRoot && (
-    <button
-      type="button"
-      className={`r-icon-button ${variant === "float" ? "r-icon-button--float" : ""}`}
-      onClick={() => back(fallback)}
-      aria-label="이전 화면으로 돌아가기"
-    >
+export function TopBar({ title, fallback = "home", right, aside, isBrand = false, variant = "default" }: TopBarProps) {
+  const backButton = (
+    <button type="button" className="r-icon-button" onClick={() => back(fallback)} aria-label="이전 화면으로 돌아가기">
       <Icon name="back" />
     </button>
   );
-  if (variant === "float") {
-    // 높이 0인 sticky 틀 안에 바를 겹쳐 두어 아래 큰 사진을 밀어내지 않습니다.
-    return (
-      <div className={`r-topbar-float ${isScrolled ? "is-scrolled" : ""}`}>
-        <header className="r-topbar r-topbar--float">
-          {backButton}
-          <b className="r-topbar__title" aria-hidden={!isScrolled}>
-            {title}
-          </b>
-          {right}
-        </header>
-      </div>
-    );
-  }
   if (variant === "plain") {
     return (
       <header className="r-topbar r-topbar--plain">
@@ -80,9 +46,9 @@ export function TopBar({
     );
   }
   // 하위 화면은 보드처럼 제목을 가운데 둡니다. 오른쪽 칸이 없으면 뒤로 버튼만큼 빈 칸을 둬 제목이 정확히 가운데 오게 합니다.
-  const isCentered = !isRoot && !aside;
+  const isCentered = !aside;
   return (
-    <header className={`r-topbar ${isRoot ? "r-topbar--root" : ""} ${isCentered ? "r-topbar--center" : ""}`}>
+    <header className={`r-topbar ${isCentered ? "r-topbar--center" : ""}`}>
       {backButton}
       {aside ? (
         <div className="r-topbar__heading">
@@ -114,12 +80,12 @@ export function PageIntro({ title, message, icon }: { title: ReactNode; message?
 }
 
 /** 상단 바에 두는 알림 버튼입니다. 읽지 않은 알림이 있으면 점을 표시합니다. */
-export function NotificationButton({ isFloating = false }: { isFloating?: boolean }) {
+export function NotificationButton() {
   const { hasUnread } = useAppData();
   return (
     <button
       type="button"
-      className={`r-icon-button ${isFloating ? "r-icon-button--float" : ""}`}
+      className="r-icon-button"
       onClick={() => go("notifications")}
       aria-label={hasUnread ? "알림, 읽지 않은 알림 있음" : "알림"}
     >
@@ -169,29 +135,18 @@ export function Segmented<T extends string>({
 
 type SectionHeadProps = {
   title: ReactNode;
-  /** 오른쪽 글자 버튼 이름. onAction과 함께 줍니다. */
-  action?: string;
-  onAction?: () => void;
-  /** 오른쪽에 흐리게 보일 보조 정보("3건", "1 / 5") */
-  meta?: ReactNode;
-  /** 오른쪽 자유 칸(직접 만든 버튼 등). meta·action 뒤에 놓입니다. */
+  /** 오른쪽 칸(칩·글자 버튼 등) */
   children?: ReactNode;
   /** 제목(h2)의 id. 섹션에 aria-labelledby로 연결할 때 씁니다. */
   titleId?: string;
   className?: string;
 };
 
-/** 섹션 제목과 오른쪽 칸(보조 정보·글자 버튼·자유 칸)입니다. */
-export function SectionHead({ title, action, onAction, meta, children, titleId, className = "" }: SectionHeadProps) {
+/** 섹션 제목과 오른쪽 칸입니다. */
+export function SectionHead({ title, children, titleId, className = "" }: SectionHeadProps) {
   return (
     <div className={`r-section-head ${className}`}>
       <h2 id={titleId}>{title}</h2>
-      {meta != null && meta !== false && <span className="r-section-head__meta">{meta}</span>}
-      {action && onAction && (
-        <button type="button" onClick={onAction}>
-          {action}
-        </button>
-      )}
       {children}
     </div>
   );
@@ -232,7 +187,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   const role = tone === "error" ? "alert" : tone === "loading" ? "status" : undefined;
   return (
-    <div className={`r-empty r-empty--${tone} ${className}`} role={role}>
+    <div className={`r-empty ${className}`} role={role}>
       {icon && (
         <span className="r-badge-icon r-empty__icon" aria-hidden="true">
           <Icon name={icon} />

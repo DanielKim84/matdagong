@@ -34,6 +34,7 @@ public class PlaceQueryService {
         String filter = query == null ? "" : query.trim();
         // 검색어의 %, _ 는 글자 그대로 찾습니다.
         String pattern = LikePatterns.contains(filter);
+        String[] hiddenIds = hiddenTasters.idsExcept(viewerId);
         List<UUID> ids = jdbc.query(
                 """
                 SELECT p.place_id
@@ -48,14 +49,14 @@ public class PlaceQueryService {
                 ORDER BY p.place_id
                 """,
                 (rs, row) -> rs.getObject("place_id", UUID.class),
-                hiddenTasters.idsExcept(viewerId),
+                hiddenIds,
                 viewerId,
                 viewerId,
                 filter,
                 pattern,
                 pattern,
                 pattern);
-        return loader.load(ids, viewerId, PlaceViewLoader.RecordScope.PUBLIC_ONLY);
+        return loader.load(ids, viewerId, PlaceViewLoader.RecordScope.PUBLIC_ONLY, hiddenIds);
     }
 
     /** 주소 경로로 받은 장소 ID로 찾습니다. UUID가 아닌 ID는 없는 장소입니다. */

@@ -66,13 +66,18 @@ export function isStoredTokenExpired(now = Date.now()): boolean {
   return expiresAt - EXPIRY_SKEW_MS <= now;
 }
 
+/** 탭에 보관한 access token과 만료 시각을 지웁니다. 로그아웃·재로그인과 401 처리가 함께 씁니다. */
+export function clearStoredAccessToken(): void {
+  removeStorage(ACCESS_TOKEN_KEY, "session");
+  removeStorage(TOKEN_EXPIRY_KEY, "session");
+}
+
 /** 여러 요청이 동시에 401을 받아도 재로그인은 한 번만 시작합니다. */
 function notifySessionExpired(): void {
   if (isExpiring) return;
   isExpiring = true;
   // 저장소를 쓸 수 없는 환경에서도 재로그인은 이어갑니다.
-  removeStorage(ACCESS_TOKEN_KEY, "session");
-  removeStorage(TOKEN_EXPIRY_KEY, "session");
+  clearStoredAccessToken();
   if (sessionExpiredHandler) {
     sessionExpiredHandler();
     return;

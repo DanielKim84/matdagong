@@ -58,9 +58,9 @@ kr.matdagong.api/               # (matdagong-api) 보안, 오류 응답, 로그�
 
 kr.matdagong.common/               # (matdagong-common) 공통 코드
 ├─ module/          # 두 모듈이 서로 묻는 인터페이스: TasterDirectory(커뮤니티가 구현), PlaceDirectory(장소가 구현)
-├─ security/        # access token 검증(JwtDecoder·audience), 계정 ID 추출, 허용 목록 주소 정책
-├─ web/             # ProblemDetail 오류 응답 기반(ApiExceptionHandlerSupport), 공통 오류 문구
-├─ http/            # 시간 제한을 둔 RestClient 생성(인증 서버·카카오·소셜 사진 호출)
+├─ security/        # access token subject에서 계정 ID 꺼내기(AuthenticatedAccount)
+├─ web/             # 공통 오류 문구(ApiErrors)
+├─ http/            # 시간 제한을 둔 RestClient 생성(인증 서버·카카오 호출)
 ├─ media/           # 이미지 머리 바이트 검사
 ├─ jdbc/            # timestamptz 읽기(JdbcTimes), 배열 칼럼 읽기(JdbcArrays), LIKE 검색어 이스케이프(LikePatterns)
 ├─ text/            # 글자 다듬기(Texts)

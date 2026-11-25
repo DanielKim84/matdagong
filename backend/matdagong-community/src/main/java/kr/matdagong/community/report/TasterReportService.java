@@ -4,6 +4,7 @@ import static kr.matdagong.community.report.ReportModels.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import kr.matdagong.common.web.ApiErrors;
 import kr.matdagong.community.CommunityDatabase;
@@ -75,10 +76,9 @@ public class TasterReportService {
 
     /** 지금 자동으로 가려진 맛객 ID입니다. 장소 모듈이 이 맛객의 기록·사진을 빼고 보여 줍니다(TasterDirectory). */
     @Transactional(transactionManager = CommunityDatabase.TRANSACTIONS, readOnly = true)
-    public List<UUID> hiddenTasters() {
-        return jdbc.query(
-                "SELECT account_id FROM taster_moderations WHERE hidden_at IS NOT NULL",
-                (rs, row) -> rs.getObject(1, UUID.class));
+    public Set<UUID> hiddenTasters() {
+        return Set.copyOf(
+                jdbc.queryForList("SELECT account_id FROM taster_moderations WHERE hidden_at IS NOT NULL", UUID.class));
     }
 
     /**

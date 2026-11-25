@@ -1,6 +1,6 @@
 /** 좌표 자료형과 거리 계산, 지금 위치 한 번 받기, 카카오 장소 결과의 좌표·주소입니다. */
 export type Coordinates = { latitude: number; longitude: number };
-export type GeoBounds = { south: number; west: number; north: number; east: number };
+type GeoBounds = { south: number; west: number; north: number; east: number };
 
 const EARTH_RADIUS_METERS = 6_371_000;
 

@@ -15,24 +15,15 @@ export function characterViewBox(pose: number): string {
 /**
  * 맛다공 캐릭터 시트에서 한 칸을 골라 그립니다.
  * 1 손인사 · 2 한입 · 3 프라이팬 · 4 하트 · 5 엄지 · 6 메뉴판 · 7 반짝 · 8 젓가락 · 9 웃음 · 10 뚝배기
+ * 꾸밈 그림이라 화면 읽기 프로그램에는 읽히지 않습니다.
  */
-export default function MascotArt({
-  pose,
-  label = "",
-  className = "",
-}: {
-  pose: number;
-  label?: string;
-  className?: string;
-}) {
+export default function MascotArt({ pose, className = "" }: { pose: number; className?: string }) {
   return (
     <svg
       className={`r-mascot ${className}`}
       viewBox={characterViewBox(pose)}
       preserveAspectRatio="xMidYMid meet"
-      role={label ? "img" : undefined}
-      aria-label={label || undefined}
-      aria-hidden={!label}
+      aria-hidden="true"
     >
       <image href={CHARACTER_SHEET.url} width={CHARACTER_SHEET.width} height={CHARACTER_SHEET.height} />
     </svg>

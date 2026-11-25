@@ -1,7 +1,7 @@
 import type { NicknameCheck } from "../hooks/useNicknameCheck";
 import Icon from "./Icon";
 
-/** 다른 맛객이 쓰는 닉네임 안내입니다. 커뮤니티 서버 UserProfileService.NICKNAME_TAKEN과 같은 문구입니다. */
+/** 다른 맛객이 쓰는 닉네임 안내입니다. 커뮤니티 모듈 UserProfileService.NICKNAME_TAKEN과 같은 문구입니다. */
 export const NICKNAME_TAKEN_MESSAGE = "이미 사용 중인 닉네임이에요.";
 
 const NOTES: Record<"checking" | "available" | "taken", string> = {

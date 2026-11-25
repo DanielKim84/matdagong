@@ -45,7 +45,7 @@ export const MY_MAP_SCOPES: { value: MyMapScope; label: string }[] = [
 ];
 
 /** 내 기록이 나만 보기인지(공유하지 않은 내 기록). */
-export function isPrivateRecord(place: Place): boolean {
+function isPrivateRecord(place: Place): boolean {
   return place.tasters.some((taster) => isMyTaster(taster) && taster.visibility === "PRIVATE");
 }
 

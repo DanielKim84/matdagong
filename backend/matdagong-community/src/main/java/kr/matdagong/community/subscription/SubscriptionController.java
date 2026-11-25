@@ -28,11 +28,6 @@ public class SubscriptionController {
         this.subscriptions = subscriptions;
     }
 
-    @GetMapping("/plans")
-    public PlanCatalog plans() {
-        return subscriptions.plans();
-    }
-
     @GetMapping
     public List<SubscriptionView> subscriptions(@AuthenticationPrincipal Jwt jwt) {
         return subscriptions.subscriptions(AuthenticatedAccount.id(jwt));

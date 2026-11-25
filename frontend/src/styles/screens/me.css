@@ -17,23 +17,6 @@
   font-size: 13px;
   line-height: 1.6;
 }
-.r-me-note--link {
-  display: flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  border: 0;
-  background: none;
-  padding: 0;
-  color: var(--color-primary-strong);
-  font-family: var(--font-body);
-  font-weight: 700;
-}
-.r-me-note--link .icon {
-  width: 16px;
-  height: 16px;
-}
 /* 글자 목록(설정·지갑). 흰 카드 안이면 좌우 여백을 둡니다. */
 .r-me-list {
   padding: 0;

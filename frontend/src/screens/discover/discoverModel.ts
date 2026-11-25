@@ -227,13 +227,6 @@ export function leadTaster(place: Place, ctx: PlaceContext): Taster | undefined 
   );
 }
 
-/** 같은 맛객(tasterId)은 첫 기록만 남깁니다(얼굴 겹치기·"외 N명" 수). */
-export function uniqueTasters(place: Place): Taster[] {
-  return place.tasters.filter(
-    (taster, index, list) => list.findIndex((other) => other.tasterId === taster.tasterId) === index,
-  );
-}
-
 /** 사전 순서의 태그 이름을 이 장소들에서 많이 쓰인 순으로 다시 놓습니다. 쓰인 수가 같으면 사전 순서를 지킵니다. */
 export function sortByUsage(names: string[], places: Place[]): string[] {
   const counts = new Map<string, number>();

@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.server.ResponseStatusException;
 
-/** 검증된 access token의 subject(공통 계정 UUID)를 서비스 데이터의 소유자 ID로 꺼냅니다. */
+/** 검증된 access token의 subject(공통 계정 UUID)를 맛다공 데이터의 소유자 ID로 꺼냅니다. */
 public final class AuthenticatedAccount {
     static final String INVALID_ACCOUNT = "계정 정보를 확인할 수 없습니다.";
 

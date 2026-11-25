@@ -2,8 +2,8 @@
  * 공통 인증 서버(dagong-auth)와 주고받는 요청입니다. 토큰 교환, 맛다공 가입 상태 조회·가입, 로그인 정보 정리를 맡습니다.
  * 가입 상태 조회는 401을 "다시 인증"으로 다뤄야 하므로 apiRequest(401이면 재로그인 시작) 대신 fetch를 씁니다.
  */
-import { STORAGE_KEYS, readStorage, removeStorage, writeStorage } from "../utils/storage";
-import { apiRequest, isStoredTokenExpired } from "./http";
+import { STORAGE_KEYS, readStorage, writeStorage } from "../utils/storage";
+import { apiRequest, clearStoredAccessToken, isStoredTokenExpired } from "./http";
 
 const AUTH_API_BASE_URL = "/auth-api";
 const TOKEN_ENDPOINT = "/oauth2/token";
@@ -69,10 +69,7 @@ export function readStoredAccessToken(): string | null {
   return isStoredTokenExpired() ? null : readStorage(STORAGE_KEYS.accessToken, "session");
 }
 
-export function clearStoredAccessToken(): void {
-  removeStorage(STORAGE_KEYS.accessToken, "session");
-  removeStorage(STORAGE_KEYS.tokenExpiry, "session");
-}
+export { clearStoredAccessToken };
 
 /** 저장된 access token이 맛다공 가입 상태인지 인증 서버에서 확인합니다. */
 export async function getMembership(accessToken: string): Promise<MembershipStatus | "reauthenticate"> {

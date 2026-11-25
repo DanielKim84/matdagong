@@ -7,7 +7,7 @@ import { RETRY_LATER_MESSAGE, type AppNotice } from "./AppData";
 
 /** 하트를 풀 때 고르는 것: 다녀왔는데 별로였어요, 그냥 빼기 */
 export type LikeChoice = "disliked" | "remove";
-export type LikeChoicePrompt = {
+type LikeChoicePrompt = {
   placeId: string;
 };
 

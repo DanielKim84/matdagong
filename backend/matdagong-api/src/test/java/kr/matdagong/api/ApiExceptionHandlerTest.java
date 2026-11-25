@@ -23,7 +23,7 @@ class ApiExceptionHandlerTest {
 
         mvc.perform(post("/oversized"))
                 .andExpect(status().isContentTooLarge())
-                .andExpect(jsonPath("$.detail").value("요청 용량이 너무 커요."));
+                .andExpect(jsonPath("$.detail").value(RequestSizeLimitFilter.TOO_LARGE));
     }
 
     @RestController

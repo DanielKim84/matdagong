@@ -26,7 +26,7 @@ import { errorMessage } from "../utils/errorMessage";
 import { RETRY_LATER_MESSAGE, type AppNotice } from "./AppData";
 
 /**
- * 커뮤니티 상태(내 프로필, 맛객, 취향 태그, 구독, 포인트, 내가 신고한 맛객)와 그 동작입니다.
+ * 커뮤니티 상태(내 프로필, 맛객, 취향 태그, 구독, 내가 신고한 맛객)와 그 동작입니다.
  * 처음 그릴 때 한 번 불러오고, 프로필 저장·구독 취소 뒤 다시 맞춥니다.
  */
 export function useCommunity(accessToken: string, displayName: string, notify: (notice: AppNotice) => void) {

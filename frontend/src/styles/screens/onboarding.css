@@ -602,9 +602,6 @@
   flex-direction: column;
   gap: 10px;
 }
-.r-onboarding-section > .r-label {
-  margin: 0;
-}
 /* ── 가입 1~3단계(보드 04-02~04-04): 흰 화면 위쪽에 번호 단계(StepProgress), 아래 고정 버튼 줄 ── */
 .r-onboarding-signup {
   background: var(--color-surface);

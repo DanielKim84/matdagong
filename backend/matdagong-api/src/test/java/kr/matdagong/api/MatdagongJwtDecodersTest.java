@@ -1,17 +1,14 @@
-package kr.matdagong.common.security;
+package kr.matdagong.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.server.ResponseStatusException;
 
-/** 맛다공 client용 토큰 검증과 계정 ID 꺼내기를 확인합니다. */
+/** 맛다공 client용 토큰만 받는지 확인합니다. */
 class MatdagongJwtDecodersTest {
     private final OAuth2TokenValidator<Jwt> validator = MatdagongJwtDecoders.audienceValidator("matdagong-web");
 
@@ -24,20 +21,6 @@ class MatdagongJwtDecodersTest {
         assertThat(otherClient.getErrors()).singleElement().satisfies(error -> assertThat(error.getDescription())
                 .isEqualTo(MatdagongJwtDecoders.WRONG_AUDIENCE));
         assertThat(validator.validate(jwt(null)).hasErrors()).isTrue();
-    }
-
-    @Test
-    void subject가_UUID가_아니면_한국어_문구로_401을_던진다() {
-        Jwt notAccount = Jwt.withTokenValue("token")
-                .header("alg", "RS256")
-                .subject("admin")
-                .build();
-
-        assertThatThrownBy(() -> AuthenticatedAccount.id(notAccount))
-                .isInstanceOfSatisfying(ResponseStatusException.class, exception -> {
-                    assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-                    assertThat(exception.getReason()).isEqualTo(AuthenticatedAccount.INVALID_ACCOUNT);
-                });
     }
 
     private static Jwt jwt(List<String> audience) {

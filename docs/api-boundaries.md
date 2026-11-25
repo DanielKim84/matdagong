@@ -83,7 +83,7 @@
 
 ## 주요 API
 
-화면은 맛다공 서버(`/api`, 개발 때는 Vite(5845)가 4845로 넘김)를 부릅니다. 화면 쪽 호출 함수는 `frontend/src/services/places.ts`, `community.ts`에 있습니다.
+화면은 맛다공 서버(`/api`, 개발 때는 Vite(5845)가 4845로 넘김)를 부릅니다. 화면 쪽 호출 함수는 `frontend/src/services/places.ts`, `community.ts`, `profile.ts`(인증 서버는 `auth.ts`)에 있습니다.
 
 | 모듈 | 경로(`/api/v1` 아래) | 하는 일 |
 | --- | --- | --- |
@@ -96,10 +96,10 @@
 | 장소 | `GET /places/drafts`, `GET /places/drafts/check`, `POST /places/drafts`, `DELETE /places/drafts/{providerPlaceId}` | 빠른 저장 목록·중복 확인·저장·지우기 |
 | 장소 | `GET`·`POST /places/recent` | 최근 본 장소 |
 | 장소 | `POST /places/{placeId}/reports`(`{ reason, memo }`) | 가게 정보 제보. 응답 `{ duplicate }`는 확인 전 같은 제보가 이미 있었는지 |
-| 커뮤니티 | `/users/me/profile`(`GET`·`POST`·`PUT`, `avatar`, `avatar/social`, `covers`, `nickname-availability`) | 내 프로필·사진·배경, 가입 때 소셜 프로필 사진 가져오기, 닉네임 미리 확인 |
+| 커뮤니티 | `/users/me/profile`(`POST` 만들기·읽기, `PUT`, `avatar`, `avatar/social`, `covers`, `nickname-availability`) | 내 프로필·사진·배경, 가입 때 소셜 프로필 사진 가져오기, 닉네임 미리 확인 |
 | 서버 | `DELETE /users/me` | 탈퇴: 내 장소 데이터와 커뮤니티 데이터 지우기(아래 [탈퇴](#탈퇴)) |
 | 커뮤니티 | `GET /tasters`, `GET /taste-tags`, `/taste-tags/requests` | 맛객 목록·취향 일치율, 태그 사전, 태그 제안 |
-| 커뮤니티 | `/subscriptions`(`plans`, `subscribers`, `POST`, `DELETE /{subscriptionId}`) | 구독·요금·나를 구독 |
+| 커뮤니티 | `/subscriptions`(`GET`, `subscribers`, `POST`, `DELETE /{subscriptionId}`) | 내 구독·나를 구독 |
 | 커뮤니티 | `/notifications`(`settings`, `place-recorded`, 읽음·지우기) | 알림함, 알림 설정(`{ tasterNewPlace, newSubscriber, serviceNews }`), 맛집 등록 알림 만들기 |
 | 커뮤니티 | `POST /tasters/{tasterId}/reports`(`{ reason, memo, placeId }`, 204), `GET /users/me/taster-reports` | 맛객 신고, 내가 신고한(확인 전) 맛객 |
 
@@ -110,7 +110,7 @@
 1. 맛다공 서버 `DELETE /api/v1/users/me`(`WithdrawalController`): 서버가 두 모듈 데이터를 차례로 지웁니다. DB가 둘이라 한 트랜잭션은 아니지만 모듈마다 한 트랜잭션입니다.
    - 장소(`AccountDataService`): 기록(메뉴·태그·방문 조건·사진 포함), 하트, 별로였던 곳, 다녀온 곳, 최근 본 장소, 빠른 저장, 제보. 여러 맛객이 함께 쓰는 가게 행은 남깁니다.
    - 커뮤니티(`WithdrawalService`): 프로필·취향·배경 사진, 내가 한·받은 구독과 회차 이력, 알림·알림 설정, 태그 제안, 내가 낸 신고·나를 향한 신고와 처리 상태.
-2. `dagong-auth` `DELETE /api/v1/matdagong/membership`: 맛다공 가입을 `WITHDRAWN`으로 바꾸고, 이 계정이 맛다공 client로 받은 로그인 기록 `oauth2_authorization`을 지웁니다. 브라우저 공개 client라 refresh token이 없어 새 토큰을 더 받을 수 없고, 이미 받은 access token은 만료(기본 30분)까지 형식상 유효합니다. 이 브라우저의 토큰은 화면이 로그아웃하며 지웁니다.
+2. `dagong-auth` `DELETE /api/v1/matdagong/membership`: 맛다공 가입을 `WITHDRAWN`으로 바꾸고, 이 계정이 맛다공 client로 받은 로그인 기록 `oauth2_authorization`을 지웁니다. 브라우저 공개 client라 refresh token이 없어 새 토큰을 더 받을 수 없습니다. 이미 받은 access token은 서명으로는 만료(기본 30분)까지 유효하지만, 맛다공 서버의 `ActiveLoginFilter`가 로그인 기록이 지워진 토큰을 늦어도 30초 안에 401로 막습니다. 이 브라우저의 토큰은 화면이 로그아웃하며 지웁니다.
 
 공통 계정·소셜 연결은 다른 다공 서비스가 함께 쓰므로 남기고, 다시 로그인하면 맛다공 가입 절차부터 시작합니다. 구독자들이 받은 "새 기록" 알림 문구처럼 내 계정 ID 없이 저장된 스냅샷은 90일 보관 뒤 정리됩니다.
 

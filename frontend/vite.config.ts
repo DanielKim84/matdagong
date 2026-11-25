@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
-// main.tsx와 같은 기본값을 써서 환경 변수가 없을 때도 인증 서버 주소가 어긋나지 않게 합니다.
+// app/signIn.ts와 같은 기본값을 써서 환경 변수가 없을 때도 인증 서버 주소가 어긋나지 않게 합니다.
 const DEFAULT_AUTH_SERVER_URL = "http://localhost:4840";
 
 /**

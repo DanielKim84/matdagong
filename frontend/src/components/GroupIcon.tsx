@@ -3,7 +3,7 @@ import Icon, { type IconName } from "./Icon";
 
 /** 묶음 머리의 연한 색 원 색입니다. ui.css의 .r-group-icon--<tone>과 짝입니다. */
 type GroupTone = "amber" | "green" | "clay" | "berry" | "blue" | "teal" | "brand" | "slate" | "neutral";
-export type GroupLook = { icon: IconName; tone: GroupTone };
+type GroupLook = { icon: IconName; tone: GroupTone };
 
 /**
  * 취향 태그 분류마다 하나로 정한 아이콘과 색입니다. 태그 고르기, 묶음별 태그(맛집 상세·맛객 프로필), 발견 필터,

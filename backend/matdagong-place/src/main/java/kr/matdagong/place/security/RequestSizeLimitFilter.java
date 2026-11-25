@@ -26,7 +26,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RequestSizeLimitFilter extends OncePerRequestFilter {
-    static final String TOO_LARGE = "요청 용량이 너무 커요.";
+    /** 413 응답 문구입니다. 읽는 도중 한도를 넘은 경우도 ApiExceptionHandler가 같은 문구를 씁니다. */
+    public static final String TOO_LARGE = "요청 용량이 너무 커요.";
     /** 장소 API 경로입니다. 다른 경로(커뮤니티 API·사진 주소)는 이 필터를 건너뜁니다. */
     private static final String PLACE_API = "/api/v1/places";
     /** Spring MVC에 닿기 전에 끊으므로 ApiExceptionHandler(matdagong-api)와 같은 ProblemDetail 모양을 직접 씁니다. */

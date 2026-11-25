@@ -21,7 +21,7 @@ type Options = {
   notify: (notice: AppNotice) => void;
   /** 내 요약을 다시 읽을 때 공개 장소 목록도 함께 바꿉니다. */
   setPlaces: Dispatch<SetStateAction<Place[]>>;
-  /** 내 요약을 다시 읽은 뒤 커뮤니티 정보(맛객 신뢰 %, 포인트 등)도 맞춥니다. */
+  /** 내 요약을 다시 읽은 뒤 커뮤니티 정보(맛객 신뢰 % 등)도 맞춥니다. */
   refreshCommunity: () => Promise<void>;
 };
 

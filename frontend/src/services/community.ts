@@ -1,4 +1,4 @@
-/** 맛객·취향 태그·구독·포인트·알림 API입니다. 프로필·사진 저장은 profile.ts에서 관리합니다. */
+/** 맛객·취향 태그·구독·알림·신고 API입니다. 프로필·사진 저장은 profile.ts에서 관리합니다. */
 import type {
   ActiveSubscription,
   ActivityScope,
@@ -6,7 +6,6 @@ import type {
   IncomingSubscription,
   NotificationFeed,
   NotificationSettings,
-  PlanCatalog,
   SubscribeResult,
   TagRequest,
   TagRequestInput,
@@ -78,10 +77,6 @@ export function createTagRequest(accessToken: string, input: TagRequestInput): P
 /** 맛다공 탈퇴: 서버가 장소 기록과 프로필·구독·알림 등 맛다공 데이터를 모두 지웁니다(다시 불러도 괜찮음). */
 export function deleteMyMatdagongData(accessToken: string): Promise<void> {
   return request("/users/me", accessToken, { method: "DELETE", errorMessage: "맛다공 데이터를 지우지 못했어요." });
-}
-
-export function getPlanCatalog(accessToken: string): Promise<PlanCatalog> {
-  return request("/subscriptions/plans", accessToken);
 }
 
 export function getSubscriptions(accessToken: string): Promise<ActiveSubscription[]> {

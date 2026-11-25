@@ -4,7 +4,7 @@ import java.time.Duration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
-/** 다른 서비스·외부 API를 부르는 RestClient를 같은 방식(연결·응답 대기 시간 제한)으로 만듭니다. */
+/** 인증 서버·외부 API(카카오)를 부르는 RestClient를 같은 방식(연결·응답 대기 시간 제한)으로 만듭니다. */
 public final class RestClients {
     private RestClients() {}
 

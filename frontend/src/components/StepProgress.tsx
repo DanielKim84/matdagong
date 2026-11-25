@@ -10,8 +10,6 @@ type StepProgressProps = {
   title?: string;
   /** 없으면 버튼 자리를 비워 번호 줄 위치를 맞춥니다. */
   onBack?: () => void;
-  /** 첫 단계에서 닫기로 쓸 때 "close" */
-  backIcon?: "back" | "close";
   backLabel?: string;
   className?: string;
 };
@@ -26,13 +24,12 @@ export default function StepProgress({
   label,
   title,
   onBack,
-  backIcon = "back",
   backLabel = "이전 단계",
   className = "",
 }: StepProgressProps) {
   const backButton = onBack ? (
     <button type="button" className="r-icon-button r-step-progress__back" onClick={onBack} aria-label={backLabel}>
-      <Icon name={backIcon} />
+      <Icon name="back" />
     </button>
   ) : (
     <span className="r-step-progress__spacer" aria-hidden="true" />

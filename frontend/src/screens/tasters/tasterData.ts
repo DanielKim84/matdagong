@@ -37,9 +37,6 @@ export function myAreaLabel(profile: Pick<MyProfile, "activityScope" | "activity
 /** 맛객 둘러보기 정렬: 구독자 많은 순 · 취향 맞는 순(믿고 가는 맛객 → 신뢰 % → 취향 %) · 기록 많은 순 */
 export type BrowseSort = "SUBSCRIBERS" | "TASTE" | "RECORDS";
 
-/** 맛객 둘러보기 목록의 정렬과 보이는 개수입니다. 지역·분야는 위쪽 공통 조건을 따릅니다. */
-export type BrowseFilter = { sort: BrowseSort; limit: number };
-
 /** "내 주변"으로 볼 거리(m). 이 안에 공개 기록이 있는 맛객을 내 주변 맛객으로 봅니다. */
 export const NEARBY_RADIUS_METERS = 5_000;
 export const NEARBY_RADIUS_KM = NEARBY_RADIUS_METERS / 1000;
@@ -101,7 +98,7 @@ function countRecords(places: Place[], isIn: (place: Place) => boolean): Map<str
  * 내 주변·내 지역 범위 안에 남긴 맛객별 기록 수입니다. 맛객이 적어 둔 지역 글자보다 실제 기록 위치를 먼저 봅니다.
  * 전체·여행이거나 위치·내 지역을 아직 모르면 undefined입니다.
  */
-export function scopeRecordCounts(scope: TasterScope, context: ScopeContext): Map<string, number> | undefined {
+function scopeRecordCounts(scope: TasterScope, context: ScopeContext): Map<string, number> | undefined {
   const { places, position, myAreas } = context;
   if (scope === "NEARBY" && position)
     return countRecords(places, (place) => distanceMeters(position, place) <= NEARBY_RADIUS_METERS);
@@ -133,7 +130,7 @@ export function isInScope(
 }
 
 /** 고른 분야(식당·카페·디저트)를 다루는 맛객인지. 둘 다 다루는 맛객은 어느 분야에도 듭니다. */
-export function matchesFocus(taster: Taster, focus: TasterFocusFilter): boolean {
+function matchesFocus(taster: Taster, focus: TasterFocusFilter): boolean {
   return focus === "ALL" || taster.tasterFocus === focus || taster.tasterFocus === "BOTH";
 }
 

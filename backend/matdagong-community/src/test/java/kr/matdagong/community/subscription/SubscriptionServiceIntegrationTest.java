@@ -46,7 +46,7 @@ class SubscriptionServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         assertThat(subscription.endAt()).isNull();
         assertThat(service.subscribers(FIRST_TASTER)).singleElement().satisfies(view -> {
             assertThat(view.subscriberNickname()).isEqualTo("나");
-            assertThat(view.startAt()).isEqualTo(subscription.startAt());
+            assertThat(view.subscriptionId()).isEqualTo(subscription.subscriptionId());
         });
         assertThat(notifications.list(FIRST_TASTER).items()).singleElement().satisfies(item -> {
             assertThat(item.notificationType()).isEqualTo(NotificationType.NEW_SUBSCRIBER);

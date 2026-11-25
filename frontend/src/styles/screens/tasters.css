@@ -7,32 +7,20 @@
   gap: 16px;
   padding: 4px 16px 24px;
 }
+/* 추천 맛집 · 공개 스타일 섹션 */
 .r-tasters-section {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  margin-top: 8px;
 }
-/* 섹션 위 안내 문장: 조건·인원(b)은 진하게, 순서 설명은 흐리게 읽힙니다. */
-.r-tasters-note {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.5;
-  word-break: keep-all;
-}
-.r-tasters-note b {
-  color: var(--color-ink);
-  font-weight: 700;
+.r-tasters-section > .r-section-head {
+  align-items: center;
 }
 .r-tasters-avatar.avatar {
   border: 0;
   background: var(--neutral-100);
-}
-.r-tasters-avatar--sm.avatar {
-  width: 36px;
-  height: 36px;
 }
 .r-tasters-avatar--md.avatar {
   width: 48px;
@@ -41,11 +29,6 @@
 .r-tasters-avatar--lg.avatar {
   width: 58px;
   height: 58px;
-}
-.r-tasters-avatar--ring.avatar {
-  width: 52px;
-  height: 52px;
-  border: 3px solid var(--color-surface);
 }
 
 /* 큰 추천 카드(RecommendCard, 보드 08-01): 배경 사진 위 어두운 아래쪽에 "추천 맛객" · 이름 · 점수·지역 · 소개 */
@@ -559,16 +542,6 @@
   color: var(--neutral-700);
   font-size: 15px;
   text-align: right;
-}
-/* 추천 맛집 · 공개 스타일 섹션 */
-.r-tasters-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
-}
-.r-tasters-section > .r-section-head {
-  align-items: center;
 }
 /* 추천 맛집(보드 08-04, TasterRecords): 사진 칸과 아래 가게 이름을 가로로 넘깁니다. */
 .r-tasters-picks {

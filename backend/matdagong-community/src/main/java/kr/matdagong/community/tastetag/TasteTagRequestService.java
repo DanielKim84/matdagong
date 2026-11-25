@@ -4,7 +4,6 @@ import static kr.matdagong.community.tastetag.TasteTagModels.*;
 
 import java.util.List;
 import java.util.UUID;
-import kr.matdagong.common.jdbc.JdbcTimes;
 import kr.matdagong.common.tag.TasteTagGroup;
 import kr.matdagong.common.web.ApiErrors;
 import kr.matdagong.community.CommunityDatabase;
@@ -26,9 +25,7 @@ public class TasteTagRequestService {
             TagRequestType.valueOf(rs.getString("request_type")),
             rs.getString("tag_name"),
             TasteTagGroup.valueOf(rs.getString("tag_group")),
-            TagRequestStatus.valueOf(rs.getString("request_st")),
-            rs.getString("review_note"),
-            JdbcTimes.instant(rs, "reg_dt"));
+            TagRequestStatus.valueOf(rs.getString("request_st")));
 
     private final JdbcTemplate jdbc;
 
@@ -53,7 +50,7 @@ public class TasteTagRequestService {
                     """
                     INSERT INTO taste_tag_requests (request_id, account_id, request_type, tag_name, tag_group, request_rsn)
                     VALUES (?, ?, ?, ?, ?, ?)
-                    RETURNING request_id, request_type, tag_name, tag_group, request_st, review_note, reg_dt
+                    RETURNING request_id, request_type, tag_name, tag_group, request_st
                     """,
                     REQUEST_MAPPER,
                     UUID.randomUUID(),
@@ -73,7 +70,7 @@ public class TasteTagRequestService {
     public List<TagRequestView> mine(UUID accountId) {
         return jdbc.query(
                 """
-                SELECT request_id, request_type, tag_name, tag_group, request_st, review_note, reg_dt
+                SELECT request_id, request_type, tag_name, tag_group, request_st
                 FROM taste_tag_requests WHERE account_id = ?
                 ORDER BY reg_dt DESC LIMIT ?
                 """,

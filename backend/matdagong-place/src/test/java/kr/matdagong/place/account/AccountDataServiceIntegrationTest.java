@@ -23,7 +23,7 @@ class AccountDataServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     }
 
     @Test
-    void 탈퇴하면_장소_서비스의_내_데이터만_모두_지워진다() {
+    void 탈퇴하면_장소_모듈의_내_데이터만_모두_지워진다() {
         UUID placeId = UUID.randomUUID();
         jdbc.update(
                 """

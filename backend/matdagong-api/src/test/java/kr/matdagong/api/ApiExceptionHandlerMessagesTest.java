@@ -1,4 +1,4 @@
-package kr.matdagong.common.web;
+package kr.matdagong.api;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import kr.matdagong.common.web.ApiErrors;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,13 +18,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
 /** 오류 응답이 한국어 detail을 담은 ProblemDetail로 나가는지 확인합니다. */
-class ApiExceptionHandlerSupportTest {
+class ApiExceptionHandlerMessagesTest {
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new SampleController())
-            .setControllerAdvice(new SampleExceptionHandler())
+            .setControllerAdvice(new ApiExceptionHandler())
             .build();
 
     @Test
@@ -53,14 +53,14 @@ class ApiExceptionHandlerSupportTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"국밥\",\"code\":\"ABCD\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value(ApiExceptionHandlerSupport.INVALID_INPUT));
+                .andExpect(jsonPath("$.detail").value(ApiExceptionHandler.INVALID_INPUT));
     }
 
     @Test
     void 예상하지_못한_오류는_내부_메시지를_숨긴다() throws Exception {
         mvc.perform(get("/boom"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.detail").value(ApiExceptionHandlerSupport.SERVER_ERROR));
+                .andExpect(jsonPath("$.detail").value(ApiExceptionHandler.SERVER_ERROR));
     }
 
     @RestController
@@ -85,7 +85,4 @@ class ApiExceptionHandlerSupportTest {
     }
 
     record Item(@NotBlank(message = "이름을 입력해 주세요.") String name, @Size(max = 3) String code) {}
-
-    @RestControllerAdvice
-    static class SampleExceptionHandler extends ApiExceptionHandlerSupport {}
 }

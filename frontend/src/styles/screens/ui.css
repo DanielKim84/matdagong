@@ -32,7 +32,6 @@
   align-items: center;
   gap: 6px;
   background: var(--color-canvas);
-  /* 위쪽 안전 영역은 떠 있는 상단 바(.r-topbar--float)와 같게 더합니다. */
   padding: calc(8px + env(safe-area-inset-top)) 12px 8px 8px;
 }
 .r-topbar h1 {
@@ -72,12 +71,6 @@
 .r-topbar__heading h1 {
   flex: none;
 }
-.r-topbar--root {
-  padding: calc(14px + env(safe-area-inset-top)) 20px 8px;
-}
-.r-topbar--root h1 {
-  font-size: 28px;
-}
 /* 탭 첫 화면의 로고 머리줄(TopBar isBrand): 보드처럼 왼쪽에 맛다공 로고, 오른쪽에 지역·알림 같은 칸을 둡니다. */
 .r-topbar--brand {
   position: static;
@@ -92,48 +85,6 @@
   display: block;
   height: 48px;
   margin: -4px 0 -4px -12px;
-}
-/* 떠 있는 상단 바(TopBar variant="float"): 높이 0인 sticky 틀 위에 겹쳐 큰 사진을 밀어내지 않습니다. */
-.r-topbar-float {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  height: 0;
-}
-.r-topbar--float {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  gap: 8px;
-  background: transparent;
-  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
-  transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-.r-topbar-float.is-scrolled .r-topbar--float {
-  background: var(--color-canvas);
-  box-shadow: 0 1px 0 var(--color-line);
-}
-.r-topbar__title {
-  min-width: 0;
-  flex: 1;
-  overflow: hidden;
-  color: var(--color-ink);
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 700;
-  opacity: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
-}
-.r-topbar-float.is-scrolled .r-topbar__title {
-  opacity: 1;
-}
-.r-topbar-float.is-scrolled .r-icon-button--float {
-  box-shadow: none;
 }
 
 /* 아이콘 버튼 */
@@ -153,10 +104,6 @@
 .r-icon-button .icon {
   width: 22px;
   height: 22px;
-}
-.r-icon-button--float {
-  background: var(--color-surface);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 14%, transparent);
 }
 .r-icon-button__dot {
   position: absolute;
@@ -195,12 +142,6 @@
   font-weight: 700;
   text-decoration: none;
 }
-.r-section-head__meta {
-  color: var(--color-muted);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
 /* 날짜 묶음 머리("오늘 3개", "최근 7일 2곳"): 알림과 빠른 장소 기록이 같은 모양을 씁니다. 제목을 낮춰 목록이 먼저 보이게 합니다. */
 .r-section-head--date {
   justify-content: flex-start;
@@ -211,11 +152,6 @@
   margin: 0;
   color: var(--color-ink);
   font-size: 15px;
-}
-.r-label {
-  color: var(--color-primary);
-  font-size: 13px;
-  font-weight: 800;
 }
 
 /* 회색 둥근 검색창(발견·내 지도·맛객 검색이 같은 모양) */
@@ -391,9 +327,6 @@
   color: var(--color-ink);
   text-align: left;
 }
-.r-card--flat {
-  box-shadow: none;
-}
 
 /* ── 버튼 ── */
 .r-button {
@@ -560,18 +493,9 @@
  * - 선택(지금 고르는 칩): 연한 코랄 바탕과 진한 코랄 글씨 — .r-chip.is-on, .r-segmented
  * - 나와의 관계(내 기록·내 맛집·구독 중·나와 같아요): 코랄 채움 — .r-tag--mine
  * - 상태 글자(나만 보기·수정 중·분류 등): 강조색 연한 바탕 — .r-tag (관계 배지보다 한 단계 옅음)
- * - 낮춰 보여 줄 관계(별로였어요): 회색 — .r-tag--muted
- * - 점수(신뢰 % 초록·취향 % 노랑, 나란히): .r-scores > .r-match (components/TasteScore) / 안내·주의: .r-tag--amber
+ * - 점수(신뢰 % 초록·취향 % 노랑, 나란히): .r-scores > .r-match (components/TasteScore)
  * - 취향·매장 태그 하나: 밝은 회색 칩 + 코랄 # — .r-hashtag (components/HashTag), 묶음별: .r-tag-group (components/TagGroupList)
  */
-.r-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
 .r-tag {
   display: inline-flex;
   height: 28px;
@@ -595,17 +519,6 @@
   background: var(--color-primary);
   color: var(--on-strong);
 }
-/* 별로였어요처럼 나와의 관계지만 낮춰 보여 줄 이름표: 회색(맛집 상세의 .r-place-pill.is-disliked와 같은 색) */
-.r-tag--muted {
-  border-color: var(--neutral-300);
-  background: var(--neutral-100);
-  color: var(--neutral-700);
-}
-.r-tag--amber {
-  border-color: var(--amber-100);
-  background: var(--amber-50);
-  color: var(--amber-800);
-}
 
 /*
  * ── 태그 하나(HashTag) ──
@@ -614,25 +527,18 @@
  */
 .r-hashtag {
   display: inline-flex;
+  min-height: 36px;
   flex: none;
   align-items: center;
   gap: 4px;
   border-radius: var(--radius-pill);
   background: var(--brand-50);
+  padding: 0 14px;
   color: var(--color-primary);
   font-family: var(--font-body);
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
-}
-.r-hashtag--md {
-  min-height: 36px;
-  padding: 0 14px;
-  font-size: 14px;
-}
-.r-hashtag--sm {
-  min-height: 28px;
-  padding: 0 10px;
-  font-size: 12px;
 }
 /* 태그 앞 #. 글자와 같은 색이고, 고르는 칩(r-chip) 안에 넣는 #(HashMark)도 같은 모양입니다. */
 .r-hashtag__hash {
@@ -1103,16 +1009,7 @@
   color: var(--color-primary);
 }
 
-/* ── 아바타 묶음·배지 ── */
-.r-avatar-stack {
-  display: flex;
-}
-.r-avatar-stack .avatar {
-  border: 2px solid var(--color-surface);
-}
-.r-avatar-stack .avatar + .avatar {
-  margin-left: -10px;
-}
+/* ── 배지 ── */
 .r-badge-icon {
   display: grid;
   width: 44px;

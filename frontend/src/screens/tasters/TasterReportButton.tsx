@@ -3,19 +3,16 @@ import { useAppData } from "../../app/AppData";
 import TasterReportSheet from "./TasterReportSheet";
 
 /**
- * 맛객 프로필·맛집 기록 아래의 "신고하기" 글자 버튼입니다.
+ * 맛객 프로필 아래의 "신고하기" 글자 버튼입니다(맛집 기록 단위 신고는 PlaceRecordMenu가 시트를 직접 엽니다).
  * 이미 신고해 확인을 기다리는 맛객이면 다시 누를 수 없게 "신고했어요"로 막습니다.
  */
 export default function TasterReportButton({
   tasterId,
   tasterName,
-  placeId,
   className = "",
 }: {
   tasterId: string;
   tasterName: string;
-  /** 맛집 기록에서 신고할 때 그 장소 ID */
-  placeId?: string;
   className?: string;
 }) {
   const app = useAppData();
@@ -33,14 +30,7 @@ export default function TasterReportButton({
       >
         {isReported ? "신고했어요 · 확인 중" : "신고하기"}
       </button>
-      {isOpen && (
-        <TasterReportSheet
-          tasterId={tasterId}
-          tasterName={tasterName}
-          placeId={placeId}
-          onClose={() => setIsOpen(false)}
-        />
-      )}
+      {isOpen && <TasterReportSheet tasterId={tasterId} tasterName={tasterName} onClose={() => setIsOpen(false)} />}
     </>
   );
 }

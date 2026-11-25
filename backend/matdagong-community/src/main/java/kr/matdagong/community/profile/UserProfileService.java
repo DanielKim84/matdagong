@@ -72,21 +72,9 @@ public class UserProfileService {
         return jdbc
                 .query(
                         """
-                        SELECT p.account_id, p.nickname, %s,
+                        SELECT p.nickname, %s,
                                p.avatar_variant, p.taster_focus, p.preference_focus, p.activity_scope,
-                               p.activity_regions, p.intro, %s, %s,
-                               ARRAY(
-                                   SELECT tag.tag_name FROM user_preference_tags selected
-                                   JOIN taste_tags tag ON tag.tag_id = selected.tag_id
-                                   WHERE selected.account_id = p.account_id AND selected.preference_type = 'LIKE'
-                                   ORDER BY tag.sort_order
-                               ) AS preference_tags,
-                               ARRAY(
-                                   SELECT tag.tag_name FROM user_preference_tags selected
-                                   JOIN taste_tags tag ON tag.tag_id = selected.tag_id
-                                   WHERE selected.account_id = p.account_id AND selected.preference_type = 'AVOID'
-                                   ORDER BY tag.sort_order
-                               ) AS excluded_tags,
+                               p.activity_regions, p.intro, %s, %s, %s, %s,
                                %s AS hidden_by_reports
                         FROM user_profiles p
                         WHERE p.account_id = ?
@@ -95,6 +83,8 @@ public class UserProfileService {
                                         ProfileQueries.HAS_AVATAR,
                                         ProfileQueries.COVER_PHOTO_IDS,
                                         ProfileQueries.PROFILE_TAG_NAMES,
+                                        ProfileQueries.preferenceTagNames("LIKE", "preference_tags"),
+                                        ProfileQueries.preferenceTagNames("AVOID", "excluded_tags"),
                                         ProfileQueries.hiddenByReports("p.account_id")),
                         (rs, row) -> {
                             List<String> coverUrls = ProfileQueries.coverUrls(rs, accountId);

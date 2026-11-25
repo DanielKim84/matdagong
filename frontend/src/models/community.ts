@@ -1,19 +1,13 @@
-/** 커뮤니티(프로필·취향 태그·구독·포인트·알림·신고) 자료형입니다. 서버 JSON 필드 이름을 그대로 씁니다. */
+/** 커뮤니티(프로필·취향 태그·구독·알림·신고) 자료형입니다. 서버 JSON 필드 이름을 그대로 씁니다. */
 
 /**
- * 맛객 닉네임 최대 글자 수입니다. 커뮤니티 서버 ProfileModels.MAX_NICKNAME_LENGTH(검증과 자동 닉네임 접미사 자르기)와
+ * 맛객 닉네임 최대 글자 수입니다. 커뮤니티 모듈 ProfileModels.MAX_NICKNAME_LENGTH(검증과 자동 닉네임 접미사 자르기)와
  * 같은 값입니다.
  */
 export const MAX_NICKNAME_LENGTH = 12;
 /** 활동 지역은 최대 3곳(프로필 편집 보드 15-01). 커뮤니티 모듈 ProfileModels.MAX_ACTIVITY_REGIONS·DB 제약(V45)과 같습니다. */
 export const MAX_ACTIVITY_REGIONS = 3;
 
-type PaidPlan = { termMonths: number; priceAmount: number };
-/** 구독 요금표입니다. testMode면 결제 연동 전이라 유료 플랜도 0원으로 열고 요금은 안내로만 보여 줍니다. */
-export type PlanCatalog = {
-  testMode: boolean;
-  paidPlans: PaidPlan[];
-};
 export type ActiveSubscription = {
   subscriptionId: string;
   targetAccountId: string;
@@ -34,9 +28,6 @@ export type IncomingSubscription = {
   avatar: string | null;
   avatarVariant: number;
   subscriptionType: "FREE" | "PAID";
-  termMonths: number | null;
-  startAt: string;
-  endAt: string | null;
 };
 export type UserNotification = {
   /** 알림 종류입니다. 커뮤니티 모듈 NotificationType, DB ck_user_notifications_type과 같은 값입니다. */
@@ -115,8 +106,6 @@ export type TagRequest = {
   tagName: string;
   tagGroup: TasteTag["tagGroup"];
   status: "PENDING" | "APPROVED" | "REJECTED";
-  reviewNote: string | null;
-  createdAt: string;
 };
 
 /** 프로필 설정 화면이 저장을 요청할 때 넘기는 변경 내용입니다(사진 파일·삭제 표시 포함). */

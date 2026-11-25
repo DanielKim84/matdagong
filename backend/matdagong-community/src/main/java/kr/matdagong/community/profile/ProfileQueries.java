@@ -35,6 +35,21 @@ public final class ProfileQueries {
                 WHERE selected.account_id = p.account_id ORDER BY tag.sort_order
             ) AS profile_tags""";
 
+    /**
+     * 고른 선호 태그(LIKE)나 제외 태그(AVOID) 이름 배열(태그 사전 sort_order 순) 칼럼입니다. {@link #PROFILE_TAG_NAMES}와 같은
+     * 모양이고 프로필 테이블 별칭이 p인 SELECT 목록에 넣습니다. 두 인자 모두 코드의 고정 값만 넘깁니다.
+     */
+    public static String preferenceTagNames(String preferenceType, String alias) {
+        return """
+                ARRAY(
+                    SELECT tag.tag_name FROM user_preference_tags selected
+                    JOIN taste_tags tag ON tag.tag_id = selected.tag_id
+                    WHERE selected.account_id = p.account_id AND selected.preference_type = '%s'
+                    ORDER BY tag.sort_order
+                ) AS %s"""
+                .formatted(preferenceType, alias);
+    }
+
     /** 프로필 사진이 있는지 칼럼입니다. 프로필 테이블 별칭이 p인 SELECT 목록에 넣고 {@link #avatarUrl}로 읽습니다. */
     public static final String HAS_AVATAR = "p.profile_img_data IS NOT NULL AS has_avatar";
 

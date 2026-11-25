@@ -1,4 +1,4 @@
-package kr.matdagong.common.security;
+package kr.matdagong.api;
 
 import java.util.List;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;

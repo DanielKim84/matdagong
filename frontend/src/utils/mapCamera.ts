@@ -1,8 +1,8 @@
 /** 상세 화면 이동 전후에 발견·내 지도의 중심과 배율을 복원합니다. */
 import { isRecord, readStorageJson, removeStorage, STORAGE_KEYS, writeStorageJson } from "./storage";
 
-export type SavedMapCamera = { latitude: number; longitude: number; level: number };
-export type SavedMapReturn = { placeId: string };
+type SavedMapCamera = { latitude: number; longitude: number; level: number };
+type SavedMapReturn = { placeId: string };
 
 function storageKey(cameraKey: string) {
   return `${STORAGE_KEYS.mapCamera}.${cameraKey}`;

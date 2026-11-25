@@ -17,8 +17,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 /**
- * DB 테스트(*IntegrationTest)의 공통 바탕입니다. 테스트 클래스마다 embedded PostgreSQL을 한 번 띄우고 그 서비스의
- * Flyway 마이그레이션(classpath:db/migration)을 모두 적용합니다. 테스트끼리 데이터가 섞이지 않도록 각 테스트 클래스는
+ * DB 테스트(*IntegrationTest)의 공통 바탕입니다. 테스트 클래스마다 embedded PostgreSQL을 한 번 띄우고 그 모듈의
+ * Flyway 마이그레이션(classpath:db/migration 아래 place 또는 community 폴더)을 모두 적용합니다. 테스트끼리 데이터가 섞이지 않도록 각 테스트 클래스는
  * {@code @BeforeEach}에서 {@link #truncate(String)}로 쓰는 테이블을 비웁니다.
  */
 public abstract class EmbeddedPostgresTestSupport {

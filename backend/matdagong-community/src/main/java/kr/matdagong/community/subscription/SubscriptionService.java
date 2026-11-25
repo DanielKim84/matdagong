@@ -36,10 +36,6 @@ public class SubscriptionService {
         this.notifications = notifications;
     }
 
-    public PlanCatalog plans() {
-        return SubscriptionPlans.catalog();
-    }
-
     @Transactional(transactionManager = CommunityDatabase.TRANSACTIONS)
     public List<SubscriptionView> subscriptions(UUID subscriberId) {
         expireEndedSubscriptions();
@@ -65,14 +61,13 @@ public class SubscriptionService {
                 subscriberId);
     }
 
-    /** 내 맛객 프로필을 구독 중인 사용자와 현재 이용 중인 구독 회차를 반환합니다. */
+    /** 내 맛객 프로필을 지금 이용 중인 회차로 구독 중인 사용자를 반환합니다. 화면(받은 구독 목록)은 기간을 보여 주지 않아 회차 값은 보내지 않습니다. */
     @Transactional(transactionManager = CommunityDatabase.TRANSACTIONS)
     public List<IncomingSubscriptionView> subscribers(UUID targetAccountId) {
         expireEndedSubscriptions();
         return jdbc.query(
                 """
-                SELECT s.subscription_id, s.subscriber_id, p.nickname, p.avatar_variant, %s,
-                       s.subscription_type, period.term_months, period.start_dt, period.end_dt
+                SELECT s.subscription_id, s.subscriber_id, p.nickname, p.avatar_variant, %s, s.subscription_type
                 FROM user_subscriptions s
                 JOIN user_profiles p ON p.account_id = s.subscriber_id
                 JOIN user_subscription_history period
@@ -89,10 +84,7 @@ public class SubscriptionService {
                             rs.getString("nickname"),
                             ProfileQueries.avatarUrl(rs, subscriberId),
                             rs.getInt("avatar_variant"),
-                            SubscriptionType.valueOf(rs.getString("subscription_type")),
-                            rs.getObject("term_months", Integer.class),
-                            JdbcTimes.instant(rs, "start_dt"),
-                            JdbcTimes.instant(rs, "end_dt"));
+                            SubscriptionType.valueOf(rs.getString("subscription_type")));
                 },
                 targetAccountId);
     }

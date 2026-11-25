@@ -151,29 +151,6 @@ html.is-page-locked .screen-content {
   white-space: nowrap;
   clip-path: inset(50%);
 }
-.primary-button {
-  display: flex;
-  width: 100%;
-  min-height: 46px;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: var(--color-primary);
-  padding: 11px 18px;
-  color: var(--on-strong);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-}
-.primary-button:hover {
-  background: var(--color-primary-strong);
-}
-.primary-button .icon {
-  width: 17px;
-  height: 17px;
-}
 
 /* ── 지도(MapCanvas): 지도 바탕, 현재 위치 안내, 오류 ── */
 .map-canvas {

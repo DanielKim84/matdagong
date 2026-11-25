@@ -10,7 +10,7 @@ import kr.matdagong.place.kakao.KakaoPlaceVerifier.PlaceInfo;
 
 /** 가볼 곳 저장 API의 요청 자료형입니다. */
 public final class WishModels {
-    private static final String INVALID_COORDINATE = "장소 위치를 확인해 주세요.";
+    private static final String INVALID_COORDINATE = "장소 좌표를 확인해 주세요.";
 
     private WishModels() {}
 

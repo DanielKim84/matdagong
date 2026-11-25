@@ -37,12 +37,6 @@ export function formatMonthDay(value?: string | number | Date | null): string {
   return time === null ? "" : new Date(time).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
 }
 
-/** "2026. 10. 26." 읽을 수 없는 값은 빈 문자열입니다. */
-export function formatFullDate(value?: string | number | Date | null): string {
-  const time = parseTime(value);
-  return time === null ? "" : new Date(time).toLocaleDateString("ko-KR");
-}
-
 /** "12,345". 숫자가 아니면 "0"입니다. */
 export function formatNumber(value?: number | null): string {
   return NUMBER_FORMAT.format(value != null && Number.isFinite(value) ? value : 0);

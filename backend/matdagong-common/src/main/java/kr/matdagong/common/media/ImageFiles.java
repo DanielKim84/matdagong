@@ -2,7 +2,7 @@ package kr.matdagong.common.media;
 
 import java.nio.charset.StandardCharsets;
 
-/** 서비스가 저장하는 사진 형식(JPG·PNG·WEBP)과 실제 파일 머리 바이트 검사를 한곳에서 정합니다. */
+/** 맛다공이 저장하는 사진 형식(JPG·PNG·WEBP)과 실제 파일 머리 바이트 검사를 한곳에서 정합니다. */
 public final class ImageFiles {
     private ImageFiles() {}
 

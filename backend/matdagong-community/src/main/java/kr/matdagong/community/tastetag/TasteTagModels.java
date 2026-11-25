@@ -3,7 +3,6 @@ package kr.matdagong.community.tastetag;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.time.Instant;
 import java.util.UUID;
 import kr.matdagong.common.tag.TasteTagGroup;
 import kr.matdagong.common.text.Texts;
@@ -44,13 +43,11 @@ public final class TasteTagModels {
         }
     }
 
-    /** 내 제안 한 줄입니다. 화면은 이름·분류·상태·검토 메모만 보여 주므로 제안 이유와 검토 시각은 보내지 않습니다. */
+    /** 내 제안 한 줄입니다. 화면은 종류·이름·분류·상태만 보여 주므로 제안 이유·검토 메모·날짜는 보내지 않습니다. */
     public record TagRequestView(
             UUID requestId,
             TagRequestType requestType,
             String tagName,
             TasteTagGroup tagGroup,
-            TagRequestStatus status,
-            String reviewNote,
-            Instant createdAt) {}
+            TagRequestStatus status) {}
 }
