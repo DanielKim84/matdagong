@@ -51,7 +51,7 @@ public class TasterService {
         List<TasterView> views = jdbc.query(
                 """
                 SELECT p.account_id, p.nickname, p.avatar_variant, p.taster_focus,
-                       p.activity_scope, p.activity_region, p.intro, %s, %s,
+                       p.activity_scope, p.activity_regions, p.intro, %s, %s,
                        (SELECT count(*) FROM user_subscriptions s
                         WHERE s.target_account_id = p.account_id AND s.subscription_st = 'ACTIVE') AS subscriber_count,
                        %s
@@ -79,7 +79,7 @@ public class TasterService {
                             coverUrls,
                             tasterFocus,
                             ActivityScope.valueOf(rs.getString("activity_scope")),
-                            rs.getString("activity_region"),
+                            JdbcArrays.strings(rs, "activity_regions"),
                             rs.getString("intro"),
                             rs.getInt("subscriber_count"),
                             profileTags,

@@ -1,0 +1,31 @@
+/*
+ * 앱 글꼴 "Matdagong"입니다. 기준은 갤럭시 글꼴 "Mong수박씨™ 한국어 Flipfont"(휴대폰 전용 유료 글꼴이라 웹에 넣을 수 없음)이고,
+ * 둥글고 깔끔한 무료 글꼴 두 개를 굵기로 나눠 한 가족으로 묶습니다. 화면 CSS는 font-weight만 정하면 됩니다.
+ * - 보통 굵기(100–500): 티머니 둥근바람 Regular. 둥글면서 세로로 길지 않고 단정합니다(2026-11-20 시안 8종 중 선택).
+ * - 굵은 글씨(600–900): 주아(Jua, SIL OFL). 둥근 굵은 글씨로 제목·이름·버튼에 씁니다.
+ * 파일은 Pretendard처럼 jsDelivr에서 버전을 고정해 받습니다(vite.config.ts CSP font-src 허용).
+ * 티머니 둥근바람은 (주)티머니의 무료 글꼴로 상업적 이용이 가능합니다(글꼴 파일 자체 판매 금지).
+ */
+@font-face {
+  font-family: "Matdagong";
+  font-style: normal;
+  font-weight: 100 500;
+  font-display: swap;
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-07@1.0/TmoneyRoundWindRegular.woff") format("woff");
+}
+@font-face {
+  font-family: "Matdagong";
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: swap;
+  src: url("https://cdn.jsdelivr.net/npm/@fontsource/jua@5.3.0/files/jua-korean-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Matdagong";
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: swap;
+  src: url("https://cdn.jsdelivr.net/npm/@fontsource/jua@5.3.0/files/jua-latin-400-normal.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212;
+}

@@ -1,20 +1,32 @@
+import { useState } from "react";
 import { useAppData } from "../../app/AppData";
 import Icon, { type IconName } from "../../components/Icon";
-import { EmptyState, SectionHead, TopBar } from "../../components/ui";
+import { EmptyState, PageIntro, SectionHead, TopBar } from "../../components/ui";
 import { formatMonthDay, formatNumber } from "../../utils/format";
 
-// 포인트는 충전하지 않고 활동(유료 구독 수익 등)으로만 쌓입니다. 쌓인 포인트를 쓰는 방법들입니다.
-const PENDING_ACTIONS: { label: string; icon: IconName; tone: "amber" | "default" }[] = [
-  { label: "정산 신청", icon: "check", tone: "default" },
-  { label: "구독료로 쓰기", icon: "bookmark", tone: "amber" },
-  { label: "상품권 교환", icon: "star", tone: "amber" },
-  { label: "맛객 후원", icon: "heart", tone: "default" },
+// 포인트는 충전하지 않고 활동(유료 구독 수익 등)으로만 쌓입니다. 쌓인 포인트를 쓰는 방법들입니다(보드 16-04 세 칸).
+const PENDING_ACTIONS: { label: string; icon: IconName }[] = [
+  { label: "교환하기", icon: "undo" },
+  { label: "후원하기", icon: "heart" },
+  { label: "구독료 사용", icon: "bookmark" },
 ];
 
-/** 포인트 지갑(#wallet): 잔액과 적립·사용 내역. 정산·구독료 결제·교환·후원은 준비 중입니다. */
+type HistoryFilter = "all" | "plus" | "minus";
+const HISTORY_FILTERS: { value: HistoryFilter; label: string }[] = [
+  { value: "all", label: "전체" },
+  { value: "plus", label: "적립" },
+  { value: "minus", label: "사용" },
+];
+
+/**
+ * 포인트 지갑(#wallet, 보드 16-04): 큰 제목과 설명, 연한 코랄 잔액 상자(동전 · 내 포인트 · 큰 숫자), 회색 "준비 중" 세 칸
+ * (교환하기 · 후원하기 · 구독료 사용), "포인트 내역"과 전체 · 적립 · 사용 칩, 내역 줄(+·- 동그라미 · 제목 · 설명 · 금액)입니다.
+ */
 export default function WalletScreen() {
   const app = useAppData();
   const { balance, history } = app.points;
+  const [filter, setFilter] = useState<HistoryFilter>("all");
+  const shown = history.filter((entry) => filter === "all" || (filter === "plus") === entry.amount > 0);
 
   function notifyPending(label: string) {
     app.actions.notify({
@@ -28,25 +40,24 @@ export default function WalletScreen() {
     <main className="r-screen r-me-wallet">
       <TopBar title="포인트 지갑" fallback="my" />
       <div className="r-me-body">
-        <section className="r-card r-me-balance" aria-label="보유 포인트">
-          <span>사용할 수 있는 포인트</span>
-          <b>
-            {formatNumber(balance)} <small>P</small>
-          </b>
-          <span>내 기록을 유료로 구독하는 사람이 늘면 포인트가 쌓여요</span>
+        <PageIntro title="포인트 지갑" message="맛다공 활동으로 모은 포인트를 확인하세요." />
+        <section className="r-me-balance" aria-label="보유 포인트">
+          <span className="r-me-balance__icon" aria-hidden="true">
+            <Icon name="coins" />
+          </span>
+          <span className="r-me-balance__copy">
+            <span>내 포인트</span>
+            <b>
+              {formatNumber(balance)}
+              <small>P</small>
+            </b>
+          </span>
         </section>
 
         <div className="r-me-tiles">
           {PENDING_ACTIONS.map((action) => (
-            <button
-              type="button"
-              key={action.label}
-              className={`r-card r-me-tile r-me-tile--${action.tone}`}
-              onClick={() => notifyPending(action.label)}
-            >
-              <span className="r-badge-icon r-me-tile__icon">
-                <Icon name={action.icon} />
-              </span>
+            <button type="button" key={action.label} className="r-me-tile" onClick={() => notifyPending(action.label)}>
+              <Icon name={action.icon} />
               <span className="r-me-tile__label">{action.label}</span>
               <small className="r-me-tile__caption">준비 중</small>
             </button>
@@ -54,11 +65,28 @@ export default function WalletScreen() {
         </div>
 
         <section className="r-me-section">
-          <SectionHead title="내역" meta={history.length > 0 && `${formatNumber(history.length)}건`} />
-          {history.length ? (
-            <div className="r-card r-me-list">
-              {history.map((entry) => (
+          <SectionHead title="포인트 내역">
+            <div className="r-chips" role="group" aria-label="내역 거르기">
+              {HISTORY_FILTERS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`r-chip ${filter === option.value ? "is-on" : ""}`}
+                  aria-pressed={filter === option.value}
+                  onClick={() => setFilter(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </SectionHead>
+          {shown.length ? (
+            <div className="r-me-list">
+              {shown.map((entry) => (
                 <div className="r-row" key={entry.historyId}>
+                  <span className={`r-me-amount__icon ${entry.amount > 0 ? "is-plus" : "is-minus"}`} aria-hidden="true">
+                    {entry.amount > 0 ? "+" : "−"}
+                  </span>
                   <span className="r-row__copy">
                     <b>{entry.title}</b>
                     <small>
@@ -67,8 +95,8 @@ export default function WalletScreen() {
                     </small>
                   </span>
                   <b className={`r-me-amount ${entry.amount > 0 ? "is-plus" : "is-minus"}`}>
-                    {entry.amount > 0 ? "+" : ""}
-                    {formatNumber(entry.amount)}
+                    {entry.amount > 0 ? "+ " : ""}
+                    {formatNumber(entry.amount)}P
                   </b>
                 </div>
               ))}
@@ -78,7 +106,7 @@ export default function WalletScreen() {
               icon="clock"
               title="아직 포인트 내역이 없어요"
               message="포인트가 쌓이거나 쓰이면 이곳에 기록돼요."
-              className="r-card r-me-empty"
+              className="r-me-empty"
             />
           )}
         </section>

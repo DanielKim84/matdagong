@@ -40,7 +40,12 @@ export function useRecordForm({ editPlace }: { editPlace?: Place }) {
   const { hasPlaceStep, resetAfterSave, ...placeForm } = useRecordPlace({ draft, editPlace, isEditing, setError });
   const photoForm = useRecordPhotos({ draft, editRecord, setError });
   const menuForm = useRecordMenus({ draft, editRecord, setError });
-  const tasteForm = useRecordTaste({ draft, editPlace, editRecord });
+  const tasteForm = useRecordTaste({
+    draft,
+    editPlace,
+    editRecord,
+    placeCategory: placeForm.selectedPlace?.category_name,
+  });
   const storyForm = useRecordStory({ draft, editRecord });
   const steps = hasPlaceStep ? NEW_RECORD_STEPS : EDIT_RECORD_STEPS;
 

@@ -7,7 +7,7 @@ import {
   coverPhotoId,
   isAllowedImageSize,
   isAllowedImageType,
-} from "./profileImages";
+} from "../../utils/profileImages";
 
 /** 저장 전 배경 사진 변경(새 파일, 지울 서버 사진)과 미리보기 갤러리를 들고 있습니다. */
 export function useCoverDraft(profile: MyProfile, onError: (message: string) => void) {

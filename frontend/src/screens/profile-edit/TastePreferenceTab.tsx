@@ -1,64 +1,66 @@
-import { Avatar } from "../../components/BrandAssets";
 import FoodFocusPicker from "../../components/FoodFocusPicker";
 import Icon from "../../components/Icon";
 import TasteTagPicker from "../../components/TasteTagPicker";
-import { groupsForFocus } from "../../models/tasteTags";
+import { TASTE_TAG_GROUPS, groupsForFocus } from "../../models/tasteTags";
+import EditNotice from "./EditNotice";
 import type { ProfileForm } from "./useProfileForm";
 
-/** 비공개 추천 취향 탭: 찾는 분야, 좋아하는 태그, 추천에서 뺄 조건입니다. */
-export default function TastePreferenceTab({ form }: { form: ProfileForm }) {
+/** 피하고 싶은 조건(매장 이용 VISIT)의 최대 수. 태그 사전의 분류 한도를 그대로 씁니다. */
+const AVOID_LIMIT = TASTE_TAG_GROUPS.find((group) => group.id === "VISIT")?.limit ?? 5;
+
+/**
+ * 추천 취향·제외 조건(보드 15-04): 나만 보는 추천 조건입니다. 자물쇠 안내 → 하트 "선호 태그 · 분류별 선택"(분류마다 펼친 칩)과
+ * 오른쪽 "태그 제안받기" → 가는 선 → 금지 표시 "피하고 싶은 조건 최대 5개"(매장 이용 칩)와 "태그 제안받기"입니다.
+ * 보드에 없는 분야 고르기는 기능을 지키려고 위에 작게 둡니다. 공개 프로필에는 보이지 않습니다.
+ */
+export default function TastePreferenceTab({ form, onRequestTag }: { form: ProfileForm; onRequestTag: () => void }) {
+  const requestButton = (
+    <button type="button" className="profile-edit-pill" onClick={onRequestTag}>
+      <Icon name="tag" />
+      태그 제안받기
+    </button>
+  );
   return (
-    <section
-      className="settings-panel taste-settings-panel"
-      hidden={form.activeTab !== "taste"}
-      aria-label="비공개 추천 취향 설정"
-    >
-      <div className="taste-settings-intro">
-        <span className="taste-settings-mascot">
-          <Avatar name="맛다공" variant={3} />
-          <i>
-            <Icon name="sparkle" />
-          </i>
-        </span>
-        <h2>오늘도, 내 입맛대로</h2>
-        <p>
-          좋아하는 취향을 알려 주시면
-          <br />
-          나와 잘 맞는 맛객을 먼저 추천해 드려요.
-        </p>
-        <small>나만의 설정이에요 · 프로필에 공개되지 않아요</small>
-      </div>
-      <section className="taste-settings-block">
-        <FoodFocusPicker
-          label="어떤 곳을 찾고 있나요?"
-          value={form.preferenceFocus}
-          onChange={form.changePreferenceFocus}
-        />
-      </section>
-      <section className="taste-settings-block">
-        <div className="taste-section-heading">
-          <h2>이런 곳이 좋아요</h2>
-          <span>분류별 선택</span>
-        </div>
+    <section className="settings-panel taste-settings-panel" aria-label="추천 취향·제외 조건 설정">
+      <EditNotice
+        icon="lock"
+        title="나만의 추천 조건입니다"
+        message="맛다공이 내 취향에 맞는 맛집을 추천할 때 사용되는 설정으로, 공개 프로필에 노출되지 않아요."
+      />
+      <FoodFocusPicker
+        label="분야"
+        value={form.preferenceFocus}
+        onChange={form.changePreferenceFocus}
+        variant="chips"
+      />
+      <section className="taste-settings-block" aria-labelledby="taste-like-title">
+        <h2 id="taste-like-title" className="taste-section-heading">
+          <Icon name="heart" />
+          선호 태그 · 분류별 선택
+        </h2>
+        <p>내가 더 자주 보고 싶은 취향이에요.</p>
         <TasteTagPicker
           options={form.positiveOptions}
           value={form.preferenceTags}
           groups={groupsForFocus(form.preferenceFocus)}
           onChange={form.changePreferenceTags}
+          inline
         />
+        {requestButton}
       </section>
-      <section className="taste-settings-block avoid-settings-block">
-        <div className="taste-section-heading">
-          <h2>추천에서 제외</h2>
-          <span>선택</span>
-        </div>
-        <p>해당 조건이 등록된 맛집은 홈과 지도에서 숨겨요.</p>
+      <section className="taste-settings-block" aria-labelledby="taste-avoid-title">
+        <h2 id="taste-avoid-title" className="taste-section-heading">
+          <Icon name="ban" />
+          피하고 싶은 조건 <small>최대 {AVOID_LIMIT}개</small>
+        </h2>
+        <p>추천에서 제외하고 싶은 조건이에요.</p>
         <TasteTagPicker
           options={form.avoidOptions}
           value={form.excludedTags}
           groups={["VISIT"]}
           onChange={form.changeExcludedTags}
         />
+        {requestButton}
       </section>
     </section>
   );

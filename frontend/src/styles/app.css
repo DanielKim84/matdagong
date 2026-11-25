@@ -1,6 +1,6 @@
 /*
- * 기본 요소, 앱 틀, 아직 r- 부품으로 바꾸지 않은 공통 부품(아이콘·아바타·주요 버튼)과 지도 위 표시입니다.
- * 색·글꼴 토큰은 src/theme(base.css, themes/*.css)에 있고, 새 공통 부품은 renewal/ui.css에 둡니다.
+ * 기본 요소, 앱 틀, 아이콘·아바타와 지도 표시처럼 여러 화면이 공유하는 기반 스타일입니다.
+ * 색·글꼴 토큰은 src/theme(base.css, themes/*.css)에 있고, 공용 화면 부품은 screens/ui.css에 둡니다.
  */
 
 /* ── 기본 요소 ── */
@@ -62,7 +62,7 @@ p {
 .app-view h1,
 .app-view h2 {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: 0;
 }
 .screen-content {
@@ -109,7 +109,7 @@ html.is-page-locked .screen-content {
   overflow: hidden !important;
 }
 
-/* ── 공통 부품(이전 이름) ── */
+/* ── 공용 아이콘·아바타 요소 ── */
 .icon {
   display: inline-block;
   width: 21px;
@@ -338,33 +338,35 @@ html.is-page-locked .screen-content {
   filter: drop-shadow(0 2px 3px color-mix(in srgb, var(--shadow-color) 28%, transparent));
 }
 .map-category-marker-shell path {
-  stroke-width: 2.7;
+  /* 테두리 선은 얇게(1.5) 두고, 안쪽 원(31px)을 크게 해 색 띠가 사진·기호를 가리지 않게 합니다. */
+  stroke-width: 1.5;
 }
-/* 가볼 곳은 초록, 다녀온 곳은 내 기록 핀과 같은 보라입니다. */
+/* 내 지도 색(보드 06-03, 아래 수·칩·목록 이름표와 같음): 가볼 곳은 코랄 하트, 가본 곳(다녀온 곳·나만 보기 기록)은 --visited-*, 공유 중(공개 내 기록)은 --shared-* 핀입니다(theme/themes/default.css). */
 .map-category-marker--liked .map-category-marker-shell path {
-  fill: var(--green-500);
-  stroke: var(--green-700);
+  fill: var(--brand-500);
+  stroke: var(--brand-700);
 }
 .map-category-marker--visited .map-category-marker-shell path {
-  fill: var(--berry-400);
-  stroke: var(--berry-600);
+  fill: var(--visited-500);
+  stroke: var(--visited-700);
 }
 .map-category-marker-glyph {
   position: absolute;
-  top: 7px;
-  left: 8px;
+  /* 핀 원(지름 36, 중심 21.5·20.5, mapMarkerArt.ts의 MARKER_SHELL_PATH) 안에 31px 원을 가운데 맞춥니다. */
+  top: 5px;
+  left: 6px;
   display: grid;
-  width: 27px;
-  height: 27px;
+  width: 31px;
+  height: 31px;
   place-items: center;
-  border: 2px solid var(--neutral-0);
+  border: 1.5px solid var(--neutral-0);
   border-radius: 50%;
   background: var(--neutral-0);
 }
 .map-category-marker-glyph > svg {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.9;
@@ -372,16 +374,13 @@ html.is-page-locked .screen-content {
   stroke-linejoin: round;
 }
 .map-category-marker--liked .map-category-marker-glyph {
-  background: var(--neutral-100);
-  color: var(--color-success-text);
+  color: var(--brand-600);
 }
 .map-category-marker--visited .map-category-marker-glyph {
-  color: var(--berry-600);
+  color: var(--visited-600);
 }
+.map-category-marker--liked .map-category-marker-glyph > svg,
 .map-category-marker--visited .map-category-marker-glyph > svg {
-  stroke-width: 3;
-}
-.map-category-marker--liked .map-category-marker-glyph > svg {
   fill: currentColor;
   stroke: none;
 }
@@ -415,6 +414,24 @@ html.is-page-locked .screen-content {
 .taster-map-marker {
   cursor: pointer;
 }
+/*
+ * 마커가 겹칠 때 아래 마커의 보이는 부분을 누르면 그 마커가 눌리게, 네모 버튼 전체가 아니라 핀 모양(경로)·얼굴·기호만 누르는 영역으로 둡니다.
+ * 버튼 자체는 누름을 받지 않고, 안쪽 모양에서 시작한 누름이 버튼으로 올라가 같은 동작을 합니다(hooks/useMapMarkers.ts).
+ */
+.taster-map-marker,
+.map-category-marker,
+.taster-map-marker-shell,
+.map-category-marker-shell {
+  pointer-events: none;
+}
+.taster-map-marker-shell path,
+.map-category-marker-shell path,
+.taster-map-marker-face,
+.taster-map-marker-badge,
+.taster-map-marker-trust,
+.map-category-marker-glyph {
+  pointer-events: auto;
+}
 .taster-map-marker-shell {
   position: absolute;
   inset: 0;
@@ -422,30 +439,37 @@ html.is-page-locked .screen-content {
   height: 53px;
 }
 .taster-map-marker-shell path {
-  stroke-width: 2.7;
+  /* 테두리 선은 얇게(1.5) 두고, 안쪽 원(31px)을 크게 해 색 띠가 사진·기호를 가리지 않게 합니다. */
+  stroke-width: 1.5;
 }
 .taster-map-marker--subscribed .taster-map-marker-shell path {
   fill: var(--brand-500);
   stroke: var(--brand-700);
 }
 .taster-map-marker--other .taster-map-marker-shell path {
-  fill: var(--amber-500);
-  stroke: var(--clay-600);
+  fill: var(--other-500);
+  stroke: var(--other-600);
 }
 .taster-map-marker--own .taster-map-marker-shell path {
-  fill: var(--berry-400);
-  stroke: var(--berry-600);
+  fill: var(--shared-500);
+  stroke: var(--shared-700);
+}
+/* 나만 보기 내 기록은 "가본 곳"(공유하지 않은 곳)이라 다녀온 곳 발바닥 핀과 같은 가본 곳 색입니다(screens/mymap/myMapModel.ts의 categoryOf). */
+.taster-map-marker--own.is-private .taster-map-marker-shell path {
+  fill: var(--visited-500);
+  stroke: var(--visited-700);
 }
 .taster-map-marker-face {
   position: absolute;
-  top: 7px;
-  left: 8px;
+  /* 핀 원(지름 36, 중심 21.5·20.5, mapMarkerArt.ts의 MARKER_SHELL_PATH) 안에 31px 원을 가운데 맞춥니다. */
+  top: 5px;
+  left: 6px;
   display: grid;
-  width: 27px;
-  height: 27px;
+  width: 31px;
+  height: 31px;
   overflow: hidden;
   place-items: center;
-  border: 2px solid var(--neutral-0);
+  border: 1.5px solid var(--neutral-0);
   border-radius: 50%;
   background: var(--neutral-50);
 }
@@ -490,7 +514,7 @@ html.is-page-locked .screen-content {
 }
 .taster-map-marker-badge--own {
   background: var(--neutral-0);
-  color: var(--berry-400);
+  color: var(--shared-500);
 }
 /*
  * 구독하지 않은 믿고 가는 맛객(신뢰 80% 이상)의 기록: 오른쪽 위 주황 별. 다른 표식보다 조금 크고 진해서 먼저 눈에 띕니다.
@@ -514,14 +538,14 @@ html.is-page-locked .screen-content {
   width: 10px;
   height: 10px;
 }
-/* 나만 보는 내 기록: 자물쇠 표식 */
+/* 나만 보는 내 기록(가본 곳): 가본 곳 색 핀에 맞춘 자물쇠 표식 */
 .taster-map-marker.is-private .taster-map-marker-badge,
 .taster-map-marker-badge.is-private {
   top: -2px;
   right: -2px;
   width: 19px;
   height: 19px;
-  background: var(--berry-600);
+  background: var(--visited-600);
   color: var(--neutral-0);
 }
 .taster-map-marker-badge svg {

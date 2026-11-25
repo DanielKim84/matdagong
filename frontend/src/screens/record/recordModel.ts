@@ -1,6 +1,6 @@
 import type { FoodFocus } from "../../models/community";
-import type { Taster } from "../../models/place";
-import { formatNumber } from "../../utils/format";
+import { placeNeighborhood, type Taster } from "../../models/place";
+import { formatNumber, shortCategory } from "../../utils/format";
 
 /** 기록하기(RecordFlow) 단계·입력 한도와 입력 값 변환입니다. 단계 컴포넌트와 입력 훅이 함께 씁니다. */
 
@@ -8,6 +8,8 @@ import { formatNumber } from "../../utils/format";
 // 같은 값입니다. 사진·메뉴 수는 입력 보관(services/registerDraft.ts)도 맞춥니다. 함께 바꿉니다.
 export const MAX_PHOTOS = 10;
 export const MAX_MENUS = 5;
+/** 매장 이용 정보는 한 기록에 이만큼까지 고릅니다(보드 11-03 "1 / 5"). 화면에서만 막습니다. */
+export const MAX_VISIT_CONDITIONS = 5;
 export const MENU_NAME_MAX = 30;
 /** 추천 이유 첫 줄(한 줄 요약) 길이입니다. 화면에서만 나눠 쓰고 서버는 추천 이유 전체(REASON_MAX)만 봅니다. */
 export const HEADLINE_MAX = 60;
@@ -37,6 +39,13 @@ export function splitReason(reason: string): { headline: string; detail: string 
 /** 확인·완료 화면에 크게 보여 줄 한 줄 추천입니다. 한 줄 추천이 비었으면 추천 이유의 첫 줄을 씁니다. */
 export function summaryHeadline(headline: string, reason: string): string {
   return headline.trim() || reason.split("\n")[0] || "";
+}
+
+/** 확인·완료 화면 장소 카드의 "분류 · 동네" 한 줄입니다(보드 12-01·12-02). */
+export function recordPlaceMeta(categoryName: string | undefined, address: string): string {
+  return [shortCategory(categoryName ?? ""), placeNeighborhood({ address, lotAddress: null })]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 export function joinReason(headline: string, detail: string): string {

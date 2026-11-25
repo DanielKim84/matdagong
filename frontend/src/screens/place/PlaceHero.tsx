@@ -1,20 +1,21 @@
-import { useEffect, useRef, useState } from "react";
-import Icon from "../../components/Icon";
-import { loadMapSdk } from "../../services/kakao";
+import { useRef, useState } from "react";
+import PaginationDots from "../../components/PaginationDots";
 import type { Place } from "../../models/place";
-import { hasCoordinates, type PlacePhoto } from "./placeRecords";
+import PlaceMiniMap from "./PlaceMiniMap";
+import type { PlacePhoto } from "./placeRecords";
 
-/** 상단 큰 사진(고른 맛객이 올린 사진). 사진이 없으면 가게 위치 지도를 보여 줍니다. */
+/**
+ * 상단 큰 사진(고른 맛객이 올린 대표 사진, 보드 09-01). 옆으로 넘기고, 사진 아래 점으로 몇 번째인지 보여 줍니다.
+ * 누구의 사진인지는 바로 아래 맛객 줄이 알려 주므로 사진 위에 글자·숫자를 얹지 않습니다(보드: 이미지 위 숫자 배지 없음).
+ * 사진이 없으면 가게 위치 지도를 보여 줍니다.
+ */
 export default function PlaceHero({
   place,
   photos,
-  caption,
   onOpenPhoto,
 }: {
   place: Place;
   photos: PlacePhoto[];
-  /** 누구의 사진인지 왼쪽 아래에 보여 줄 문구 */
-  caption?: string;
   onOpenPhoto: (index: number) => void;
 }) {
   const track = useRef<HTMLDivElement>(null);
@@ -25,11 +26,15 @@ export default function PlaceHero({
     if (!element || !element.clientWidth) return;
     setIndex(Math.round(element.scrollLeft / element.clientWidth));
   }
+  function scrollTo(next: number) {
+    const element = track.current;
+    if (element) element.scrollTo({ left: next * element.clientWidth, behavior: "smooth" });
+  }
 
   if (!photos.length)
     return (
       <div className="r-place-hero r-place-hero--map">
-        <PlaceMap place={place} />
+        <PlaceMiniMap place={place} />
       </div>
     );
 
@@ -48,57 +53,14 @@ export default function PlaceHero({
           </button>
         ))}
       </div>
-      {caption && <span className="r-place-hero__caption">{caption}</span>}
       {photos.length > 1 && (
-        <span className="r-place-hero__count" aria-hidden="true">
-          {Math.min(index, photos.length - 1) + 1} / {photos.length}
-        </span>
+        <PaginationDots
+          activeIndex={Math.min(index, photos.length - 1)}
+          total={photos.length}
+          onSelect={scrollTo}
+          label="사진"
+        />
       )}
     </div>
   );
-}
-
-/** 움직이지 않는 작은 위치 지도입니다. 지도를 불러오지 못하면 주소만 보여 줍니다. */
-function PlaceMap({ place }: { place: Place }) {
-  const element = useRef<HTMLDivElement>(null);
-  const { latitude, longitude } = place;
-  const [hasError, setHasError] = useState(!hasCoordinates({ latitude, longitude }));
-
-  useEffect(() => {
-    if (!hasCoordinates({ latitude, longitude })) return;
-    let active = true;
-    let overlay: MapOverlay | undefined;
-    loadMapSdk()
-      .then(() => {
-        const maps = window.kakao?.maps;
-        if (!active || !element.current || !maps) return;
-        const center = new maps.LatLng(latitude, longitude);
-        const map = new maps.Map(element.current, { center, level: 3, draggable: false, zoomable: false });
-        const pin = document.createElement("span");
-        pin.className = "r-place-map-pin";
-        pin.setAttribute("aria-hidden", "true");
-        overlay = new maps.CustomOverlay({ map, position: center, content: pin, yAnchor: 1 });
-        requestAnimationFrame(() => {
-          map.relayout();
-          map.setCenter(center);
-        });
-      })
-      .catch(() => {
-        if (active) setHasError(true);
-      });
-    return () => {
-      active = false;
-      overlay?.setMap(null);
-    };
-  }, [latitude, longitude]);
-
-  if (hasError) {
-    return (
-      <div className="r-place-hero__placeholder">
-        <Icon name="pin" />
-        <span>{place.address || "위치 정보가 없어요"}</span>
-      </div>
-    );
-  }
-  return <div className="r-place-hero__map" ref={element} role="img" aria-label={`${place.name} 위치 지도`} />;
 }

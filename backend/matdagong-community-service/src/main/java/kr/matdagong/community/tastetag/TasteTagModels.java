@@ -29,8 +29,8 @@ public final class TasteTagModels {
     public record TasteTagView(String name, TasteTagGroup tagGroup) {}
 
     /**
-     * 태그·매장 이용 정보 제안입니다. 이름의 앞뒤·연속 공백과 공백뿐인 이유는 검증 전에 정리합니다. 이름 30자·이유 300자는
-     * 화면 TasteTagRequestSheet의 한도와 맞춥니다.
+     * 태그·매장 이용 정보 제안입니다. 이름의 앞뒤·연속 공백과 공백뿐인 이유는 검증 전에 정리합니다. 이름 30자는
+     * 화면 TasteTagRequestScreen의 한도와 같습니다. 이유는 300자까지 받지만 화면(보드 17-04)은 100자까지만 받습니다.
      */
     public record TagRequest(
             @NotNull(message = "제안 종류를 선택해 주세요.") TagRequestType requestType,

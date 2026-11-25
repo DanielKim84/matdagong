@@ -2,12 +2,13 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { usePageScrollLock } from "../hooks/usePageScrollLock";
-import Icon from "./Icon";
+import Icon, { type IconName } from "./Icon";
 
 type NoticeTone = "danger" | "info" | "success" | "warning";
 type DialogOptions = {
   title: string;
   message: string;
+  /** 한 줄 값(예: 원래 종료 예정일)을 보여 주는 상자입니다. */
   detail?: { label: string; value: string };
   tone?: NoticeTone;
   confirmLabel?: string;
@@ -93,14 +94,14 @@ export function NotificationDialogProvider({ children }: { children: ReactNode }
     };
   }, [request, finish]);
 
-  const icon =
+  const icon: IconName =
     request?.tone === "success"
       ? "check"
       : request?.tone === "info"
         ? "message"
         : request?.tone === "warning"
           ? "sparkle"
-          : "close";
+          : "trash";
 
   return (
     <NotificationContext.Provider value={{ confirm, alert }}>

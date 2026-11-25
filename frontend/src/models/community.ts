@@ -5,6 +5,8 @@
  * 같은 값입니다.
  */
 export const MAX_NICKNAME_LENGTH = 12;
+/** 활동 지역은 최대 3곳(프로필 편집 보드 15-01). 커뮤니티 서비스 ProfileModels.MAX_ACTIVITY_REGIONS·DB 제약(V45)과 같습니다. */
+export const MAX_ACTIVITY_REGIONS = 3;
 
 type PaidPlan = { termMonths: number; priceAmount: number };
 /** 구독 요금표입니다. testMode면 결제 연동 전이라 유료 플랜도 0원으로 열고 요금은 안내로만 보여 줍니다. */
@@ -80,7 +82,8 @@ export type MyProfile = {
   tasterFocus: FoodFocus;
   preferenceFocus: FoodFocus;
   activityScope: ActivityScope;
-  activityRegion: string | null;
+  /** 활동 지역(최대 MAX_ACTIVITY_REGIONS곳, 고른 순서). 여행 위주면 빈 목록입니다. */
+  activityRegions: string[];
   intro: string | null;
   profileTags: string[];
   preferenceTags: string[];
@@ -107,7 +110,7 @@ export type TasteTag = {
   tagGroup: "CUISINE" | "TASTE" | "CAFE" | "DESSERT" | "TRAVEL" | "MOOD" | "OCCASION" | "VISIT";
 };
 
-/** 태그·매장 이용 정보 제안입니다. 길이 한도는 TasteTagRequestSheet와 커뮤니티 서비스 TasteTagModels.TagRequest가 같습니다. */
+/** 태그·매장 이용 정보 제안입니다. 길이 한도는 TasteTagRequestScreen과 커뮤니티 서비스 TasteTagModels.TagRequest가 같습니다. */
 export type TagRequestInput = {
   requestType: "TAG" | "PLACE_INFO";
   name: string;
@@ -136,7 +139,7 @@ export type ProfileChanges = {
   profileTags: string[];
   tasterFocus: FoodFocus;
   activityScope: ActivityScope;
-  activityRegion: string;
+  activityRegions: string[];
   preferenceFocus: FoodFocus;
   preferenceTags: string[];
   excludedTags: string[];

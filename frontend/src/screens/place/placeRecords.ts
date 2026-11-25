@@ -1,6 +1,6 @@
 import { isMyTaster, type Place, type RecommendedMenu, type Taster } from "../../models/place";
 import { groupTagsByDictionary, isTasteTagGroup, type TagGroupSection } from "../../models/tasteTags";
-import { compareByTrust, isTrustedTaster, tasteScoreLabel } from "../../models/trust";
+import { compareByTrust } from "../../models/trust";
 import { formatWon } from "../../utils/format";
 
 /** 맛집 상세(PlaceDetailScreen)와 그 하위 부품이 쓰는 맛객 기록 정렬·표시·사진 모으기 계산입니다. */
@@ -54,17 +54,6 @@ export function placeRecords(place: Place, subscribedIds: string[]): PlaceRecord
   );
 }
 
-/**
- * 맛객 고르기 줄과 전체 목록에서 이름 아래 붙이는 짧은 표시입니다.
- * 믿고 가는 맛객이면 구독 여부보다 신뢰 등급을 먼저 보여 줍니다(어떤 맛객의 기록을 믿을지 고르는 화면이라서).
- */
-export function recordBadge(record: PlaceRecord, subscribedIds: string[]): string {
-  if (isMyTaster(record)) return "내 기록";
-  if (isTrustedTaster(record)) return tasteScoreLabel(record);
-  if (subscribedIds.includes(record.tasterId)) return "구독 중";
-  return tasteScoreLabel(record);
-}
-
 /** 서명 주소의 쿼리·해시를 떼어 같은 사진인지 비교할 열쇠로 씁니다. */
 function photoKey(src: string): string {
   return src.split(/[?#]/, 1)[0];
@@ -93,6 +82,19 @@ export function collectPhotos(record: PlaceRecord): PlacePhoto[] {
       });
   });
   return photos;
+}
+
+/** "맛집 사진"(보드 09-03)에 보여 줄 모든 맛객의 대표 사진(메뉴 사진 제외)입니다. 같은 주소의 사진은 한 번만 넣습니다. */
+export function placeGalleryPhotos(records: PlaceRecord[]): PlacePhoto[] {
+  const seen = new Set<string>();
+  return records
+    .flatMap((record) => collectPhotos(record).filter((photo) => !photo.isMenu))
+    .filter((photo) => {
+      const key = photoKey(photo.src);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 }
 
 /** 서명 주소의 쿼리를 빼고 비교해 사진 보기에서 몇 번째 사진인지 찾습니다. 없으면 -1입니다. */

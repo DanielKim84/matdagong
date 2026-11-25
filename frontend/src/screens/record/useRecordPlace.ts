@@ -52,7 +52,6 @@ export function useRecordPlace({
   const selectedLikedPlace = selectedPlace
     ? places.find((place) => likedPlaceIds.includes(place.id) && isSameKakaoPlace(place, selectedPlace.id))
     : undefined;
-  const existingVenue = selectedPlace ? places.find((place) => isSameKakaoPlace(place, selectedPlace.id)) : undefined;
 
   // 하트로 저장만 한 장소를 고르면 직접 방문했는지 먼저 확인합니다.
   const selectedLikedPlaceId = selectedLikedPlace?.id;
@@ -147,17 +146,16 @@ export function useRecordPlace({
     placeSearch: search.placeSearch,
     changePlaceSearch: search.changePlaceSearch,
     placeResults: search.placeResults,
+    nearbyPlaces: search.nearbyPlaces,
     hasSearched: search.hasSearched,
     isSearchingPlaces: search.isSearchingPlaces,
     findPlaces: search.findPlaces,
     choosePlace,
     chooseQuickDraft,
-    clearPlace,
     selectedPlace,
     name,
     address,
     coordinates,
-    existingVenue,
     drafts,
     activeDraftId,
     selectedLikedPlace,

@@ -78,12 +78,6 @@ export function collectFeedRecords(
   return records.sort((left, right) => right.time - left.time);
 }
 
-/** "마포구 망원동"처럼 주소에서 구·동만 짧게 뽑습니다. */
-export function shortArea(place: Place): string {
-  const parts = (place.address || place.roadAddress || place.lotAddress || "").split(/\s+/).filter(Boolean);
-  return parts.slice(1, 3).join(" ");
-}
-
 /** 맛객별로 스토리에서 본 기록 key 목록입니다. */
 export type StorySeen = Record<string, string[]>;
 

@@ -1,11 +1,12 @@
 import type { NicknameCheck } from "../hooks/useNicknameCheck";
+import Icon from "./Icon";
 
 /** 다른 맛객이 쓰는 닉네임 안내입니다. 커뮤니티 서버 UserProfileService.NICKNAME_TAKEN과 같은 문구입니다. */
 export const NICKNAME_TAKEN_MESSAGE = "이미 사용 중인 닉네임이에요.";
 
 const NOTES: Record<"checking" | "available" | "taken", string> = {
   checking: "겹치는 닉네임이 있는지 보고 있어요…",
-  available: "쓸 수 있는 닉네임이에요.",
+  available: "사용 가능한 닉네임이에요.",
   taken: `${NICKNAME_TAKEN_MESSAGE} 다른 이름을 정해 주세요.`,
 };
 
@@ -21,6 +22,7 @@ export default function NicknameCheckNote({ check, id }: { check: NicknameCheck;
       className={`r-nickname-check ${check === "available" ? "is-ok" : check === "taken" ? "is-taken" : ""}`}
       role={check === "taken" ? "alert" : "status"}
     >
+      {check === "available" && <Icon name="check" />}
       {NOTES[check]}
     </span>
   );

@@ -7,7 +7,8 @@ import Icon from "../../components/Icon";
 import PlaceThumb from "../../components/PlaceThumb";
 import { useModalLock } from "../../hooks/useModalLock";
 import { formatRelativeTime } from "../../utils/format";
-import { shortArea, type StoryGroup } from "./feedRecords";
+import { sharePlaceWithNotice } from "../../utils/placeLinks";
+import { type StoryGroup } from "./feedRecords";
 
 /**
  * 전체 화면 스토리 뷰어입니다. 진행 막대가 다 차면 다음 기록으로 넘어가고,
@@ -68,7 +69,6 @@ export default function StoryViewer({
   if (!group || !record) return null;
   const { place, taster } = record;
   const isLiked = likedPlaceIds.includes(place.id);
-  const area = shortArea(place);
   const when = formatRelativeTime(taster.recordedAt);
   // 화면 왼쪽·오른쪽을 누르고 있는 동안에는 넘김을 멈춥니다.
   const holdToPause = {
@@ -132,15 +132,34 @@ export default function StoryViewer({
             {when && <small>{when}</small>}
           </span>
         </button>
-        <button
-          type="button"
-          ref={closeRef}
-          className="r-icon-button r-feed-story__close"
-          aria-label="스토리 닫기"
-          onClick={onClose}
-        >
-          <Icon name="close" />
-        </button>
+        <span className="r-feed-story__tools">
+          <button
+            type="button"
+            className={`r-icon-button r-feed-story__like${isLiked ? " is-on" : ""}`}
+            aria-label={isLiked ? "하트 풀기" : "가볼 곳에 저장"}
+            aria-pressed={isLiked}
+            onClick={() => void chooseLike()}
+          >
+            <Icon name="heart" filled={isLiked} />
+          </button>
+          <button
+            type="button"
+            className="r-icon-button"
+            aria-label={`${place.name} 공유`}
+            onClick={() => void sharePlaceWithNotice(place, actions.notify)}
+          >
+            <Icon name="share" />
+          </button>
+          <button
+            type="button"
+            ref={closeRef}
+            className="r-icon-button r-feed-story__close"
+            aria-label="스토리 닫기"
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </button>
+        </span>
       </header>
 
       <button
@@ -149,45 +168,38 @@ export default function StoryViewer({
         aria-label="이전 기록"
         onClick={previous}
         {...holdToPause}
-      />
+      >
+        <span className="r-feed-story__arrow" aria-hidden="true">
+          <Icon name="back" />
+        </span>
+      </button>
       <button
         type="button"
         className="r-feed-story__tap r-feed-story__tap--next"
         aria-label="다음 기록"
         onClick={next}
         {...holdToPause}
-      />
+      >
+        <span className="r-feed-story__arrow" aria-hidden="true">
+          <Icon name="chevron" />
+        </span>
+      </button>
 
+      {/* 아래: 큰 가게 이름과 맛객이 남긴 이야기, "맛집 보기" 한 버튼(보드 07-02) */}
       <div className="r-feed-story__panel">
-        <span className="r-feed-story__place">
-          {place.name}
-          {area ? ` · ${area}` : ""}
-        </span>
-        {taster.note && <p className="r-feed-story__quote">“{taster.note}”</p>}
-        <span className="r-feed-story__count">
-          {position.item + 1} / {group.records.length}
-        </span>
-        <div className="r-feed-story__actions">
-          <button
-            type="button"
-            className="r-button r-button--primary"
-            onClick={() => {
-              onClose();
-              go("place", place.id);
-            }}
-          >
-            장소 보기
-          </button>
-          <button
-            type="button"
-            className={`r-feed-story__like${isLiked ? " is-on" : ""}`}
-            aria-label={isLiked ? "하트 풀기" : "가볼 곳에 저장"}
-            aria-pressed={isLiked}
-            onClick={() => void chooseLike()}
-          >
-            <Icon name="heart" filled={isLiked} />
-          </button>
-        </div>
+        <h2 className="r-feed-story__place">{place.name}</h2>
+        {taster.note && <p className="r-feed-story__quote">{taster.note}</p>}
+        <button
+          type="button"
+          className="r-button r-button--primary r-button--block"
+          onClick={() => {
+            onClose();
+            go("place", place.id);
+          }}
+        >
+          <Icon name="fork" />
+          맛집 보기
+        </button>
       </div>
     </div>,
     document.body,

@@ -11,6 +11,7 @@ declare global {
     extend(position: MapCoordinate): void;
   }
   interface MapInstance {
+    getCenter(): MapCoordinate;
     setCenter(position: MapCoordinate): void;
     setDraggable(value: boolean): void;
     setZoomable(value: boolean): void;
@@ -18,8 +19,16 @@ declare global {
     getBounds(): MapBounds;
     getLevel(): number;
     setLevel(level: number, options?: { animate?: boolean }): void;
-    setBounds(bounds: MapBounds): void;
+    /** padding(px)은 위·오른쪽·아래·왼쪽 순서로, 그만큼 안쪽에 범위를 맞춥니다. */
+    setBounds(
+      bounds: MapBounds,
+      paddingTop?: number,
+      paddingRight?: number,
+      paddingBottom?: number,
+      paddingLeft?: number,
+    ): void;
     panTo(position: MapCoordinate): void;
+    panBy(dx: number, dy: number): void;
   }
   interface MapOverlay {
     setMap(map: MapInstance | null): void;
@@ -32,7 +41,14 @@ declare global {
     region_2depth_name: string;
     region_3depth_name: string;
   }
+  /** Geocoder.addressSearch 결과 한 줄. x는 경도, y는 위도(문자열)입니다. */
+  interface KakaoAddressResult {
+    address_name: string;
+    x: string;
+    y: string;
+  }
   interface KakaoGeocoder {
+    addressSearch(query: string, callback: (result: KakaoAddressResult[], status: string) => void): void;
     coord2RegionCode(
       longitude: number,
       latitude: number,
@@ -79,7 +95,13 @@ declare global {
             callback: (results: KakaoPlaceResult[], status: string) => void,
             options?: { size?: number; location?: MapCoordinate; radius?: number },
           ): void;
+          categorySearch(
+            categoryCode: string,
+            callback: (results: KakaoPlaceResult[], status: string) => void,
+            options: { location: MapCoordinate; radius: number; size?: number; sort?: string },
+          ): void;
         };
+        SortBy: { DISTANCE: string };
         Geocoder: new () => KakaoGeocoder;
       };
       event: {

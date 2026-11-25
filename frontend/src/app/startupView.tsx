@@ -19,53 +19,69 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className = "", 
   return node;
 }
 
-/** 로고 → 캐릭터 무대 → 문구 순서로 화면 가운데에 둡니다. */
-function startupPanel(className: string, ...children: HTMLElement[]): void {
+/** 세로 로고(입체 심볼 + 맛다공 글자, 보드 02-01·02-03)입니다. 한 줄 소개는 접속 중 화면만 붙입니다. */
+function brandBlock(withTagline: boolean): HTMLElement {
+  const brand = element("div", "auth-start-brand");
+  const symbol = element("img", "auth-start-brand__symbol");
+  symbol.src = "/assets/brand/app-icon.png";
+  symbol.alt = "";
+  const name = element("h1", "auth-start-brand__name", "맛다공");
+  brand.append(symbol, name);
+  if (withTagline) brand.append(element("p", "auth-start-brand__tagline", "맛있는 순간을 함께하는 사람들"));
+  return brand;
+}
+
+function showPanel(className: string, ...children: HTMLElement[]): void {
   const root = document.getElementById("root");
   if (!root) return;
-  const logo = element("img", "auth-start-logo");
-  logo.src = "/assets/brand-logo.png";
-  logo.alt = "맛다공";
   const panel = element("main", `auth-start-screen ${className}`);
-  panel.append(logo, mascotStage(), ...children);
+  panel.append(...children);
   root.replaceChildren(panel);
 }
 
-/** 접시 위 프라이팬 캐릭터와 바닥 그림자, 접시를 도는 코랄 고리(접속 중일 때만 돎)입니다. 장식이라 읽히지 않습니다. */
-function mascotStage(): HTMLElement {
-  const stage = element("div", "auth-start-stage");
-  stage.setAttribute("aria-hidden", "true");
-  stage.append(
-    element("span", "auth-start-stage__ring"),
-    element("span", "auth-start-stage__plate"),
-    element("span", "auth-start-stage__shadow"),
-    element("span", "auth-start-stage__character"),
-  );
-  return stage;
-}
-
-/** 앱을 그리기 전 접속 중 화면입니다. 문구 아래 점 세 개가 차례로 숨 쉬듯 움직입니다. */
-export function showStartupStatus(message: string): void {
-  const status = element("p", "auth-start-message", message);
+/**
+ * 앱을 그리기 전 접속 중 화면입니다(보드 02-01). 세로 로고 아래 프라이팬 캐릭터 장면을 깔고,
+ * 둥글게 올라온 흰 판에 안내 문구와 오가는 코랄 진행 막대를 둡니다.
+ */
+export function showStartupStatus(): void {
+  const scene = element("div", "auth-start-scene");
+  scene.setAttribute("aria-hidden", "true");
+  scene.append(element("span", "auth-start-scene__character"));
+  const status = element("section", "auth-start-status");
   status.setAttribute("role", "status");
-  const dots = element("span", "auth-start-dots");
-  dots.setAttribute("aria-hidden", "true");
-  dots.append(element("i"), element("i"), element("i"));
-  startupPanel("is-loading", status, dots);
+  const progress = element("span", "auth-start-progress");
+  progress.setAttribute("aria-hidden", "true");
+  progress.append(element("i"));
+  status.append(
+    element("h2", "", "계정을 확인하고 있어요"),
+    element("p", "auth-start-message", "잠시만 기다려 주세요."),
+    progress,
+  );
+  showPanel("is-loading", brandBlock(true), scene, status);
 }
 
-export function showSignInError(message: string): void {
-  const retry = element("button", "", "다시 로그인");
+/** 로그인을 이어 가지 못했을 때의 화면입니다(보드 02-03). 다시 로그인하면 돌아갈 화면을 기억한 채 처음부터 시작합니다. */
+export function showSignInError(): void {
+  const alert = element("span", "auth-start-alert", "!");
+  alert.setAttribute("aria-hidden", "true");
+  const message = element("p", "auth-start-message");
+  for (const [index, line] of [
+    "네트워크 연결이 원활하지 않거나",
+    "일시적으로 인증에 문제가 발생했어요.",
+    "다시 로그인해 주세요.",
+  ].entries()) {
+    if (index > 0) message.append(element("br"));
+    message.append(line);
+  }
+  const retry = element("button", "auth-start-retry", "다시 로그인");
   retry.type = "button";
   retry.addEventListener("click", () => {
     window.location.assign(`/${readReturnHash()}`);
   });
-  startupPanel(
-    "auth-start-error",
-    element("h1", "", "로그인을 이어갈 수 없어요"),
-    element("p", "auth-start-message", message),
-    retry,
-  );
+  const body = element("section", "auth-start-error__body");
+  body.setAttribute("role", "alert");
+  body.append(alert, element("h2", "", "로그인할 수 없어요"), message);
+  showPanel("auth-start-error", brandBlock(false), body, retry);
 }
 
 /** 가입한 계정은 바로 앱을, 아직 가입하지 않은 계정은 서비스 소개(계정별 한 번)와 가입 화면을 먼저 그립니다. */
@@ -87,6 +103,19 @@ export function renderMatdagong(root: HTMLElement, accessToken: string, membersh
     renderApp();
     return;
   }
+  // 서비스 소개는 공통 계정 UUID를 붙인 키로 계정별 한 번만 보여줍니다. 가입 1단계의 뒤로 버튼으로는 다시 볼 수 있습니다.
+  const onboardingKey = onboardingCompletedKey(accountIdFromAccessToken(accessToken));
+  const renderIntro = () =>
+    reactRoot.render(
+      <StrictMode>
+        <IntroScreen
+          onComplete={() => {
+            writeStorage(onboardingKey, "true", "local");
+            renderSignup();
+          }}
+        />
+      </StrictMode>,
+    );
   const renderSignup = () =>
     reactRoot.render(
       <StrictMode>
@@ -95,24 +124,11 @@ export function renderMatdagong(root: HTMLElement, accessToken: string, membersh
           displayName={membership.displayName ?? ""}
           email={membership.email ?? ""}
           profileImageUrl={membership.profileImageUrl}
+          onBack={renderIntro}
           onComplete={renderApp}
         />
       </StrictMode>,
     );
-  // 서비스 소개는 공통 계정 UUID를 붙인 키로 계정별 한 번만 보여줍니다.
-  const onboardingKey = onboardingCompletedKey(accountIdFromAccessToken(accessToken));
-  if (readStorage(onboardingKey, "local") === "true") {
-    renderSignup();
-    return;
-  }
-  reactRoot.render(
-    <StrictMode>
-      <IntroScreen
-        onComplete={() => {
-          writeStorage(onboardingKey, "true", "local");
-          renderSignup();
-        }}
-      />
-    </StrictMode>,
-  );
+  if (readStorage(onboardingKey, "local") === "true") renderSignup();
+  else renderIntro();
 }

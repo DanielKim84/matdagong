@@ -14,8 +14,13 @@ type TopBarProps = {
   right?: ReactNode;
   /** 제목 바로 옆에 붙일 작은 칸(맛객 탭의 지역 버튼 등). 기본 바에서만 씁니다. */
   aside?: ReactNode;
-  /** float: 큰 사진 위에 떠 있는 바(상세·프로필). 바탕 없이 둥근 버튼만 보이고, isScrolled면 바탕과 제목이 나타납니다. */
-  variant?: "default" | "float";
+  /** 탭 첫 화면(발견·피드·맛객)에서 제목 글자 대신 맛다공 로고를 보여 줍니다. 제목은 로고의 대체 글자로 읽습니다. */
+  isBrand?: boolean;
+  /**
+   * float: 큰 사진 위에 떠 있는 바(상세·프로필). 바탕 없이 둥근 버튼만 보이고, isScrolled면 바탕과 제목이 나타납니다.
+   * plain: 뒤로 버튼(과 오른쪽 칸)만 있는 바(보드 14·16처럼 제목을 본문 위 PageIntro에 크게 두는 화면). 제목은 화면 읽기용으로만 둡니다.
+   */
+  variant?: "default" | "float" | "plain";
   isScrolled?: boolean;
 };
 
@@ -26,6 +31,7 @@ export function TopBar({
   fallback = "home",
   right,
   aside,
+  isBrand = false,
   variant = "default",
   isScrolled = false,
 }: TopBarProps) {
@@ -53,8 +59,30 @@ export function TopBar({
       </div>
     );
   }
+  if (variant === "plain") {
+    return (
+      <header className="r-topbar r-topbar--plain">
+        {backButton}
+        <h1 className="visually-hidden">{title}</h1>
+        <span className="r-topbar__fill" aria-hidden="true" />
+        {right}
+      </header>
+    );
+  }
+  if (isBrand) {
+    return (
+      <header className="r-topbar r-topbar--brand">
+        <h1>
+          <img className="r-topbar__logo" src="/assets/brand/brand-logo-flat.png" alt={title} />
+        </h1>
+        {right}
+      </header>
+    );
+  }
+  // 하위 화면은 보드처럼 제목을 가운데 둡니다. 오른쪽 칸이 없으면 뒤로 버튼만큼 빈 칸을 둬 제목이 정확히 가운데 오게 합니다.
+  const isCentered = !isRoot && !aside;
   return (
-    <header className={`r-topbar ${isRoot ? "r-topbar--root" : ""}`}>
+    <header className={`r-topbar ${isRoot ? "r-topbar--root" : ""} ${isCentered ? "r-topbar--center" : ""}`}>
       {backButton}
       {aside ? (
         <div className="r-topbar__heading">
@@ -64,8 +92,24 @@ export function TopBar({
       ) : (
         <h1>{title}</h1>
       )}
-      {right}
+      {right ?? (isCentered && <span className="r-topbar__spacer" aria-hidden="true" />)}
     </header>
+  );
+}
+
+/**
+ * 하위 화면 본문 맨 위의 큰 제목과 한 줄 설명입니다(보드 13-02 "가볼 곳 24곳", 14 "최근 본 곳", 16 "포인트 지갑").
+ * 위쪽 바의 가운데 제목은 작게, 이 제목은 크게 둬 어떤 화면인지 바로 읽히게 합니다. icon은 제목 앞 코랄 아이콘입니다.
+ */
+export function PageIntro({ title, message, icon }: { title: ReactNode; message?: ReactNode; icon?: IconName }) {
+  return (
+    <div className="r-page-intro">
+      <h2 className="r-home-title">
+        {icon && <Icon name={icon} filled={icon === "heart"} />}
+        {title}
+      </h2>
+      {message && <p>{message}</p>}
+    </div>
   );
 }
 
@@ -85,20 +129,29 @@ export function NotificationButton({ isFloating = false }: { isFloating?: boolea
   );
 }
 
-/** 탭 전환입니다. 선택 상태는 aria-selected로 표시합니다. */
+/**
+ * 탭 전환입니다. 선택 상태는 aria-selected로 표시합니다.
+ * 기본은 회색 틀 안 알약(보드 06-02 "추천순 | 가까운 순"), underline은 글자 아래 코랄 밑줄 탭(보드 05-02 "시/도 선택 | 구/군 선택")입니다.
+ */
 export function Segmented<T extends string>({
   value,
   options,
   onChange,
   label,
+  variant = "pill",
 }: {
   value: T;
   options: { value: T; label: string }[];
   onChange: (value: T) => void;
   label: string;
+  variant?: "pill" | "underline";
 }) {
   return (
-    <div className="r-segmented" role="tablist" aria-label={label}>
+    <div
+      className={`r-segmented ${variant === "underline" ? "r-segmented--underline" : ""}`}
+      role="tablist"
+      aria-label={label}
+    >
       {options.map((option) => (
         <button
           key={option.value}

@@ -119,7 +119,7 @@ export function createPlaceMarker(place: Place, subscriptions: string[], kindOve
           place.tasters.find((taster) => !isMyTaster(taster) && !subscriptions.includes(taster.tasterId)) ??
           fallbackTaster)
         : (place.tasters.find(isMyTaster) ?? fallbackTaster);
-  // 내 기록 중 나만 보기는 같은 보라 핀에 자물쇠 표식으로 구분합니다.
+  // 내 기록 중 나만 보기는 가본 곳이라 가본 곳 색 핀(app.css)에 자물쇠 표식으로 구분합니다.
   const isPrivateOwn = kind === "own" && markerTaster.visibility === "PRIVATE";
   button.className = `taster-map-marker taster-map-marker--${kind}${isPrivateOwn ? " is-private" : ""}`;
   const owner =
@@ -143,13 +143,14 @@ export function createPlaceMarker(place: Place, subscriptions: string[], kindOve
   button.append(shell, markerFace(kind, markerTaster));
 
   // 표식은 오른쪽 위에 하나만 둡니다. 구독 중인 믿고 가는 맛객은 하트 자리에 같은 색 별을 넣습니다.
-  if (kind !== "other") {
+  // 공유 중인 내 기록(공유 중 색 핀)은 내 지도에서 한 가지뿐이라 표식 없이 두고, 나만 보는 내 기록만 자물쇠를 붙입니다.
+  if (kind === "subscribed" || isPrivateOwn) {
     const badge = document.createElement("span");
     badge.className = "taster-map-marker-badge";
     badge.setAttribute("aria-hidden", "true");
     if (isPrivateOwn) badge.innerHTML = LOCK_BADGE_SVG;
     else if (kind === "subscribed" && trustedTaster) badge.innerHTML = TRUST_BADGE_SVG;
-    else badge.textContent = kind === "subscribed" ? "♥" : "✓";
+    else badge.textContent = "♥";
     button.append(badge);
   }
   // 구독하지 않은 믿고 가는 맛객은 눈에 잘 띄도록 주황 바탕 별을 붙입니다.

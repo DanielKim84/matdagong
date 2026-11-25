@@ -1,0 +1,11 @@
+/* 현재 기본 화면 스타일입니다. 공통 부품 다음에 화면별 파일을 불러옵니다. */
+@import "./ui.css";
+@import "./discover.css";
+@import "./mymap.css";
+@import "./place.css";
+@import "./feed.css";
+@import "./record.css";
+@import "./tasters.css";
+@import "./me.css";
+@import "./me-collections.css";
+@import "./onboarding.css";

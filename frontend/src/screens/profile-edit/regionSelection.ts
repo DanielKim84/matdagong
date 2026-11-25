@@ -1,4 +1,4 @@
-/** 프로필 편집의 주 활동 지역(시·도 → 시·군·구 → 읍·면·동) 선택값 계산입니다. 서버에는 한 문자열로 저장합니다. */
+/** 프로필 편집의 활동 지역 한 곳 고르기(시·도 → 시·군·구 → 읍·면·동) 선택값 계산입니다. 고른 곳은 공식 이름을 이은 한 줄로 저장합니다. */
 import type { RegionData } from "../../models/region";
 
 export type RegionSelection = { sido: string; district: string; dong: string };
@@ -8,26 +8,6 @@ export const EMPTY_REGION_SELECTION: RegionSelection = { sido: "", district: "",
 // 법정동 목록에서 시·군·구가 없는 세종시는 "(직할)"로 들어 있어 화면에는 "세종시"로 보여 줍니다.
 const DIRECT_DISTRICT = "(직할)";
 const DIRECT_DISTRICT_LABEL = "세종시";
-
-/**
- * 저장된 한 줄 지역 문자열을 시·도, 시·군·구, 읍·면·동 선택으로 되돌립니다. 저장 값은 이 화면이 법정동 목록의 공식 이름으로
- * 만든 것("서울특별시 마포구 망원동")입니다.
- */
-export function restoreRegionSelection(value: string | null | undefined, regions: RegionData[]): RegionSelection {
-  const saved = value?.trim() ?? "";
-  const selectedRegion = regions.find((region) => saved.includes(region.name));
-  const sido = selectedRegion?.name ?? "";
-  const district =
-    selectedRegion?.districts.find((item) => item.name !== DIRECT_DISTRICT && saved.includes(item.name))?.name ??
-    selectedRegion?.districts.find((item) => item.name === DIRECT_DISTRICT)?.name ??
-    "";
-  const dong =
-    selectedRegion?.districts
-      .find((item) => item.name === district)
-      ?.dongs.map((name) => name.split(" ")[0])
-      .find((name) => saved.includes(name)) ?? "";
-  return { sido, district, dong };
-}
 
 /** 화면에 보일 시·군·구 이름입니다. */
 export function districtLabel(district: string): string {
@@ -53,12 +33,7 @@ export function dongOptions(regions: RegionData[], { sido, district }: RegionSel
   return [...new Set(dongs.map((name) => name.split(" ")[0]))];
 }
 
-/** 일부만 고른 상태인지 봅니다. 아무것도 고르지 않은 것은 허용합니다. */
-export function isIncompleteRegion({ sido, district, dong }: RegionSelection): boolean {
-  return Boolean(sido || district || dong) && (!sido || !district || !dong);
-}
-
-/** 서버는 활동 지역을 한 문자열로 받으므로 저장할 때 합칩니다. */
+/** 고른 시·도(·시·군·구·읍·면·동)를 공식 이름을 이은 한 줄로 합칩니다. 활동 지역 목록의 한 칸(서버 activityRegions의 원소)입니다. */
 export function joinRegionSelection({ sido, district, dong }: RegionSelection): string {
   return [sido, district && district !== DIRECT_DISTRICT ? district : "", dong].filter(Boolean).join(" ");
 }

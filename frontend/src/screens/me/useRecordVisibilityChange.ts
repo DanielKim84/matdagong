@@ -19,11 +19,11 @@ export function useRecordVisibilityChange() {
   async function applyChange(placeIds: string[], shouldMakePublic: boolean): Promise<boolean> {
     if (!placeIds.length || isSaving) return false;
     const isConfirmed = await confirm({
-      title: shouldMakePublic ? `${placeIds.length}곳을 공개할까요?` : `${placeIds.length}곳을 나만 보기로 바꿀까요?`,
+      title: shouldMakePublic ? `${placeIds.length}곳을 공유할까요?` : `${placeIds.length}곳의 공유를 그만할까요?`,
       message: shouldMakePublic
         ? "남긴 사진·메뉴·태그 그대로 다른 사람의 지도와 피드에 보여요."
-        : "남긴 사진·메뉴·태그는 그대로 두고, 다른 사람의 지도와 피드에서는 빠져요.",
-      confirmLabel: shouldMakePublic ? "공개할게요" : "나만 볼게요",
+        : "남긴 사진·메뉴·태그는 그대로 두고, 다른 사람의 지도와 피드에서는 빠져요. 가본 곳으로 옮겨져요.",
+      confirmLabel: shouldMakePublic ? "공유할게요" : "그만할게요",
       tone: "info",
     });
     if (!isConfirmed) return false;
@@ -34,10 +34,10 @@ export function useRecordVisibilityChange() {
       window.dispatchEvent(new Event(MY_ACTIVITY_CHANGED_EVENT));
       app.actions.notify({
         kind: "success",
-        title: shouldMakePublic ? `${result.changed}곳을 공개했어요` : `${result.changed}곳을 나만 보기로 바꿨어요`,
+        title: shouldMakePublic ? `${result.changed}곳을 공유했어요` : `${result.changed}곳의 공유를 그만했어요`,
         message: shouldMakePublic
-          ? "이제 다른 사람의 지도와 피드에도 보여요. 내가 등록한 곳에서 볼 수 있어요."
-          : "이제 나에게만 보여요. 나만 보기에서 볼 수 있어요.",
+          ? "이제 다른 사람의 지도와 피드에도 보여요. 공유 중에서 볼 수 있어요."
+          : "이제 나에게만 보여요. 가본 곳에서 볼 수 있어요.",
       });
       return true;
     } catch (cause) {

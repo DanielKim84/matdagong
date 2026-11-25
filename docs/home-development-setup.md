@@ -168,7 +168,7 @@ VITE_AUTH_CLIENT_ID=matdagong-web-dev
 VITE_AUTH_REDIRECT_URI=http://localhost:4845/auth/callback
 ```
 
-선택 값: `VITE_APP_THEME`(시즌 테마 강제, 예 `halloween`), `VITE_FEATURE_AI_PICK=true`(발견 지도에 AI 추천 칩 표시). 평소에는 적지 않습니다.
+선택 값: `VITE_APP_THEME`(추가 테마를 만든 뒤 해당 `id`로 지정), `VITE_FEATURE_AI_PICK=true`(발견 지도에 AI 추천 칩 표시). 현재 등록된 테마는 기본 테마뿐이므로 `VITE_APP_THEME`는 보통 비워 둡니다.
 
 `dagong-auth\frontend`에는 설정 파일이 필요 없습니다.
 

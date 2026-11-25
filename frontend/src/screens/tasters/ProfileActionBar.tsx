@@ -6,7 +6,7 @@ import { useNotificationDialog } from "../../components/NotificationDialog";
 import type { Taster } from "../../models/place";
 import { confirmCancelSubscription } from "./tasterData";
 
-/** 맛객 프로필 아래 고정 버튼 줄: 내 프로필은 편집, 다른 맛객은 후원(준비 중)과 구독·해지 */
+/** 맛객 프로필 소개 아래의 큰 버튼(보드 08-03): 내 프로필은 편집, 다른 맛객은 구독하기 또는 구독 중(누르면 해지 확인) */
 export default function ProfileActionBar({ taster, isOwn }: { taster: Taster; isOwn: boolean }) {
   const app = useAppData();
   const { confirm } = useNotificationDialog();
@@ -26,47 +26,33 @@ export default function ProfileActionBar({ taster, isOwn }: { taster: Taster; is
 
   if (isOwn) {
     return (
-      <div className="r-action-bar">
-        <button type="button" className="r-button r-button--primary r-button--block" onClick={() => go("profile-edit")}>
-          <Icon name="settings" /> 프로필 편집
-        </button>
-      </div>
-    );
-  }
-  return (
-    <div className="r-action-bar">
       <button
         type="button"
-        className="r-button r-button--secondary r-tasters-support"
-        onClick={() =>
-          app.actions.notify({
-            kind: "info",
-            title: "후원은 준비 중이에요",
-            message: "곧 마음에 드는 맛객을 응원할 수 있어요.",
-          })
-        }
+        className="r-button r-button--secondary r-button--block r-tasters-subscribe"
+        onClick={() => go("profile-edit")}
       >
-        후원
+        <Icon name="pencil" /> 프로필 편집
       </button>
-      {isSubscribed ? (
-        <button
-          type="button"
-          className="r-button r-button--secondary r-tasters-subscribed"
-          disabled={isBusy}
-          onClick={() => void unsubscribe()}
-          aria-label={`${taster.tasterName} 구독 중, 눌러서 구독 해지`}
-        >
-          <Icon name="check" /> {isBusy ? "해지하고 있어요…" : "구독 중"}
-        </button>
-      ) : (
-        <button
-          type="button"
-          className="r-button r-button--primary r-tasters-subscribe"
-          onClick={() => app.actions.openSubscription(taster.tasterId)}
-        >
-          {app.currentFreeSubscription ? "구독하기" : "구독하기 · 첫 구독 무료"}
-        </button>
-      )}
-    </div>
+    );
+  }
+  return isSubscribed ? (
+    <button
+      type="button"
+      className="r-button r-button--secondary r-button--block r-tasters-subscribe is-subscribed"
+      disabled={isBusy}
+      onClick={() => void unsubscribe()}
+      aria-label={`${taster.tasterName} 구독 중, 눌러서 구독 해지`}
+    >
+      <Icon name="check" /> {isBusy ? "해지하고 있어요…" : "구독 중"}
+    </button>
+  ) : (
+    <button
+      type="button"
+      className="r-button r-button--primary r-button--block r-tasters-subscribe"
+      onClick={() => app.actions.openSubscription(taster.tasterId)}
+    >
+      <Icon name="user-plus" />
+      {app.currentFreeSubscription ? "구독하기" : "구독하기 · 첫 구독 무료"}
+    </button>
   );
 }

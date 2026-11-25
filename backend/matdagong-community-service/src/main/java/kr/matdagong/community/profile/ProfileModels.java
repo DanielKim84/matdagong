@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import kr.matdagong.common.tag.TasteTagGroup;
@@ -80,6 +81,22 @@ public final class ProfileModels {
                     String nickname) {}
 
     /**
+     * 활동 지역은 최대 3곳입니다(프로필 편집 보드 15-01). DB 제약 ck_user_profiles_activity_regions(V45)와 화면의
+     * MAX_ACTIVITY_REGIONS(frontend models/community.ts)와 같은 값입니다.
+     */
+    public static final int MAX_ACTIVITY_REGIONS = 3;
+
+    /** 활동 지역 목록의 앞뒤 공백을 지우고, 빈 칸과 같은 지역을 빼고 고른 순서를 지킵니다. 없으면 빈 목록입니다. */
+    static List<String> cleanRegions(List<String> regions) {
+        if (regions == null) return List.of();
+        return regions.stream()
+                .map(Texts::blankToNull)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    /**
      * 프로필 수정 요청입니다. 화면은 분야·활동 방식을 늘 보냅니다. 닉네임·소개·활동 지역의 앞뒤 공백은 검증 전에
      * 지웁니다(소개·활동 지역이 공백뿐이면 비움). 소개 300자는 화면 useProfileForm의 MAX_INTRO_LENGTH와 맞춥니다. 태그 목록
      * 길이는 형식만 막고, 분류별 한도(TasteTagGroup.maxSelections)와 사전에 있는 태그인지는 UserProfileService가
@@ -92,7 +109,8 @@ public final class ProfileModels {
             @NotNull(message = FOCUS_REQUIRED) FoodFocus tasterFocus,
             @NotNull(message = FOCUS_REQUIRED) FoodFocus preferenceFocus,
             @NotNull(message = "활동 방식을 선택해 주세요.") ActivityScope activityScope,
-            @Size(max = 50, message = "활동 지역은 50자 이하로 입력해 주세요.") String activityRegion,
+            @Size(max = MAX_ACTIVITY_REGIONS, message = "활동 지역은 최대 3곳까지 고를 수 있어요.")
+                    List<@Size(max = 50, message = "활동 지역은 50자 이하로 입력해 주세요.") String> activityRegions,
             @Size(max = MAX_NON_VISIT_TAGS) List<@NotBlank @Size(max = 30) String> profileTags,
             @Size(max = MAX_NON_VISIT_TAGS) List<@NotBlank @Size(max = 30) String> preferenceTags,
             @Size(max = 5, message = "피하고 싶은 조건은 최대 5개까지 선택할 수 있어요.")
@@ -101,7 +119,7 @@ public final class ProfileModels {
             nickname = nickname == null ? null : nickname.trim();
             intro = Texts.blankToNull(intro);
 
-            activityRegion = Texts.blankToNull(activityRegion);
+            activityRegions = cleanRegions(activityRegions);
         }
     }
 
@@ -119,7 +137,7 @@ public final class ProfileModels {
             FoodFocus tasterFocus,
             FoodFocus preferenceFocus,
             ActivityScope activityScope,
-            String activityRegion,
+            List<String> activityRegions,
             String intro,
             List<String> profileTags,
             List<String> preferenceTags,

@@ -2,11 +2,16 @@ import { useState } from "react";
 import { useAppData } from "../../app/AppData";
 import Icon from "../../components/Icon";
 import type { Place } from "../../models/place";
-import { kakaoPlaceUrl } from "../../utils/placeLinks";
-import PlaceReportSheet from "./PlaceReportSheet";
+import { kakaoPlaceUrl, openDirections } from "../../utils/placeLinks";
+import { hasCoordinates } from "./placeRecords";
+import PlaceMiniMap from "./PlaceMiniMap";
+import PlaceReportScreen from "./PlaceReportScreen";
 
-/** 모든 맛객이 함께 보는 가게 기본 정보(주소·전화·카카오맵). 맛객이 직접 남긴 내용은 맛객 기록에서 보여 줍니다. */
-export default function PlaceInfo({ place }: { place: Place }) {
+/**
+ * 모든 맛객이 함께 보는 가게 "위치"(보드 09-04): 주소와 복사, 전화와 코랄 동그라미 걸기 버튼, 작은 위치 지도,
+ * 카카오맵에서 보기 | 길찾기, 고른 맛객이 남긴 이용 정보 칩, 맨 아래 전체 폭 "정보 제보"입니다.
+ */
+export default function PlaceInfo({ place, conditions }: { place: Place; conditions: string[] }) {
   const { actions } = useAppData();
   const [isReportOpen, setIsReportOpen] = useState(false);
   const phone = place.providerPhone?.trim();
@@ -24,11 +29,11 @@ export default function PlaceInfo({ place }: { place: Place }) {
   }
 
   return (
-    <section className="r-place-section" aria-labelledby="place-info-title">
-      <h2 className="r-place-section__title" id="place-info-title">
-        가게 정보
-      </h2>
-      <div className="r-card r-place-info">
+    <>
+      <section className="r-place-section r-place-location" aria-labelledby="place-info-title">
+        <h2 className="r-place-section__title" id="place-info-title">
+          위치
+        </h2>
         <div className="r-place-info__row">
           <Icon name="pin" />
           <span className="r-place-info__text">
@@ -36,32 +41,67 @@ export default function PlaceInfo({ place }: { place: Place }) {
             {altAddress && <small>{altAddress}</small>}
           </span>
           {place.address && (
-            <button type="button" onClick={copyAddress}>
-              복사
+            <button type="button" className="r-place-info__action" onClick={copyAddress} aria-label="주소 복사">
+              <Icon name="copy" />
             </button>
           )}
         </div>
         <div className="r-place-info__row">
           <Icon name="phone" />
           {phone ? (
-            <a className="r-place-info__text" href={`tel:${phone}`}>
-              {phone}
-            </a>
+            <>
+              <span className="r-place-info__text">{phone}</span>
+              <a className="r-place-info__action is-call" href={`tel:${phone}`} aria-label={`전화 걸기 ${phone}`}>
+                <Icon name="phone" />
+              </a>
+            </>
           ) : (
             <span className="r-place-info__text r-muted">전화번호 정보가 없어요</span>
           )}
         </div>
-        <a className="r-place-info__row" href={kakaoPlaceUrl(place)} target="_blank" rel="noreferrer">
-          <Icon name="map" />
-          <span className="r-place-info__text">카카오맵에서 보기</span>
-          <Icon name="chevron" />
-        </a>
-      </div>
 
-      <button type="button" className="r-text-button r-place-report" onClick={() => setIsReportOpen(true)}>
-        잘못된 정보 알려주기
-      </button>
-      {isReportOpen && <PlaceReportSheet place={place} onClose={() => setIsReportOpen(false)} />}
-    </section>
+        <PlaceMiniMap place={place} className="r-place-location__map" />
+        <div className="r-place-location__buttons">
+          <a className="r-button r-button--secondary" href={kakaoPlaceUrl(place)} target="_blank" rel="noreferrer">
+            <Icon name="external" />
+            카카오맵에서 보기
+          </a>
+          <button
+            type="button"
+            className="r-button r-button--primary"
+            onClick={() => openDirections(place)}
+            disabled={!hasCoordinates(place)}
+          >
+            <Icon name="route" />
+            길찾기
+          </button>
+        </div>
+      </section>
+
+      {conditions.length > 0 && (
+        <section className="r-place-section" aria-labelledby="place-conditions-title">
+          <h2 className="r-place-section__title" id="place-conditions-title">
+            맛객이 남긴 이용 정보
+          </h2>
+          <div className="r-place-conditions">
+            {conditions.map((condition) => (
+              <span key={condition}>{condition}</span>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="r-place-section r-place-report">
+        <button
+          type="button"
+          className="r-button r-button--secondary r-button--block"
+          onClick={() => setIsReportOpen(true)}
+        >
+          <Icon name="alert" />
+          정보 제보
+        </button>
+      </div>
+      {isReportOpen && <PlaceReportScreen place={place} onClose={() => setIsReportOpen(false)} />}
+    </>
   );
 }

@@ -9,7 +9,6 @@ import { RETRY_LATER_MESSAGE, type AppNotice } from "./AppData";
 export type LikeChoice = "disliked" | "remove";
 export type LikeChoicePrompt = {
   placeId: string;
-  placeName: string;
 };
 
 const CHOICE_NOTICES: Record<LikeChoice, { title: string; message: string }> = {
@@ -80,10 +79,7 @@ export function useLikeChoice(options: Options) {
     }
     if (!options.likedPlaceIds.includes(placeId)) return saveWish(placeId);
     finish();
-    setPrompt({
-      placeId,
-      placeName: options.placeOf(placeId)?.name ?? "이 맛집",
-    });
+    setPrompt({ placeId });
     return new Promise((resolve) => {
       settle.current = resolve;
     });

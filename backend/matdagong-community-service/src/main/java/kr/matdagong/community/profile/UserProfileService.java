@@ -73,7 +73,7 @@ public class UserProfileService {
                         """
                         SELECT p.account_id, p.nickname, %s,
                                p.avatar_variant, p.taster_focus, p.preference_focus, p.activity_scope,
-                               p.activity_region, p.intro, %s, %s,
+                               p.activity_regions, p.intro, %s, %s,
                                ARRAY(
                                    SELECT tag.tag_name FROM user_preference_tags selected
                                    JOIN taste_tags tag ON tag.tag_id = selected.tag_id
@@ -106,7 +106,7 @@ public class UserProfileService {
                                     FoodFocus.valueOf(rs.getString("taster_focus")),
                                     FoodFocus.valueOf(rs.getString("preference_focus")),
                                     ActivityScope.valueOf(rs.getString("activity_scope")),
-                                    rs.getString("activity_region"),
+                                    JdbcArrays.strings(rs, "activity_regions"),
                                     rs.getString("intro"),
                                     JdbcArrays.strings(rs, "profile_tags"),
                                     JdbcArrays.strings(rs, "preference_tags"),
@@ -128,7 +128,7 @@ public class UserProfileService {
                     """
                     UPDATE user_profiles
                     SET nickname = ?, intro = ?, taster_focus = ?, preference_focus = ?,
-                        activity_scope = ?, activity_region = ?, upd_dt = now()
+                        activity_scope = ?, activity_regions = ?::varchar[], upd_dt = now()
                     WHERE account_id = ?
                     """,
                     request.nickname(),
@@ -136,8 +136,9 @@ public class UserProfileService {
                     request.tasterFocus().name(),
                     request.preferenceFocus().name(),
                     request.activityScope().name(),
-                    // 여행 위주 맛객은 한 지역에 묶이지 않으므로 활동 지역을 저장하지 않습니다.
-                    request.activityScope() == ActivityScope.TRAVEL ? null : request.activityRegion(),
+                    // 여행 위주 맛객은 한 지역에 묶이지 않으므로 활동 지역을 저장하지 않습니다(DB 제약 ck_user_profiles_activity_regions).
+                    (request.activityScope() == ActivityScope.TRAVEL ? List.<String>of() : request.activityRegions())
+                            .toArray(String[]::new),
                     accountId);
         } catch (DuplicateKeyException exception) {
             // 위 확인과 저장 사이에 다른 계정이 같은 닉네임을 먼저 저장한 경우입니다. 사용자가 고른 이름이라 바꾸지 않고 알립니다.

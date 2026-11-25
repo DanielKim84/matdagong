@@ -8,7 +8,7 @@ import {
 } from "./regionSelection";
 import RegionPicker from "./RegionPicker";
 
-/** 주 활동 지역을 시·도 → 시·군·구 → 읍·면·동 순서로 고릅니다. 위 단계를 바꾸면 아래 단계는 비웁니다. */
+/** 활동 지역 한 곳을 시·도 → 시·군·구 → 읍·면·동 순서로 고릅니다(활동 지역 추가 시트 RegionAddSheet). 위 단계를 바꾸면 아래 단계는 비웁니다. */
 export default function ActivityRegionField({
   regions,
   value,
@@ -22,9 +22,8 @@ export default function ActivityRegionField({
 }) {
   return (
     <fieldset className="activity-region-field">
-      <legend>
-        주 활동 지역 <small>선택</small>
-      </legend>
+      {/* 시트 제목("활동 지역 추가")과 겹치지 않게 화면에서는 숨기고 읽기 도구에만 알립니다. */}
+      <legend className="visually-hidden">활동 지역</legend>
       <div className="activity-region-picker">
         <RegionPicker
           label="시·도"

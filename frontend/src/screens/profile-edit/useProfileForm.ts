@@ -1,8 +1,9 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { RETRY_LATER_MESSAGE } from "../../app/AppData";
 import { NICKNAME_TAKEN_MESSAGE } from "../../components/NicknameCheckNote";
 import { useNicknameCheck } from "../../hooks/useNicknameCheck";
 import {
+  MAX_ACTIVITY_REGIONS,
   MAX_NICKNAME_LENGTH,
   type ActivityScope,
   type FoodFocus,
@@ -13,39 +14,33 @@ import {
 import { AVOIDABLE_VISIT_CONDITIONS } from "../../models/place";
 import { filterTagsForFocus } from "../../models/tasteTags";
 import { errorMessage } from "../../utils/errorMessage";
-import {
-  EMPTY_REGION_SELECTION,
-  isIncompleteRegion,
-  joinRegionSelection,
-  restoreRegionSelection,
-  type RegionSelection,
-} from "./regionSelection";
-import { useAvatarDraft } from "./useAvatarDraft";
+import { useAvatarDraft } from "../../hooks/useAvatarDraft";
 import { useCoverDraft } from "./useCoverDraft";
-import { useRegionCatalog } from "./useRegionCatalog";
+import { useRegionCatalog } from "../../hooks/useRegionCatalog";
 
-export type ProfileTab = "profile" | "taste";
+/**
+ * 프로필 편집의 네 화면(보드 15): 공개 프로필(15-01) · 배경 사진(15-02) · 공개 스타일 태그(15-03) · 추천 취향·제외 조건(15-04).
+ * 주소 #profile-edit/<view>로 오가며, 한 폼(useProfileForm)을 함께 써서 어느 화면에서 저장해도 전부 한 번에 저장합니다.
+ */
+export type ProfileView = "profile" | "cover" | "style" | "taste";
 
 /** 소개 최대 글자 수. 커뮤니티 서비스 ProfileModels.UpdateProfileRequest의 intro 검증과 같습니다. */
 export const MAX_INTRO_LENGTH = 300;
 
-/** 프로필 편집 화면의 입력 상태와 저장 동작입니다. 두 탭이 한 폼을 함께 저장합니다. */
+/** 프로필 편집 화면의 입력 상태와 저장 동작입니다. 네 화면(ProfileView)이 한 폼을 함께 저장합니다. */
 export function useProfileForm({
   accessToken,
   profile,
   options,
-  initialTab,
   onSave,
   onError,
 }: {
   accessToken: string;
   profile: MyProfile;
   options: TasteTag[];
-  initialTab: ProfileTab;
   onSave: (changes: ProfileChanges) => Promise<void>;
   onError: (message: string) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab);
   const { regions, hasCatalogError } = useRegionCatalog();
   const avatar = useAvatarDraft(onError);
   const cover = useCoverDraft(profile, onError);
@@ -63,15 +58,11 @@ export function useProfileForm({
   const [excludedTags, setExcludedTags] = useState(profile.excludedTags);
   const [tasterFocus, setTasterFocus] = useState<FoodFocus>(profile.tasterFocus);
   const [activityScope, setActivityScope] = useState<ActivityScope>(profile.activityScope);
-  const [activityRegion, setActivityRegion] = useState<RegionSelection>(EMPTY_REGION_SELECTION);
-  const [hasRegionChanged, setHasRegionChanged] = useState(false);
+  // 활동 지역(최대 MAX_ACTIVITY_REGIONS곳)은 법정동 공식 이름을 이은 한 줄씩입니다. 더하기는 RegionAddSheet가 합니다.
+  const [activityRegions, setActivityRegions] = useState<string[]>(profile.activityRegions);
   const [preferenceFocus, setPreferenceFocus] = useState<FoodFocus>(profile.preferenceFocus);
   const [isSaving, setIsSaving] = useState(false);
   const [copyNotice, setCopyNotice] = useState("");
-
-  useEffect(() => {
-    if (regions.length) setActivityRegion(restoreRegionSelection(profile.activityRegion, regions));
-  }, [regions, profile.activityRegion]);
 
   function changeNickname(value: string) {
     setNickname(value.slice(0, MAX_NICKNAME_LENGTH));
@@ -104,45 +95,37 @@ export function useProfileForm({
 
   function changeActivityScope(scope: ActivityScope) {
     setActivityScope(scope);
-    if (scope === "TRAVEL") {
-      setActivityRegion(EMPTY_REGION_SELECTION);
-      setHasRegionChanged(true);
-    }
+    // 여행 위주는 한 지역에 묶이지 않아 지역을 비웁니다(서버도 TRAVEL이면 저장하지 않음).
+    if (scope === "TRAVEL") setActivityRegions([]);
   }
 
-  function changeActivityRegion(selection: RegionSelection) {
-    setActivityRegion(selection);
-    setHasRegionChanged(true);
+  /** 활동 지역 더하기: 같은 곳은 다시 넣지 않고 최대 MAX_ACTIVITY_REGIONS곳까지입니다. */
+  function addActivityRegion(region: string) {
+    setActivityRegions((current) =>
+      current.includes(region) || current.length >= MAX_ACTIVITY_REGIONS ? current : [...current, region],
+    );
+  }
+  function removeActivityRegion(region: string) {
+    setActivityRegions((current) => current.filter((item) => item !== region));
   }
 
   /** 공개 스타일로는 추천 분야와 선호 태그만 복사하고, 제외 조건은 공개하지 않습니다. */
   function copyPreferenceToProfile() {
     setTasterFocus(preferenceFocus);
     setProfileTags(filterTagsForFocus(preferenceTags, preferenceFocus, positiveOptions));
-    setCopyNotice("추천 취향을 가져왔어요. 확인한 뒤 프로필 저장을 눌러 주세요.");
+    setCopyNotice("추천 취향을 가져왔어요. 확인한 뒤 저장을 눌러 주세요.");
   }
 
-  function savedActivityRegion() {
-    if (activityScope === "TRAVEL") return "";
-    return hasRegionChanged ? joinRegionSelection(activityRegion) : (profile.activityRegion ?? "");
-  }
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  /** 네 화면 어디서 눌러도 폼 전체를 저장합니다. 저장했으면 true라, 하위 화면은 저장 뒤 공개 프로필 화면으로 돌아갑니다. */
+  async function submit(event: FormEvent<HTMLFormElement>): Promise<boolean> {
     event.preventDefault();
     if (!nickname.trim()) {
-      setActiveTab("profile");
-      onError("맛객 닉네임을 입력해 주세요.");
-      return;
+      onError("공개 프로필 화면에서 맛객 닉네임을 입력해 주세요.");
+      return false;
     }
     if (nicknameCheck === "taken") {
-      setActiveTab("profile");
       onError(`${NICKNAME_TAKEN_MESSAGE} 다른 이름을 정해 주세요.`);
-      return;
-    }
-    if (activityScope !== "TRAVEL" && hasRegionChanged && isIncompleteRegion(activityRegion)) {
-      setActiveTab("profile");
-      onError("주 활동 지역은 시·도, 시·군·구, 읍·면·동까지 선택해 주세요.");
-      return;
+      return false;
     }
     setIsSaving(true);
     try {
@@ -152,7 +135,7 @@ export function useProfileForm({
         profileTags: filterTagsForFocus(profileTags, tasterFocus, positiveOptions),
         tasterFocus,
         activityScope,
-        activityRegion: savedActivityRegion(),
+        activityRegions: activityScope === "TRAVEL" ? [] : activityRegions,
         preferenceFocus,
         preferenceTags: filterTagsForFocus(preferenceTags, preferenceFocus, positiveOptions),
         // 사전에서 빠졌거나 이제 고를 수 없는 조건은 저장하지 않습니다(다른 태그와 같은 규칙).
@@ -164,8 +147,10 @@ export function useProfileForm({
       });
       avatar.reset();
       cover.reset();
+      return true;
     } catch (cause) {
       onError(errorMessage(cause, RETRY_LATER_MESSAGE));
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -173,8 +158,6 @@ export function useProfileForm({
 
   return {
     profile,
-    activeTab,
-    setActiveTab,
     regions,
     hasCatalogError,
     avatar,
@@ -198,8 +181,9 @@ export function useProfileForm({
     changePreferenceFocus,
     activityScope,
     changeActivityScope,
-    activityRegion,
-    changeActivityRegion,
+    activityRegions,
+    addActivityRegion,
+    removeActivityRegion,
     copyNotice,
     copyPreferenceToProfile,
     isSaving,

@@ -3,9 +3,8 @@ import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
-import TasteScore from "../../components/TasteScore";
 import TasterAvatar from "../../components/TasterAvatar";
-import { EmptyState, NotificationButton, Segmented, Skeleton, TopBar } from "../../components/ui";
+import { EmptyState, NotificationButton, Skeleton, TopBar } from "../../components/ui";
 import { avatarSource } from "../../utils/profileMedia";
 import FeedCard from "./FeedCard";
 import {
@@ -26,7 +25,10 @@ const PAGE_SIZE = 10;
 /** 구독이 없을 때 보여 줄 추천 맛객 수 */
 const EMPTY_PICK_LIMIT = 3;
 
-/** 피드 탭: 구독한 맛객 스토리 줄과 맛객들의 최신 기록 카드. */
+/**
+ * 피드 탭(보드 07-01): 로고 · 알림, "맛객들의 새로운 기록" 제목, 구독 · 전체 칩, 구독한 맛객 스토리 링 줄, 최신 기록 목록.
+ * 구독한 맛객이 없으면(보드 07-04) 제목·칩 없이 빈 화면 안내만 둡니다.
+ */
 export default function FeedScreen() {
   const app = useAppData();
   const { places, tasterById, isMyTasterId, subscriptions, actions } = app;
@@ -88,58 +90,57 @@ export default function FeedScreen() {
 
   const isLoading = app.isLoading && places.length === 0;
   const hasError = !app.isLoading && !!app.error && places.length === 0;
+  const hasNoSubscriptions = tab === "subscribed" && subscriptions.length === 0 && !isLoading && !hasError;
 
   return (
     <main className="r-screen r-feed">
-      <TopBar title="피드" isRoot right={<NotificationButton />} />
-
-      <nav className="r-feed-stories" aria-label="구독한 맛객 스토리">
-        <button type="button" className="r-feed-story-chip" onClick={() => go("tasters")}>
-          <span className="r-feed-story-chip__add">
-            <Icon name="plus" />
-          </span>
-          <small>맛객 찾기</small>
-        </button>
-        {storyGroups.map((group) => {
-          const playableIndex = playableGroups.indexOf(group);
-          const isFresh = group.unseenCount > 0;
-          return (
-            <button
-              type="button"
-              key={group.tasterId}
-              className={`r-feed-story-chip${isFresh ? " is-fresh" : ""}`}
-              aria-label={`${group.name}${isFresh ? `, 안 본 새 기록 ${group.unseenCount}개` : `, 최근 ${STORY_WINDOW_DAYS}일 새 기록 없음`}${playableIndex < 0 ? ", 기록 없음, 프로필 보기" : ", 스토리 보기"}`}
-              onClick={() =>
-                playableIndex >= 0
-                  ? setStory({ groups: playableGroups, start: playableIndex })
-                  : go("profile", group.tasterId)
-              }
-            >
-              <span className="r-feed-story-chip__ring">
-                <Avatar src={group.avatar} name={group.name} variant={group.variant} />
-                {isFresh && (
-                  <em className="r-feed-story-chip__count" aria-hidden="true">
-                    {group.unseenCount}
-                  </em>
-                )}
-              </span>
-              <small>{group.name}</small>
-            </button>
-          );
-        })}
-      </nav>
-
-      <div className="r-feed-tabs">
-        <Segmented
-          label="피드 범위"
-          value={tab}
-          onChange={changeTab}
-          options={[
-            { value: "subscribed", label: "구독 중" },
+      <TopBar title="맛다공 피드" isBrand right={<NotificationButton />} />
+      {!hasNoSubscriptions && <h2 className="r-home-title r-feed__title">맛객들의 새로운 기록</h2>}
+      <div className="r-chips r-feed-tabs" role="tablist" aria-label="피드 범위" hidden={hasNoSubscriptions}>
+        {(
+          [
+            { value: "subscribed", label: "구독" },
             { value: "all", label: "전체" },
-          ]}
-        />
+          ] as const
+        ).map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            role="tab"
+            aria-selected={tab === option.value}
+            className={`r-chip ${tab === option.value ? "is-on" : ""}`}
+            onClick={() => changeTab(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
+
+      {storyGroups.length > 0 && (
+        <nav className="r-feed-stories" aria-label="구독한 맛객 스토리">
+          {storyGroups.map((group) => {
+            const playableIndex = playableGroups.indexOf(group);
+            const isFresh = group.unseenCount > 0;
+            return (
+              <button
+                type="button"
+                key={group.tasterId}
+                className={`r-feed-story-chip${isFresh ? " is-fresh" : ""}`}
+                aria-label={`${group.name}${isFresh ? `, 안 본 새 기록 ${group.unseenCount}개` : `, 최근 ${STORY_WINDOW_DAYS}일 새 기록 없음`}${playableIndex < 0 ? ", 기록 없음, 프로필 보기" : ", 스토리 보기"}`}
+                onClick={() =>
+                  playableIndex >= 0
+                    ? setStory({ groups: playableGroups, start: playableIndex })
+                    : go("profile", group.tasterId)
+                }
+              >
+                <span className="r-feed-story-chip__ring">
+                  <Avatar src={group.avatar} name={group.name} variant={group.variant} />
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       <section className="r-feed-list" aria-label={tab === "subscribed" ? "구독한 맛객의 기록" : "맛객들의 최신 기록"}>
         {isLoading ? (
@@ -151,8 +152,8 @@ export default function FeedScreen() {
             message={app.error}
             action={{ label: "다시 불러오기", onClick: actions.retry }}
           />
-        ) : tab === "subscribed" && subscriptions.length === 0 ? (
-          <EmptySubscriptions onShowAll={() => changeTab("all")} />
+        ) : hasNoSubscriptions ? (
+          <EmptySubscriptions />
         ) : records.length === 0 ? (
           <EmptyState
             title={tab === "subscribed" ? "구독한 맛객의 새 기록이 아직 없어요" : "아직 공개된 기록이 없어요"}
@@ -190,49 +191,55 @@ export default function FeedScreen() {
   );
 }
 
-/** 구독한 맛객이 없을 때: 취향이 맞는 맛객을 보여 주고 맛객 탭으로 안내합니다. */
-function EmptySubscriptions({ onShowAll }: { onShowAll: () => void }) {
-  const picks = useAppData().recommendedTasters.slice(0, EMPTY_PICK_LIMIT);
+/** 구독한 맛객이 없을 때(보드 07-04): 로고 그림과 안내, 맛객 추천받기 · 맛객 둘러보기, "이런 맛객은 어때요?" 세 명. */
+function EmptySubscriptions() {
+  const { recommendedTasters, actions } = useAppData();
+  const picks = recommendedTasters.slice(0, EMPTY_PICK_LIMIT);
   return (
-    <div className="r-card r-feed-empty">
-      <EmptyState
-        icon="user"
-        title="아직 구독한 맛객이 없어요"
-        message={
-          <>
-            입맛이 맞는 맛객을 구독하면
-            <br />새 기록이 이곳에 스토리와 카드로 모여요.
-          </>
-        }
-      />
-      {picks.length > 0 && (
-        <div className="r-feed-empty__picks">
-          <span className="r-label">취향이 비슷한 맛객</span>
-          {picks.map((taster) => (
-            <button
-              type="button"
-              className="r-row"
-              key={taster.tasterId}
-              onClick={() => go("profile", taster.tasterId)}
-            >
-              <TasterAvatar taster={taster} />
-              <span className="r-row__copy">
-                <b>{taster.tasterName}</b>
-                <small>{taster.intro || taster.activityRegion || "맛객"}</small>
-                <TasteScore taster={taster} />
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+    <div className="r-feed-empty">
+      <img className="r-feed-empty__art" src="/assets/brand/brand-symbol.png" alt="" />
+      <h3>아직 구독한 맛객이 없어요</h3>
+      <p>
+        좋아하는 맛객을 구독하고
+        <br />
+        그들의 새로운 기록과 스토리를 만나보세요.
+      </p>
       <div className="r-feed-empty__actions">
-        <button type="button" className="r-button r-button--primary r-button--block" onClick={() => go("tasters")}>
-          맛객 찾아보기
+        <button
+          type="button"
+          className="r-button r-button--primary r-button--block"
+          onClick={() => go("taster-recommendations")}
+        >
+          <Icon name="people" />
+          맛객 추천받기
         </button>
-        <button type="button" className="r-button r-button--secondary r-button--block" onClick={onShowAll}>
-          전체 기록 먼저 보기
+        <button type="button" className="r-button r-button--secondary r-button--block" onClick={() => go("tasters")}>
+          <Icon name="search" />
+          맛객 둘러보기
         </button>
       </div>
+      {picks.length > 0 && (
+        <section className="r-feed-empty__picks" aria-labelledby="feed-picks-title">
+          <h3 id="feed-picks-title">이런 맛객은 어때요?</h3>
+          <ul>
+            {picks.map((taster) => (
+              <li key={taster.tasterId}>
+                <button type="button" onClick={() => go("profile", taster.tasterId)}>
+                  <TasterAvatar taster={taster} />
+                  <b>{taster.tasterName}</b>
+                </button>
+                <button
+                  type="button"
+                  className="r-feed-empty__subscribe"
+                  onClick={() => actions.openSubscription(taster.tasterId)}
+                >
+                  구독하기
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

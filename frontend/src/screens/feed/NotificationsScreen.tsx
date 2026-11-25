@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import Icon, { type IconName } from "../../components/Icon";
-import { useNotificationDialog } from "../../components/NotificationDialog";
 import PlaceThumb from "../../components/PlaceThumb";
 import { EmptyState, SectionHead, Skeleton, TopBar } from "../../components/ui";
 import type { UserNotification } from "../../models/community";
@@ -14,19 +13,21 @@ type NotificationGroup = { label: string; items: UserNotification[] };
 /** 오늘을 빼고 이만큼 앞의 날까지를 "이번 주"로 묶습니다. */
 const THIS_WEEK_PAST_DAYS = 6;
 
-/** 오늘 / 이번 주 / 이전 으로 묶습니다. 서버가 준 순서는 그대로 둡니다. */
+/** 오늘 / 어제 / 이번 주 / 이전 으로 묶습니다(보드 07-03). 서버가 준 순서는 그대로 둡니다. */
 function groupByDate(items: UserNotification[]): NotificationGroup[] {
   const today = startOfDay();
   const groups: NotificationGroup[] = [
     { label: "오늘", items: [] },
+    { label: "어제", items: [] },
     { label: "이번 주", items: [] },
     { label: "이전", items: [] },
   ];
   for (const item of items) {
     const time = parseTime(item.createdAt);
-    if (time === null || time < today - THIS_WEEK_PAST_DAYS * DAY_MS) groups[2].items.push(item);
+    if (time === null || time < today - THIS_WEEK_PAST_DAYS * DAY_MS) groups[3].items.push(item);
     else if (time >= today) groups[0].items.push(item);
-    else groups[1].items.push(item);
+    else if (time >= today - DAY_MS) groups[1].items.push(item);
+    else groups[2].items.push(item);
   }
   return groups.filter((group) => group.items.length > 0);
 }
@@ -49,12 +50,14 @@ function resolveTarget(item: UserNotification): (() => void) | null {
   return null;
 }
 
-/** 알림(#notifications). 상단 종 아이콘에서 엽니다. */
+/**
+ * 알림(#notifications, 보드 07-03). 상단 종 아이콘에서 엽니다. 오늘 · 어제 · 이번 주 · 이전 회색 띠 아래 알림 줄
+ * (연한 코랄 네모 속 아이콘 · 굵은 제목 두 줄까지 · 설명 · 시각 · 안 읽음 코랄 점 · >)입니다. 누르면 읽음으로 바꾸고 그 화면으로 갑니다.
+ */
 export default function NotificationsScreen() {
   const app = useAppData();
   const { notificationFeed, isNotificationLoading, notificationError, actions } = app;
-  const { items, unreadCount } = notificationFeed;
-  const { confirm } = useNotificationDialog();
+  const { items } = notificationFeed;
   const groups = useMemo(() => groupByDate(items), [items]);
 
   // 장소 알림에는 그 장소의 기록 사진을 작게 붙입니다.
@@ -65,34 +68,9 @@ export default function NotificationsScreen() {
     return map;
   }, [app.places, app.myRecords, app.privatePlaces]);
 
-  async function remove(item: UserNotification) {
-    const isAccepted = await confirm({
-      title: "알림을 삭제할까요?",
-      message: "삭제한 알림은 알림 목록에서 사라져요.",
-      tone: "danger",
-      confirmLabel: "삭제하기",
-    });
-    if (isAccepted) actions.deleteNotification(item.notificationId);
-  }
-
   return (
     <main className="r-screen r-feed-noti">
-      <TopBar
-        title="알림"
-        fallback="feed"
-        right={
-          items.length > 0 ? (
-            <button
-              type="button"
-              className="r-text-button"
-              onClick={actions.markAllNotificationsRead}
-              disabled={unreadCount === 0}
-            >
-              모두 읽음
-            </button>
-          ) : undefined
-        }
-      />
+      <TopBar title="알림" fallback="feed" />
 
       <div className="r-feed-noti__body">
         {isNotificationLoading ? (
@@ -121,8 +99,8 @@ export default function NotificationsScreen() {
           <>
             {groups.map((group) => (
               <section className="r-feed-noti__group" key={group.label} aria-label={group.label}>
-                <SectionHead title={group.label} meta={`${group.items.length}개`} className="r-section-head--date" />
-                <ul className="r-card r-feed-noti__list">
+                <SectionHead title={group.label} className="r-section-head--date" />
+                <ul className="r-feed-noti__list">
                   {group.items.map((item) => {
                     const kind = describeKind(item);
                     const openTarget = resolveTarget(item);
@@ -154,14 +132,7 @@ export default function NotificationsScreen() {
                           </span>
                           {place && photo && <PlaceThumb place={place} photo={photo} className="r-feed-noti__thumb" />}
                           {isUnread && <i className="r-feed-noti__dot" aria-hidden="true" />}
-                        </button>
-                        <button
-                          type="button"
-                          className="r-icon-button r-feed-noti__delete"
-                          aria-label={`${item.title} 알림 삭제`}
-                          onClick={() => void remove(item)}
-                        >
-                          <Icon name="close" />
+                          <Icon name="chevron" />
                         </button>
                       </li>
                     );
@@ -169,14 +140,6 @@ export default function NotificationsScreen() {
                 </ul>
               </section>
             ))}
-            {/* 확인 창은 actions.deleteAllNotifications가 띄웁니다. */}
-            <button
-              type="button"
-              className="r-text-button r-feed-noti__delete-all"
-              onClick={() => void actions.deleteAllNotifications()}
-            >
-              알림 모두 삭제
-            </button>
           </>
         )}
       </div>

@@ -1,0 +1,638 @@
+/* 현재 기본 피드 화면 전용 규칙입니다. 공통 부품은 ui.css를 씁니다. */
+
+.r-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── 스토리 줄 ── */
+.r-feed-stories {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 2px 20px 4px;
+  scrollbar-width: none;
+}
+.r-feed-stories::-webkit-scrollbar {
+  display: none;
+}
+.r-feed-story-chip {
+  display: flex;
+  width: 72px;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+}
+.r-feed-story-chip__ring {
+  position: relative;
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-200);
+  padding: 3px;
+}
+.r-feed-story-chip.is-fresh .r-feed-story-chip__ring {
+  background: var(--color-primary);
+}
+.r-feed-story-chip:not(.is-fresh) .r-feed-story-chip__ring {
+  background: var(--brand-200);
+}
+/* 안 본 최근 기록 수(링 오른쪽 아래) */
+.r-feed-story-chip__ring .avatar {
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--color-canvas);
+}
+
+/* ── 제목 · 구독 / 전체 칩(보드 07-01) ── */
+.r-feed__title {
+  margin: 4px 20px 0;
+}
+.r-feed-tabs {
+  padding: 0 20px;
+}
+
+/* ── 기록 목록: 카드 바탕 없이 줄 사이를 옅은 선으로 나눕니다. ── */
+.r-feed-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px;
+}
+.r-feed-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--color-line);
+  padding: 14px 0 18px;
+}
+.r-feed-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.r-feed-card__author {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-feed-card__author .avatar {
+  width: 48px;
+  height: 48px;
+}
+.r-feed-card__who {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-feed-card__who b {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-feed-card__who small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.r-feed-card__photo {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--neutral-100);
+  padding: 0;
+}
+.r-feed-card__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-feed-card__photo .r-feed-card__no-photo {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+/* 사진 아래 가게 이름 줄: 이름과 오른쪽 >(보드 07-01). 누르면 맛집 상세 */
+.r-feed-card__title {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-feed-card__title b {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-feed-card__title .icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--neutral-700);
+}
+.r-feed-card__more {
+  color: var(--neutral-700);
+}
+.r-feed-card__note {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 15px;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+/* 불러오는 중: 기록 카드 높이에 맞춥니다. */
+.r-feed-skeletons .r-skeleton {
+  height: 360px;
+}
+
+/* ── 구독 없음(보드 07-04) ── */
+.r-feed-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 0 16px;
+  text-align: center;
+}
+.r-feed-empty__art {
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+}
+.r-feed-empty > h3 {
+  margin: 8px 0 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+}
+.r-feed-empty > p {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.r-feed-empty__actions {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+}
+.r-feed-empty__picks {
+  width: 100%;
+  margin-top: 12px;
+  border-top: 1px solid var(--color-line);
+  padding-top: 18px;
+  text-align: left;
+}
+.r-feed-empty__picks h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+}
+.r-feed-empty__picks ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-feed-empty__picks li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: 12px 6px;
+}
+.r-feed-empty__picks li > button:first-child {
+  display: flex;
+  max-width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+.r-feed-empty__picks .avatar {
+  width: 64px;
+  height: 64px;
+}
+.r-feed-empty__picks b {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-feed-empty__subscribe {
+  min-height: 36px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 14px;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ── 스토리 뷰어 ── */
+.r-feed-story {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: min(var(--app-width), 100%);
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--neutral-900);
+  color: var(--on-strong);
+  font-family: var(--font-body);
+}
+.r-feed-story__media,
+.r-feed-story__media .r-place-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* 흐린 바탕: 사진 전체를 둔 뒤 남는 위아래(가로 사진)·양옆을 같은 사진의 색으로 채웁니다. 가장자리가 흐려 비지 않게 조금 키웁니다. */
+.r-feed-story__backdrop {
+  position: absolute;
+  inset: -40px;
+  width: calc(100% + 80px);
+  height: calc(100% + 80px);
+  object-fit: cover;
+  filter: blur(28px) saturate(1.1);
+  opacity: 0.85;
+}
+/* 보드 07-02처럼 사진을 화면에 꽉 채웁니다(남는 곳이 없어 흐린 바탕은 가장자리에서만 비침). */
+.r-feed-story__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-feed-story__media .r-place-thumb {
+  border-radius: 0;
+  background: none;
+}
+.r-feed-story__media .r-place-thumb--icon {
+  background: var(--clay-800);
+  color: var(--clay-400);
+}
+.r-feed-story__media .r-place-thumb--icon .icon {
+  width: 72px;
+  height: 72px;
+}
+.r-feed-story__scrim-top,
+.r-feed-story__scrim-bottom {
+  position: absolute;
+  right: 0;
+  left: 0;
+  pointer-events: none;
+}
+.r-feed-story__scrim-top {
+  top: 0;
+  height: 170px;
+  background: linear-gradient(color-mix(in srgb, var(--neutral-900) 60%, transparent), transparent);
+}
+.r-feed-story__scrim-bottom {
+  bottom: 0;
+  height: 340px;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--neutral-900) 78%, transparent) 35%);
+}
+.r-feed-story__bars {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top));
+  right: 14px;
+  left: 14px;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+}
+.r-feed-story__bars span {
+  height: 3px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--on-strong) 40%, transparent);
+}
+.r-feed-story__bars span.is-done {
+  background: var(--on-strong);
+}
+/* 진행 막대가 끝나면(animationend) StoryViewer.tsx가 다음 기록으로 넘깁니다. 6s가 기록 한 장을 보여 주는 시간입니다. */
+.r-feed-story__bars i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--on-strong);
+  transform-origin: left center;
+  animation: r-feed-story-progress 6s linear forwards;
+}
+/*
+ * 움직임 줄이기에서도 진행 막대만은 남깁니다. app.css의 전체 끄기 규칙이 이 막대까지 멈추면
+ * animationend가 오지 않아 다음 기록으로 넘어가지 않고, 막대도 다 찬 것처럼 보이기 때문입니다.
+ * 제자리에서 차오르기만 하는 막대라 화면이 움직이지 않습니다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .r-feed-story__bars i {
+    animation: r-feed-story-progress 6s linear forwards !important;
+  }
+  .r-feed-story__bars i.is-paused {
+    animation-play-state: paused !important;
+  }
+}
+.r-feed-story__bars i.is-paused {
+  animation-play-state: paused;
+}
+@keyframes r-feed-story-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.r-feed-story__head {
+  position: absolute;
+  top: calc(24px + env(safe-area-inset-top));
+  right: 8px;
+  left: 10px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.r-feed-story__author {
+  display: flex;
+  min-width: 0;
+  min-height: 48px;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: none;
+  padding: 0 6px;
+  color: var(--on-strong);
+  text-align: left;
+}
+.r-feed-story__author .avatar {
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--on-strong);
+}
+.r-feed-story__author > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+.r-feed-story__author b {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-feed-story__author small {
+  color: var(--neutral-150);
+  font-size: 12px;
+}
+/* 위 오른쪽 하트 · 공유 · 닫기(흰 아이콘) */
+.r-feed-story__tools {
+  display: flex;
+  flex: none;
+}
+.r-feed-story__tools .r-icon-button {
+  color: var(--on-strong);
+}
+.r-feed-story__tools .r-feed-story__like.is-on {
+  color: var(--brand-300);
+}
+.r-feed-story__tap {
+  position: absolute;
+  top: 90px;
+  bottom: 230px;
+  z-index: 1;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.r-feed-story__tap--prev {
+  left: 0;
+  width: 35%;
+}
+.r-feed-story__tap--next {
+  right: 0;
+  width: 65%;
+}
+/* 넘기기 동그라미 ‹ ›: 사진 가운데 높이의 양옆(보드 07-02). 누르는 칸은 화면 왼쪽·오른쪽 전체입니다. */
+.r-feed-story__arrow {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  color: var(--color-ink);
+  transform: translateY(-50%);
+}
+.r-feed-story__tap--prev .r-feed-story__arrow {
+  left: 16px;
+}
+.r-feed-story__tap--next .r-feed-story__arrow {
+  right: 16px;
+}
+.r-feed-story__arrow .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-feed-story__panel {
+  position: absolute;
+  right: 20px;
+  bottom: calc(32px + env(safe-area-inset-bottom));
+  left: 20px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* 큰 가게 이름과 그 아래 맛객이 남긴 이야기(흰 글씨) */
+.r-feed-story__place {
+  margin: 0;
+  color: var(--on-strong);
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.r-feed-story__quote {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--on-strong);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-line;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow-wrap: anywhere;
+}
+.r-feed-story__panel .r-button {
+  min-height: 52px;
+  margin-top: 6px;
+}
+
+/* ── 알림(보드 07-03): 오늘·어제·이번 주를 화면 폭 회색 띠로 나누고, 그 아래 줄은 카드 없이 옅은 선으로 나눕니다. ── */
+.r-feed-noti__body {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 32px;
+}
+.r-feed-noti__group {
+  display: flex;
+  flex-direction: column;
+}
+.r-feed-noti__group > .r-section-head--date {
+  background: var(--neutral-50);
+  padding: 8px 20px;
+}
+.r-feed-noti__list {
+  margin: 0;
+  padding: 0 8px 0 20px;
+  list-style: none;
+}
+.r-feed-noti__item {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-line);
+}
+.r-feed-noti__item:last-child {
+  border-bottom: 0;
+}
+.r-feed-noti__open {
+  display: flex;
+  min-width: 0;
+  min-height: 68px;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: none;
+  padding: 12px 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-feed-noti__icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.r-feed-noti__icon.is-amber {
+  background: var(--amber-50);
+  color: var(--amber-600);
+}
+.r-feed-noti__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+  line-height: 1.45;
+  /* "남겼어요"가 "남 / 겼어요"로 끊기지 않게 낱말 단위로 줄을 바꿉니다(긴 가게 이름은 아래 span이 끊음). */
+  word-break: keep-all;
+}
+.r-feed-noti__copy b {
+  font-size: 16px;
+  font-weight: 700;
+}
+.r-feed-noti__copy span {
+  color: var(--neutral-700);
+  overflow-wrap: anywhere;
+}
+.r-feed-noti__copy time {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-feed-noti__item.is-read .r-feed-noti__copy b {
+  font-weight: 500;
+}
+.r-feed-noti__item.is-read .r-feed-noti__copy,
+.r-feed-noti__item.is-read .r-feed-noti__icon {
+  opacity: 0.75;
+}
+.r-feed-noti__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+}
+.r-feed-noti__dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+}
+/* 줄 오른쪽 > */
+.r-feed-noti__open > .icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--color-muted);
+}
+.r-feed-noti__skeletons {
+  gap: 8px;
+  padding: 12px 20px;
+}
+.r-feed-noti__skeletons .r-skeleton {
+  height: 68px;
+}

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   cancelSubscription,
   createTagRequest,
-  ensureMyProfile,
   getIncomingSubscriptions,
   getMyReportedTasters,
   getMyTagRequests,
@@ -11,9 +10,9 @@ import {
   getTasteTags,
   getTasters,
   reportTaster,
-  saveMyProfile,
 } from "../services/community";
 import { ApiError } from "../services/http";
+import { ensureMyProfile, saveMyProfile } from "../services/profile";
 import type {
   ActiveSubscription,
   IncomingSubscription,

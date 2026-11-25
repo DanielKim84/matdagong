@@ -56,29 +56,26 @@ export function formatDay(date: Date): string {
   return `${formatMonthDay(date)} (${WEEKDAYS[date.getDay()]})`;
 }
 
-export type DiaryView = "calendar" | "photo" | "list";
-/** 다이어리 주소(#diary/<값>)에 담는 보기 상태. month는 0부터 셉니다. */
-type DiaryRoute = { view: DiaryView; year: number; month: number };
+/** 기록 달력 주소(#diary/<값>)에 담는 달. month는 0부터 셉니다. */
+type DiaryRoute = { year: number; month: number };
 
-const DIARY_VIEWS: DiaryView[] = ["calendar", "photo", "list"];
-const DIARY_ROUTE_PATTERN = /^(calendar|photo|list)(?:\.(\d{4})-(\d{2}))?$/;
+const DIARY_ROUTE_PATTERN = /^(\d{4})-(\d{2})$/;
 
 /**
- * 주소의 값("photo", "calendar.2026-03")을 보기 상태로 바꿉니다. 상세로 갔다가 뒤로 오면 이 값으로
- * 보던 탭과 달을 되살립니다. 값이 없거나 잘못되면 이번 달 달력입니다.
+ * 주소의 값("2026-03")을 달로 바꿉니다. 상세로 갔다가 뒤로 오면 이 값으로 보던 달을 되살립니다.
+ * 값이 없거나 잘못되면 이번 달입니다.
  */
 export function parseDiaryRoute(value: string, today = new Date()): DiaryRoute {
   const match = DIARY_ROUTE_PATTERN.exec(value);
-  const fallback = { year: today.getFullYear(), month: today.getMonth() };
-  if (!match) return { view: "calendar", ...fallback };
-  const view = DIARY_VIEWS.find((item) => item === match[1]) ?? "calendar";
-  const month = Number(match[3]) - 1;
-  return match[2] && month >= 0 && month <= 11 ? { view, year: Number(match[2]), month } : { view, ...fallback };
+  const month = match ? Number(match[2]) - 1 : -1;
+  return match && month >= 0 && month <= 11
+    ? { year: Number(match[1]), month }
+    : { year: today.getFullYear(), month: today.getMonth() };
 }
 
-/** 보기 상태를 주소 값으로 바꿉니다. 달은 달력에서만 담습니다. */
-export function formatDiaryRoute({ view, year, month }: DiaryRoute): string {
-  return view === "calendar" ? `calendar.${year}-${String(month + 1).padStart(2, "0")}` : view;
+/** 달을 주소 값으로 바꿉니다. */
+export function formatDiaryRoute({ year, month }: DiaryRoute): string {
+  return `${year}-${String(month + 1).padStart(2, "0")}`;
 }
 
 /** 날짜별로 묶은 기록. 같은 날 여러 곳이면 최근 기록이 먼저입니다. */

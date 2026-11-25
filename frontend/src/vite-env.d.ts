@@ -10,7 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_AUTH_CLIENT_ID?: string;
   /** 인증 뒤 돌아올 주소. 기본값 현재 origin + /auth/callback */
   readonly VITE_AUTH_REDIRECT_URI?: string;
-  /** 기간 예약과 관계없이 강제로 쓸 테마 id(src/theme/themes.ts). 비우면 예약·기본 테마를 따릅니다. */
+  /** 등록된 테마 ID(src/theme/themes.ts). 비우거나 잘못된 ID면 기본 테마를 씁니다. */
   readonly VITE_APP_THEME?: string;
   /** "true"면 발견 지도에 AI 추천 칩을 보여 줍니다(비용 검토 전까지 기본 꺼짐). */
   readonly VITE_FEATURE_AI_PICK?: string;

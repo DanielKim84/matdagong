@@ -1,39 +1,31 @@
-/*
- * 기본 테마 (A 시안 · 웜 다이어리)
- * 크림 바탕, 접근성 대비를 맞춘 코랄, 허니 앰버를 쓰는 맛다공 기본 분위기입니다.
- *
- * 각 색 계열은 0(가장 밝음)~900(가장 어두움) 단계로 정의합니다. 화면 CSS는 이 단계 변수만 쓰므로,
- * 시즌 테마는 같은 이름의 단계 값만 바꾸면 앱 전체 분위기가 바뀝니다. 새 테마도 단계별 밝기 순서를 지켜야
- * 글자와 배경의 대비가 유지됩니다.
- */
+/* 기본 테마 (브랜드 A): 밝은 흰 바탕·차콜 본문·선명한 코랄을 씁니다. */
 :root,
 [data-theme="default"] {
-  /* 따뜻한 회색: 바탕, 선, 본문 글자 */
   --neutral-0: #ffffff;
-  --neutral-25: #fffcf8;
-  --neutral-50: #fff8f1;
-  --neutral-100: #faf0e6;
-  --neutral-150: #f3e6db;
-  --neutral-200: #e9d9cc;
-  --neutral-300: #d3c1b4;
-  --neutral-400: #a99689;
-  --neutral-500: #7f6f66;
-  --neutral-600: #67574f;
-  --neutral-700: #4f403a;
-  --neutral-800: #3b2d27;
-  --neutral-900: #2a1e19;
+  --neutral-25: #fdfdfe;
+  --neutral-50: #f7f8fa;
+  --neutral-100: #f0f1f4;
+  --neutral-150: #e7e9ed;
+  --neutral-200: #dadee4;
+  --neutral-300: #c3c8d0;
+  --neutral-400: #929aa6;
+  --neutral-500: #68717e;
+  --neutral-600: #535d6a;
+  --neutral-700: #3d4652;
+  --neutral-800: #20252b;
+  --neutral-900: #15191f;
 
-  /* 브랜드 코랄: 주요 버튼, 강조, 선택 상태. 600 위 흰 글자가 4.5:1 대비를 넘습니다. */
-  --brand-50: #fff4ef;
-  --brand-100: #fde6dc;
-  --brand-200: #f9cdbb;
-  --brand-300: #f3a88d;
-  --brand-400: #eb7d5e;
-  --brand-500: #e05d3c;
-  --brand-600: #cf3f25;
-  --brand-700: #a8301b;
-  --brand-800: #7c2415;
-  --brand-900: #52190f;
+  /* 500은 브랜드 원색, 600은 흰색 작은 글자의 대비를 확보한 버튼·본문 강조색입니다. */
+  --brand-50: #fff1f4;
+  --brand-100: #ffe3e9;
+  --brand-200: #ffc5d1;
+  --brand-300: #ff9ab0;
+  --brand-400: #fc6b8b;
+  --brand-500: #ef365b;
+  --brand-600: #d9234c;
+  --brand-700: #b71b3e;
+  --brand-800: #901733;
+  --brand-900: #651326;
 
   /* 클레이: 채도가 낮은 갈색·살구 계열 장식 */
   --clay-50: #fbf5ef;
@@ -107,6 +99,26 @@
   --berry-800: #44213c;
   --berry-900: #2b1526;
 
+  /*
+   * 내 지도 갈래·지도 마커 색. 마커, 내 지도 수 칸, 목록 이름표, 상세 뱃지, 마커 안내가 모두 이 토큰만 읽습니다.
+   * 가본 곳(다녀온 곳·나만 보기 기록) = visited, 공유 중(공개 내 기록) = shared, 구독 안 한 맛객 핀 = other.
+   * 구독 중 맛객과 가볼 곳은 브랜드 코랄(brand)입니다. 시안을 바꿀 때는 이 묶음만 고칩니다.
+   * 발견(구독 안 한 맛객)과 내 지도(가본 곳)는 탭이 달라 한 화면에 같이 나오지 않으므로 같은 쨍한 탠저린을 쓰고,
+   * 공유 중만 스카이로 따로 둡니다. 코랄·탠저린과 정반대 쪽 색이라 지도 위 작은 핀에서도 한눈에 갈리고, 파랑은 "공유"를 떠올리게 합니다.
+   */
+  --visited-50: #fff4e5;
+  --visited-200: #ffd49e;
+  --visited-500: #ff9a1f;
+  --visited-600: #e07800;
+  --visited-700: #a85a00;
+  --shared-50: #eaf5fd;
+  --shared-200: #b4dcf5;
+  --shared-500: #3ba9e6;
+  --shared-600: #2b93cf;
+  --shared-700: #1f6f9e;
+  --other-500: var(--visited-500);
+  --other-600: var(--visited-600);
+
   /* 청록: 취향 태그 묶음(뷰·분위기) 구분 */
   --teal-50: #eef8f6;
   --teal-100: #d6efea;
@@ -120,14 +132,19 @@
   --teal-900: #0d2b28;
 
   /* 그림자와 사진 위 어두운 막. color-mix로 투명도를 더해 씁니다. */
-  --shadow-color: #3b2214;
+  --shadow-color: #20252b;
   /* 진한 색이나 사진 위에 올리는 글자색 */
   --on-strong: #ffffff;
+  /* 소셜 제공자 브랜드 색(설정의 연결 계정 아이콘). 공통 로그인 dagong-auth login.css의 같은 이름과 맞춥니다. */
+  --kakao-bg: #fee500;
+  --kakao-ink: #191600;
+  --naver-bg: #03c75a;
 
-  --font-body: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
-  --font-display: "Jua", "Pretendard", "Noto Sans KR", sans-serif;
+  /* 앱 전체 글꼴(theme/fonts.css): 보통 굵기는 티머니 둥근바람, 600 이상은 주아로 그려집니다. 받기 전·실패 때는 Pretendard입니다. */
+  --font-body: "Matdagong", "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+  --font-display: "Matdagong", "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
 
-  /* 반경: 아래에서 올라오는 시트·큰 카드(sheet) > 카드 > 입력·버튼 > 썸네일·배지(md) > 작은 칸(sm) > 아주 작은 표시(xs). 시즌 테마가 따로 정하지 않으면 이 값을 씁니다. */
+  /* 기본 반경 단계입니다. 새 테마에서 별도 지정하지 않으면 이 값을 상속합니다. */
   --radius-card: 22px;
   --radius-control: 16px;
   --radius-sheet: 28px;

@@ -2,12 +2,12 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { go } from "../app/navigation";
 import Icon from "./Icon";
-import QuickPlaceSheet from "./QuickPlaceSheet";
+import QuickPlaceScreen from "./QuickPlaceScreen";
 import Sheet from "./Sheet";
 
 /**
  * 떠 있는 "+ 기록하기" 버튼과, 누르면 여는 "맛집 기록하기 / 빠른 저장" 메뉴입니다.
- * 내가 가 본 곳을 남기는 동작이라 내 지도 화면에 둡니다. 자리(위치)는 감싸는 쪽(.r-mymap__record)이 정합니다.
+ * 내가 가 본 곳을 남기는 동작이라 내 지도 화면에 둡니다. 자리(위치)는 내 지도 머리줄(.r-mymap__head)이 정합니다.
  * 버튼을 감싼 영역이 쌓임 순서를 만들어 아래 탭 바에 시트가 가려지지 않도록, 시트는 문서 끝에 붙입니다.
  */
 export default function RecordMenuButton() {
@@ -17,7 +17,7 @@ export default function RecordMenuButton() {
   return (
     <>
       <button type="button" className="r-record-fab" aria-label="기록하기" onClick={() => setIsRecordMenuOpen(true)}>
-        <Icon name="plus" />
+        <Icon name="pencil" />
         <span>기록하기</span>
       </button>
       {isRecordMenuOpen &&
@@ -62,7 +62,7 @@ export default function RecordMenuButton() {
           </Sheet>,
           document.body,
         )}
-      {isQuickOpen && createPortal(<QuickPlaceSheet onClose={() => setIsQuickOpen(false)} />, document.body)}
+      {isQuickOpen && createPortal(<QuickPlaceScreen onClose={() => setIsQuickOpen(false)} />, document.body)}
     </>
   );
 }

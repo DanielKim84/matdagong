@@ -1,0 +1,670 @@
+/* 현재 기본 발견 화면 전용 규칙입니다. 공통 부품은 ui.css를 씁니다. 내 지도(mymap.css)도 같은 틀(.r-discover)을 씁니다. */
+
+/* ── 화면 틀(보드 06-01): 위에서 아래로 스크롤되는 한 장의 화면. 지도는 둥근 카드 안에 둡니다. ── */
+.r-discover {
+  display: flex;
+  flex-direction: column;
+}
+.r-discover__top {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 16px 0;
+}
+
+/* 지역 버튼(로고 오른쪽): 핀 · 동네 이름 · 아래 화살표 */
+.r-region-button {
+  display: inline-flex;
+  min-height: 44px;
+  max-width: 50%;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: none;
+  padding: 0 6px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.r-region-button .icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.r-region-button .icon:first-child {
+  color: var(--color-primary);
+}
+
+/* 회색 안내 줄(ⓘ + 한 줄 설명). 발견 검색 결과, 위치 없음 안내 등에서 씁니다. */
+.r-info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-100);
+  padding: 10px 12px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+.r-info-note .icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-muted);
+}
+
+/* 맛객 관계 칩 + 오른쪽 필터 버튼 */
+.r-discover-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.r-discover-chips > .r-chips {
+  min-width: 0;
+  flex: 1;
+}
+/* 맛객 관계 칩의 작은 ▾(보드 06-01) */
+.r-discover-chips .r-chip .icon {
+  width: 14px;
+  height: 14px;
+  margin-right: -4px;
+}
+/* 필터 버튼: 칩 줄 오른쪽 네모(보드 06-01) */
+.r-discover-chips__filter {
+  position: relative;
+  display: grid;
+  width: var(--pill-height);
+  height: var(--pill-height);
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--neutral-150);
+  border-radius: 12px;
+  background: var(--color-surface);
+  padding: 0;
+  color: var(--neutral-700);
+}
+.r-discover-chips__filter .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-discover-chips__filter.is-on {
+  border-color: var(--brand-200);
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+/* 검색 결과의 "지도 보기 / 목록 보기"(보드 05-01): 칩 줄 오른쪽 끝 연한 코랄 알약 */
+.r-discover-chips__map {
+  display: inline-flex;
+  height: var(--pill-height);
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 14px;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+}
+.r-discover-chips__map .icon {
+  width: 18px;
+  height: 18px;
+}
+.r-discover-chips__filter i {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 0 4px;
+  color: var(--on-strong);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+}
+.r-discover-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.r-discover-status > button {
+  min-height: 44px;
+  margin: -12px 0;
+  border: 0;
+  background: none;
+  padding: 0 8px;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ── 둥근 지도 카드(발견·내 지도) ── */
+.r-map-card {
+  position: relative;
+  height: min(300px, 40dvh);
+  flex: none;
+  overflow: hidden;
+  margin: 16px 16px 0;
+  border-radius: var(--radius-card);
+  background: var(--neutral-100);
+  /* 지도 SDK가 그 안에 겹쳐 그리는 요소가 카드 둥근 모서리 밖으로 나오지 않게 합니다. */
+  isolation: isolate;
+}
+.r-map-card > div:first-child {
+  position: absolute;
+  inset: 0;
+}
+.r-discover .map-error {
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+/* 지도 SDK 부품(MapCanvas)의 내 위치 버튼을 카드 오른쪽 아래 흰 동그라미로 둡니다(글자는 aria-label로 읽음). */
+.r-discover .map-location {
+  top: auto;
+  right: 12px;
+  bottom: 12px;
+  left: auto;
+  flex-direction: row-reverse;
+}
+.r-discover .map-location > button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-surface);
+  padding: 0;
+  color: var(--color-ink);
+  font-size: 0;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--shadow-color) 16%, transparent);
+}
+.r-discover .map-location__label {
+  display: none;
+}
+.r-discover .map-location > button .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-discover .map-location > small {
+  max-width: 200px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  padding: 8px 10px;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--shadow-color) 12%, transparent);
+}
+
+/* 지도 아래 몇 곳 다음의 "지도에 보이는 곳 N곳 모두 보기"(지도 목록 06-02로) */
+.r-discover__more {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--neutral-700);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+}
+.r-discover__more .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── 지도 목록 펼침(보드 06-02, MapListScreen) ── */
+.r-map-list .r-segmented {
+  flex: none;
+}
+.r-map-list__count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0 4px;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.r-map-list__count > .icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.r-map-list__count > span {
+  flex: 1;
+}
+.r-map-list__count .r-text-button {
+  min-height: 36px;
+  font-size: 13px;
+}
+
+/* 고른 마커를 키워 앞으로 꺼냅니다. */
+.r-discover .taster-map-marker,
+.r-discover .map-category-marker {
+  transform-origin: 50% 100%;
+  transition: transform 0.18s ease-out;
+}
+.r-discover .taster-map-marker.is-focused,
+.r-discover .map-category-marker.is-focused {
+  position: relative;
+  z-index: 2;
+  transform: scale(1.32);
+  filter: drop-shadow(0 6px 8px color-mix(in srgb, var(--shadow-color) 30%, transparent));
+}
+
+/* ── 지도 아래 사진 목록 ── */
+.r-discover__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 16px 16px;
+}
+.r-discover__list > .r-section-head {
+  align-items: center;
+}
+.r-discover__focus-hint {
+  margin: 4px 0 0;
+  color: var(--color-primary-strong);
+  font-size: 13px;
+  font-weight: 600;
+}
+/* 지도에서 고른 곳: 목록 맨 위에 연한 코랄 바탕으로 표시합니다. */
+.r-discover__list li.is-focused .r-place-card {
+  margin: 4px -10px;
+  border-bottom: 0;
+  border-radius: var(--radius-md);
+  background: var(--brand-50);
+  padding: 10px;
+}
+
+/* 장소 목록 행의 오른쪽 하트·내 기록 표시. 줄 모양은 공용 PlaceCard(ui.css)입니다. */
+.r-discover-row__save {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  margin: -6px -8px 0 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  padding: 0;
+  color: var(--neutral-700);
+}
+.r-discover-row__save .icon {
+  width: 24px;
+  height: 24px;
+}
+.r-discover-row__save.is-on {
+  color: var(--color-primary);
+}
+.r-discover-row__mine {
+  flex: none;
+  margin-top: 4px;
+}
+/* 목록을 불러오는 동안 행 자리(공용 Skeleton을 목록 행 모양으로) */
+.r-discover-rows-skeleton {
+  gap: 10px;
+}
+.r-discover-rows-skeleton > .r-skeleton {
+  height: 96px;
+  border-radius: var(--radius-md);
+  background: var(--neutral-100);
+}
+.r-discover-empty {
+  padding: 22px 20px;
+}
+
+/* ── 지도 마커 안내(보드 05-04, MarkerGuideScreen 전체 화면): 왼쪽 작은 지도 그림 · 오른쪽 마커와 설명 ── */
+.r-discover-guide__title {
+  margin: 4px 0 14px;
+  color: var(--color-ink);
+  font-size: 19px;
+  font-weight: 800;
+}
+.r-discover-guide__title small {
+  color: var(--neutral-700);
+  font-size: 14px;
+  font-weight: 600;
+}
+.r-discover-guide__body {
+  display: flex;
+  gap: 12px;
+}
+.r-discover-guide__map {
+  position: relative;
+  width: 40%;
+  min-height: 300px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: url("/assets/content/intro/map.svg") center / cover no-repeat;
+}
+.r-discover-guide__spot {
+  position: absolute;
+  transform: scale(0.72);
+  transform-origin: top left;
+}
+.r-discover-guide__list {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-discover-guide__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+}
+.r-discover-guide__art {
+  display: grid;
+  width: 34px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+}
+/* 실제 지도와 같은 마커를 줄 안에서는 작게 줄여 그립니다. */
+.r-discover-guide__art > * {
+  transform: scale(0.62);
+}
+/* 내 위치 캐릭터는 핀보다 커서 더 줄입니다. */
+.r-discover-guide__art > .my-position-marker {
+  transform: scale(0.42);
+}
+.r-discover-guide__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 4px;
+}
+.r-discover-guide__copy b {
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+.r-discover-guide__copy small {
+  color: var(--neutral-700);
+  font-size: 12px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+/* ── 필터(보드 05-03, FilterScreen 전체 화면): 카드 없이 굵은 묶음 제목과 흰 칩, 맛객 관계는 세 칸 ── */
+.r-discover-filter__group {
+  min-width: 0;
+  margin: 0 0 22px;
+  border: 0;
+  padding: 0;
+}
+.r-discover-filter__legend {
+  margin-bottom: 12px;
+  padding: 0;
+  color: var(--color-ink);
+  font-size: 19px;
+  font-weight: 800;
+}
+.r-discover-filter__group .r-chip {
+  min-width: 72px;
+  justify-content: center;
+  border-color: var(--neutral-200);
+  font-size: 15px;
+}
+.r-discover-filter__scope {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.r-discover-filter__note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-discover-filter__note .icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/* ── 지역 선택(보드 05-02, RegionScreen 전체 화면): 지역명 검색 · 내 위치로 보기 · 시/도→구/군 밑줄 탭 · 세 칸 버튼 · 아래 선택하기 ── */
+.r-region-sheet {
+  --region-gap: 12px;
+}
+/* 본문이 세로 flex라 검색창이 눌리지 않게 높이를 고정합니다. */
+.r-region-sheet__search {
+  flex: none;
+  margin-bottom: var(--region-gap);
+}
+.r-region-sheet__mine,
+.r-region-sheet .r-segmented,
+.r-region-sheet__grid {
+  flex: none;
+}
+.r-region-sheet__mine {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 14px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-region-sheet__mine > span:nth-child(2) {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-region-sheet__mine b {
+  font-size: 16px;
+  font-weight: 700;
+}
+.r-region-sheet__mine small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.r-region-sheet__mine > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+.r-region-sheet__mine-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.r-region-sheet__mine-icon .icon {
+  width: 22px;
+  height: 22px;
+}
+/* 시/도·구/군 버튼: 세 칸, 고르면 코랄 연한 바탕(칩 is-on과 같은 색) */
+.r-region-sheet__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: var(--region-gap) 0 16px;
+}
+.r-region-sheet__grid button {
+  min-height: 46px;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 6px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-region-sheet__grid button.is-on {
+  border-color: var(--brand-200);
+  background: var(--brand-50);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.r-region-sheet__results {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-region-sheet__results button {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-bottom: 1px solid var(--color-line);
+  background: none;
+  padding: 0 4px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  text-align: left;
+}
+.r-region-sheet__results button > .icon:first-child {
+  width: 18px;
+  height: 18px;
+  color: var(--color-primary);
+}
+.r-region-sheet__results button > .icon:last-child {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: var(--color-muted);
+}
+.r-region-sheet__empty {
+  margin: 24px 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ── 위치 권한 없음(보드 18-01, LocationDeniedCard): 연한 코랄 원 아이콘 · 제목 · 설명 · 회색 안내 상자 · 위치 켜기 / 직접 지역 선택 ── */
+.r-location-denied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 4px;
+  text-align: center;
+}
+.r-location-denied__icon {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.r-location-denied__icon .icon {
+  width: 36px;
+  height: 36px;
+}
+.r-location-denied h2 {
+  margin: 4px 0 0;
+  color: var(--color-ink);
+  font-size: 22px;
+  font-weight: 800;
+}
+.r-location-denied > p {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 15px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.r-location-denied__note {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  border-radius: var(--radius-md);
+  background: var(--neutral-50);
+  padding: 14px;
+  text-align: left;
+}
+.r-location-denied__note > .icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--neutral-600);
+}
+.r-location-denied__note span {
+  display: grid;
+  gap: 3px;
+}
+.r-location-denied__note b {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.r-location-denied__note small {
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+.r-location-denied__actions {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 8px;
+}
+/* 안내 아래 "지도로 맛집 둘러보기": 큰 제목보다 한 단계 작게 */
+.r-home-title--sub {
+  margin-top: 12px;
+  font-size: 18px;
+}

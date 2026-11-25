@@ -1,0 +1,886 @@
+/*
+ * 프로필·취향 편집과 태그·매장 정보 제안 화면의 입력 스타일입니다.
+ * 같은 입력 부품을 쓰는 다른 화면에 영향을 주지 않도록 화면 루트로 범위를 좁힙니다.
+ */
+.profile-settings {
+  --forms-card-shadow: 0 2px 10px color-mix(in srgb, var(--shadow-color) 8%, transparent);
+  --forms-focus-ring: 0 0 0 3px var(--brand-50);
+}
+/* ═════════════ 프로필·취향 편집 ═════════════ */
+
+.app-view .profile-settings {
+  background: var(--color-canvas);
+}
+
+/* 배경 사진 */
+.profile-settings .profile-edit-cover {
+  /* 맛객 프로필 위쪽 배경과 같은 3:2 비율로 미리 보여 줘, 올린 사진이 프로필에서 잘리는 모양을 그대로 확인합니다. */
+  aspect-ratio: 3 / 2;
+  border-radius: var(--radius-card);
+  box-shadow: var(--forms-card-shadow);
+}
+.profile-settings .profile-edit-cover > button {
+  width: 44px;
+  height: 44px;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-surface);
+  padding: 0;
+  color: var(--color-ink);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow-color) 16%, transparent);
+  backdrop-filter: none;
+}
+.profile-settings .profile-edit-cover > button .icon {
+  width: 22px;
+  height: 22px;
+}
+.profile-settings .profile-edit-cover > .profile-default-cover-badge,
+.profile-settings .profile-edit-cover > .profile-primary-cover-badge {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-cover > .profile-primary-cover-badge .icon {
+  width: 14px;
+  height: 14px;
+}
+.profile-settings .profile-edit-cover-thumbnails {
+  gap: 8px;
+  margin: 8px 16px 0;
+  padding: 4px;
+}
+/* 보드 15-02처럼 세로로 긴 큰 썸네일(넷째 칸 사진 추가까지 한 화면에 보임) */
+.profile-settings .profile-edit-cover-thumbnail {
+  width: 84px;
+  height: 116px;
+}
+.profile-settings .profile-edit-cover-thumbnail-preview {
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--neutral-200);
+}
+.profile-settings .profile-edit-cover-thumbnail-preview > img {
+  border-radius: var(--radius-md);
+}
+.profile-settings .profile-edit-cover-thumbnail-delete {
+  border: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.profile-settings .profile-edit-cover-indicators {
+  /* 점 버튼 세로 44px 중 늘어난 13.5px씩을 상쇄한 값(보이는 간격은 위 5px, 아래 2px) */
+  margin: -8.5px auto -11.5px;
+}
+
+/* ── 입력 칸(프로필 편집) ── */
+.profile-settings .profile-edit-field {
+  gap: 8px;
+}
+.profile-settings .profile-edit-field > span {
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-field em {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  margin-left: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 8px;
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-field > span > small {
+  margin-left: 6px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.profile-settings .profile-edit-field > input,
+.profile-settings .profile-edit-field > textarea {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 16px;
+  color: var(--color-ink);
+  font-size: 15px;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.profile-settings .profile-edit-field > input {
+  height: 52px;
+  min-height: 52px;
+}
+.profile-settings .profile-edit-field > textarea {
+  min-height: 120px;
+  padding: 14px 16px;
+  line-height: 1.6;
+}
+.profile-settings .profile-edit-field input::placeholder,
+.profile-settings .profile-edit-field textarea::placeholder {
+  color: var(--color-muted);
+}
+.profile-settings .profile-edit-field > input:focus,
+.profile-settings .profile-edit-field > textarea:focus {
+  border-color: var(--brand-400);
+  outline: none;
+  box-shadow: var(--forms-focus-ring);
+}
+.profile-settings .profile-edit-field > small {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.profile-settings .copy-taste-notice {
+  margin: -8px 0 0;
+  border-radius: var(--radius-md);
+  background: var(--color-canvas);
+  padding: 10px 14px;
+  color: var(--color-success-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 찾는 분야 카드(FoodFocusPicker): 가입 2단계(보드 04-03). 프로필 편집은 작은 칩 줄(.food-focus-chips)입니다. */
+.r-onboarding .food-focus-picker > div {
+  gap: 8px;
+}
+.r-onboarding .food-focus-picker label > span {
+  gap: 8px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+/* 아이콘과 이름을 한 줄에 둔 낮은 카드(보드 04-03) */
+.r-onboarding .food-focus-picker label > span {
+  min-height: 54px;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.r-onboarding .food-focus-picker .icon {
+  width: 22px;
+  height: 22px;
+  margin-right: -6px;
+  color: inherit;
+}
+.r-onboarding .food-focus-picker .icon:last-of-type {
+  margin-right: 0;
+}
+.r-onboarding .food-focus-picker b {
+  color: inherit;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* 고른 분야는 칩 is-on과 같은 연한 코랄(보드 04-03 "둘 다") */
+.r-onboarding .food-focus-picker input:checked + span {
+  border-color: var(--brand-200);
+  background: var(--brand-50);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+.r-onboarding .food-focus-picker input:focus-visible + span {
+  outline: 2px solid var(--brand-400);
+  outline-offset: 3px;
+}
+
+/* 활동 지역 */
+.profile-settings .activity-region-picker {
+  gap: 8px;
+}
+.profile-settings .region-picker-field > span {
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+.profile-settings .activity-region-picker .region-picker-trigger {
+  min-height: 52px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 10px 0 12px;
+  color: var(--color-ink);
+  box-shadow: none;
+}
+.profile-settings .activity-region-picker .region-picker-trigger > span {
+  font-size: 14px;
+  font-weight: 600;
+}
+.profile-settings .activity-region-picker .region-picker-trigger > .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--color-muted);
+}
+.profile-settings .activity-region-picker .region-picker-trigger:disabled {
+  background: var(--color-canvas);
+  color: var(--color-subtle);
+}
+.profile-settings .region-picker-menu {
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 8px;
+}
+.profile-settings .region-picker-menu > input {
+  min-height: 44px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 0 12px;
+  color: var(--color-ink);
+  font-size: 15px;
+}
+.profile-settings .region-picker-menu > button {
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  color: var(--color-ink);
+  font-size: 15px;
+}
+.profile-settings .region-picker-menu > button:hover,
+.profile-settings .region-picker-menu > button[aria-selected="true"] {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+.profile-settings .region-picker-menu > small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.profile-settings .activity-region-field > small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+/* ── 아래 고정 저장 버튼 ── */
+.profile-settings .settings-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  border-top: 0;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-canvas) 0%, transparent),
+    var(--color-canvas) 18px
+  );
+  padding: 18px 20px calc(14px + env(safe-area-inset-bottom));
+}
+.profile-settings .settings-save-bar > button {
+  min-height: 52px;
+  border-radius: var(--radius-control);
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+/* ═════════════ 태그·매장 정보 제안(시트 안 내용) ═════════════ */
+/* 분류 이름 앞 분류 아이콘(GroupIcon)은 알약 높이에 맞춰 조금 작게 둡니다. */
+
+/* ═════════════ 프로필 편집 네 화면(보드 15) ═════════════ */
+
+/* 맨 위 안내 상자: 공개(지구본) · 나만 보기(자물쇠). 연한 코랄 바탕에 코랄 아이콘·제목 */
+.profile-settings .profile-edit-notice {
+  display: flex;
+  gap: 12px;
+  border-radius: var(--radius-card);
+  background: var(--brand-50);
+  padding: 14px 16px;
+}
+.profile-settings .profile-edit-notice > .icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  color: var(--color-primary);
+}
+.profile-settings .profile-edit-notice span {
+  display: grid;
+  gap: 4px;
+}
+.profile-settings .profile-edit-notice b {
+  color: var(--brand-700);
+  font-size: 16px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-notice small {
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+/* 15-01 가운데 큰 프로필 사진, 오른쪽 아래 흰 카메라 단추 */
+.profile-settings .profile-edit-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.profile-settings .profile-edit-avatar-button {
+  position: relative;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  padding: 0;
+}
+.profile-settings .profile-edit-avatar-button > .avatar {
+  width: 168px;
+  height: 168px;
+}
+.profile-settings .profile-edit-avatar-button > span:last-child {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-surface);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--shadow-color) 18%, transparent);
+  color: var(--color-ink);
+}
+.profile-settings .profile-edit-avatar-button > span:last-child .icon {
+  width: 22px;
+  height: 22px;
+}
+.profile-settings .profile-edit-avatar-section > small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.profile-settings .profile-edit-avatar-section .text-action {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* 입력 칸 안 오른쪽 아래 글자 수(닉네임 8/12, 소개 24/60처럼) */
+.profile-settings .profile-edit-field > span:first-child {
+  color: var(--color-ink);
+  font-size: 15px;
+}
+.profile-settings .profile-edit-input {
+  position: relative;
+  display: block;
+}
+.profile-settings .profile-edit-input > input,
+.profile-settings .profile-edit-input > textarea {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 56px 0 16px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+.profile-settings .profile-edit-input > input {
+  height: 52px;
+}
+.profile-settings .profile-edit-input > textarea {
+  min-height: 112px;
+  padding: 14px 16px 28px;
+  line-height: 1.6;
+  resize: vertical;
+}
+.profile-settings .profile-edit-input > input:focus,
+.profile-settings .profile-edit-input > textarea:focus {
+  border-color: var(--brand-400);
+  outline: none;
+  box-shadow: var(--forms-focus-ring);
+}
+.profile-settings .profile-edit-input > small {
+  position: absolute;
+  right: 14px;
+  bottom: 16px;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.profile-settings .profile-edit-input.is-multiline > small {
+  bottom: 10px;
+}
+
+/* 활동 지역: 범위 칩 한 줄 + (지역 중심·둘 다일 때) 시·도→동 고르기 */
+.profile-settings .activity-scope-chips {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.profile-settings .activity-scope-chips > legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.profile-settings .activity-scope-chips .r-chip .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* 15-01 아래 하위 화면으로 가는 줄(배경 사진 · 공개 스타일 태그 · 추천 취향) */
+.profile-settings .profile-edit-links {
+  margin: 0;
+  padding: 0 16px;
+  list-style: none;
+}
+.profile-settings .profile-edit-links li + li {
+  border-top: 1px solid var(--color-line);
+}
+.profile-settings .profile-edit-links button {
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.profile-settings .profile-edit-links button > .icon:first-child {
+  width: 20px;
+  height: 20px;
+  color: var(--neutral-700);
+}
+.profile-settings .profile-edit-links b {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-links small {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.profile-settings .profile-edit-links button > .icon:last-child {
+  width: 16px;
+  height: 16px;
+  color: var(--color-muted);
+}
+
+/* 15-02 배경 사진: 장수 제목과 안내, 작은 사진 줄 끝의 사진 추가 칸, 첫 장의 대표 표시 */
+.profile-settings .cover-edit-view .profile-edit-cover {
+  margin: 0;
+}
+.profile-settings .cover-edit-view__head h2 {
+  margin: 0 0 4px;
+  color: var(--color-ink);
+  font-size: 18px;
+}
+.profile-settings .cover-edit-view__head p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.profile-settings .cover-edit-view .profile-edit-cover-thumbnails {
+  margin: 0;
+}
+.profile-settings .profile-edit-cover-thumbnail-preview {
+  position: relative;
+}
+.profile-settings .profile-edit-cover-thumbnail-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  gap: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 0 7px;
+  color: var(--on-strong);
+  font-size: 12px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-cover-thumbnail-badge .icon {
+  width: 11px;
+  height: 11px;
+}
+.profile-settings .profile-edit-cover-thumbnail-add {
+  display: flex;
+  width: 84px;
+  height: 116px;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-cover-thumbnail-add .icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-ink);
+}
+
+/* 15-03·15-04 맨 위 작은 분야 칩 줄(FoodFocusPicker chips): 왼쪽 이름표 "분야", 오른쪽 칩 */
+.profile-settings .food-focus-chips {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.profile-settings .food-focus-chips > span {
+  flex: none;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 800;
+}
+.profile-settings .food-focus-chips .icon {
+  width: 16px;
+  height: 16px;
+}
+/* 오른쪽에 붙는 흰 테두리 알약(15-03 "추천 취향에서 가져오기", 15-04 "태그 제안받기") */
+.profile-settings .profile-edit-pill {
+  display: flex;
+  min-height: var(--pill-height);
+  align-self: flex-end;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+}
+.profile-settings .profile-edit-pill .icon {
+  width: 16px;
+  height: 16px;
+}
+/* 15-03 펼친 분류 제목: 아이콘 · 이름 왼쪽, "2/10" 오른쪽 */
+.profile-settings .r-taste-picker__inline-title > span {
+  margin-left: auto;
+  font-size: 16px;
+  font-weight: 700;
+}
+/* 15-04 묶음: 카드 없이 하트·금지 아이콘 제목과 회색 설명, 아래 오른쪽 "태그 제안받기", 묶음 사이 가는 선 */
+.profile-settings .taste-settings-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.profile-settings .taste-settings-block + .taste-settings-block {
+  border-top: 1px solid var(--color-line);
+  padding-top: 20px;
+}
+.profile-settings .taste-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+.profile-settings .taste-section-heading > .icon {
+  width: 22px;
+  height: 22px;
+  color: var(--color-primary);
+}
+.profile-settings .taste-section-heading small {
+  font-size: 13px;
+  font-weight: 600;
+}
+.profile-settings .taste-settings-block > p {
+  margin: 0 0 4px 30px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.profile-settings .taste-settings-block .r-taste-picker__group {
+  padding: 14px 0;
+}
+.profile-settings .taste-settings-block .r-taste-picker__inline-title {
+  font-size: 16px;
+}
+.profile-settings .taste-settings-block .r-taste-picker.is-single {
+  padding: 10px 0 4px;
+}
+
+/* 15-01 활동 지역: 제목 "활동 지역 (i)"와 오른쪽 "최대 3개 선택", 고른 지역 칩 한 줄(누르면 빼기)과 끝의 ›, 아래 작은 활동 범위 칩 */
+.profile-settings .activity-scope-chips > legend {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 4px;
+}
+.profile-settings .activity-scope-chips > legend small {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+}
+.profile-settings .activity-region-help {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+}
+.profile-settings .activity-region-help .icon {
+  width: 18px;
+  height: 18px;
+}
+.profile-settings .activity-region-help__text {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.profile-settings .activity-region-row {
+  display: flex;
+  min-height: var(--pill-height);
+  align-items: center;
+  gap: 4px;
+}
+.profile-settings .activity-region-chips {
+  min-width: 0;
+  flex: 1;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.profile-settings .activity-region-chips .r-chip {
+  min-width: 76px;
+  justify-content: center;
+  border-color: transparent;
+}
+.profile-settings .activity-region-row__empty {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.profile-settings .activity-region-row__add {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+}
+.profile-settings .activity-region-row__add .icon {
+  width: 18px;
+  height: 18px;
+}
+.profile-settings .activity-region-row__add:disabled {
+  color: var(--neutral-300);
+}
+.profile-settings .activity-scope-chips__range {
+  margin-top: 10px;
+}
+.profile-settings .activity-scope-chips__range .r-chip {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.profile-settings .region-add-sheet__lead {
+  margin: 0 0 14px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.profile-settings .region-add-sheet .activity-region-field {
+  margin-bottom: 18px;
+}
+
+/* ── 태그 제안(보드 17-04, TasteTagRequestScreen 전체 화면) ──
+   음식 사진 띠 위 흰 큰 글, 이름표가 왼쪽에 붙은 분류 칩 · 태그명 줄, 설명 칸(오른쪽 아래 글자 수), 제안하기, 내 제안 줄 */
+.r-tag-request .r-subscreen__body {
+  gap: 16px;
+  padding-top: 0;
+}
+.r-tag-request__banner {
+  position: relative;
+  height: 160px;
+  overflow: hidden;
+  margin: 0 -20px;
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+}
+.r-tag-request__banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-tag-request__banner::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--shadow-color) 70%, transparent), transparent 80%);
+  content: "";
+}
+.r-tag-request__banner p {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 20px;
+  display: flex;
+  margin: 0;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--on-strong);
+  transform: translateY(-50%);
+}
+.r-tag-request__banner b {
+  font-size: 22px;
+  line-height: 1.3;
+}
+.r-tag-request__banner small {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-tag-request__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.r-tag-request__row .r-chips {
+  min-width: 0;
+  flex: 1;
+}
+.r-tag-request__label {
+  flex: none;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 800;
+}
+.r-tag-request__row input,
+.r-tag-request__area textarea {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+.r-tag-request__row input {
+  min-height: 46px;
+  flex: 1;
+  padding: 0 14px;
+}
+.r-tag-request__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-tag-request__area {
+  position: relative;
+}
+.r-tag-request__area textarea {
+  min-height: 110px;
+  resize: vertical;
+  padding: 12px 14px 28px;
+  line-height: 1.5;
+}
+.r-tag-request__area small {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-tag-request__history h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0 10px;
+  font-size: 18px;
+  font-weight: 800;
+}
+.r-tag-request__history h3 small {
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.r-tag-request__history ul {
+  margin: 0;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  list-style: none;
+}
+.r-tag-request__history li {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+}
+.r-tag-request__history li + li {
+  border-top: 1px solid var(--color-line);
+}
+.r-tag-request__history em {
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 3px 10px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+.r-tag-request__history b {
+  min-width: 0;
+  flex: 1;
+  font-size: 15px;
+}
+.r-tag-request__history li > .icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--color-muted);
+}
+/* 검토 상태: 검토 중 노랑, 적용 완료 초록, 미반영 회색 */
+.r-tag-request__status {
+  flex: none;
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.r-tag-request__status.is-pending {
+  background: var(--amber-50);
+  color: var(--amber-800);
+}
+.r-tag-request__status.is-approved {
+  background: var(--green-50);
+  color: var(--green-700);
+}
+.r-tag-request__status.is-rejected {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+}

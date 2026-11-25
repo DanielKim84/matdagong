@@ -268,9 +268,7 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
         </div>
         {activeTab && <TabBar active={activeTab} />}
         {subscriptionTarget && <SubscriptionOfferSheet />}
-        {likeChoice.prompt && (
-          <LikeChoiceSheet prompt={likeChoice.prompt} onChoose={likeChoice.choose} onClose={likeChoice.close} />
-        )}
+        {likeChoice.prompt && <LikeChoiceSheet onChoose={likeChoice.choose} onClose={likeChoice.close} />}
       </div>
     </AppDataContext.Provider>
   );

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { SubscriptionFilter } from "./SubscriptionsManageScreen";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
 import { useNotificationDialog } from "../../components/NotificationDialog";
@@ -7,11 +8,15 @@ import { EmptyState } from "../../components/ui";
 import TasterAvatar from "../../components/TasterAvatar";
 import type { ActiveSubscription } from "../../models/community";
 import type { Taster } from "../../models/place";
+import Icon from "../../components/Icon";
 import { formatMonthDay } from "../../utils/format";
 import { confirmCancelSubscription, daysLeft, planLabel, subscribedTaster } from "./tasterData";
 
-/** 내가 구독 중인 맛객 목록. 각 줄의 "관리"에서 프로필 보기·해지를 고릅니다. */
-export default function SubscribedList() {
+/**
+ * 내가 구독 중인 맛객 목록(보드 16-01): 큰 얼굴 · 이름 · "유료 구독/무료 구독"과 초록 "활성" 알약 · 유료면 "만료: 날짜" · >.
+ * filter로 무료·유료만 골라 보고, 줄을 누르면 관리 시트(프로필 보기 · 기간 연장 · 해지)를 엽니다.
+ */
+export default function SubscribedList({ filter = "all" }: { filter?: SubscriptionFilter }) {
   const app = useAppData();
   const [managing, setManaging] = useState<ActiveSubscription | null>(null);
 
@@ -28,32 +33,33 @@ export default function SubscribedList() {
 
   return (
     <>
-      <div className="r-card r-tasters-list">
-        {app.subscriptions.map((subscription) => {
-          const taster = subscribedTaster(app.tasterById, subscription);
-          const isFree = subscription.subscriptionType === "FREE";
-          return (
-            <div className="r-tasters-sub-row" key={subscription.subscriptionId}>
-              <button type="button" className="r-row" onClick={() => go("profile", taster.tasterId)}>
-                <TasterAvatar taster={taster} className="r-tasters-avatar r-tasters-avatar--md" />
-                <span className="r-row__copy">
-                  <b>{taster.tasterName}</b>
-                  <small className={isFree ? "r-tasters-plan is-free" : "r-tasters-plan"}>
-                    {planLabel(subscription)}
-                  </small>
-                </span>
-              </button>
+      <div className="r-tasters-list">
+        {app.subscriptions
+          .filter((subscription) => filter === "all" || subscription.subscriptionType === filter)
+          .map((subscription) => {
+            const taster = subscribedTaster(app.tasterById, subscription);
+            const isFree = subscription.subscriptionType === "FREE";
+            return (
               <button
                 type="button"
-                className="r-tasters-sub-row__manage"
+                className="r-row r-tasters-sub-row"
+                key={subscription.subscriptionId}
                 onClick={() => setManaging(subscription)}
                 aria-label={`${taster.tasterName} 구독 관리`}
               >
-                관리
+                <TasterAvatar taster={taster} className="r-tasters-avatar r-tasters-avatar--lg" />
+                <span className="r-row__copy">
+                  <b>{taster.tasterName}</b>
+                  <span className="r-tasters-sub-row__pills">
+                    <em className={isFree ? "is-free" : "is-paid"}>{isFree ? "무료 구독" : "유료 구독"}</em>
+                    <em className="is-active">활성</em>
+                  </span>
+                  {!isFree && subscription.endAt && <small>만료: {formatDate(subscription.endAt)}</small>}
+                </span>
+                <Icon name="chevron" />
               </button>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {managing && (
@@ -65,6 +71,12 @@ export default function SubscribedList() {
       )}
     </>
   );
+}
+
+/** "2025.03.31"처럼 점으로 나눈 날짜입니다(보드 16-01 만료일). */
+function formatDate(value: string): string {
+  const date = new Date(value);
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
 }
 
 /** 구독 한 건의 관리 시트: 남은 기간, 프로필 보기, 기간 연장(준비 중), 해지 */

@@ -1,0 +1,1192 @@
+/* 현재 기본 기록 화면 전용 규칙입니다. 공통 부품은 ui.css를 씁니다. */
+
+/* ── 단계형 기록 화면 틀 ── */
+.r-record {
+  display: flex;
+  flex-direction: column;
+}
+/* 위쪽: 이전 버튼 · "기록 작성" 제목 줄 아래 번호 단계(보드 11) */
+.r-record-head {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  min-height: 60px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-canvas);
+  /* 위쪽 안전 영역은 공용 상단 바(.r-topbar)와 같게 더합니다. */
+  padding: calc(8px + env(safe-area-inset-top)) 8px 12px;
+}
+.r-record-head__progress {
+  flex: 1;
+}
+/* 확인·수정 화면(보드 12-01·12-03)은 번호 단계 없이 가운데 제목만: 공용 하위 화면 바를 머리 칸 안에 꽉 채웁니다. */
+.r-record-head > .r-topbar {
+  min-height: 44px;
+  flex: 1;
+  border: 0;
+  padding: 0;
+}
+.r-record-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 18px;
+  padding: 8px 20px calc(116px + env(safe-area-inset-bottom));
+}
+.r-record-step {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.r-record-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-record-title h1 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 26px;
+  line-height: 1.3;
+}
+.r-record-title p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.r-record-help {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+/* 공용 글자 버튼을 기록 화면의 세로 칸 안에서 왼쪽 정렬·좁은 여백으로 씁니다. */
+.r-record .r-text-button {
+  align-self: flex-start;
+  padding: 0 4px;
+}
+.r-record-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 8px 8px 8px 14px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-record-notice > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-success);
+}
+.r-record-notice span {
+  flex: 1;
+}
+.r-record-notice button {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  padding: 0 10px;
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+.r-record-actions {
+  border-top: 0;
+  background: linear-gradient(to top, var(--color-canvas) 78%, color-mix(in srgb, var(--color-canvas) 0%, transparent));
+  padding-top: 20px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+/* ── 1단계 · 장소 검색(보드 11-01): 회색 알약 검색창 ── */
+.r-record-search {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-100);
+  padding: 0 8px 0 16px;
+  transition: border-color 0.15s;
+}
+.r-record-search:focus-within {
+  border-color: var(--brand-300);
+  background: var(--color-surface);
+}
+.r-record-search > .icon {
+  width: 22px;
+  height: 22px;
+  color: var(--color-muted);
+}
+.r-record-search input {
+  min-width: 0;
+  min-height: 44px;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: 16px;
+}
+.r-record-search input::placeholder {
+  color: var(--color-muted);
+}
+.r-record-search__state {
+  padding-right: 8px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.r-record-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* 가게 줄: 왼쪽 사진 칸(카카오 장소는 사진이 없어 분류 기호) · 이름 · "분류 · 거리 · 동네", 고른 줄은 연한 코랄 테두리·바탕 */
+.r-record-result {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 14px;
+  border: 1.5px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 8px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.r-record-result.is-on {
+  border-color: var(--brand-300);
+  background: var(--brand-50);
+}
+.r-record-result__thumb {
+  display: grid;
+  width: 88px;
+  height: 64px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-100);
+  color: var(--neutral-400);
+}
+.r-record-result__thumb .icon {
+  width: 24px;
+  height: 24px;
+}
+.r-record-result__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-record-result__copy b {
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-record-result__copy small {
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-record-result mark {
+  background: none;
+  color: var(--color-primary);
+}
+.r-record .r-badge-icon.is-quiet {
+  background: var(--neutral-100);
+  color: var(--color-muted);
+}
+.r-record-empty {
+  padding: 24px 12px;
+}
+.r-record-drafts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-record-drafts__toggle {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--neutral-100);
+  padding: 0 16px;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+.r-record-drafts__toggle b {
+  display: grid;
+  min-width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 0 8px;
+  color: var(--on-strong);
+  font-size: 13px;
+  font-weight: 800;
+}
+.r-record-drafts__list .r-row > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+.r-record-location {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 4px 8px 4px 14px;
+  min-height: 52px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-record-location > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+.r-record-location.is-ready > .icon {
+  color: var(--color-success-text);
+}
+.r-record-location span {
+  flex: 1;
+  padding: 8px 0;
+}
+.r-record-location .r-text-button {
+  align-self: center;
+}
+/* ── 2단계 · 사진과 메뉴(보드 11-02) ── */
+/* 큰 사진 넘기기: 한 장씩 꽉 찬 둥근 사진, 첫 장 왼쪽 위 코랄 "대표 사진", 끝에 사진 추가 칸, 아래 점 */
+.r-record-cover {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-record-cover__track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.r-record-cover__track::-webkit-scrollbar {
+  display: none;
+}
+.r-record-cover__slide {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  scroll-snap-align: start;
+}
+.r-record-cover__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+}
+.r-record-cover__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-record-cover__badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  padding: 5px 12px;
+  color: var(--on-strong);
+  font-size: 13px;
+  font-weight: 800;
+}
+.r-record-cover__remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--shadow-color) 55%, transparent);
+  color: var(--on-strong);
+}
+.r-record-cover__remove .icon {
+  width: 16px;
+  height: 16px;
+}
+.r-record-cover__add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1.5px dashed var(--neutral-300);
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+  cursor: pointer;
+}
+.r-record-cover__add .icon {
+  width: 30px;
+  height: 30px;
+  color: var(--color-primary);
+}
+.r-record-cover__add b {
+  font-size: 16px;
+}
+.r-record-cover__add small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-record-cover__add.is-busy {
+  opacity: 0.6;
+}
+
+/* 메뉴 입력: 연한 코랄 상자, 머리줄 "메뉴 입력 (최대 5개)" · 코랄 테두리 "+ 메뉴 추가" 알약 */
+.r-record-menus {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1.5px solid var(--brand-200);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 14px;
+}
+.r-record-menus__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.r-record-menus__head b {
+  font-size: 16px;
+  font-weight: 800;
+}
+.r-record-menus__head small {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.r-record-menus__add {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--brand-200);
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 12px;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-record-menus__add .icon {
+  width: 16px;
+  height: 16px;
+}
+/* 메뉴 한 줄: 왼쪽 사진 칸, 오른쪽 이름표가 붙은 입력(메뉴명 · 가격(선택) · 메뉴 사진) */
+.r-record-dish {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.r-record-dish + .r-record-dish {
+  border-top: 1px solid var(--brand-100);
+  padding-top: 14px;
+}
+.r-record-dish__photo {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-100);
+  color: var(--neutral-400);
+  cursor: pointer;
+}
+.r-record-dish__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-record-dish__photo .icon {
+  width: 22px;
+  height: 22px;
+}
+.r-record-dish__fields {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 28px;
+}
+.r-record-dish__fields > label,
+.r-record-dish__photo-row {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 600;
+}
+.r-record-dish__fields input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  padding: 0 10px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+.r-record-dish__fields input::placeholder {
+  color: var(--neutral-400);
+}
+.r-record-dish__price {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.r-record-dish__price input {
+  padding-right: 28px;
+}
+.r-record-dish__price i {
+  position: absolute;
+  right: 10px;
+  color: var(--color-muted);
+  font-style: normal;
+}
+.r-record-dish__photo-add,
+.r-record-dish__photo-remove {
+  position: relative;
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px dashed var(--neutral-300);
+  border-radius: var(--radius-sm);
+  background: var(--neutral-50);
+  padding: 0;
+  color: var(--neutral-500);
+  cursor: pointer;
+}
+.r-record-dish__photo-remove {
+  border-style: solid;
+}
+.r-record-dish__photo-remove img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-record-dish__photo-remove .icon {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--shadow-color) 55%, transparent);
+  color: var(--on-strong);
+}
+.r-record-dish__remove {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+}
+.r-record-dish + .r-record-dish .r-record-dish__remove {
+  top: 8px;
+}
+.r-record-dish__remove .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+
+/* ── 3단계 · 태그와 이용 정보(보드 11-03): 취향 태그는 공용 TasteTagPicker inline, 맨 아래 매장 이용도 같은 모양 ── */
+.r-record-visit {
+  border-top: 1px solid var(--neutral-100);
+  padding-top: 18px;
+}
+.r-record-visit .r-chips {
+  gap: 10px 8px;
+}
+.r-record-visit .r-taste-picker__chip {
+  min-width: 76px;
+  justify-content: center;
+  padding: 0 16px;
+  font-size: 15px;
+}
+.r-record-visit .r-taste-picker__chip:not(.is-on) {
+  border-color: var(--neutral-200);
+  background: var(--color-surface);
+}
+
+/* ── 4단계 · 추천 이유와 공개(보드 11-04): 이름표 줄(제목 · 오른쪽 글자 수) 아래 입력 칸, 공개 범위는 공용 고르기 줄(.r-option) ── */
+.r-record-story-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-record-story-field__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.r-record-story-field__head b,
+.r-record-visibility legend {
+  color: var(--color-ink);
+  font-size: 17px;
+  font-weight: 800;
+}
+.r-record-story-field__head small {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.r-record-story-field input,
+.r-record-story-field textarea {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.r-record-story-field input {
+  min-height: 48px;
+  padding: 0 14px;
+}
+.r-record-story-field textarea {
+  min-height: 140px;
+  resize: vertical;
+  padding: 12px 14px 30px;
+}
+.r-record-story-field input:focus,
+.r-record-story-field textarea:focus {
+  border-color: var(--brand-300);
+  outline: 0;
+}
+.r-record-story-field__area {
+  position: relative;
+  display: block;
+}
+.r-record-story-field__area small {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-record-visibility {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 0;
+  border: 0;
+  padding: 0;
+}
+.r-record-visibility legend {
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+/* ── 5단계 · 최종 확인(보드 12-01)과 내 기록 수정(12-03, ReviewStep) ──
+   항목마다 옅은 테두리 카드: 머리줄(아이콘 · 이름 · 오른쪽 "수정 >" 알약) 아래 사진 줄 · 한 줄 추천 · 태그 */
+.r-record-check {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 12px 14px;
+}
+.r-record-check--place {
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  padding: 10px;
+}
+.r-record-check--place > img,
+.r-record-check__empty {
+  display: grid;
+  width: 96px;
+  height: 70px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-100);
+  color: var(--neutral-400);
+  object-fit: cover;
+}
+.r-record-check__place {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-record-check__place b {
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-record-check__place small {
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-record-check__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.r-record-check__head > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--neutral-700);
+}
+.r-record-check__head b {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 800;
+}
+.r-record-check__edit {
+  display: inline-flex;
+  min-height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0 10px;
+  color: var(--neutral-700);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-record-check__edit .icon {
+  width: 14px;
+  height: 14px;
+}
+.r-record-check__photos {
+  display: flex;
+  gap: 6px;
+}
+.r-record-check__photos img {
+  width: 30%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+.r-record-check__photos.is-wide img {
+  width: calc((100% - 12px) / 3);
+}
+.r-record-check__quote {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.r-record-check__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.r-record-check__tags span {
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 5px 12px;
+  color: var(--brand-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* 내 기록 수정(보드 12-03): 카드 없이 이름표 아래 사진 · 메뉴 줄 · 이유 칸 · 태그 줄 */
+.r-record-step--edit {
+  gap: 16px;
+}
+.r-record-edit-part {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-record-edit-part .r-record-check__head b,
+.r-record-edit-part__title {
+  font-size: 16px;
+  font-weight: 800;
+}
+.r-record-edit-menu,
+.r-record-edit-reason {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 8px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-record-edit-menu > img,
+.r-record-edit-menu .r-record-check__empty {
+  width: 72px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+.r-record-edit-menu > span {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-record-edit-menu b {
+  font-size: 15px;
+}
+.r-record-edit-menu small {
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-record-edit-menu > .icon,
+.r-record-edit-tags > span > .icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--color-muted);
+}
+.r-record-edit-reason {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 12px 14px;
+}
+.r-record-edit-reason span {
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+.r-record-edit-reason small {
+  align-self: flex-end;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-record-edit-tags {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-record-edit-tags > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.r-record-edit-tags .r-record-check__tags {
+  flex: 1;
+}
+.r-record-edit-tags small {
+  flex: 1;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+/* ── 저장 완료 ── */
+/* 저장 완료(보드 12-02): 흰 바탕, 문구는 단어 단위로 줄을 바꿉니다. */
+.r-record-done {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  gap: 22px;
+  background: var(--color-canvas);
+  padding: calc(8px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+}
+.r-record-done__bar {
+  margin-left: -12px;
+}
+/* 위·아래 여백을 나눠 가져 키 큰 화면에서도 내용이 가운데쯤 옵니다. 버튼은 맨 아래에 둡니다. */
+.r-record-done__top {
+  display: flex;
+  margin-top: auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+/* 연한 코랄 동그라미 속 맛다공 기호(보드 12-02) */
+.r-record-done__mark {
+  position: relative;
+  display: grid;
+  width: 148px;
+  height: 148px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--brand-50);
+}
+/* 오른쪽 위 반짝이: 짧은 코랄 빗금 세 개 */
+.r-record-done__mark i {
+  position: absolute;
+  top: -10px;
+  right: -14px;
+  width: 30px;
+  height: 26px;
+  background:
+    linear-gradient(var(--color-primary), var(--color-primary)) 0 70% / 4px 12px no-repeat,
+    linear-gradient(var(--color-primary), var(--color-primary)) 50% 0 / 4px 14px no-repeat,
+    linear-gradient(var(--color-primary), var(--color-primary)) 100% 70% / 4px 12px no-repeat;
+  transform: rotate(24deg);
+}
+.r-record-done__mark img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+.r-record-done__top h1 {
+  margin: 6px 0 0;
+  font-size: 28px;
+}
+.r-record-done__status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.r-record-done__status p {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 15px;
+  line-height: 1.5;
+  text-wrap: balance;
+  word-break: keep-all;
+}
+.r-record-done__badge {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 0 14px;
+  color: var(--brand-700);
+  font-size: 13px;
+  font-weight: 800;
+}
+/* 흰 글자 대비(4.5:1)를 맞춘 주요 코랄(--color-primary)로 채웁니다. 관계 배지(.r-tag--mine)와 같은 색입니다. */
+.r-record-done__badge.is-public {
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-record-done__badge .icon {
+  width: 14px;
+  height: 14px;
+}
+/* 방금 남긴 기록 카드(보드 12-02): 위 줄은 사진 · 이름 · "분류 · 동네" · >, 아래 옅은 선 다음 "공개 범위" 줄 */
+.r-record-done__card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.r-record-done__card > button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 14px;
+  border: 0;
+  background: none;
+  padding: 12px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-record-done__card > button > img {
+  width: 96px;
+  height: 72px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-100);
+  object-fit: cover;
+}
+.r-record-done__card > button > span {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-record-done__card b {
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-record-done__card small {
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-record-done__card > button > .icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--color-muted);
+}
+.r-record-done__visibility {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  border-top: 1px solid var(--color-line);
+  padding: 12px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  font-weight: 600;
+}
+.r-record-done__visibility > .icon {
+  width: 18px;
+  height: 18px;
+}
+.r-record-done__badge.is-small {
+  min-height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+/* 맛집 보기 · 계속 기록하기: 테두리 줄 버튼 */
+.r-record-done__links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-record-done__links button {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 0 14px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+}
+.r-record-done__links .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-record-done__links .icon:last-child {
+  margin-left: auto;
+  color: var(--color-muted);
+}
+.r-record-done__links .icon:first-child {
+  margin-left: auto;
+}
+.r-record-done__finish {
+  margin-top: auto;
+}
+
+/* ── 방문 확인 시트 ── */
+.r-record-sheet__lead {
+  margin: 0 0 16px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.r-record-sheet__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ── 빠른 저장(보드 12-04, QuickPlaceScreen 전체 화면) ── */
+.r-quick-screen .r-subscreen__body {
+  gap: 18px;
+}
+.r-quick-screen__here {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  border-radius: var(--radius-control);
+  background: var(--brand-50);
+  padding: 12px 14px;
+  color: var(--color-ink);
+  font-size: 14px;
+}
+.r-quick-screen__here > .icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--color-primary);
+}
+.r-quick-screen__here b {
+  flex: 1;
+}
+.r-quick-screen__here span {
+  border-radius: var(--radius-pill);
+  background: var(--green-50);
+  padding: 4px 10px;
+  color: var(--green-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-quick-screen__part {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-quick-screen__part h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+}
+/* 근처 장소 줄 오른쪽 고르기 동그라미: 고르면 코랄로 채우고 흰 체크 */
+.r-quick-screen .r-record-result__copy {
+  flex: 1;
+}
+.r-quick-screen__radio {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  place-items: center;
+  margin-right: 6px;
+  border: 2px solid var(--neutral-300);
+  border-radius: 50%;
+  color: transparent;
+}
+.r-quick-screen__radio .icon {
+  width: 15px;
+  height: 15px;
+}
+.r-record-result.is-on .r-quick-screen__radio {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-quick-screen__visit {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.r-quick-screen__visit input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.r-quick-screen__box {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  place-items: center;
+  border: 2px solid var(--neutral-300);
+  border-radius: 6px;
+  color: transparent;
+}
+.r-quick-screen__box .icon {
+  width: 15px;
+  height: 15px;
+}
+.r-quick-screen__visit input:checked + .r-quick-screen__box {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-quick-screen__visit input:focus-visible + .r-quick-screen__box {
+  outline: 2px solid var(--brand-400);
+  outline-offset: 2px;
+}
+
+/* 저장 실패·단계 안내 상자(보드 18-02): 왼쪽 ! 아이콘, 굵은 안내와 작은 설명, 오른쪽 코랄 테두리 "재시도" */
+.r-record-failure {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.r-record-failure > .icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--color-primary);
+}
+.r-record-failure > span {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-record-failure b {
+  color: var(--color-primary);
+  font-size: 14px;
+}
+.r-record-failure small {
+  color: var(--neutral-700);
+  font-size: 12px;
+  font-weight: 500;
+}
+.r-record-failure button {
+  min-height: 36px;
+  flex: none;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  padding: 0 12px;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 800;
+}

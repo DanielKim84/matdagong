@@ -5,6 +5,7 @@ import static kr.matdagong.community.notification.NotificationModels.*;
 import java.util.List;
 import java.util.UUID;
 import kr.matdagong.common.jdbc.JdbcTimes;
+import kr.matdagong.common.text.Texts;
 import kr.matdagong.community.profile.ProfileQueries;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -128,7 +129,7 @@ public class NotificationService {
                         subscriberId,
                         NotificationType.TASTER_NEW_PLACE,
                         "구독 중인 맛객이 새 기록을 남겼어요.",
-                        tasterName + " 맛객이 " + placeName + "을(를) 등록했어요.",
+                        tasterName + " 맛객이 " + placeName + Texts.objectParticle(placeName) + " 등록했어요.",
                         PLACE_TARGET,
                         place.placeId(),
                         eventKey + ":" + subscriberId);

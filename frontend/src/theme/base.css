@@ -1,7 +1,6 @@
 /*
- * 테마와 무관한 의미 토큰입니다. 화면 CSS는 가능하면 이 이름(--color-*)을 쓰고,
- * 세밀한 단계가 필요할 때만 계열 단계 변수(--brand-600 등)를 직접 씁니다.
- * 테마 파일(themes/*.css)은 계열 단계 값만 바꾸고, 이 파일은 바꾸지 않습니다.
+ * 화면에서 쓰는 의미 토큰입니다. 새 테마를 추가할 때는 themes/<id>.css의 색상 단계만 바꾸고,
+ * 이 파일과 화면 CSS는 그대로 둡니다.
  */
 :root {
   --color-ink: var(--neutral-800);
@@ -9,7 +8,8 @@
   /* 비활성 글자·장식 아이콘 전용입니다. 대비가 2.7이라 읽어야 하는 글자·placeholder·뜻 있는 아이콘에는 --color-muted를 씁니다. */
   --color-subtle: var(--neutral-400);
   --color-line: var(--neutral-150);
-  --color-canvas: var(--neutral-50);
+  /* 화면 바탕은 흰색입니다(docs/ui/proposals 보드). 카드는 그림자 대신 옅은 테두리로 구분합니다(.r-card). */
+  --color-canvas: var(--neutral-0);
   --color-surface: var(--neutral-0);
   --color-surface-soft: var(--neutral-100);
   --color-primary: var(--brand-600);

@@ -41,7 +41,7 @@ class NotificationServiceIntegrationTest extends EmbeddedPostgresTestSupport {
         assertThat(first.message()).isEqualTo("연남옥의 맛있는 이야기를 확인해 보세요.");
         assertThat(service.list(SUBSCRIBER).items()).singleElement().satisfies(item -> {
             assertThat(item.notificationType()).isEqualTo(NotificationType.TASTER_NEW_PLACE);
-            assertThat(item.message()).isEqualTo("골목맛객 맛객이 연남옥을(를) 등록했어요.");
+            assertThat(item.message()).isEqualTo("골목맛객 맛객이 연남옥을 등록했어요.");
             assertThat(item.targetId()).isEqualTo("p-001");
         });
     }

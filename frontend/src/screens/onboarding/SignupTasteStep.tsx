@@ -1,14 +1,17 @@
-import { FOOD_FOCUS_OPTIONS } from "../../components/FoodFocusPicker";
-import MascotArt from "../../components/MascotArt";
-import StepProgress from "../../components/StepProgress";
+import FoodFocusPicker from "../../components/FoodFocusPicker";
 import TasteTagPicker from "../../components/TasteTagPicker";
-import { EmptyState, Segmented } from "../../components/ui";
+import StepProgress from "../../components/StepProgress";
+import { EmptyState } from "../../components/ui";
 import type { FoodFocus, TasteTag } from "../../models/community";
-import { groupsForFocus } from "../../models/tasteTags";
-import type { LoadState } from "./loadMatches";
+import { groupsForFocus, type TasteTagGroup } from "../../models/tasteTags";
+import type { LoadState } from "./loadRecommendations";
 
-// 맛객 추천이 의미 있으려면 취향을 이만큼은 골라야 합니다.
-const MIN_TASTE_TAGS = 3;
+/**
+ * 가입 때 칩을 바로 펼쳐 보여 주는 분류입니다(보드 04-03: 음식 종류 · 맛·메뉴 · 이럴 때, 카페면 카페·디저트).
+ * 여행·분위기는 나중에 골라도 되는 덤이라 프로필 편집처럼 분류 줄만 두고 누르면 시트에서 고릅니다.
+ * 취향 %는 내가 고른 분류만 세므로(TasteMatch) 덤을 안 골라도 추천이 되고, 하나도 안 골라도 인기 맛객을 추천합니다(loadRecommendations).
+ */
+const FIRST_GROUPS: readonly TasteTagGroup[] = ["CUISINE", "TASTE", "CAFE", "DESSERT", "OCCASION"];
 
 type Props = {
   tasteTags: TasteTag[];
@@ -20,11 +23,15 @@ type Props = {
   error: string;
   isSubmitting: boolean;
   onBack: () => void;
-  /** 고른 취향으로 가입을 마칩니다. 빈 배열이면 취향 없이 마칩니다. */
+  /** 고른 취향으로 다음 단계로 갑니다. 빈 배열이면 취향 없이 갑니다. */
   onSubmit: (tags: string[]) => void;
 };
 
-/** 가입 2단계: 찾는 분야를 고르고, 그 분야의 취향 태그를 고릅니다(나중에 프로필 편집에서 바꿀 수 있음). */
+/**
+ * 가입 2단계 · 추천 취향(보드 04-03): "어떤 맛집을 찾으시나요?" → 찾는 분야(식당·카페·둘 다) → 분류마다 "음식 종류 2/10"처럼 제목과
+ * 칩을 바로 펼쳐 고르고(TasteTagPicker inline), 여행·분위기는 "더 고르기" 아래 분류 줄을 눌러 시트에서 고릅니다. 고르지 않아도 다음으로 갑니다.
+ * 나중에 프로필 편집의 추천 취향에서 바꿀 수 있습니다.
+ */
 export default function SignupTasteStep({
   tasteTags,
   tagsState,
@@ -37,21 +44,18 @@ export default function SignupTasteStep({
   onBack,
   onSubmit,
 }: Props) {
-  const count = value.length;
+  const groups = groupsForFocus(focus);
+  const firstGroups = groups.filter((group) => FIRST_GROUPS.includes(group));
+  const moreGroups = groups.filter((group) => !FIRST_GROUPS.includes(group));
   // 태그 목록을 못 받으면 취향 없이 가입을 마치고 설정에서 고르게 합니다.
   const hasNoTags = tagsState === "error" || (tagsState === "ready" && !tasteTags.length);
-  const hasEnoughTags = hasNoTags || count >= MIN_TASTE_TAGS;
   return (
-    <main className="r-screen r-onboarding r-onboarding-signup">
+    <main className="r-screen r-onboarding r-onboarding-signup r-signup-step">
+      <StepProgress step={2} total={3} label="가입 진행" onBack={onBack} className="r-onboarding-progress" />
       <div className="r-onboarding-signup__content">
-        <StepProgress step={2} total={3} label="가입 진행" onBack={onBack} className="r-onboarding-progress" />
         <header className="r-onboarding-heading">
-          <h1 className="r-display">
-            어떤 맛을
-            <br />
-            좋아하세요?
-          </h1>
-          <p className="r-muted">{MIN_TASTE_TAGS}개 이상 고르면 입맛이 맞는 맛객을 찾아드려요.</p>
+          <h1 className="r-display">어떤 맛집을 찾으시나요?</h1>
+          <p className="r-muted">관심 있는 분야와 좋아하는 태그를 골라주세요.</p>
         </header>
         {tagsState === "loading" ? (
           <EmptyState tone="loading" title="취향 목록을 불러오고 있어요…" />
@@ -63,21 +67,20 @@ export default function SignupTasteStep({
           />
         ) : (
           <>
-            <Segmented<FoodFocus>
-              label="찾는 분야"
-              value={focus}
-              onChange={onFocusChange}
-              options={FOOD_FOCUS_OPTIONS}
-            />
-            <TasteTagPicker options={tasteTags} value={value} onChange={onChange} groups={groupsForFocus(focus)} />
+            <FoodFocusPicker label="찾는 분야" value={focus} onChange={onFocusChange} />
+            <section className="r-onboarding-section" aria-label="좋아하는 취향">
+              <TasteTagPicker options={tasteTags} value={value} onChange={onChange} groups={firstGroups} inline />
+            </section>
+            {moreGroups.length > 0 && (
+              <section className="r-onboarding-section" aria-labelledby="signup-more-title">
+                <h2 id="signup-more-title" className="r-onboarding-subhead">
+                  더 고르기 <small>선택 · 나중에 골라도 돼요</small>
+                </h2>
+                <TasteTagPicker options={tasteTags} value={value} onChange={onChange} groups={moreGroups} />
+              </section>
+            )}
           </>
         )}
-        <div className="r-onboarding-note">
-          <MascotArt pose={2} className="r-onboarding-note__art" />
-          <p>
-            고른 취향은 <b>나만 보는 추천용</b>이에요. 프로필에 공개되지 않아요.
-          </p>
-        </div>
         {error && (
           <p className="r-error-text" role="alert">
             {error}
@@ -88,24 +91,11 @@ export default function SignupTasteStep({
         <button
           type="button"
           className="r-button r-button--primary r-button--block"
-          disabled={isSubmitting || !hasEnoughTags}
+          disabled={isSubmitting || tagsState === "loading"}
           onClick={() => onSubmit(hasNoTags ? [] : value)}
         >
-          {isSubmitting
-            ? "저장하는 중…"
-            : tagsState === "loading"
-              ? "취향 목록을 불러오는 중…"
-              : hasNoTags
-                ? "가입 마치기"
-                : hasEnoughTags
-                  ? `다음 · ${count}개 선택`
-                  : `${MIN_TASTE_TAGS - count}개 더 골라 주세요`}
+          {isSubmitting ? "저장하는 중…" : "다음"}
         </button>
-        {tagsState === "ready" && !hasNoTags && (
-          <button type="button" className="r-onboarding-later" disabled={isSubmitting} onClick={() => onSubmit([])}>
-            취향은 나중에 고를게요
-          </button>
-        )}
       </div>
     </main>
   );

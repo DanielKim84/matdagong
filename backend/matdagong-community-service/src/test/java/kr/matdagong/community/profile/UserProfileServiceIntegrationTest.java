@@ -160,13 +160,13 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
                         FoodFocus.BOTH,
                         FoodFocus.BOTH,
                         ActivityScope.TRAVEL,
-                        "마포",
+                        List.of("마포"),
                         List.of(),
                         List.of(),
                         List.of()));
 
-        assertThat(local.activityRegion()).isEqualTo("마포");
-        assertThat(travel.activityRegion()).isNull();
+        assertThat(local.activityRegions()).containsExactly("마포", "서울특별시");
+        assertThat(travel.activityRegions()).isEmpty();
         assertThat(travel.activityScope()).isEqualTo(ActivityScope.TRAVEL);
     }
 
@@ -271,7 +271,15 @@ class UserProfileServiceIntegrationTest extends EmbeddedPostgresTestSupport {
     private static UpdateProfileRequest request(
             String nickname, FoodFocus focus, List<String> profileTags, List<String> liked, List<String> excluded) {
         return new UpdateProfileRequest(
-                nickname, null, focus, focus, ActivityScope.LOCAL, "마포", profileTags, liked, excluded);
+                nickname,
+                null,
+                focus,
+                focus,
+                ActivityScope.LOCAL,
+                List.of("마포", "서울특별시"),
+                profileTags,
+                liked,
+                excluded);
     }
 
     static void assertStatus(ThrowingCallable call, HttpStatus status, String detail) {

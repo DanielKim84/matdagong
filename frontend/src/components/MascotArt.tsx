@@ -1,5 +1,10 @@
 /** 맛다공 캐릭터 시트(5×2 칸, 칸마다 396.6×396.5) 그림입니다. 캐릭터 그림·기본 아바타·지도 핀이 함께 씁니다. */
-export const CHARACTER_SHEET = { url: "/assets/avatars/matdagong-characters-v1.png", width: 1983, height: 793 };
+// 로그인 화면의 auth-start.css도 같은 원본 시트와 배치를 사용합니다.
+export const CHARACTER_SHEET = {
+  url: "/assets/brand/characters/chef.png",
+  width: 1983,
+  height: 793,
+};
 
 /** 캐릭터 시트에서 pose번(1~10) 칸만 보이게 하는 SVG viewBox입니다. 범위를 벗어나면 가까운 칸으로 맞춥니다. */
 export function characterViewBox(pose: number): string {

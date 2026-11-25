@@ -13,3 +13,6 @@ tmp/
 **/.env.*
 !.env.example
 !**/.env.example
+
+# 전달용 묶음(docs/ui/proposals/package.py로 다시 만듦). 120MB라 GitHub 한 파일 한도(100MB)를 넘어 올리지 않습니다.
+docs/ui/proposals/matdagong-uiux-handoff.zip

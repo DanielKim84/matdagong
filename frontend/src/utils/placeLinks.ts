@@ -1,4 +1,4 @@
-/** 맛집을 밖으로 여는 주소(카카오맵 장소·길찾기)와 이 앱의 상세 주소 공유입니다. */
+/** 맛집을 밖으로 여는 주소(카카오맵 장소·길찾기)와 이 앱의 상세·프로필 주소 공유입니다. */
 import { RETRY_LATER_MESSAGE, type AppNotice } from "../app/AppData";
 import type { Place } from "../models/place";
 
@@ -36,12 +36,11 @@ export function openDirections(place: Pick<Place, "name" | "latitude" | "longitu
 /** shared: 공유 창으로 보냄, copied: 링크 복사, cancelled: 사용자가 공유 창을 닫음, failed: 둘 다 못 함 */
 type ShareResult = "shared" | "copied" | "cancelled" | "failed";
 
-/** 장소 링크를 공유하거나(지원 기기) 복사합니다. 화면에서는 안내까지 함께 띄우는 sharePlaceWithNotice를 씁니다. */
-async function sharePlace(place: Pick<Place, "id" | "name">): Promise<ShareResult> {
-  const url = placeUrl(place);
+/** 링크를 공유하거나(지원 기기) 복사합니다. 화면에서는 안내까지 함께 띄우는 sharePlaceWithNotice·sharePageWithNotice를 씁니다. */
+async function shareLink(title: string, text: string, url: string): Promise<ShareResult> {
   try {
     if (navigator.share) {
-      await navigator.share({ title: place.name, text: `맛다공에서 본 ${place.name}`, url });
+      await navigator.share({ title, text, url });
       return "shared";
     }
     await navigator.clipboard.writeText(url);
@@ -60,9 +59,19 @@ export async function sharePlaceWithNotice(
   place: Pick<Place, "id" | "name">,
   notify: (notice: AppNotice) => void,
 ): Promise<void> {
-  const result = await sharePlace(place);
+  const result = await shareLink(place.name, `맛다공에서 본 ${place.name}`, placeUrl(place));
+  noticeShareResult(result, place.name, notify);
+}
+
+/** 지금 보고 있는 화면(맛객 프로필 등)의 주소를 공유하고, sharePlaceWithNotice와 같은 안내를 띄웁니다. */
+export async function sharePageWithNotice(title: string, notify: (notice: AppNotice) => void): Promise<void> {
+  const result = await shareLink(title, `맛다공에서 본 ${title}`, window.location.href);
+  noticeShareResult(result, title, notify);
+}
+
+function noticeShareResult(result: ShareResult, name: string, notify: (notice: AppNotice) => void) {
   if (result === "copied") {
-    notify({ kind: "success", title: "링크를 복사했어요", message: `${place.name} 링크를 붙여 넣어 공유해 보세요.` });
+    notify({ kind: "success", title: "링크를 복사했어요", message: `${name} 링크를 붙여 넣어 공유해 보세요.` });
   } else if (result === "failed") {
     notify({ kind: "error", title: "공유하지 못했어요", message: RETRY_LATER_MESSAGE });
   }

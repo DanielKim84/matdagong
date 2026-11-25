@@ -7,7 +7,7 @@ export type GroupLook = { icon: IconName; tone: GroupTone };
 
 /**
  * 취향 태그 분류마다 하나로 정한 아이콘과 색입니다. 태그 고르기, 묶음별 태그(맛집 상세·맛객 프로필), 발견 필터,
- * 태그 제안 시트가 모두 이 값을 써서 같은 분류는 어디서나 같은 모양으로 보입니다.
+ * 맛객 취향 탭이 모두 이 값을 써서 같은 분류는 어디서나 같은 모양으로 보입니다.
  */
 const TAG_GROUP_LOOKS: Record<TasteTagGroup, GroupLook> = {
   CUISINE: { icon: "fork", tone: "amber" },

@@ -24,7 +24,7 @@ public final class TasterModels {
             List<String> profileCoverUrls,
             FoodFocus tasterFocus,
             ActivityScope activityScope,
-            String activityRegion,
+            List<String> activityRegions,
             String intro,
             int subscriberCount,
             List<String> profileTags,

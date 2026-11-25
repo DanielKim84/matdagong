@@ -1,5 +1,6 @@
-import { isMyTaster, type Place, type Taster, type VisitCondition } from "../../models/place";
+import { isMyTaster, placeNeighborhood, type Place, type Taster, type VisitCondition } from "../../models/place";
 import type { TasteTagGroup } from "../../models/tasteTags";
+import type { TasteTag } from "../../models/community";
 import { compareByTrust, isTrustedTaster } from "../../models/trust";
 import { categoryLabel, formatDistance } from "../../utils/format";
 import { distanceMeters, type Coordinates } from "../../utils/geo";
@@ -7,43 +8,33 @@ import { distanceMeters, type Coordinates } from "../../utils/geo";
 /**
  * 발견 화면(DiscoverScreen)의 필터·정렬·대표 맛객 고르기 계산입니다. 내 지도도 범위·정렬·대표 맛객 계산을 함께 씁니다.
  * React 없이 장소 목록만 다룹니다.
- * 탭 저장소에 남기는 화면 상태(고른 조건·시트 높이·정렬)는 discoverStorage.ts가 맡습니다.
+ * 탭 저장소에 남기는 화면 상태(고른 조건·정렬)는 discoverStorage.ts가 맡습니다.
  */
 
 /** 상단 칩의 "누구의 기록" 범위입니다. 내 기록·하트한 곳은 발견이 아니라 내 지도 탭에서 봅니다. */
 type Scope = "all" | "subscribed" | "unsubscribed";
-/** 내 위치를 가운데 두고 지도에 보여 줄 반경(m). 맛집을 거르지 않고 지도 범위만 맞춥니다. */
-export type ViewRadius = 500 | 1000 | 5000 | 10000;
 export type SortOrder = "priority" | "distance";
-export type SheetState = "peek" | "half" | "full";
 /** 지도 아래 카드에 한 번에 보여 줄 최대 장소 수입니다(발견·내 지도). */
-export const CAROUSEL_LIMIT = 30;
 /** 지도에 보이는 영역(위도·경도) */
 export type VisibleBounds = { south: number; west: number; north: number; east: number };
 
 export type DiscoverFilters = {
   scope: Scope;
-  /** 음식 종류(장소 분류의 마지막 단계). 빈 문자열이면 전체 */
-  category: string;
-  /** 맛객 기록 태그(여행·드라이브·뷰·분위기·이럴 때). 모두 맞아야 보입니다. */
+  /** 취향 사전의 큰 음식 종류 태그 하나. 빈 문자열이면 전체 */
+  cuisine: string;
+  /** 맛객 기록의 탐색 태그(여행·드라이브·뷰·분위기·이럴 때). 모두 맞아야 보입니다. */
   tags: string[];
   /** 방문해 확인한 매장 정보. 모두 맞아야 보입니다. */
   conditions: VisitCondition[];
 };
 
-export const DEFAULT_FILTERS: DiscoverFilters = { scope: "all", category: "", tags: [], conditions: [] };
+export const DEFAULT_FILTERS: DiscoverFilters = { scope: "all", cuisine: "", tags: [], conditions: [] };
 
+/** label은 발견 위쪽 칩(보드 06-01), sheetLabel은 필터 화면 "맛객 관계"(보드 05-03)의 이름입니다. */
 export const SCOPE_OPTIONS: { value: Scope; label: string; sheetLabel: string }[] = [
-  { value: "all", label: "전체", sheetLabel: "전체 맛객" },
-  { value: "subscribed", label: "구독", sheetLabel: "구독한 맛객" },
-  { value: "unsubscribed", label: "구독 안 한", sheetLabel: "구독하지 않은 맛객" },
-];
-
-export const VIEW_RADIUS_OPTIONS: { value: ViewRadius; label: string; hint: string }[] = [
-  { value: 500, label: "500m", hint: "걸어서" },
-  { value: 1000, label: "1km", hint: "산책 삼아" },
-  { value: 5000, label: "5km", hint: "차로 잠깐" },
-  { value: 10000, label: "10km", hint: "넓게" },
+  { value: "all", label: "전체", sheetLabel: "전체" },
+  { value: "subscribed", label: "구독", sheetLabel: "구독" },
+  { value: "unsubscribed", label: "구독 안 한", sheetLabel: "구독 안 함" },
 ];
 
 /**
@@ -63,8 +54,20 @@ export const FILTER_CONDITIONS: VisitCondition[] = [
   "친절 경험",
 ];
 
-/** 필터 시트에 묶음으로 보여 줄 취향 태그 분류입니다. 음식 종류는 카카오 분류로 따로 고릅니다. */
+/** 음식 종류는 별도 한 칸으로 고르고, 나머지 탐색 태그는 시트의 묶음으로 보여 줍니다. */
 export const FILTER_TAG_GROUPS: readonly TasteTagGroup[] = ["TRAVEL", "MOOD", "OCCASION"];
+
+/** 이전 필터 이름이 세션에 남아 있으면 현재 취향 사전에 있는 선택만 살립니다. */
+export function normalizeDiscoverFilters(filters: DiscoverFilters, tasteTags: TasteTag[]): DiscoverFilters {
+  if (!tasteTags.length) return filters;
+  const cuisineNames = new Set(tasteTags.filter((tag) => tag.tagGroup === "CUISINE").map((tag) => tag.name));
+  const exploreNames = new Set(
+    tasteTags.filter((tag) => FILTER_TAG_GROUPS.includes(tag.tagGroup)).map((tag) => tag.name),
+  );
+  const cuisine = cuisineNames.has(filters.cuisine) ? filters.cuisine : "";
+  const tags = filters.tags.filter((tag) => exploreNames.has(tag));
+  return cuisine === filters.cuisine && tags.length === filters.tags.length ? filters : { ...filters, cuisine, tags };
+}
 
 /** 화면이 장소를 판단할 때 쓰는 계정 관계입니다. */
 export type PlaceContext = {
@@ -144,9 +147,11 @@ function distanceTo(place: Place, ctx: PlaceContext): number | null {
   return ctx.device ? distanceMeters(ctx.device, place) : null;
 }
 
-/** 목록·카드의 "음식 종류 · 거리" 한 줄입니다. */
+/** 목록·카드의 "음식 종류 · 거리 · 동네" 한 줄입니다(보드 05-01). */
 export function placeSummary(place: Place, ctx: PlaceContext): string {
-  return [categoryLabel(place.category), formatDistance(distanceTo(place, ctx))].filter(Boolean).join(" · ");
+  return [categoryLabel(place.category), formatDistance(distanceTo(place, ctx)), placeNeighborhood(place)]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 /** 범위를 아직 모르면(null) 모든 장소를 안에 있는 것으로 봅니다. */
@@ -163,13 +168,14 @@ export function isInBounds(place: Place, bounds: VisibleBounds | null): boolean 
 export function matchesFilters(place: Place, filters: DiscoverFilters, ctx: PlaceContext): boolean {
   if (filters.scope === "subscribed" && !isSubscribedPlace(place, ctx)) return false;
   if (filters.scope === "unsubscribed" && !isUnsubscribedPlace(place, ctx)) return false;
-  if (filters.category && categoryLabel(place.category) !== filters.category) return false;
+  const scoped = scopedPlace(place, filters.scope, ctx);
+  if (filters.cuisine && !placeTags(scoped).includes(filters.cuisine)) return false;
   if (filters.tags.length) {
-    const tags = placeTags(place);
+    const tags = placeTags(scoped);
     if (!filters.tags.every((tag) => tags.includes(tag))) return false;
   }
   if (filters.conditions.length) {
-    const conditions = placeConditions(place);
+    const conditions = placeConditions(scoped);
     if (!filters.conditions.every((condition) => conditions.includes(condition))) return false;
   }
   return true;
@@ -183,15 +189,26 @@ function priorityOf(place: Place, ctx: PlaceContext): number {
   return 3;
 }
 
-/** 추천순은 우선순위 → 가까운 곳 → 기록 수, 가까운 순은 내 위치를 모르면 추천순으로 정렬합니다. */
+/** 대표 맛객의 점수(신뢰 %가 있으면 그것, 없으면 취향 %)입니다. 추천순에서 같은 단계끼리 비교할 때 씁니다. */
+function leadScoreOf(place: Place, ctx: PlaceContext): number {
+  const lead = leadTaster(place, ctx);
+  if (!lead || isMyTaster(lead)) return 0;
+  return lead.trustScore ?? ctx.matchOf(lead);
+}
+
+/**
+ * 추천순은 우선순위(믿고 가는 맛객 → 구독 → 취향 맞음) → 대표 맛객 점수 → 기록 수 → 가까운 곳 순이고,
+ * 가까운 순은 거리만 봅니다(내 위치를 모르면 추천순). 같은 단계 안에서 거리를 먼저 보면 두 정렬이 똑같아 보여 점수·기록 수를 먼저 봅니다.
+ */
 export function sortPlaces(list: Place[], order: SortOrder, ctx: PlaceContext): Place[] {
   const distance = (place: Place) => distanceTo(place, ctx) ?? Number.POSITIVE_INFINITY;
   return [...list].sort((left, right) => {
     if (order === "distance" && ctx.device) return distance(left) - distance(right);
     return (
       priorityOf(left, ctx) - priorityOf(right, ctx) ||
-      (ctx.device ? distance(left) - distance(right) : 0) ||
-      right.recordCount - left.recordCount
+      leadScoreOf(right, ctx) - leadScoreOf(left, ctx) ||
+      right.recordCount - left.recordCount ||
+      (ctx.device ? distance(left) - distance(right) : 0)
     );
   });
 }
@@ -217,37 +234,6 @@ export function uniqueTasters(place: Place): Taster[] {
   );
 }
 
-/** 구독한 맛객의 기록을 최근 순으로 고릅니다. 지도에 보이는 지역의 장소만 넘겨 그 지역의 새 기록을 보여 줍니다. */
-export function recentSubscribedRecords(
-  places: Place[],
-  ctx: PlaceContext,
-  limit: number,
-): { place: Place; taster: Taster }[] {
-  return places
-    .flatMap((place) =>
-      place.tasters.filter((taster) => ctx.subscriptions.has(taster.tasterId)).map((taster) => ({ place, taster })),
-    )
-    .sort((left, right) => (right.taster.recordedAt ?? "").localeCompare(left.taster.recordedAt ?? ""))
-    .slice(0, limit);
-}
-
-/** 목록에서 많이 쓰인 값부터 고릅니다. */
-function mostUsed(values: string[], limit: number): string[] {
-  const counts = new Map<string, number>();
-  values.forEach((value) => counts.set(value, (counts.get(value) ?? 0) + 1));
-  return [...counts.entries()]
-    .sort((left, right) => right[1] - left[1])
-    .slice(0, limit)
-    .map(([value]) => value);
-}
-
-export function topCategories(places: Place[], limit = 8): string[] {
-  return mostUsed(
-    places.map((place) => categoryLabel(place.category)),
-    limit,
-  );
-}
-
 /** 사전 순서의 태그 이름을 이 장소들에서 많이 쓰인 순으로 다시 놓습니다. 쓰인 수가 같으면 사전 순서를 지킵니다. */
 export function sortByUsage(names: string[], places: Place[]): string[] {
   const counts = new Map<string, number>();
@@ -257,5 +243,5 @@ export function sortByUsage(names: string[], places: Place[]): string[] {
 
 /** 범위(상단 칩)를 뺀 세부 조건 수입니다. */
 export function detailFilterCount(filters: DiscoverFilters): number {
-  return (filters.category ? 1 : 0) + filters.tags.length + filters.conditions.length;
+  return (filters.cuisine ? 1 : 0) + filters.tags.length + filters.conditions.length;
 }

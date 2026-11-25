@@ -41,20 +41,20 @@ class ProfileModelsTest {
     }
 
     @Test
-    void 수정_요청은_닉네임과_활동_지역의_공백을_정리하고_공백뿐인_소개는_비운다() {
+    void 수정_요청은_닉네임과_활동_지역의_공백을_정리하고_빈_지역과_겹친_지역을_빼고_공백뿐인_소개는_비운다() {
         UpdateProfileRequest request = new UpdateProfileRequest(
                 " 국밥러 ",
                 "  ",
                 FoodFocus.BOTH,
                 FoodFocus.BOTH,
                 ActivityScope.LOCAL,
-                " 서울 마포구 ",
+                Arrays.asList(" 서울 마포구 ", "  ", null, "서울 마포구", "부산광역시"),
                 List.of(),
                 List.of(),
                 List.of());
 
         assertThat(request.nickname()).isEqualTo("국밥러");
         assertThat(request.intro()).isNull();
-        assertThat(request.activityRegion()).isEqualTo("서울 마포구");
+        assertThat(request.activityRegions()).containsExactly("서울 마포구", "부산광역시");
     }
 }

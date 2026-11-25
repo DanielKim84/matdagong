@@ -1,20 +1,24 @@
 import { go } from "../../app/navigation";
+import Icon from "../../components/Icon";
 import { Segmented, TopBar } from "../../components/ui";
-import { POLICY_DOCUMENTS, isPolicyKey, type PolicyKey } from "./policyDocuments";
+import { EFFECTIVE_DATE, POLICY_DOCUMENTS, isPolicyKey, type PolicyKey } from "./policyDocuments";
 
 const POLICY_TABS: { value: PolicyKey; label: string }[] = [
   { value: "terms", label: "이용약관" },
   { value: "privacy", label: "개인정보 처리방침" },
 ];
 
-/** 이용약관·개인정보 처리방침(#policy/terms, #policy/privacy). 위 탭으로 두 문서를 오갑니다. */
+/**
+ * 이용약관·개인정보 처리방침(#policy/terms, #policy/privacy, 보드 17-03): 위 탭으로 두 문서를 오가고, 회색 초안 안내 · 개정일 ·
+ * "맛다공 이용약관 (초안)" 제목 · 번호 붙은 조항을 카드 없이 이어 둡니다.
+ */
 export default function PolicyScreen({ routeId }: { routeId: string }) {
   const key: PolicyKey = isPolicyKey(routeId) ? routeId : "terms";
   const document = POLICY_DOCUMENTS[key];
 
   return (
     <main className="r-screen r-me-policy">
-      <TopBar title="약관 및 정책" fallback="settings" />
+      <TopBar title="이용약관 · 개인정보" fallback="settings" />
       <div className="r-me-body">
         <Segmented<PolicyKey>
           label="볼 문서 고르기"
@@ -23,10 +27,14 @@ export default function PolicyScreen({ routeId }: { routeId: string }) {
           onChange={(next) => go("policy", next, true)}
           options={POLICY_TABS}
         />
-        <p className="r-me-policy__draft">초안이에요. 정식 출시 전에 법률 검토를 거쳐 바뀔 수 있어요.</p>
+        <p className="r-info-note">
+          <Icon name="info" />
+          현재 정책 본문은 법률 검토 전 초안입니다.
+        </p>
+        <p className="r-me-policy__date">개정일: {EFFECTIVE_DATE} (초안)</p>
 
-        <article className="r-card r-me-policy__doc" aria-labelledby="r-me-policy-title">
-          <h1 id="r-me-policy-title">{document.title}</h1>
+        <article className="r-me-policy__doc" aria-labelledby="r-me-policy-title">
+          <h1 id="r-me-policy-title">맛다공 {document.title} (초안)</h1>
           <p className="r-me-policy__summary">{document.summary}</p>
           {document.sections.map((section) => (
             <section key={section.title}>
@@ -35,11 +43,11 @@ export default function PolicyScreen({ routeId }: { routeId: string }) {
                 typeof block === "string" ? (
                   <p key={index}>{block}</p>
                 ) : (
-                  <ul key={index}>
+                  <ol key={index}>
                     {block.map((item) => (
                       <li key={item}>{item}</li>
                     ))}
-                  </ul>
+                  </ol>
                 ),
               )}
             </section>

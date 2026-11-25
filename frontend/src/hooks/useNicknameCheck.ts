@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { checkNicknameAvailable } from "../services/community";
+import { checkNicknameAvailable } from "../services/profile";
 
 /**
  * 닉네임 미리 확인 결과입니다. idle은 묻지 않은 상태(빈 이름·지금 내 이름), unknown은 확인에 실패한 상태입니다.

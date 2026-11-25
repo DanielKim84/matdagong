@@ -1,0 +1,714 @@
+/* 현재 기본 맛집 화면 전용 규칙입니다(보드 09·10). 공통 부품은 ui.css를 씁니다. */
+
+.r-place {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
+/* 위쪽 흰 바: 큰 사진이 보이는 동안은 가게 이름을 숨기고(사진 바로 아래 큰 이름이 있으므로), 지나가면 보여 줍니다. */
+.r-place > .r-topbar h1 {
+  overflow: hidden;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+.r-place:not([data-scrolled="true"]) > .r-topbar h1 {
+  opacity: 0;
+}
+/* 상세·프로필의 위쪽 바는 큰 사진과 바로 이어지므로 아래 선을 두지 않습니다. */
+.r-place > .r-topbar,
+.r-tasters-profile > .r-topbar {
+  border-bottom: 0;
+}
+.r-place-like.is-liked {
+  color: var(--color-primary);
+}
+
+/* ── 큰 사진 / 위치 지도 ── */
+.r-place-hero {
+  position: relative;
+  background: var(--color-surface);
+}
+.r-place-hero__track {
+  display: flex;
+  height: clamp(240px, 70vw, 320px);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  background: var(--neutral-100);
+}
+.r-place-hero__track::-webkit-scrollbar {
+  display: none;
+}
+.r-place-hero__slide {
+  flex: 0 0 100%;
+  border: 0;
+  background: none;
+  padding: 0;
+  scroll-snap-align: start;
+}
+.r-place-hero__slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.r-place-hero > .photo-slide-indicators {
+  margin: 2px auto 0;
+}
+.r-place-hero--map .r-place-minimap {
+  height: clamp(220px, 60vw, 280px);
+  border-radius: 0;
+}
+
+/* 움직이지 않는 작은 위치 지도(PlaceMiniMap)와 코랄 핀 */
+.r-place-minimap {
+  height: 180px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--neutral-100);
+}
+.r-place-minimap--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: var(--color-muted);
+  font-size: 14px;
+  text-align: center;
+}
+.r-place-minimap--empty .icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.r-place-map-pin {
+  display: block;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 6px;
+  border: 3px solid var(--color-surface);
+  border-radius: 50% 50% 50% 0;
+  background: var(--color-primary);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--shadow-color) 30%, transparent);
+  transform: rotate(-45deg);
+}
+
+/* ── 본문: 사진 아래 흰 바탕에 섹션을 옅은 선으로 나눕니다. ── */
+.r-place-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px;
+}
+.r-place-body > * + * {
+  border-top: 1px solid var(--color-line);
+}
+.r-place-title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 0 16px;
+}
+.r-place-title h1 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 30px;
+  line-height: 1.25;
+  word-break: keep-all;
+}
+.r-place-title__meta {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 15px;
+}
+.r-place-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.r-place-pill {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-100);
+  padding: 0 11px;
+  color: var(--neutral-700);
+  font-size: 12px;
+  font-weight: 700;
+}
+/* 나와의 관계: 내 지도와 같은 갈래 색(다녀온 곳·나만 보기 visited, 공유 중 shared, 가볼 곳 코랄. theme/themes/default.css) */
+.r-place-pill.is-visited,
+.r-place-pill.is-private {
+  background: var(--visited-50);
+  color: var(--visited-700);
+}
+.r-place-pill.is-shared {
+  background: var(--shared-50);
+  color: var(--shared-700);
+}
+.r-place-pill.is-wish {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+/* 별로였던 곳: 내 맛집이 아니므로 코랄 대신 차분한 회색으로 둡니다. */
+.r-place-pill.is-disliked {
+  background: var(--neutral-150);
+  color: var(--neutral-700);
+}
+
+/* 본문 섹션 틀과 기록 아래 안내 문구(저장한 곳·별로였던 곳) */
+.r-place-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 0;
+}
+.r-place-note {
+  margin: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  padding: 12px 14px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.r-place-note--disliked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ── 섹션 제목(맛객의 추천 이유, 위치) ── */
+.r-place-section__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* ── 대표 맛객 한마디(PlaceTasterLead, 보드 09-01): 맛객 줄 · 굵은 한 줄 추천 · 두 줄까지 자른 이야기 ── */
+.r-place-lead {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 0 20px;
+}
+.r-place-lead__who {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-place-lead__who > .avatar {
+  width: 64px;
+  height: 64px;
+  flex: none;
+}
+.r-place-lead__name {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.r-place-lead__name b {
+  font-size: 18px;
+  font-weight: 800;
+}
+.r-place-lead__who > .icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--neutral-700);
+}
+.r-place-lead__quote,
+.r-place-record__quote {
+  margin: 4px 0 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+.r-place-lead__story {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* ── 맛객의 추천 이유(보드 09-02): 제목 줄(오른쪽 ⋯ 기록 메뉴) · 맛객 바꾸기 줄 · 한 줄 추천 · 이야기 · 이런 스타일이에요 ── */
+.r-place-records__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.r-place-record-menu {
+  margin-right: -10px;
+  color: var(--neutral-700);
+}
+.r-place-records__write {
+  margin-top: 4px;
+}
+.r-place-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.r-place-switcher__arrow {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--neutral-150);
+  border-radius: 50%;
+  background: var(--color-surface);
+  padding: 0;
+  color: var(--color-ink);
+}
+.r-place-switcher__arrow .icon {
+  width: 18px;
+  height: 18px;
+}
+.r-place-switcher__who {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.r-place-switcher__who > .avatar {
+  width: 80px;
+  height: 80px;
+  flex: none;
+}
+.r-place-switcher__who > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.r-place-switcher__who b {
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-place-record {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+.r-place-record__story {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-line;
+  word-break: keep-all;
+}
+/* 추천 이유 아래 단락(이런 스타일이에요): 위 이야기와 옅은 선으로 나눕니다. */
+.r-place-record__part {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  border-top: 1px solid var(--color-line);
+  padding-top: 20px;
+}
+/* 이런 스타일이에요: 묶음마다 옅은 테두리 상자에 묶음 이름 · 코랄 "N개" · 연한 코랄 # 칩 */
+.r-place-styles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-place-styles > li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+.r-place-styles__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.r-place-styles__head b {
+  font-size: 15px;
+  font-weight: 800;
+}
+.r-place-styles__head em {
+  color: var(--color-primary);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+}
+.r-place-styles__tags,
+.r-place-conditions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.r-place-styles__tags span,
+.r-place-conditions span {
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 6px 14px;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* 대표 메뉴(보드 09-03): 메뉴마다 옅은 테두리 상자에 사진 · 이름 · 가격 · > */
+.r-place-record__menus {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-place-record__menus li > button,
+.r-place-record__menus li > div {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 0 14px 0 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-place-record__menus li > button > .icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--color-muted);
+}
+.r-place-record__menus .r-place-record__menu-photo {
+  display: grid;
+  width: 104px;
+  height: 76px;
+  flex: none;
+  place-items: center;
+  background: var(--neutral-100);
+  object-fit: cover;
+}
+/* 사진 없는 메뉴도 같은 크기 칸을 두어 이름이 같은 줄에서 시작합니다. */
+.r-place-record__menus .r-place-record__menu-photo.is-empty {
+  color: var(--color-subtle);
+}
+.r-place-record__menus .r-place-record__menu-photo .icon {
+  width: 22px;
+  height: 22px;
+}
+.r-place-record__menu-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-place-record__menu-text span {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-place-record__menu-text b {
+  color: var(--neutral-700);
+  font-size: 15px;
+  font-weight: 500;
+}
+/* ── 맛집 사진(보드 09-03): 모든 맛객의 대표 사진을 둥근 큰 칸에서 넘깁니다(큰 사진 PlaceHero와 같은 부품). ── */
+.r-place-gallery .r-place-hero {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+/* ── 위치 아래 두 칸 버튼(카카오맵에서 보기 | 길찾기)과 맨 아래 전체 폭 "정보 제보"(보드 09-04) ── */
+.r-place-location__buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.r-place-location__buttons .r-button {
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 8px;
+  font-size: 15px;
+  white-space: nowrap;
+}
+.r-place-report .r-button {
+  min-height: 50px;
+}
+
+/* ── 위치(보드 09-04): 주소 · 전화 · 작은 지도 ── */
+.r-place-location {
+  gap: 10px;
+}
+.r-place-info__row {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-ink);
+}
+.r-place-info__row > .icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--neutral-700);
+}
+.r-place-info__text {
+  min-width: 0;
+  flex: 1;
+  color: var(--color-ink);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.r-place-info__text.r-muted {
+  color: var(--color-muted);
+}
+.r-place-info__text small {
+  display: block;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-place-info__action {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  padding: 0;
+  color: var(--neutral-700);
+}
+.r-place-info__action.is-call {
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.r-place-info__action .icon {
+  width: 18px;
+  height: 18px;
+}
+.r-place-location__map {
+  margin-top: 4px;
+}
+
+/* ── 하단 고정 동작 바(보드 09-03): 바로가기 · 길찾기 반씩 ── */
+.r-place-actionbar > .r-button {
+  min-width: 0;
+  flex: 1;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+/* ── 전체 화면 사진 보기(보드 10-01): 흰 바탕, 위쪽 큰 사진(닫기·넘기기는 사진 위), 아래 점과 메뉴·맛객 ── */
+.r-place-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  width: min(var(--app-width), 100%);
+  flex-direction: column;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  overscroll-behavior: contain;
+}
+.r-place-viewer__top {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(12px + env(safe-area-inset-top)) 14px 10px;
+}
+.r-place-viewer__spacer {
+  width: 44px;
+}
+.r-place-viewer__stage {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  background: var(--neutral-100);
+  /* 가로 스와이프(hooks/useSwipe)를 브라우저가 가져가지 않게 합니다. */
+  touch-action: pan-y;
+}
+.r-place-viewer__track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.28s ease;
+}
+.r-place-viewer__slide {
+  display: grid;
+  height: 100%;
+  flex: 0 0 100%;
+  place-items: center;
+}
+/* 사진은 잘리지 않게 전체를 보여 줍니다(메뉴 사진의 글씨 등). */
+.r-place-viewer__slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+/* 닫기: 사진 위 오른쪽, 어떤 사진 위에서도 보이게 반투명 어두운 동그라미에 흰 X */
+.r-place-viewer__close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--shadow-color) 45%, transparent);
+  padding: 0;
+  color: var(--on-strong);
+}
+.r-place-viewer__close .icon {
+  width: 22px;
+  height: 22px;
+}
+/* 넘기기: 사진 양옆 흰 동그라미 */
+.r-place-viewer__nav {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  padding: 0;
+  color: var(--color-ink);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--shadow-color) 18%, transparent);
+  transform: translateY(-50%);
+}
+.r-place-viewer__nav .icon {
+  width: 20px;
+  height: 20px;
+}
+.r-place-viewer__nav--prev {
+  left: 12px;
+}
+.r-place-viewer__nav--next {
+  right: 12px;
+}
+.r-place-viewer__bottom {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
+}
+.r-place-viewer__bottom > .photo-slide-indicators {
+  align-self: center;
+}
+/* 메뉴 사진이면 메뉴 이름과 가격을 크게 보여 줍니다. */
+.r-place-viewer__menu {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  border-radius: var(--radius-md);
+  background: var(--brand-50);
+  padding: 12px 16px;
+}
+.r-place-viewer__menu-kind {
+  grid-column: 1 / -1;
+  color: var(--color-primary-strong);
+  font-size: 12px;
+  font-weight: 700;
+}
+.r-place-viewer__menu b {
+  overflow: hidden;
+  font-size: 19px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-place-viewer__menu strong {
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.r-place-viewer__author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.r-place-viewer__author .avatar {
+  width: 36px;
+  height: 36px;
+}
+.r-place-viewer__author > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+.r-place-viewer__author b {
+  font-size: 15px;
+}
+.r-place-viewer__author span {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+/* ── 불러오는 중: 공용 Skeleton(line 3개)을 큰 사진 + 글 두 줄 모양으로 ── */
+.r-place-skeleton {
+  padding: 8px 20px;
+}
+.r-place-skeleton .r-skeleton:first-child {
+  height: 240px;
+  border-radius: var(--radius-card);
+}
+.r-place-skeleton .r-skeleton:last-of-type {
+  width: 55%;
+}

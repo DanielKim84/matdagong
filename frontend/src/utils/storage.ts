@@ -16,7 +16,7 @@ export const STORAGE_KEYS = {
   oauthState: "matdagong.auth.oauth-state",
   pkceVerifier: "matdagong.auth.pkce-verifier",
   returnHash: "matdagong.auth.return-hash",
-  /** local: 첫 소개·가입을 마쳤는지. 계정별 키는 onboardingCompletedKey()를 씁니다. */
+  /** local: 가입 전 서비스 소개를 보거나 건너뛰었는지. 가입 완료 여부는 서버 응답으로 판단합니다. */
   onboardingCompleted: "matdagong.onboarding.completed",
   /** session: 다른 화면이 기록 화면을 열면서 넘기는 일회성 장소 값 */
   quickPlaceHandoff: "matdagong.quick-place.selected-place",
@@ -26,10 +26,12 @@ export const STORAGE_KEYS = {
   /** session: 로그인 만료 때 보관한 기록 입력과 남은 공간 확인용 값 */
   registerDraft: "matdagong.register.form-draft",
   registerDraftProbe: "matdagong.register.form-draft.probe",
-  /** session: 테마 미리 보기(?theme=) */
-  themePreview: "matdagong.theme.preview",
   /** session: 발견 화면의 조건·시트 높이·정렬 */
   discoverState: "matdagong.discover.state",
+  /** session: 화면 이동 뒤 복원할 지도 중심·배율 */
+  mapCamera: "matdagong.map.camera.v2",
+  /** session: 맛집 상세에서 돌아올 때 복원할 지도 카드 선택 */
+  mapReturn: "matdagong.map.return",
   /** local: 맛객별로 마지막으로 본 스토리 기록 시각 */
   feedStorySeen: "matdagong.feed.storySeen",
 } as const;

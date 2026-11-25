@@ -2,7 +2,7 @@
 import type { useNotificationDialog } from "../../components/NotificationDialog";
 import type { ActiveSubscription, MyProfile } from "../../models/community";
 import type { Place, Taster } from "../../models/place";
-import { shortSidoName } from "../../models/region";
+import { regionContains, regionLabel, regionsOverlap } from "../../models/region";
 import { compareByTrust } from "../../models/trust";
 import { DAY_MS, formatMonthDay, parseTime } from "../../utils/format";
 import { distanceMeters, type Coordinates } from "../../utils/geo";
@@ -22,7 +22,17 @@ export type TasterFocusFilter = "ALL" | "RESTAURANT" | "CAFE_DESSERT";
 export type TasterScope = "ALL" | "NEARBY" | "MY_AREA" | "TRAVEL";
 
 /** 범위를 거를 때 필요한 값. 내 주변은 position, 내 지역은 myArea가 있어야 거를 수 있습니다. */
-export type ScopeContext = { places: Place[]; position: Coordinates | null; myArea: string | null };
+/**
+ * 범위를 거를 때 필요한 값. 내 주변은 position, 내 지역은 myAreas(내 활동 지역 목록)가 있어야 거를 수 있습니다.
+ * myArea는 화면 문구에 쓰는 내 지역 이름("마포구 · 연남동")이고, 활동 지역이 없으면 null입니다.
+ */
+export type ScopeContext = { places: Place[]; position: Coordinates | null; myArea: string | null; myAreas: string[] };
+
+/** 내 지역 이름표: 활동 지역 짧은 이름을 " · "로 잇습니다. 여행 위주이거나 지역이 없으면 null입니다. */
+export function myAreaLabel(profile: Pick<MyProfile, "activityScope" | "activityRegions"> | null): string | null {
+  if (!profile || profile.activityScope === "TRAVEL" || !profile.activityRegions.length) return null;
+  return profile.activityRegions.map(regionLabel).join(" · ");
+}
 
 /** 맛객 둘러보기 정렬: 구독자 많은 순 · 취향 맞는 순(믿고 가는 맛객 → 신뢰 % → 취향 %) · 기록 많은 순 */
 export type BrowseSort = "SUBSCRIBERS" | "TASTE" | "RECORDS";
@@ -74,16 +84,6 @@ export function hasTravelers(tasters: Taster[]): boolean {
   return tasters.some(isTraveler);
 }
 
-/**
- * 시·도와 시·군·구까지만 남긴 비교용 지역 이름입니다. "서울특별시 마포구 망원동"과 주소 "서울 마포구 동교로 251"이
- * 모두 "서울 마포구"가 되어 활동 지역과 기록 주소를 같은 기준으로 견줄 수 있습니다. 시·도를 못 찾으면 null입니다.
- */
-export function areaKey(text: string | null | undefined): string | null {
-  const sido = shortSidoName(text);
-  const district = text?.trim().split(/\s+/)[1];
-  return sido && district ? `${sido} ${district}` : null;
-}
-
 /** 조건에 맞는 장소에 공개 기록을 남긴 맛객별 기록 수입니다. */
 function countRecords(places: Place[], isIn: (place: Place) => boolean): Map<string, number> {
   const counts = new Map<string, number>();
@@ -102,26 +102,32 @@ function countRecords(places: Place[], isIn: (place: Place) => boolean): Map<str
  * 전체·여행이거나 위치·내 지역을 아직 모르면 undefined입니다.
  */
 export function scopeRecordCounts(scope: TasterScope, context: ScopeContext): Map<string, number> | undefined {
-  const { places, position, myArea } = context;
+  const { places, position, myAreas } = context;
   if (scope === "NEARBY" && position)
     return countRecords(places, (place) => distanceMeters(position, place) <= NEARBY_RADIUS_METERS);
-  if (scope === "MY_AREA" && myArea) return countRecords(places, (place) => areaKey(place.address) === myArea);
+  if (scope === "MY_AREA" && myAreas.length)
+    return countRecords(places, (place) => myAreas.some((area) => regionContains(area, place.address)));
   return undefined;
 }
 
-/** 이 맛객이 범위에 드는지. 내 지역은 그 지역에 기록이 있거나, 활동 지역을 내 지역으로 적어 둔 맛객(여행 위주 제외)입니다. */
+/**
+ * 이 맛객이 범위에 드는지. 내 지역은 내 활동 지역 중 한 곳에 기록이 있거나, 맛객의 활동 지역 중 한 곳이 내 활동 지역과 겹치는
+ * 맛객(여행 위주 제외)입니다. "서울"처럼 넓게 고른 지역은 그 안의 "마포구"와도 겹칩니다(models/region의 regionsOverlap).
+ */
 export function isInScope(
   taster: Taster,
   scope: TasterScope,
   counts: Map<string, number> | undefined,
-  myArea: string | null,
+  myAreas: string[],
 ): boolean {
   if (scope === "TRAVEL") return isTraveler(taster);
   const recordCount = counts?.get(taster.tasterId) ?? 0;
   if (scope === "NEARBY") return recordCount > 0;
   if (scope === "MY_AREA")
     return (
-      recordCount > 0 || (taster.activityScope !== "TRAVEL" && !!myArea && areaKey(taster.activityRegion) === myArea)
+      recordCount > 0 ||
+      (taster.activityScope !== "TRAVEL" &&
+        (taster.activityRegions ?? []).some((region) => myAreas.some((area) => regionsOverlap(region, area))))
     );
   return true;
 }
@@ -156,7 +162,7 @@ export function filterBrowseTasters(
       areaCountOf(right) - areaCountOf(left) || totalCountOf(right) - totalCountOf(left) || bySubscribers(left, right),
   };
   return tasters
-    .filter((taster) => isInScope(taster, scope, counts, context.myArea) && matchesFocus(taster, focus))
+    .filter((taster) => isInScope(taster, scope, counts, context.myAreas) && matchesFocus(taster, focus))
     .sort(compare[sort]);
 }
 
@@ -164,7 +170,7 @@ export function filterBrowseTasters(
 export function searchTasters(tasters: Taster[], keyword: string): Taster[] {
   if (!keyword) return [];
   return tasters.filter((taster) =>
-    [taster.tasterName, taster.intro, taster.activityRegion, ...tagsOf(taster)].some((text) =>
+    [taster.tasterName, taster.intro, ...(taster.activityRegions ?? []), ...tagsOf(taster)].some((text) =>
       text?.toLowerCase().includes(keyword),
     ),
   );
@@ -199,9 +205,9 @@ export function focusLabel(focus?: Taster["tasterFocus"]): string | null {
   return null;
 }
 
-/** "망원 중심", "여행·드라이브"처럼 활동 지역을 짧게 씁니다. */
+/** "망원동 · 연남동", "마포구 · 여행", "여행·드라이브"처럼 활동 지역(최대 3곳)을 짧게 씁니다. */
 export function activityLabel(taster: Taster): string | null {
-  const region = taster.activityRegion?.trim();
+  const region = (taster.activityRegions ?? []).map(regionLabel).join(" · ");
   if (taster.activityScope === "TRAVEL") return "여행·드라이브";
   if (taster.activityScope === "BOTH") return region ? `${region} · 여행` : "동네·여행";
   return region || null;
@@ -255,7 +261,7 @@ export function tasterFromProfile(profile: MyProfile, nickname: string, subscrib
     profileCoverUrls: profile.profileCoverUrls,
     tasterFocus: profile.tasterFocus,
     activityScope: profile.activityScope,
-    activityRegion: profile.activityRegion,
+    activityRegions: profile.activityRegions,
     profileTags: profile.profileTags,
     subscriberCount,
   };

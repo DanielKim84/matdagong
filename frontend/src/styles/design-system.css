@@ -1,4 +1,4 @@
-/* 프로필 설정·태그 제안 시트에서 a/forms.css가 덮지 않는 공통 모양입니다. profile-settings.css 뒤, a/forms.css 앞에 불러옵니다(main.tsx). */
+/* 프로필 설정에서 profile/forms.css가 덮지 않는 공통 모양입니다. profile-settings.css 뒤, profile/forms.css 앞에 불러옵니다(main.tsx). */
 
 /* ── 프로필 설정 ── */
 .copy-taste-notice {
@@ -17,56 +17,4 @@
 }
 .activity-region-picker .region-picker-trigger {
   font-family: inherit;
-}
-
-/* 취향 설정 머리의 캐릭터는 별도 그림 카드 대신 프로필처럼 둥글게 배치합니다. */
-.taste-settings-intro > .taste-settings-mascot {
-  position: relative;
-  display: inline-grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.taste-settings-mascot .brand-art {
-  width: 54px;
-  height: 56px;
-}
-.taste-settings-mascot > .avatar {
-  width: 44px;
-  height: 44px;
-  border: 2px solid var(--neutral-0);
-  box-shadow: 0 3px 9px color-mix(in srgb, var(--shadow-color) 12%, transparent);
-}
-.taste-settings-mascot > i {
-  position: absolute;
-  right: -2px;
-  bottom: -1px;
-  display: grid;
-  width: 18px;
-  height: 18px;
-  place-items: center;
-  border: 2px solid var(--neutral-0);
-  border-radius: 50%;
-  background: var(--amber-400);
-  color: var(--on-strong);
-}
-.taste-settings-mascot > i .icon {
-  width: 10px;
-  height: 10px;
-}
-
-/* 제안 내역을 불러오지 못했을 때의 안내 줄입니다. 글자 색·크기는 a/forms.css가 정합니다. */
-.proposal-history-empty {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.proposal-history-empty button {
-  flex: none;
 }

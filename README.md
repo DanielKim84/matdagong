@@ -2,6 +2,8 @@
 
 React 사용자 화면과 독립 배포 가능한 Spring Boot 서비스로 구성한 맛집 공유 앱입니다. 공통 로그인과 계정은 별도 프로젝트인 `dagong-auth`가 맡고, 맛다공은 인증된 공통 계정 ID를 서비스 API에서 사용합니다.
 
+기획·디자인 검토 자료는 [전체 화면 인수인계 시안](docs/ui/redesign/README.md)에 있습니다. 최신 브랜드 A를 반영한 18개 보드·72개 화면/주요 상태, HTML 열람본과 PDF를 제공하며 실제 앱에 적용하기 전의 제안입니다.
+
 ## 프로젝트 구성
 
 ```text
@@ -32,7 +34,7 @@ Java 21과 Node.js 24.22.1 이상(24 LTS 계열)을 사용합니다. 프런트 �
 .\gradlew.bat :matdagong-place-service:bootRun
 ```
 
-커뮤니티 서비스는 루트 `.env`의 `COMMUNITY_DB_*`, 장소 서비스는 `PLACE_DB_*` 설정으로 각각 별도 개발 DB에 연결합니다. 로컬 PostgreSQL을 별도로 사용할 때는 `docker compose up -d postgres`로 시작하고 각 DB 접속 설정을 로컬 DB로 맞춥니다. 스키마는 서비스별 Flyway가 적용합니다. 공통 로그인 화면 개발 서버(4840)와 인증 API(5840)를 실행한 뒤, 맛다공 저장소 루트에서 `npm run dev`를 실행하고 `http://localhost:4845/`에 접속합니다. 로그인 테스트에는 `localhost`를 사용해야 PKCE 상태와 callback 주소가 같은 브라우저 origin으로 유지됩니다.
+커뮤니티 서비스는 루트 `.env`의 `COMMUNITY_DB_*`, 장소 서비스는 `PLACE_DB_*` 설정으로 각각 별도 개발 DB에 연결합니다. 두 서비스는 공통 개발 환경 안내에 따라 공유 Neon DB를 사용하며 로컬 PostgreSQL·Docker 설정은 두지 않습니다. 스키마는 서비스별 Flyway가 적용합니다. 공통 로그인 화면 개발 서버(4840)와 인증 API(5840)를 실행한 뒤, 맛다공 저장소 루트에서 `npm run dev`를 실행하고 `http://localhost:4845/`에 접속합니다. 로그인 테스트에는 `localhost`를 사용해야 PKCE 상태와 callback 주소가 같은 브라우저 origin으로 유지됩니다.
 
 두 서비스는 루트 `.env`에서 다음 값도 읽습니다. 값의 형식은 `.env.example`을 참고합니다.
 

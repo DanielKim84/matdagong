@@ -5,14 +5,13 @@ import { clearStoredAccessToken, getMembership, readStoredAccessToken } from "./
 import { SESSION_EXPIRING_EVENT, setSessionExpiredHandler } from "./services/http";
 import { applyTheme } from "./theme/applyTheme";
 import { installMouseDragScroll } from "./utils/dragScroll";
-import { errorMessage } from "./utils/errorMessage";
 import "./theme/index.css";
 import "./styles/app.css";
 import "./styles/auth-start.css";
 import "./styles/profile-settings.css";
 import "./styles/design-system.css";
-import "./styles/a/forms.css";
-import "./styles/renewal/index.css";
+import "./styles/profile/forms.css";
+import "./styles/screens/index.css";
 
 const CALLBACK_PATH = "/auth/callback";
 
@@ -22,7 +21,7 @@ async function startMatdagong(): Promise<void> {
 
   try {
     const isCallback = window.location.pathname === CALLBACK_PATH;
-    showStartupStatus(isCallback ? "로그인 결과를 확인하고 있어요…" : "맛다공에 접속하고 있어요…");
+    showStartupStatus();
     if (isCallback) await completeSignIn();
 
     const accessToken = readStoredAccessToken();
@@ -40,9 +39,9 @@ async function startMatdagong(): Promise<void> {
       return;
     }
     renderMatdagong(root, accessToken, membership);
-  } catch (cause) {
+  } catch {
     clearPendingSignIn();
-    showSignInError(errorMessage(cause, "잠시 후 다시 시도해 주세요."));
+    showSignInError();
   }
 }
 
@@ -56,7 +55,7 @@ function restartExpiredSession(): void {
   window.dispatchEvent(new Event(SESSION_EXPIRING_EVENT));
   rememberReturnHash();
   beginSignIn().catch(() => {
-    showSignInError("로그인을 다시 시작하지 못했어요. 다시 시도해 주세요.");
+    showSignInError();
   });
 }
 

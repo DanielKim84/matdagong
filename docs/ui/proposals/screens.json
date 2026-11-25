@@ -1,0 +1,798 @@
+{
+  "version": "2026-11-18",
+  "status": "검토용 제안 · 일부 화면 1차 적용",
+  "groups": [
+    {
+      "n": 1,
+      "key": "01-overview",
+      "title": "핵심 화면",
+      "summary": "발견에서 맛집을 고르고, 맛객을 신뢰하고, 나의 장소로 이어지는 네 가지 핵심 장면.",
+      "screens": [
+        {
+          "id": "01-01",
+          "title": "발견",
+          "route": "home",
+          "purpose": "조건을 좁혀 오늘 갈 맛집을 찾는다.",
+          "action": "검색·지역·추천 카드·지도 진입",
+          "rule": "사진 중심 목록을 첫 화면으로 적용하고 기존 지도는 별도 화면에 유지한다. 검색·필터·기록만 노출하는 규칙은 공유한다.",
+          "source": "discover/DiscoverScreen.tsx"
+        },
+        {
+          "id": "01-02",
+          "title": "맛집 상세",
+          "route": "place/<id>",
+          "purpose": "맛객의 추천 이유와 메뉴를 확인하고 행동한다.",
+          "action": "맛객 선택·가볼 곳 저장·길찾기",
+          "rule": "사진 아래 가게 정보는 흰 패널로 구분한다. 하트는 가볼 곳 저장이며 내 기록이 있으면 하트 대신 기록 수정·공개 범위를 제공한다.",
+          "source": "place/PlaceDetailScreen.tsx"
+        },
+        {
+          "id": "01-03",
+          "title": "맛객 프로필",
+          "route": "profile/<id>",
+          "purpose": "추천 기록과 경험 신뢰를 보고 구독을 결정한다.",
+          "action": "신뢰·취향 점수·추천 맛집·구독",
+          "rule": "추천 맛집을 함께 방문한 곳으로 오인시키지 않는다. 경험이 부족하면 신뢰 등급을 부여하지 않는다.",
+          "source": "tasters/TasterProfileScreen.tsx"
+        },
+        {
+          "id": "01-04",
+          "title": "나",
+          "route": "my",
+          "purpose": "내 기록과 저장한 장소를 관리한다.",
+          "action": "가볼 곳·다녀온 곳·내 기록·기록하기",
+          "rule": "사진 모음에서 다녀온 곳은 체크, 가볼 곳은 하트, 내 기록은 펜으로 구분하고 각각 기존 목록·다이어리로 연결한다.",
+          "source": "me/MeScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "key": "02-entry",
+      "title": "시작과 공통 로그인",
+      "summary": "새 브랜드의 첫인상과 로그인 상태를 명확히 연결한다.",
+      "screens": [
+        {
+          "id": "02-01",
+          "title": "앱 시작",
+          "route": "앱 시작 상태",
+          "purpose": "계정 확인 중 상태를 알려준다.",
+          "action": "입체 A 아이콘·셰프·진행 안내",
+          "rule": "로딩은 짧게 표현하고 모션 줄이기 설정을 존중한다.",
+          "source": "../app/startupView.tsx"
+        },
+        {
+          "id": "02-02",
+          "title": "다공 계정 로그인",
+          "route": "/login",
+          "purpose": "카카오 또는 네이버로 공통 계정에 로그인한다.",
+          "action": "다공 D 로고·카카오·네이버 버튼",
+          "rule": "공통 다공 D 브랜드와 맛다공 A 브랜드를 구분한다. 이메일 로그인·계정 자동 병합을 추가하지 않는다.",
+          "source": "dagong-auth/frontend/src/pages/LoginPage.tsx"
+        },
+        {
+          "id": "02-03",
+          "title": "로그인 오류",
+          "route": "/login?error",
+          "purpose": "실패 원인을 안내하고 다시 시도한다.",
+          "action": "오류 설명·다시 로그인",
+          "rule": "인증 흐름은 기존 구현을 유지한다. 화면 배치만 제안한다.",
+          "source": "dagong-auth/frontend/src/pages/LoginPage.tsx"
+        },
+        {
+          "id": "02-04",
+          "title": "다른 기기 확인",
+          "route": "/login?device-confirm=PC",
+          "purpose": "동일 종류의 다른 기기 로그인 전환을 확인한다.",
+          "action": "계속하기·취소",
+          "rule": "휴대폰 1대·PC 1대 정책과 기존 확인 절차를 유지한다.",
+          "source": "dagong-auth/frontend/src/components/DeviceConfirm.tsx"
+        }
+      ]
+    },
+    {
+      "n": 3,
+      "key": "03-intro",
+      "title": "서비스 소개 1-4",
+      "summary": "다섯 장의 앱 소개 중 문제 인식·신뢰·지도·활동을 설명한다.",
+      "screens": [
+        {
+          "id": "03-01",
+          "title": "소개 1 · 선택의 고민",
+          "route": "intro · 1/5",
+          "purpose": "광고와 후기 사이에서 고르기 어려운 문제를 보여준다.",
+          "action": "설명·건너뛰기·다음",
+          "rule": "새 로고를 사용하며 읽을 수 있는 짧은 문장으로 구성한다.",
+          "source": "onboarding/IntroScreen.tsx"
+        },
+        {
+          "id": "03-02",
+          "title": "소개 2 · 경험 신뢰",
+          "route": "intro · 2/5",
+          "purpose": "취향에서 시작해 실제 경험으로 신뢰가 쌓임을 설명한다.",
+          "action": "취향·신뢰의 차이·다음",
+          "rule": "함께 인정한 경험으로 신뢰를 계산하며 단순 하트 저장은 신뢰가 아니다.",
+          "source": "onboarding/IntroScreen.tsx"
+        },
+        {
+          "id": "03-03",
+          "title": "소개 3 · 지도",
+          "route": "intro · 3/5",
+          "purpose": "맛객 기록을 지도에서 찾는 방법을 설명한다.",
+          "action": "지도·추천 이유·길찾기",
+          "rule": "발견에는 맛객 기록이 있는 장소만 노출한다.",
+          "source": "onboarding/IntroScreen.tsx"
+        },
+        {
+          "id": "03-04",
+          "title": "소개 4 · 맛객 활동",
+          "route": "intro · 4/5",
+          "purpose": "좋아하는 곳의 기록과 구독 활동을 소개한다.",
+          "action": "기록·구독·다음",
+          "rule": "유료 결제·정산은 준비 중 상태를 명시하고 수익을 보장하는 표현을 피한다.",
+          "source": "onboarding/IntroScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "key": "04-signup",
+      "title": "소개 완료와 가입",
+      "summary": "소개에서 프로필·취향·맛객 추천으로 이어지는 가입 과정을 정리한다.",
+      "screens": [
+        {
+          "id": "04-01",
+          "title": "소개 5 · 시작",
+          "route": "intro · 5/5",
+          "purpose": "가입 시작을 유도한다.",
+          "action": "A 로고·캐릭터·시작하기",
+          "rule": "미가입 계정은 가입 전에 보고, 가입한 사용자는 설정에서 다시 볼 수 있다.",
+          "source": "onboarding/IntroScreen.tsx"
+        },
+        {
+          "id": "04-02",
+          "title": "가입 1 · 이름과 사진",
+          "route": "가입 · name",
+          "purpose": "공개할 프로필 사진과 닉네임을 정한다.",
+          "action": "사진 선택·닉네임 중복 확인·다음",
+          "rule": "닉네임 중복이면 진행을 막는다. 소셜 사진은 선택 동의 및 기본 사진 여부에 따라 사용한다.",
+          "source": "onboarding/SignupNameStep.tsx"
+        },
+        {
+          "id": "04-03",
+          "title": "가입 2 · 추천 취향",
+          "route": "가입 · taste",
+          "purpose": "찾는 분야와 좋아하는 태그를 고른다.",
+          "action": "식당·카페·둘 다·분류 태그",
+          "rule": "분야별 태그와 한도는 현재 사전을 따른다. 선택 체크를 추가해 칩 폭이 바뀌지 않게 한다.",
+          "source": "onboarding/SignupTasteStep.tsx"
+        },
+        {
+          "id": "04-04",
+          "title": "가입 3 · 맛객 추천",
+          "route": "가입 · match",
+          "purpose": "취향에 맞는 맛객을 선택한다.",
+          "action": "추천 목록·점수·구독 선택·시작",
+          "rule": "점수가 신뢰인지 취향인지 명확히 표기한다.",
+          "source": "onboarding/SignupMatchStep.tsx"
+        }
+      ]
+    },
+    {
+      "n": 5,
+      "key": "05-discover",
+      "title": "검색·지역·필터",
+      "summary": "검색과 필터를 선택하는 화면을 단순하고 일관되게 제안한다.",
+      "screens": [
+        {
+          "id": "05-01",
+          "title": "맛집 검색",
+          "route": "home · 검색",
+          "purpose": "맛객 기록에서 키워드에 맞는 장소를 찾는다.",
+          "action": "검색어·결과·지도 이동",
+          "rule": "발견 검색에는 기록 있는 곳만 표시한다. 카카오 전체 장소 검색은 내 지도에서 제공한다.",
+          "source": "discover/DiscoverScreen.tsx"
+        },
+        {
+          "id": "05-02",
+          "title": "지역 선택",
+          "route": "home · 지역 시트",
+          "purpose": "보고 싶은 지역으로 이동한다.",
+          "action": "검색·시/도·구/군·선택",
+          "rule": "정확한 지역 선택과 내 위치 이용을 구분한다.",
+          "source": "discover/DiscoverScreen.tsx"
+        },
+        {
+          "id": "05-03",
+          "title": "필터",
+          "route": "home · 필터 시트",
+          "purpose": "맛객 관계·태그·매장 이용 조건으로 좁힌다.",
+          "action": "전체·구독·구독 안 한·분류·적용",
+          "rule": "태그는 모두 일치 조건이다. 거리 반경은 장소 필터가 아니라 지도 범위 조정이다.",
+          "source": "discover/FilterScreen.tsx"
+        },
+        {
+          "id": "05-04",
+          "title": "정렬과 마커 안내",
+          "route": "home · 목록/안내",
+          "purpose": "추천순과 가까운 순, 지도 표식을 이해한다.",
+          "action": "정렬·표식 설명",
+          "rule": "위치가 없으면 가까운 순에 위치 안내를 제공한다. 취향 점수를 지도 핀에 덧붙이지 않는다.",
+          "source": "discover/MarkerGuideScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "key": "06-map",
+      "title": "발견 지도와 내 지도",
+      "summary": "새 기록 탐색과 나의 장소 관리 지도를 서로 구분한다.",
+      "screens": [
+        {
+          "id": "06-01",
+          "title": "발견 지도",
+          "route": "map",
+          "purpose": "다른 맛객의 추천 기록을 지도에서 탐색한다.",
+          "action": "검색·관계 칩·카드·목록",
+          "rule": "내 기록·가볼 곳·별로였던 곳은 발견에서 제외한다. AI 기능은 기본 시안에서 숨긴다.",
+          "source": "discover/DiscoverScreen.tsx"
+        },
+        {
+          "id": "06-02",
+          "title": "지도 목록 펼침",
+          "route": "home · 목록",
+          "purpose": "현재 보이는 지역의 기록을 목록으로 본다.",
+          "action": "추천순·거리·맛객·하트",
+          "rule": "지도와 목록은 같은 영역의 장소를 가리킨다.",
+          "source": "discover/DiscoverScreen.tsx"
+        },
+        {
+          "id": "06-03",
+          "title": "내 지도",
+          "route": "mymap",
+          "purpose": "가볼 곳과 가본 곳을 지도에서 관리한다.",
+          "action": "전체·가볼 곳·가본 곳·기록하기",
+          "rule": "내 기록·다녀온 곳·가볼 곳의 표식을 구분한다. 내 지도는 가운데 루트 탭이다.",
+          "source": "mymap/MyMapScreen.tsx"
+        },
+        {
+          "id": "06-04",
+          "title": "내 지도 전체 장소 검색",
+          "route": "mymap · 검색",
+          "purpose": "카카오 전체 장소를 검색하고 상세로 이동한다.",
+          "action": "장소 검색·결과·선택",
+          "rule": "아무도 기록하지 않은 장소도 조회할 수 있다. 기록 없음과 사진 오류를 구분한다.",
+          "source": "mymap/MyMapScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 7,
+      "key": "07-feed",
+      "title": "피드·스토리·알림",
+      "summary": "구독한 맛객의 최신 기록을 살펴보고 상세로 연결한다.",
+      "screens": [
+        {
+          "id": "07-01",
+          "title": "피드",
+          "route": "feed",
+          "purpose": "구독 또는 전체 맛객의 새 기록을 본다.",
+          "action": "구독·전체·스토리·기록 카드",
+          "rule": "루트 탭 5개를 유지한다. 화면 예시의 사진·인물·숫자는 문서용 가상 데이터다.",
+          "source": "feed/FeedScreen.tsx"
+        },
+        {
+          "id": "07-02",
+          "title": "스토리 보기",
+          "route": "feed · 스토리",
+          "purpose": "맛객의 최근 기록을 연속으로 본다.",
+          "action": "진행 막대·좌우 이동·맛집 보기",
+          "rule": "스토리 이미지는 몰입형이되 앱의 전체 테마를 다크로 바꾸지 않는다.",
+          "source": "feed/StoryViewer.tsx"
+        },
+        {
+          "id": "07-03",
+          "title": "받은 알림",
+          "route": "notifications",
+          "purpose": "새 기록과 구독 관련 알림을 확인한다.",
+          "action": "읽음 상태·날짜 그룹·연결",
+          "rule": "알림 유형에 맞는 목적지로 이동한다.",
+          "source": "feed/NotificationsScreen.tsx"
+        },
+        {
+          "id": "07-04",
+          "title": "피드 첫 사용",
+          "route": "feed · 빈 상태",
+          "purpose": "구독이 없는 사용자에게 다음 행동을 제안한다.",
+          "action": "맛객 추천·둘러보기",
+          "rule": "빈 목록에 가상 실제 기록을 채우지 않는다. 추천과 데이터 없음 안내를 구분한다.",
+          "source": "feed/FeedScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 8,
+      "key": "08-tasters",
+      "title": "맛객 탐색과 프로필",
+      "summary": "점수와 활동 지역을 바탕으로 신뢰할 맛객을 고른다.",
+      "screens": [
+        {
+          "id": "08-01",
+          "title": "맛객 추천",
+          "route": "tasters",
+          "purpose": "취향과 경험에 맞는 맛객을 찾는다.",
+          "action": "추천·분야·활동 지역·구독",
+          "rule": "taster-recommendations 경로도 같은 화면을 사용한다.",
+          "source": "tasters/TastersScreen.tsx"
+        },
+        {
+          "id": "08-02",
+          "title": "맛객 검색",
+          "route": "tasters · 검색",
+          "purpose": "이름이나 활동 지역으로 맛객을 찾는다.",
+          "action": "검색·결과·점수",
+          "rule": "검색 결과 없음에는 조건 변경 행동을 제공한다.",
+          "source": "tasters/TastersScreen.tsx"
+        },
+        {
+          "id": "08-03",
+          "title": "프로필 상단",
+          "route": "profile/<id> · 상단",
+          "purpose": "배경·소개·신뢰·구독을 한눈에 본다.",
+          "action": "배경 사진·소개·구독·점수",
+          "rule": "배경 사진·뒤로가기·공유 버튼은 맛집 상세와 같은 규칙으로 맞춘다.",
+          "source": "tasters/TasterProfileScreen.tsx"
+        },
+        {
+          "id": "08-04",
+          "title": "프로필 하단",
+          "route": "profile/<id> · 하단",
+          "purpose": "추천 맛집과 공개 스타일을 자세히 본다.",
+          "action": "추천 목록·공개 태그·활동 지역",
+          "rule": "태그는 선택된 상태로 표시한다. 추천 취향의 제외 조건은 공개하지 않는다.",
+          "source": "tasters/TasterProfileScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 9,
+      "key": "09-place",
+      "title": "맛집 상세 전체 구성",
+      "summary": "긴 상세는 상단과 하단을 연속 화면으로 나누어 확인한다.",
+      "screens": [
+        {
+          "id": "09-01",
+          "title": "상세 상단",
+          "route": "place/<id> · 상단",
+          "purpose": "사진·가게명·맛객을 구분해서 보여준다.",
+          "action": "사진·아래쪽 점·겹치는 정보 패널",
+          "rule": "사진과 패널 내용이 겹치지 않게 안전 여백을 둔다. 이미지 위의 숫자 배지는 두지 않는다.",
+          "source": "place/PlaceDetailScreen.tsx"
+        },
+        {
+          "id": "09-02",
+          "title": "추천 이유·태그",
+          "route": "place/<id> · 기록",
+          "purpose": "고른 맛객의 추천 이유와 스타일을 본다.",
+          "action": "맛객 전환·긴 이유·선택 태그",
+          "rule": "이유는 최소 높이를 두고 내용이 많으면 확장한다. 분류별 코랄 카운트만 두고 전체 카운트는 제거한다.",
+          "source": "place/PlaceDetailScreen.tsx"
+        },
+        {
+          "id": "09-03",
+          "title": "메뉴·사진",
+          "route": "place/<id> · 메뉴/사진",
+          "purpose": "고른 맛객의 메뉴·가격·사진을 확인한다.",
+          "action": "메뉴 카드·가격·사진 확대",
+          "rule": "맛객별 메뉴·가격·태그는 서로 합치지 않는다. 시안의 바로가기는 배치 제안이다.",
+          "source": "place/PlaceDetailScreen.tsx"
+        },
+        {
+          "id": "09-04",
+          "title": "위치·매장 정보",
+          "route": "place/<id> · 하단",
+          "purpose": "주소·전화·지도와 이용 조건을 확인한다.",
+          "action": "카카오맵·길찾기·정보 제보",
+          "rule": "선택된 매장 이용 태그도 같은 칩 규칙을 쓴다. 외부 지도·길찾기는 현재 링크 동작을 유지한다.",
+          "source": "place/PlaceDetailScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 10,
+      "key": "10-place-actions",
+      "title": "상세의 주요 동작",
+      "summary": "저장·공개 범위·제보를 상황에 맞는 시트로 표현한다.",
+      "screens": [
+        {
+          "id": "10-01",
+          "title": "사진 전체 보기",
+          "route": "place/<id> · 사진 뷰어",
+          "purpose": "선택한 맛객의 사진을 크게 본다.",
+          "action": "사진·넘기기·닫기",
+          "rule": "점은 사진 아래 최대 5개이며 이동 창과 크기 변화가 부드럽게 이어진다. 늘어나거나 찌그러지지 않게 한다.",
+          "source": "place/PlaceDetailScreen.tsx"
+        },
+        {
+          "id": "10-02",
+          "title": "가볼 곳 해제",
+          "route": "place/<id> · 하트 해제",
+          "purpose": "저장을 취소하거나 별로였던 경험을 남긴다.",
+          "action": "가볼 곳에서 빼기·별로였어요",
+          "rule": "별로였어요는 방문 근거 또는 가게 1km 내 위치 확인이 필요하다. 하트는 방문 기록이 아니다.",
+          "source": "../app/LikeChoiceSheet.tsx"
+        },
+        {
+          "id": "10-03",
+          "title": "내 기록 공개 범위",
+          "route": "place/<id> · 공개 전환",
+          "purpose": "기록은 보존하고 공개 여부만 변경한다.",
+          "action": "공개 추천·나만 보기·확인",
+          "rule": "기록을 하트로 전환하지 않는다. 비공개로 바꿔도 사진·메뉴·방문 기록이 유지된다.",
+          "source": "place/PlaceDetailScreen.tsx"
+        },
+        {
+          "id": "10-04",
+          "title": "가게 정보 제보",
+          "route": "place/<id> · 제보",
+          "purpose": "잘못된 가게 기본 정보를 알린다.",
+          "action": "폐업·이름·주소·위치·기타",
+          "rule": "기타는 설명이 필수이며 전송 후 확인 중 상태를 제공한다.",
+          "source": "place/PlaceDetailScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 11,
+      "key": "11-record",
+      "title": "기록 작성 1-4",
+      "summary": "한 단계에 한 가지 일을 맡겨 작성 부담을 줄인다.",
+      "screens": [
+        {
+          "id": "11-01",
+          "title": "1 · 장소 선택",
+          "route": "register · place",
+          "purpose": "직접 다녀온 가게를 선택한다.",
+          "action": "검색·장소 카드·다음",
+          "rule": "기존 기록 수정에는 장소 검색·가게 변경·임시 장소 불러오기를 제공하지 않는다.",
+          "source": "record/PlaceStep.tsx"
+        },
+        {
+          "id": "11-02",
+          "title": "2 · 사진과 메뉴",
+          "route": "register · media",
+          "purpose": "대표 사진과 추천 메뉴를 정한다.",
+          "action": "큰 사진·슬라이드 썸네일·메뉴 입력",
+          "rule": "첫 사진만 대표 배지. 썸네일 X는 확인 후 편집 상태에 반영하며 최종 저장 전 서버 확정으로 오인시키지 않는다.",
+          "source": "record/MediaStep.tsx"
+        },
+        {
+          "id": "11-03",
+          "title": "3 · 태그와 이용 정보",
+          "route": "register · taste",
+          "purpose": "맛과 상황·매장 정보를 선택한다.",
+          "action": "분류별 칩·코랄 카운트·다음",
+          "rule": "분류별 한도와 선택 상태를 통일한다. 체크 추가로 칩 폭이 변하지 않게 한다.",
+          "source": "record/TasteStep.tsx"
+        },
+        {
+          "id": "11-04",
+          "title": "4 · 추천 이유와 공개",
+          "route": "register · story",
+          "purpose": "한 줄 추천과 자세한 이야기를 쓴다.",
+          "action": "추천 문장·긴 설명·공개 범위",
+          "rule": "이유 입력은 충분한 기본 높이와 확장을 제공한다. 공개와 나만 보기의 차이를 바로 설명한다.",
+          "source": "record/StoryStep.tsx"
+        }
+      ]
+    },
+    {
+      "n": 12,
+      "key": "12-record-finish",
+      "title": "확인·완료·수정·빠른 저장",
+      "summary": "확인 후 저장하고, 수정과 빠른 저장의 목적을 구분한다.",
+      "screens": [
+        {
+          "id": "12-01",
+          "title": "5 · 최종 확인",
+          "route": "register · review",
+          "purpose": "장소·사진·이유·태그를 확인한다.",
+          "action": "요약·각 단계 수정·저장",
+          "rule": "저장 중 중복 제출을 막고 성공 후에만 완료로 이동한다.",
+          "source": "record/ReviewStep.tsx"
+        },
+        {
+          "id": "12-02",
+          "title": "기록 완료",
+          "route": "register · done",
+          "purpose": "저장 결과와 다음 행동을 안내한다.",
+          "action": "맛집 보기·계속 기록·완료",
+          "rule": "공개 범위에 맞는 문구를 사용한다. 실제 보상 없는 포인트 지급을 약속하지 않는다.",
+          "source": "record/RecordDone.tsx"
+        },
+        {
+          "id": "12-03",
+          "title": "내 기록 수정",
+          "route": "register/<id>",
+          "purpose": "기존 기록 내용을 고친다.",
+          "action": "고정 가게 정보·사진·메뉴·수정 저장",
+          "rule": "장소 선택 단계를 제외한다. 다른 사람의 기록은 수정할 수 없다.",
+          "source": "record/RecordScreen.tsx"
+        },
+        {
+          "id": "12-04",
+          "title": "빠른 저장",
+          "route": "mymap · 빠른 저장",
+          "purpose": "방문 사실을 간단히 남긴다.",
+          "action": "근처 장소·방문 확인·저장",
+          "rule": "가게 1km 안에서만 가능하다. 추천 기록과 빠른 방문 저장은 다르다.",
+          "source": "mymap/MyMapScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 13,
+      "key": "13-collections",
+      "title": "나와 내 맛집 모음",
+      "summary": "개인 보관함을 상태별로 나누되 기록의 의미를 유지한다.",
+      "screens": [
+        {
+          "id": "13-01",
+          "title": "나 · 전체 구성",
+          "route": "my · 전체",
+          "purpose": "프로필·기록·모음·설정을 확인한다.",
+          "action": "프로필 편집·공개 프로필·모음·구독",
+          "rule": "기록 달력은 보조 기능으로 두고 전체 UI를 저널 스타일로 만들지 않는다.",
+          "source": "me/MeScreen.tsx"
+        },
+        {
+          "id": "13-02",
+          "title": "가볼 곳",
+          "route": "saved/wish",
+          "purpose": "하트로 저장한 곳을 본다.",
+          "action": "사진 카드·하트 해제·상세",
+          "rule": "방문 여부와 관계없이 가볼 곳 저장은 별도 상태다.",
+          "source": "me/CollectionsScreen.tsx"
+        },
+        {
+          "id": "13-03",
+          "title": "가본 곳",
+          "route": "saved/visited",
+          "purpose": "다녀온 곳과 내 기록을 모아 본다.",
+          "action": "체크·기록 상태·상세",
+          "rule": "기록 없는 방문과 내 기록을 이름표로 구분한다.",
+          "source": "me/CollectionsScreen.tsx"
+        },
+        {
+          "id": "13-04",
+          "title": "공개·나만 보기 기록",
+          "route": "saved/mine · saved/private",
+          "purpose": "내 추천 기록의 공개 범위를 관리한다.",
+          "action": "공개 기록·나만 보기 칩·범위 변경",
+          "rule": "비공개도 내 방문 기록이다. 저장만 한 맛집이라는 잘못된 안내를 붙이지 않는다.",
+          "source": "me/CollectionsScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 14,
+      "key": "14-personal-history",
+      "title": "기록과 개인 목록",
+      "summary": "달력·최근·빠른 장소·별로였던 곳을 빠르게 찾는다.",
+      "screens": [
+        {
+          "id": "14-01",
+          "title": "기록 달력",
+          "route": "diary",
+          "purpose": "날짜별 기록을 찾아본다.",
+          "action": "달력·선택 날짜·기록 목록",
+          "rule": "기록은 서버 데이터 기준이다. 달력은 이 화면의 탐색 도구다.",
+          "source": "me/DiaryScreen.tsx"
+        },
+        {
+          "id": "14-02",
+          "title": "최근 본 곳",
+          "route": "recent",
+          "purpose": "최근 조회한 맛집으로 돌아간다.",
+          "action": "날짜 그룹·장소·상세",
+          "rule": "최근 열람은 방문 사실을 뜻하지 않는다.",
+          "source": "me/CollectionsScreen.tsx"
+        },
+        {
+          "id": "14-03",
+          "title": "빠른 장소 기록",
+          "route": "drafts",
+          "purpose": "방문만 저장한 곳에서 추천 기록을 이어 쓴다.",
+          "action": "오늘·최근 7일·그 전·기록하기",
+          "rule": "이 화면은 작성 중 글 임시저장함과 다르다.",
+          "source": "me/QuickDraftsScreen.tsx"
+        },
+        {
+          "id": "14-04",
+          "title": "별로였던 곳",
+          "route": "disliked",
+          "purpose": "지도에서 뺀 곳을 확인하고 되돌린다.",
+          "action": "이유 안내·되돌리기",
+          "rule": "되돌리면 경험 엇갈림에서도 빠진다. 다른 맛객의 기록 자체를 지우는 기능은 아니다.",
+          "source": "me/DislikedPlacesScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 15,
+      "key": "15-profile-settings",
+      "title": "공개 프로필과 추천 취향",
+      "summary": "남에게 보이는 프로필과 나만 쓰는 추천 조건을 분리한다.",
+      "screens": [
+        {
+          "id": "15-01",
+          "title": "공개 프로필 편집",
+          "route": "profile-edit",
+          "purpose": "사진·닉네임·소개·활동 지역을 수정한다.",
+          "action": "대표 사진·닉네임 확인·소개·저장",
+          "rule": "태그 정리 때문에 프로필 입력 기능을 없애지 않는다. 공개 항목임을 표시한다.",
+          "source": "ProfileSettingsScreen.tsx"
+        },
+        {
+          "id": "15-02",
+          "title": "배경 사진 편집",
+          "route": "profile-edit · 배경",
+          "purpose": "큰 미리보기와 썸네일을 관리한다.",
+          "action": "사진 추가·대표 배지·썸네일 X",
+          "rule": "대표 배지는 첫 사진에만 표시한다. 스크롤바 없는 썸네일 슬라이드와 확인 삭제를 제공한다.",
+          "source": "profile-edit/CoverEditor.tsx"
+        },
+        {
+          "id": "15-03",
+          "title": "공개 스타일 태그",
+          "route": "profile-edit · 스타일",
+          "purpose": "내가 좋아하는 분야와 특징을 공개한다.",
+          "action": "분야·분류별 선택·카운트",
+          "rule": "닉네임·사진과 별개의 공개 스타일이며 분류별 선택 상태를 일관되게 표시한다.",
+          "source": "profile-edit/PublicProfileTab.tsx"
+        },
+        {
+          "id": "15-04",
+          "title": "추천 취향·제외 조건",
+          "route": "profile-edit/taste",
+          "purpose": "내 추천 조건을 비공개로 설정한다.",
+          "action": "선호 태그·피하고 싶은 조건·태그 제안",
+          "rule": "VISIT 제외 조건은 공개 프로필에 노출하지 않는다. 태그 제안 화면 진입을 제공한다.",
+          "source": "profile-edit/TastePreferenceTab.tsx"
+        }
+      ]
+    },
+    {
+      "n": 16,
+      "key": "16-subscriptions",
+      "title": "구독 관리와 포인트",
+      "summary": "구독의 상태를 보여주고 준비 중 결제 기능을 구분한다.",
+      "screens": [
+        {
+          "id": "16-01",
+          "title": "내가 구독한 맛객",
+          "route": "subscriptions",
+          "purpose": "무료·유료 구독과 만료를 확인한다.",
+          "action": "구독 목록·종류·만료·프로필",
+          "rule": "무료·유료와 활성 상태를 혼동하지 않게 표시한다.",
+          "source": "tasters/SubscriptionsManageScreen.tsx"
+        },
+        {
+          "id": "16-02",
+          "title": "나를 구독한 사람",
+          "route": "subscriptions/incoming",
+          "purpose": "내 구독자를 확인한다.",
+          "action": "유료·무료 요약·구독자 목록",
+          "rule": "타인의 비공개 취향을 노출하지 않는다.",
+          "source": "tasters/IncomingList.tsx"
+        },
+        {
+          "id": "16-03",
+          "title": "구독 선택",
+          "route": "profile/<id> · 구독 시트",
+          "purpose": "무료 구독과 유료 개발 흐름을 구분한다.",
+          "action": "조건 설명·무료 구독·유료 준비 중",
+          "rule": "실제 결제는 연결되지 않았다. 카드 입력이나 결제 완료 화면을 실제 기능처럼 제안하지 않는다.",
+          "source": "tasters/TasterProfileScreen.tsx"
+        },
+        {
+          "id": "16-04",
+          "title": "포인트 지갑",
+          "route": "wallet",
+          "purpose": "잔액·내역·준비 중 기능을 확인한다.",
+          "action": "포인트·적립/사용 내역·준비 중",
+          "rule": "정산·교환·후원·구독료 사용은 준비 중이며 충전 기능을 추가하지 않는다.",
+          "source": "me/WalletScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 17,
+      "key": "17-settings",
+      "title": "설정·정책·제안",
+      "summary": "계정과 알림을 관리하고 서비스 안내를 확인한다.",
+      "screens": [
+        {
+          "id": "17-01",
+          "title": "설정 전체",
+          "route": "settings",
+          "purpose": "연결 계정·프로필·알림·앱 정보를 관리한다.",
+          "action": "카카오·네이버 연결 상태·소개·로그아웃",
+          "rule": "다른 제공자로 로그인하면 별도 계정이다. 연결 안 됨을 눌러 연결하는 미구현 동작을 추가하지 않는다.",
+          "source": "me/AccountSettingsScreen.tsx"
+        },
+        {
+          "id": "17-02",
+          "title": "알림 수신 설정",
+          "route": "settings · 알림",
+          "purpose": "알림 유형별 수신 여부를 바꾼다.",
+          "action": "새 기록·새 구독자·서비스 소식 스위치",
+          "rule": "꺼진 종류는 서버에서 알림을 만들지 않는다. 별도 페이지 분리는 시각적 설명을 위한 제안이다.",
+          "source": "me/AccountSettingsScreen.tsx"
+        },
+        {
+          "id": "17-03",
+          "title": "이용약관·개인정보",
+          "route": "policy/terms · policy/privacy",
+          "purpose": "서비스 정책을 읽는다.",
+          "action": "문서 전환·개정일·본문",
+          "rule": "현재 정책 본문은 법률 검토 전 초안이다. 기획 문서에서 승인된 정책으로 표시하지 않는다.",
+          "source": "me/PolicyScreen.tsx"
+        },
+        {
+          "id": "17-04",
+          "title": "태그 제안",
+          "route": "profile-edit/taste · 제안 시트",
+          "purpose": "없는 태그를 제안하고 처리 상태를 확인한다.",
+          "action": "분류·태그명·설명·내 제안",
+          "rule": "제안은 즉시 전체 사전에 등록되는 것이 아니다.",
+          "source": "TasteTagRequestScreen.tsx"
+        }
+      ]
+    },
+    {
+      "n": 18,
+      "key": "18-states",
+      "title": "예외·확인 상태",
+      "summary": "정상 화면뿐 아니라 권한·실패·파괴적 동작도 문서화한다.",
+      "screens": [
+        {
+          "id": "18-01",
+          "title": "위치 권한 없음",
+          "route": "home/mymap · 위치 거부",
+          "purpose": "위치 없이도 탐색하고 재시도할 수 있게 한다.",
+          "action": "현재 지역·위치 켜기·직접 지역 선택",
+          "rule": "기본 지도 탐색은 유지하며 방문 확인이 필요한 행동은 제한 이유를 알린다.",
+          "source": "discover/DiscoverScreen.tsx"
+        },
+        {
+          "id": "18-02",
+          "title": "저장 실패",
+          "route": "register/profile-edit · 오류",
+          "purpose": "입력을 유지하고 저장 실패를 안내한다.",
+          "action": "작업별 오류 문구·재시도",
+          "rule": "사진 삭제 오류에 프로필 저장 실패 같은 다른 동작의 문구를 사용하지 않는다.",
+          "source": "record/useRecordForm.ts"
+        },
+        {
+          "id": "18-03",
+          "title": "기록 삭제 확인",
+          "route": "place/<id> · 삭제 확인",
+          "purpose": "기록과 사진·태그 삭제의 범위를 알린다.",
+          "action": "삭제 범위·나만 보기 대안·취소·삭제",
+          "rule": "기록은 삭제돼도 가게·하트는 남고 다녀온 곳으로 남는다. 되돌릴 수 없음을 명시한다.",
+          "source": "place/PlaceDetailScreen.tsx"
+        },
+        {
+          "id": "18-04",
+          "title": "맛다공 탈퇴 확인",
+          "route": "settings · 탈퇴",
+          "purpose": "삭제되는 데이터와 공통 계정의 차이를 설명한다.",
+          "action": "기록·프로필·구독 삭제·최종 확인",
+          "rule": "다공 공통 계정과 다른 서비스 이용은 남는다. 사용자 확인 후 기존 탈퇴 순서를 유지한다.",
+          "source": "me/AccountSettingsScreen.tsx"
+        }
+      ]
+    }
+  ]
+}

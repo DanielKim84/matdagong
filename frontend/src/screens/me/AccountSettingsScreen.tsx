@@ -1,37 +1,54 @@
 import { useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
-import Icon from "../../components/Icon";
+import { Avatar } from "../../components/BrandAssets";
+import Icon, { type IconName } from "../../components/Icon";
 import { useNotificationDialog } from "../../components/NotificationDialog";
+import SubScreen from "../../components/SubScreen";
 import { Skeleton, TopBar } from "../../components/ui";
 import { cancelMembership } from "../../services/auth";
 import { deleteMyCommunityData } from "../../services/community";
 import { deleteMyPlaceData } from "../../services/places";
 import type { NotificationSettings } from "../../models/community";
+import { LOGIN_PROVIDERS } from "../../models/loginProviders";
 import { errorMessage } from "../../utils/errorMessage";
 import { useNotificationSettings } from "./useNotificationSettings";
 
 // code는 인증 서버가 알려 주는 소셜 제공자 코드입니다. 공통 로그인 화면(dagong-auth LoginPage)과 같은 제공자만 둡니다.
 // Apple은 아이폰 앱을 출시할 때 iOS에서만 붙일 예정이라 지금은 두지 않습니다.
-const PROVIDERS = [
-  { key: "kakao", code: "KAKAO", label: "카카오", mark: "K" },
-  { key: "naver", code: "NAVER", label: "네이버", mark: "N" },
-] as const;
 
-const NOTIFICATION_OPTIONS: { key: keyof NotificationSettings; label: string; description: string }[] = [
-  { key: "tasterNewPlace", label: "구독 맛객의 새 기록", description: "구독한 맛객이 새 맛집을 공개하면 알려요" },
-  { key: "newSubscriber", label: "새 구독자", description: "누군가 나를 구독하면 알려요" },
-  { key: "serviceNews", label: "맛다공 소식·이벤트", description: "새 기능과 이벤트 소식을 받아요" },
-];
+// 알림 줄의 왼쪽 코랄 아이콘(보드 17-02: 새 기록 연필 · 새 구독자 사람들 · 서비스 소식 확성기)
+const NOTIFICATION_OPTIONS: { key: keyof NotificationSettings; label: string; description: string; icon: IconName }[] =
+  [
+    {
+      key: "tasterNewPlace",
+      label: "새 기록",
+      description: "구독한 맛객이 새 맛집을 공개하면 알려드려요.",
+      icon: "pencil",
+    },
+    { key: "newSubscriber", label: "새 구독자", description: "새로운 구독자가 생기면 알려드려요.", icon: "people" },
+    {
+      key: "serviceNews",
+      label: "서비스 소식",
+      description: "맛다공의 새로운 기능과 중요한 소식을 알려드려요.",
+      icon: "megaphone",
+    },
+  ];
 
-/** 설정(#settings): 계정 연결, 알림, 프로필, 앱 정보, 로그아웃, 탈퇴. */
+/**
+ * 설정(#settings, 보드 17-01): 뒤로 옆 "설정", 내 프로필 줄("나의 맛다공"), 연결 계정(카카오·네이버 아이콘과 연결됨 알약),
+ * 바로 가기 줄(프로필 정보 · 알림 설정 · 이용약관·개인정보 · 맛다공 앱 소개), 코랄 로그아웃, 맨 아래 작은 "맛다공 탈퇴".
+ * 알림 설정은 알림 수신 설정 화면(17-02), 탈퇴는 탈퇴 확인 화면(18-04)을 전체 화면으로 엽니다.
+ * 바로 가기 줄은 나 탭(MeScreen)의 줄(.r-me-links)과 같은 모양입니다.
+ */
 export default function AccountSettingsScreen() {
   const app = useAppData();
   const { confirm } = useNotificationDialog();
   const notificationSettings = useNotificationSettings();
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [open, setOpen] = useState<"alerts" | "withdraw" | null>(null);
 
-  const connectedLabel = PROVIDERS.filter((provider) => app.loginProviders.includes(provider.code))
+  const connectedLabel = LOGIN_PROVIDERS.filter((provider) => app.loginProviders.includes(provider.code))
     .map((provider) => provider.label)
     .join("·");
 
@@ -48,17 +65,10 @@ export default function AccountSettingsScreen() {
   /**
    * 맛다공 탈퇴: 장소 서비스 → 커뮤니티 서비스 → 공통 로그인의 맛다공 가입 정보 순서로 지운 뒤 로그아웃합니다.
    * 세 곳 모두 이미 지운 것을 다시 지워도 괜찮게 만들어, 중간에 실패하면 같은 버튼으로 다시 시도하면 됩니다.
-   * 공통 계정(소셜 연결)은 다른 다공 서비스가 함께 쓰므로 남깁니다.
+   * 공통 계정(소셜 연결)은 다른 다공 서비스가 함께 쓰므로 남깁니다. 무엇이 지워지는지는 탈퇴 확인 화면(18-04)이 먼저 보여 줍니다.
    */
   async function withdraw() {
-    const isConfirmed = await confirm({
-      title: "맛다공을 탈퇴할까요?",
-      message: "남긴 기록과 사진, 프로필, 구독, 알림이 모두 지워지고 되돌릴 수 없어요.",
-      detail: { label: "함께 지워지는 것", value: "맛집 기록·사진·하트, 프로필·취향, 구독·구독자, 알림, 포인트 내역" },
-      confirmLabel: "탈퇴할게요",
-      tone: "danger",
-    });
-    if (!isConfirmed || isWithdrawing) return;
+    if (isWithdrawing) return;
     setIsWithdrawing(true);
     try {
       await deleteMyPlaceData(app.accessToken);
@@ -76,42 +86,99 @@ export default function AccountSettingsScreen() {
     app.actions.logout();
   }
 
+  const links: { icon: IconName; label: string; onClick: () => void }[] = [
+    { icon: "user", label: "프로필 정보", onClick: () => go("profile-edit") },
+    { icon: "bell", label: "알림 설정", onClick: () => setOpen("alerts") },
+    { icon: "book", label: "이용약관 · 개인정보", onClick: () => go("policy", "terms") },
+    { icon: "info", label: "맛다공 앱 소개", onClick: () => go("intro") },
+  ];
+
   return (
     <main className="r-screen r-me-settings">
-      <TopBar title="설정" fallback="my" />
+      <TopBar title="설정" fallback="my" aside={<span />} />
       <div className="r-me-body">
+        <button type="button" className="r-me-settings__profile" onClick={() => go("profile-edit")}>
+          <Avatar
+            src={app.myProfile?.profileImgUrl ?? null}
+            name={app.nickname}
+            variant={app.myProfile?.avatarVariant ?? 1}
+          />
+          <span>
+            <b className="r-display">나의 맛다공</b>
+            <small>
+              내가 가본 맛집과
+              <br />
+              가고 싶은 곳을 기록해요.
+            </small>
+          </span>
+          <Icon name="chevron" />
+        </button>
+
         <section className="r-me-group" aria-labelledby="r-me-settings-accounts">
           <h2 id="r-me-settings-accounts" className="r-me-group__title">
-            연결된 계정
+            연결 계정
           </h2>
-          <div className="r-card r-me-list">
-            {PROVIDERS.map((provider) => (
+          {/* 한 계정에 다른 소셜 계정을 더 잇는 기능은 아직 없어, 다른 제공자로 로그인하면 새 계정이 됩니다. */}
+          <p className="r-me-settings__note">
+            <Icon name="info" />
+            다른 계정으로 로그인하면 별도 계정이에요.
+          </p>
+          <div className="r-me-list">
+            {LOGIN_PROVIDERS.map((provider) => (
               <div className="r-row r-me-setting" key={provider.key}>
                 <span className={`r-me-provider r-me-provider--${provider.key}`} aria-hidden="true">
                   {provider.mark}
                 </span>
-                <span className="r-me-setting__label">{provider.label}</span>
+                <span className="r-me-setting__label">{provider.label} 계정</span>
                 {app.loginProviders.includes(provider.code) ? (
                   <span className="r-me-setting__state is-ok">연결됨</span>
                 ) : (
-                  // 한 계정에 다른 소셜 계정을 더 잇는 기능은 아직 없어, 다른 제공자로 로그인하면 새 계정이 됩니다.
-                  <small className="r-me-setting__state">연결 안 됨</small>
+                  <span className="r-me-setting__state">연결 안 됨</span>
                 )}
               </div>
             ))}
           </div>
         </section>
 
-        <section className="r-me-group" aria-labelledby="r-me-settings-alerts">
-          <h2 id="r-me-settings-alerts" className="r-me-group__title">
-            알림
-          </h2>
-          <div className="r-card r-me-list">
+        <ul className="r-me-links">
+          {links.map((link) => (
+            <li key={link.label}>
+              <button type="button" onClick={link.onClick}>
+                <Icon name={link.icon} />
+                <b>{link.label}</b>
+                <Icon name="chevron" />
+              </button>
+            </li>
+          ))}
+          <li>
+            <button type="button" className="r-me-links__danger" onClick={() => void logout()}>
+              <Icon name="logout" />
+              <b>로그아웃</b>
+            </button>
+          </li>
+        </ul>
+        {/* 탈퇴는 되돌릴 수 없어 목록 밖 아래에 작은 글자 버튼으로 둡니다. */}
+        <button type="button" className="r-me-withdraw" onClick={() => setOpen("withdraw")}>
+          맛다공 탈퇴
+        </button>
+      </div>
+
+      {open === "alerts" && (
+        <SubScreen title="알림 수신 설정" onClose={() => setOpen(null)} className="r-me-alerts">
+          <p className="r-me-alerts__notice">
+            <Icon name="bell" />
+            <span>
+              <b>원하는 알림을 선택해 받아보세요.</b>
+              꺼진 종류는 서버에서 알림을 만들지 않습니다.
+            </span>
+          </p>
+          <div className="r-me-list">
             {notificationSettings.settings ? (
               NOTIFICATION_OPTIONS.map((option) => {
                 const isOn = notificationSettings.settings?.[option.key] ?? false;
                 return (
-                  <div className="r-row r-me-setting" key={option.key}>
+                  <div className="r-row r-me-setting r-me-setting--alert" key={option.key}>
+                    <Icon name={option.icon} />
                     <span className="r-row__copy">
                       <b>{option.label}</b>
                       <small>{option.description}</small>
@@ -138,56 +205,61 @@ export default function AccountSettingsScreen() {
             ) : (
               <Skeleton shape="row" count={3} label="알림 설정을 불러오고 있어요…" />
             )}
-            <button type="button" className="r-row r-me-setting" onClick={() => go("notifications")}>
-              <span className="r-me-setting__label">받은 알림 보기</span>
-              <Icon name="chevron" />
-            </button>
           </div>
-        </section>
-
-        <section className="r-me-group" aria-labelledby="r-me-settings-profile">
-          <h2 id="r-me-settings-profile" className="r-me-group__title">
-            내 정보
-          </h2>
-          <div className="r-card r-me-list">
-            <button type="button" className="r-row r-me-setting" onClick={() => go("profile-edit")}>
-              <span className="r-me-setting__label">프로필 편집</span>
-              <Icon name="chevron" />
-            </button>
-            <button type="button" className="r-row r-me-setting" onClick={() => go("profile-edit", "taste")}>
-              <span className="r-me-setting__label">취향 다시 설정하기</span>
-              <Icon name="chevron" />
-            </button>
-          </div>
-        </section>
-
-        <section className="r-me-group" aria-labelledby="r-me-settings-etc">
-          <h2 id="r-me-settings-etc" className="r-me-group__title">
-            기타
-          </h2>
-          <div className="r-card r-me-list">
-            <button type="button" className="r-row r-me-setting" onClick={() => go("intro")}>
-              <span className="r-me-setting__label">맛다공 앱 소개</span>
-              <Icon name="chevron" />
-            </button>
-            <button type="button" className="r-row r-me-setting" onClick={() => go("policy", "terms")}>
-              <span className="r-me-setting__label">이용약관</span>
-              <Icon name="chevron" />
-            </button>
-            <button type="button" className="r-row r-me-setting" onClick={() => go("policy", "privacy")}>
-              <span className="r-me-setting__label">개인정보 처리방침</span>
-              <Icon name="chevron" />
-            </button>
-            <button type="button" className="r-row r-me-setting" onClick={() => void logout()}>
-              <span className="r-me-setting__label is-danger">로그아웃</span>
-            </button>
-          </div>
-        </section>
-        {/* 탈퇴는 되돌릴 수 없어 목록 밖 아래에 작은 글자 버튼으로 둡니다. */}
-        <button type="button" className="r-me-withdraw" onClick={() => void withdraw()} disabled={isWithdrawing}>
-          {isWithdrawing ? "탈퇴 처리 중…" : "맛다공 탈퇴"}
-        </button>
-      </div>
+        </SubScreen>
+      )}
+      {open === "withdraw" && (
+        <SubScreen
+          title="맛다공 탈퇴"
+          onClose={() => setOpen(null)}
+          className="r-me-withdraw-screen"
+          footer={
+            <>
+              <button type="button" className="r-button r-button--secondary" onClick={() => setOpen(null)}>
+                취소
+              </button>
+              <button
+                type="button"
+                className="r-button r-button--primary"
+                disabled={isWithdrawing}
+                onClick={() => void withdraw()}
+              >
+                {isWithdrawing ? "탈퇴 처리 중…" : "탈퇴하기"}
+              </button>
+            </>
+          }
+        >
+          <span className="r-me-withdraw-screen__mark" aria-hidden="true">
+            <Icon name="user-x" />
+          </span>
+          <h2 className="r-me-withdraw-screen__title">맛다공을 탈퇴할까요?</h2>
+          <p className="r-me-withdraw-screen__lead">
+            탈퇴하면 맛다공에 저장한 모든 데이터가
+            <br />
+            삭제돼요. 이 작업은 되돌릴 수 없어요.
+          </p>
+          <section className="r-me-withdraw-screen__box is-danger" aria-label="삭제되는 데이터">
+            <b>
+              <Icon name="trash" />
+              삭제되는 데이터
+            </b>
+            <ul>
+              <li>내가 작성한 모든 기록과 사진, 태그</li>
+              <li>프로필 정보(소개, 프로필 사진 등)</li>
+              <li>구독 정보(이용권, 혜택 등)</li>
+            </ul>
+          </section>
+          <section className="r-me-withdraw-screen__box" aria-label="다공 공통 계정">
+            <b>
+              <Icon name="user" />
+              다공 공통 계정은 남아요
+            </b>
+            <p>
+              맛다공을 탈퇴해도 다공의 공통 계정은 삭제되지 않아요. 다른 다공 서비스는 지금처럼 계속 이용할 수 있어요.
+            </p>
+          </section>
+        </SubScreen>
+      )}
     </main>
   );
 }

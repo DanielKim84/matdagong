@@ -23,7 +23,7 @@ matdagong-community-service ──GET /api/v1/places/{id}──→ matdagong-pla
 ## 데이터베이스
 
 - 각 도메인 서비스는 자체 데이터베이스를 소유하며 다른 서비스의 테이블을 직접 조회하지 않습니다.
-- 커뮤니티 서비스는 `COMMUNITY_DB_*`, 장소 서비스는 `PLACE_DB_*` 접속 설정을 씁니다. 기본값은 `docker-compose.yml`의 로컬 PostgreSQL에 있는 `matdagong_community`, `matdagong_places` DB입니다(개발 PC 설정은 [개발 환경 설정](../docs/home-development-setup.md)).
+- 커뮤니티 서비스는 `COMMUNITY_DB_*`, 장소 서비스는 `PLACE_DB_*` 접속 설정을 씁니다. 개발 PC는 루트 `.env`에 설정한 공유 Neon DB를 사용합니다. 로컬 Docker 초기화 구성은 제거했습니다([개발 환경 설정](../docs/home-development-setup.md)).
 - 사용자의 공통 로그인 ID와 계정 상태는 `dagong-auth`가 소유하고, 각 맛다공 서비스는 공통 계정 UUID를 값으로만 저장합니다(인증 DB와 외래 키 없음).
 - 스키마는 Flyway SQL이 관리합니다: 커뮤니티 `backend/matdagong-community-service/src/main/resources/db/migration`, 장소 `backend/matdagong-place-service/src/main/resources/db/migration`. 적용된 마이그레이션은 공유 개발 DB의 체크섬과 맞아야 하므로 고치지 않고 새 버전으로 바꿉니다.
 - 테이블별 역할은 [커뮤니티 DB의 주요 테이블](../docs/api-boundaries.md#커뮤니티-db의-주요-테이블), [장소 DB의 주요 테이블](../docs/api-boundaries.md#장소-db의-주요-테이블)에 한 곳으로 모아 둡니다.

@@ -1,156 +1,171 @@
 /*
- * app/startupView.tsx 가 React 를 그리기 전에 띄우는 접속 중·로그인 오류 화면입니다.
- * 로고 → 캐릭터 무대 → 문구 순서로 가운데에 둡니다. 소셜 버튼 선택은 공통 인증 서버 로그인 화면이 맡습니다.
- * 접속 중(.is-loading)에는 크림 바탕 위로 코랄·노랑 빛이 천천히 번지고, 접시를 코랄 고리가 돌며,
- * 캐릭터가 접시 위에서 살짝 떠오르고(그림자는 그만큼 작아짐), 문구 아래 점 세 개가 차례로 숨 쉽니다.
+ * app/startupView.tsx 가 React 를 그리기 전에 띄우는 접속 중(보드 02-01)·로그인 오류(보드 02-03) 화면입니다.
+ * 흰 바탕 위쪽에 세로 로고(입체 심볼 + 맛다공)를 두고,
+ * 접속 중에는 그 아래 프라이팬 캐릭터 장면과 둥글게 올라온 흰 판(안내 문구 + 진행 막대)을,
+ * 오류 때는 분홍 원 "!"와 안내, 맨 아래 "다시 로그인" 버튼을 둡니다. 소셜 버튼 선택은 공통 인증 서버 로그인 화면이 맡습니다.
  */
 .auth-start-screen {
-  position: relative;
   display: flex;
   width: min(var(--app-width), 100%);
   min-height: 100dvh;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
   overflow: hidden;
   margin: 0 auto;
-  background: var(--color-canvas);
-  padding: calc(48px + env(safe-area-inset-top)) 24px calc(48px + env(safe-area-inset-bottom));
+  background: var(--color-surface);
+  padding: calc(72px + env(safe-area-inset-top)) 0 0;
   color: var(--color-ink);
   font-family: var(--font-body);
   text-align: center;
-  isolation: isolate;
 }
 
-/* 바탕의 옅은 빛 두 개(위 오른쪽 코랄, 아래 왼쪽 노랑). 글자 뒤에 깔립니다. */
-.auth-start-screen::before,
-.auth-start-screen::after {
-  position: absolute;
-  z-index: -1;
-  width: 360px;
-  height: 360px;
-  border-radius: 50%;
-  filter: blur(48px);
-  content: "";
+/* ── 세로 로고 ── */
+.auth-start-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-.auth-start-screen::before {
-  top: -120px;
-  right: -140px;
-  background: color-mix(in srgb, var(--brand-100) 80%, transparent);
-}
-.auth-start-screen::after {
-  bottom: -140px;
-  left: -150px;
-  background: color-mix(in srgb, var(--amber-100) 75%, transparent);
-}
-
-.auth-start-logo {
+.auth-start-brand__symbol {
   display: block;
-  width: 168px;
-  height: auto;
+  width: 152px;
+  height: 152px;
+  margin: -14px 0 -18px;
+  /* 앱 아이콘 원본의 흰 바탕이 흰 화면과 어긋나 보이지 않게 곱하기로 겹칩니다. */
+  mix-blend-mode: multiply;
+}
+.auth-start-brand__name {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.auth-start-brand__tagline {
+  margin: 8px 0 0;
+  color: var(--neutral-700);
+  font-size: 16px;
+  font-weight: 600;
 }
 
-/* ── 캐릭터 무대: 코랄 고리 · 흰 접시 · 바닥 그림자 · 캐릭터를 겹쳐 둡니다. ── */
-.auth-start-stage {
+/* ── 접속 중: 캐릭터 장면과 아래 흰 판 ── */
+/* 따뜻한 주방 빛을 흐리게 깐 장면 가운데에 프라이팬 캐릭터를 둡니다. */
+.auth-start-scene {
   position: relative;
-  width: 216px;
-  height: 216px;
-  margin: 10px 0 6px;
-}
-.auth-start-stage > span {
-  position: absolute;
-  display: block;
-}
-/* 고리가 지나는 길: 호가 끊겨 보이지 않게 아주 옅은 둥근 선을 먼저 깝니다. */
-.auth-start-stage::before {
-  position: absolute;
-  inset: 0;
-  border: 3px solid var(--brand-50);
-  border-radius: 50%;
-  content: "";
-}
-/* 접시 둘레를 도는 고리: 꼬리가 투명했다가 끝으로 갈수록 진해지는 코랄 호입니다. */
-.auth-start-stage__ring {
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, transparent 0 55%, var(--brand-200) 78%, var(--color-primary) 100%);
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
-  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
-}
-.auth-start-stage__plate {
-  inset: 12px;
-  border: 1px solid color-mix(in srgb, var(--brand-100) 70%, transparent);
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 38%, var(--color-surface) 0 58%, var(--brand-50) 100%);
-  box-shadow:
-    0 18px 40px color-mix(in srgb, var(--shadow-color) 10%, transparent),
-    inset 0 -6px 16px color-mix(in srgb, var(--brand-100) 45%, transparent);
-}
-.auth-start-stage__shadow {
-  bottom: 40px;
-  left: 50%;
-  width: 104px;
-  height: 14px;
-  margin-left: -52px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--shadow-color) 16%, transparent);
-  filter: blur(4px);
+  width: 100%;
+  min-height: 280px;
+  flex: 1;
+  margin-top: 28px;
+  background:
+    radial-gradient(circle at 14% 30%, color-mix(in srgb, var(--green-200) 70%, transparent) 0 18%, transparent 34%),
+    radial-gradient(circle at 88% 58%, color-mix(in srgb, var(--brand-200) 70%, transparent) 0 14%, transparent 30%),
+    radial-gradient(circle at 70% 18%, color-mix(in srgb, var(--amber-100) 90%, transparent) 0 20%, transparent 40%),
+    linear-gradient(180deg, var(--neutral-50), var(--amber-50) 60%, var(--neutral-100));
+  /* 위쪽은 흰 화면으로 부드럽게 녹아들게 합니다. */
+  -webkit-mask: linear-gradient(180deg, transparent, #000 22%);
+  mask: linear-gradient(180deg, transparent, #000 22%);
 }
 /* 프라이팬을 든 맛다공 캐릭터(캐릭터 시트 5×2 중 3번째 칸) */
-.auth-start-stage__character {
-  bottom: 42px;
+.auth-start-scene__character {
+  position: absolute;
+  bottom: 18px;
   left: 50%;
-  width: 164px;
-  height: 164px;
-  margin-left: -82px;
-  background: url("/assets/avatars/matdagong-characters-v1.png") 50% 0 / 500% 200% no-repeat;
-}
-/* 오류 화면은 고리가 돌지 않으니 옅은 테두리만 남깁니다. */
-.auth-start-error .auth-start-stage__ring {
-  background: var(--brand-100);
+  width: 300px;
+  height: 300px;
+  margin-left: -150px;
+  /* MascotArt.tsx의 캐릭터 원본 시트와 경로·배치를 맞춥니다. */
+  background: url("/assets/brand/characters/chef.png") 50% 0 / 500% 200% no-repeat;
 }
 
+/* 장면 아래쪽을 둥글게 덮고 올라오는 흰 판 */
+.auth-start-status {
+  position: relative;
+  width: 100%;
+  margin-top: -40px;
+  border-radius: 50% 50% 0 0 / 40px 40px 0 0;
+  background: var(--color-surface);
+  padding: 36px 24px calc(48px + env(safe-area-inset-bottom));
+}
+.auth-start-status h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
 .auth-start-message {
-  max-width: 320px;
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.6;
-}
-
-.auth-start-dots {
-  display: inline-flex;
-  gap: 6px;
-  margin-top: -4px;
-}
-.auth-start-dots i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  opacity: 0.25;
-}
-
-.auth-start-error h1 {
-  margin: 0;
+  margin: 10px 0 0;
   color: var(--neutral-700);
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 400;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.65;
 }
 
-.auth-start-error button {
+/* 끝을 알 수 없는 기다림이라 짧은 코랄 막대가 회색 길을 오갑니다. */
+.auth-start-progress {
+  position: relative;
+  display: block;
+  width: 210px;
+  height: 6px;
+  overflow: hidden;
+  margin: 22px auto 0;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-100);
+}
+.auth-start-progress i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 45%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+
+/* ── 로그인 오류 ── */
+.auth-start-error {
+  padding-right: 24px;
+  padding-bottom: calc(48px + env(safe-area-inset-bottom));
+  padding-left: 24px;
+}
+.auth-start-error .auth-start-brand__symbol {
+  width: 120px;
+  height: 120px;
+}
+.auth-start-error .auth-start-brand__name {
+  font-size: 36px;
+}
+.auth-start-error__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 44px;
+}
+.auth-start-alert {
+  display: grid;
+  width: 112px;
+  height: 112px;
+  place-items: center;
+  margin-bottom: 36px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--color-primary);
+  font-size: 60px;
+  font-weight: 900;
+  line-height: 1;
+}
+.auth-start-error h2 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 800;
+}
+.auth-start-retry {
   width: 100%;
   min-height: 54px;
-  margin-top: 10px;
   border: 0;
   border-radius: var(--radius-control);
   background: var(--color-primary);
   color: var(--on-strong);
   font: inherit;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
 }
 
@@ -164,30 +179,11 @@
   .auth-start-screen > :nth-child(n + 3) {
     animation-delay: 0.16s;
   }
-  /* is-loading은 startupView.tsx가 이 화면 루트에만 붙이는 상태라 루트 클래스와 함께 씁니다. */
-  .auth-start-screen.is-loading::before {
-    animation: auth-start-drift 9s ease-in-out infinite alternate;
-  }
-  .auth-start-screen.is-loading::after {
-    animation: auth-start-drift 11s ease-in-out -4s infinite alternate-reverse;
-  }
-  .auth-start-screen.is-loading .auth-start-stage__ring {
-    animation: auth-start-spin 1.6s linear infinite;
-  }
-  .auth-start-screen.is-loading .auth-start-stage__character {
+  .auth-start-scene__character {
     animation: auth-start-float 2.4s ease-in-out infinite;
   }
-  .auth-start-screen.is-loading .auth-start-stage__shadow {
-    animation: auth-start-shadow 2.4s ease-in-out infinite;
-  }
-  .auth-start-dots i {
-    animation: auth-start-dot 1.2s ease-in-out infinite;
-  }
-  .auth-start-dots i:nth-child(2) {
-    animation-delay: 0.16s;
-  }
-  .auth-start-dots i:nth-child(3) {
-    animation-delay: 0.32s;
+  .auth-start-progress i {
+    animation: auth-start-progress 1.4s ease-in-out infinite alternate;
   }
 }
 
@@ -197,30 +193,13 @@
     opacity: 0;
   }
 }
-@keyframes auth-start-drift {
-  to {
-    transform: translate(-40px, 30px) scale(1.12);
-  }
-}
-@keyframes auth-start-spin {
-  to {
-    transform: rotate(1turn);
-  }
-}
 @keyframes auth-start-float {
   50% {
-    transform: translateY(-9px) rotate(-1.5deg);
+    transform: translateY(-8px) rotate(-1.5deg);
   }
 }
-@keyframes auth-start-shadow {
-  50% {
-    transform: scaleX(0.78);
-    opacity: 0.6;
-  }
-}
-@keyframes auth-start-dot {
-  40% {
-    transform: translateY(-3px);
-    opacity: 1;
+@keyframes auth-start-progress {
+  to {
+    transform: translateX(122%);
   }
 }

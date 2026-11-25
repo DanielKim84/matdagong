@@ -35,6 +35,9 @@ export default function Sheet({
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     panel.current?.focus({ preventScroll: true });
     function trapFocus(event: KeyboardEvent) {
+      // 창이 겹쳐 열려 있으면(지도 목록 위 마커 안내 등) 맨 위 창만 키를 받습니다.
+      const sheets = document.querySelectorAll(".sheet");
+      if (sheets[sheets.length - 1] !== panel.current) return;
       if (event.key === "Escape") closeRef.current();
       if (event.key !== "Tab") return;
       const items = panel.current?.querySelectorAll<HTMLElement>(FOCUSABLE);

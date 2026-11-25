@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { searchNearbyKakaoPlaces } from "../../services/kakao";
+import { findNearbyEateries, searchNearbyKakaoPlaces } from "../../services/kakao";
 import { VISIT_RADIUS_METERS } from "../../models/place";
 import { errorMessage } from "../../utils/errorMessage";
 import type { Coordinates } from "../../utils/geo";
@@ -7,7 +7,10 @@ import type { Coordinates } from "../../utils/geo";
 const SEARCH_DELAY_MS = 450;
 const SEARCH_MIN_LENGTH = 2;
 
-/** 현재 위치 1km 안의 카카오 장소를 이름·주소로 찾습니다. 입력을 멈추면 자동으로 찾습니다. */
+/**
+ * 현재 위치 1km 안의 카카오 장소를 이름·주소로 찾습니다. 입력을 멈추면 자동으로 찾습니다.
+ * 검색어가 없을 때 보여 줄 근처 음식점·카페(nearbyPlaces, 보드 11-01)도 위치를 얻으면 한 번 받아 둡니다.
+ */
 export function usePlaceSearch({
   location,
   selectedPlace,
@@ -21,6 +24,7 @@ export function usePlaceSearch({
   const [placeResults, setPlaceResults] = useState<KakaoPlaceResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
+  const [nearbyPlaces, setNearbyPlaces] = useState<KakaoPlaceResult[]>([]);
   // 늦게 도착한 이전 검색 결과가 최신 결과를 덮지 않도록 요청 순번을 셉니다.
   const searchSeq = useRef(0);
 
@@ -64,6 +68,21 @@ export function usePlaceSearch({
     setHasSearched(false);
   }
 
+  // 근처 목록은 보여 주기만 하는 덤이라 못 받아도 알리지 않습니다(검색은 그대로 할 수 있음).
+  useEffect(() => {
+    if (!location) return;
+    let active = true;
+    findNearbyEateries(location, VISIT_RADIUS_METERS).then(
+      (places) => {
+        if (active) setNearbyPlaces(places);
+      },
+      () => undefined,
+    );
+    return () => {
+      active = false;
+    };
+  }, [location]);
+
   // 위치가 없거나 이미 장소를 골랐으면 검색하지 않습니다.
   useEffect(() => {
     if (selectedPlace || !location || placeSearch.trim().length < SEARCH_MIN_LENGTH) return;
@@ -75,6 +94,7 @@ export function usePlaceSearch({
     placeSearch,
     changePlaceSearch,
     placeResults,
+    nearbyPlaces,
     hasSearched,
     isSearchingPlaces,
     findPlaces,

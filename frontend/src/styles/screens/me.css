@@ -1,0 +1,1035 @@
+/* 현재 기본 나 화면 전용 규칙입니다. 공통 부품은 ui.css를 씁니다. */
+
+/* ── 공통 ── */
+.r-me-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 20px 24px;
+}
+.r-me-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-me-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.r-me-note--link {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-primary-strong);
+  font-family: var(--font-body);
+  font-weight: 700;
+}
+.r-me-note--link .icon {
+  width: 16px;
+  height: 16px;
+}
+/* 글자 목록(설정·지갑). 흰 카드 안이면 좌우 여백을 둡니다. */
+.r-me-list {
+  padding: 0;
+}
+.r-card.r-me-list {
+  padding: 0 16px;
+}
+/* me 화면의 빈 화면(EmptyState className="r-me-empty")만 아이콘·버튼 간격을 조금 띄웁니다. */
+.r-me-empty .r-badge-icon {
+  margin-bottom: 4px;
+}
+.r-me-empty .r-button {
+  margin-top: 6px;
+}
+
+/* ── 나 홈(보드 13-01): 프로필 머리 ── */
+.r-me-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: calc(20px + env(safe-area-inset-top)) 20px 16px;
+}
+.r-me-head__avatar {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  padding: 0;
+}
+.r-me-head__avatar .avatar {
+  width: 96px;
+  height: 96px;
+}
+.r-me-head__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 24px;
+}
+.r-me-head__copy h1 {
+  margin: 0;
+  font-size: 24px;
+}
+.r-me-head__copy > p {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+/* 프로필 편집 · 공개 프로필은 보드처럼 한 줄에 나란히 둡니다. */
+.r-me-head__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.r-me-head__action {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  padding: 0 8px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.r-me-head__action .icon {
+  width: 14px;
+  height: 14px;
+}
+.r-me-head__settings {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top));
+  right: 8px;
+}
+/* ── 바로 가기 줄(보드 13-01): 아이콘 · 이름 · > ── */
+.r-me-links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-me-links li + li {
+  border-top: 1px solid var(--color-line);
+}
+.r-me-links button {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: none;
+  padding: 0 2px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-me-links b {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 500;
+}
+.r-me-links .icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+.r-me-links .icon:last-child {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+
+/* ── 이번 주 기록 달력(보드 13-01) ── */
+.r-me-week {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 14px 14px 12px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-me-week__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.r-me-week__head b {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+}
+.r-me-week__head small {
+  flex: 1;
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-me-week__head .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-muted);
+}
+.r-me-week__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.r-me-week__days > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.r-me-week__days small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.r-me-week__days small.r-me-calendar__weekdays .is-sunday {
+  color: var(--color-primary);
+}
+.r-me-week__days b {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 600;
+}
+.r-me-week__days .is-today b {
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-me-week__days i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+.r-me-week__days i.is-on {
+  background: var(--color-primary);
+}
+
+/* 설정 줄 오른쪽 화살표(설정 화면의 행) */
+.r-me-setting > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-subtle);
+}
+
+/* ── 빠른 장소 기록(#drafts, 보드 14-03): 공용 가게 줄(.r-collection-row)에 오른쪽 코랄 "기록하기"와 작은 휴지통 ── */
+.r-me-draft-row__thumb {
+  display: grid;
+  width: 96px;
+  height: 72px;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-100);
+  color: var(--neutral-400);
+}
+.r-me-draft-row__thumb .icon {
+  width: 24px;
+  height: 24px;
+}
+.r-me-draft-row__actions {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.r-me-draft-row__write {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  padding: 0 10px;
+  color: var(--on-strong);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 800;
+}
+.r-me-draft-row__write .icon,
+.r-me-draft-row__delete .icon {
+  width: 15px;
+  height: 15px;
+}
+.r-me-draft-row__delete {
+  min-height: 32px;
+  color: var(--color-muted);
+}
+.r-me-diary__band small {
+  margin-left: 6px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ── 별로였던 곳(#disliked): 안내 카드 → 몇 곳인지와 달라지는 점 → 사진 카드 ── */
+.r-me-disliked__notice span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-me-disliked__notice b {
+  color: var(--color-ink);
+}
+/* "별로였어요" 알약(가본 곳 기록 없음과 같은 회색 계열에 옅은 코랄 글씨) */
+.r-collection-row__copy em.is-disliked {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+.r-me-disliked__undo {
+  display: inline-flex;
+  min-height: 36px;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  padding: 0 10px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-me-disliked__undo .icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* ── 내 맛집 모음(보드 13-02~13-04, CollectionsScreen)·최근 본 곳(14-02, RecentScreen)의 가게 줄 ──
+   사진 · 이름 · "분류 · 동네"(공개 범위 화면은 방문 날짜) · 한마디 두 줄, 오른쪽 하트·> 또는 공개 범위 고르기. 줄 사이는 옅은 선입니다. */
+.r-me-collections.has-action-bar .r-me-body {
+  padding-bottom: calc(110px + env(safe-area-inset-bottom));
+}
+.r-collection-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-collection-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--color-line);
+  padding: 12px 0;
+}
+.r-collection-row__main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 14px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-collection-row__main > .icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--color-muted);
+}
+.r-collection-row__photo {
+  position: relative;
+  width: 112px;
+  height: 84px;
+  flex: none;
+}
+.r-collection-row__photo .r-place-thumb {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+}
+/* 가본 곳: 사진 왼쪽 아래 흰 원 속 체크(보드 13-03) */
+.r-collection-row__photo i {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  color: var(--color-ink);
+}
+.r-collection-row__photo i .icon {
+  width: 15px;
+  height: 15px;
+}
+.r-collection-row__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.r-collection-row__copy b {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-collection-row__copy small {
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-collection-row__copy q {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+/* 가본 곳 "기록 있음"(연한 초록)·"기록 없음"(회색) 알약 */
+.r-collection-row__copy em {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-100);
+  padding: 4px 10px;
+  color: var(--neutral-700);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+.r-collection-row__copy em.is-on {
+  background: var(--green-50);
+  color: var(--green-700);
+}
+.r-collection-row__copy em .icon {
+  width: 13px;
+  height: 13px;
+}
+.r-collection-row__heart {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  align-self: flex-start;
+  place-items: center;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+}
+.r-collection-row__heart .icon {
+  width: 24px;
+  height: 24px;
+}
+/* 공개 범위 화면은 오른쪽 고르기 칸만큼 사진을 줄입니다. */
+.r-collection-row.is-shared .r-collection-row__photo,
+.r-me-collections .r-collection-row:has(.r-collection-row__visibility) .r-collection-row__photo {
+  width: 92px;
+  height: 72px;
+}
+/* 공개 범위 고르기: 공개는 흰 알약, 나만 보기는 연한 코랄 알약(보드 13-04) */
+.r-collection-row__visibility select {
+  min-width: 104px;
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+.r-collection-row__visibility.is-public select {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+/* ── 기록 달력(보드 14-01, DiaryScreen) ── */
+/* 위쪽: 뒤로 버튼 옆에 큰 제목 */
+.r-me-diary__head {
+  display: flex;
+  min-height: 60px;
+  align-items: center;
+  gap: 4px;
+  padding: calc(8px + env(safe-area-inset-top)) 12px 0 8px;
+}
+.r-me-diary__head h1 {
+  margin: 0;
+  font-size: 26px;
+}
+.r-me-diary__lead {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 14px;
+}
+/* 날짜 띠("3월 21일 (금)의 기록 3개"): 연한 코랄 바탕 */
+.r-me-diary__band {
+  margin: 0 0 4px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+  padding: 8px 12px;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 800;
+}
+/* 달력 카드: 위에 "< 2025년 3월 >", 아래 요일과 날짜 */
+.r-me-calendar {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 8px 10px 12px;
+}
+.r-me-month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.r-me-month b {
+  font-size: 17px;
+  font-weight: 800;
+}
+.r-me-calendar__weekdays,
+.r-me-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  justify-items: center;
+}
+.r-me-calendar__weekdays {
+  margin: 4px 0 6px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  font-weight: 600;
+}
+.r-me-calendar__grid {
+  row-gap: 4px;
+}
+.is-sunday {
+  color: var(--color-primary);
+}
+/* 날짜 한 칸: 기록한 날은 연한 코랄 원, 고른 날은 코랄 원에 흰 글씨, 오늘은 코랄 테두리 */
+.r-me-day {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+}
+.r-me-day.is-sunday {
+  color: var(--color-primary);
+}
+.r-me-day.is-recorded {
+  background: var(--brand-100);
+}
+.r-me-day.is-today {
+  box-shadow: inset 0 0 0 1.5px var(--color-primary);
+}
+.r-me-day.is-selected {
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+
+/* ── 포인트 지갑 ── */
+/* 잔액 상자(보드 16-04): 연한 코랄 바탕에 왼쪽 동전 아이콘, 오른쪽 "내 포인트"와 큰 숫자 */
+.r-me-balance {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-radius: var(--radius-card);
+  background: var(--brand-50);
+  padding: 22px 20px;
+}
+.r-me-balance__icon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  place-items: center;
+  color: var(--color-primary);
+}
+.r-me-balance__icon .icon {
+  width: 44px;
+  height: 44px;
+}
+.r-me-balance__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-me-balance__copy > span {
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.r-me-balance__copy > b {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+}
+.r-me-balance__copy > b small {
+  margin-left: 2px;
+  font-size: 22px;
+}
+.r-me-balance__copy > small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+/* 지갑의 준비 중 칸: 회색 바탕 세 칸에 아이콘 · 이름 · "준비 중"(보드 16-04) */
+.r-me-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.r-me-tile {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--neutral-50);
+  padding: 14px 6px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+.r-me-tile > .icon {
+  width: 24px;
+  height: 24px;
+  color: var(--neutral-700);
+}
+.r-me-tile__label {
+  font-size: 14px;
+  font-weight: 700;
+}
+.r-me-tile__caption {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+/* 포인트 내역 줄: 왼쪽 연한 초록 + (적립) · 회색 −(사용) 동그라미, 오른쪽 코랄 금액 */
+.r-me-amount__icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: 700;
+}
+.r-me-amount__icon.is-plus {
+  background: var(--green-50);
+  color: var(--green-700);
+}
+.r-me-amount__icon.is-minus {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+}
+.r-me-amount {
+  flex: none;
+  font-size: 16px;
+  font-weight: 800;
+}
+.r-me-amount.is-plus {
+  color: var(--color-primary);
+}
+.r-me-amount.is-minus {
+  color: var(--color-ink);
+}
+
+/* ── 설정 ── */
+.r-me-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-me-group__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+}
+/* 설정 맨 위 내 프로필 줄(보드 17-01) */
+.r-me-settings__profile {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 14px;
+  border: 0;
+  border-bottom: 1px solid var(--color-line);
+  background: none;
+  padding: 4px 0 18px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-me-settings__profile .avatar {
+  width: 72px;
+  height: 72px;
+  flex: none;
+}
+.r-me-settings__profile > span {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-me-settings__profile b {
+  font-size: 22px;
+}
+.r-me-settings__profile small {
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.r-me-settings__profile > .icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--color-muted);
+}
+/* 연결 계정 위 회색 안내 줄 */
+.r-me-settings__note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-100);
+  padding: 10px 12px;
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-me-settings__note .icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+/* 알림 줄: 왼쪽 코랄 아이콘 · 이름과 설명 · 오른쪽 스위치(보드 17-02) */
+.r-me-setting--alert > .icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  align-self: flex-start;
+  margin-top: 4px;
+  color: var(--color-primary);
+}
+/* 로그아웃: 바로 가기 줄 끝의 코랄 글자 */
+.r-me-links__danger {
+  color: var(--color-primary-strong) !important;
+}
+.r-me-setting {
+  min-height: 56px;
+  padding: 6px 0;
+}
+.r-me-setting__label {
+  flex: 1;
+  font-size: 15px;
+}
+.r-me-setting__label.is-danger {
+  color: var(--brand-700);
+  font-weight: 700;
+}
+/* 연결 상태 알약(보드 17-01): 연결됨은 연한 초록, 연결 안 됨은 회색 */
+.r-me-setting__state {
+  border-radius: var(--radius-pill);
+  background: var(--neutral-100);
+  padding: 4px 10px;
+  color: var(--neutral-700);
+  font-size: 12px;
+  font-weight: 700;
+}
+.r-me-setting__state.is-ok {
+  background: var(--green-50);
+  color: var(--green-700);
+}
+/* 제공자 네모 아이콘: 카카오 노랑, 네이버 초록(각 제공자의 브랜드 색) */
+.r-me-provider {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 900;
+}
+.r-me-provider--kakao {
+  background: var(--kakao-bg);
+  color: var(--kakao-ink);
+}
+.r-me-provider--naver {
+  background: var(--naver-bg);
+  color: var(--on-strong);
+}
+.r-me-switch {
+  position: relative;
+  width: 52px;
+  height: 44px;
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.r-me-switch > span {
+  position: absolute;
+  top: 8px;
+  left: 2px;
+  width: 48px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-300);
+  transition: background 0.15s;
+}
+.r-me-switch > span::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  transition: transform 0.15s;
+}
+.r-me-switch.is-on > span {
+  background: var(--color-primary);
+}
+.r-me-switch.is-on > span::after {
+  transform: translateX(20px);
+}
+
+/* ── 프로필 편집(#profile-edit) ── */
+
+.r-me-edit__save > .r-button {
+  width: 100%;
+}
+/* 배경 사진 편집(보드 15-02): 취소 · 저장 같은 너비 두 칸 */
+.r-me-edit__save.has-cancel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* 설정 맨 아래 탈퇴: 실수로 누르지 않게 목록 밖 작은 글자 버튼입니다. */
+.r-me-withdraw {
+  min-height: 44px;
+  align-self: center;
+  border: 0;
+  background: none;
+  padding: 0 12px;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ── 알림 수신 설정(보드 17-02, 설정에서 여는 전체 화면): 연한 코랄 안내 상자 아래 알림 줄과 스위치 ── */
+.r-me-alerts__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 8px;
+  border-radius: var(--radius-md);
+  background: var(--brand-50);
+  padding: 14px;
+  color: var(--neutral-700);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-me-alerts__notice > .icon {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  color: var(--color-primary);
+}
+.r-me-alerts__notice span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.r-me-alerts__notice b {
+  color: var(--color-ink);
+  font-size: 15px;
+}
+
+/* ── 맛다공 탈퇴 확인(보드 18-04, 설정에서 여는 전체 화면) ── */
+.r-me-withdraw-screen .r-subscreen__body {
+  align-items: center;
+  text-align: center;
+}
+.r-me-withdraw-screen__mark {
+  display: grid;
+  width: 88px;
+  height: 88px;
+  place-items: center;
+  margin-top: 12px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.r-me-withdraw-screen__mark .icon {
+  width: 40px;
+  height: 40px;
+}
+.r-me-withdraw-screen__title {
+  margin: 18px 0 8px;
+  font-size: 24px;
+  font-weight: 800;
+}
+.r-me-withdraw-screen__lead {
+  margin: 0 0 20px;
+  color: var(--neutral-700);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.r-me-withdraw-screen__box {
+  width: 100%;
+  margin-bottom: 12px;
+  border-radius: var(--radius-md);
+  background: var(--neutral-50);
+  padding: 16px;
+  text-align: left;
+}
+.r-me-withdraw-screen__box.is-danger {
+  background: var(--brand-50);
+}
+.r-me-withdraw-screen__box b {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 800;
+}
+.r-me-withdraw-screen__box b .icon {
+  width: 22px;
+  height: 22px;
+}
+.r-me-withdraw-screen__box.is-danger b .icon {
+  color: var(--color-primary);
+}
+.r-me-withdraw-screen__box ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.r-me-withdraw-screen__box p {
+  margin: 8px 0 0;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── 이용약관·개인정보 처리방침(#policy) ── */
+.r-me-policy__date {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-me-policy__doc {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 0 24px;
+}
+.r-me-policy__doc h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+.r-me-policy__summary {
+  margin: -12px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.r-me-policy__doc section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-line);
+}
+.r-me-policy__doc h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+}
+.r-me-policy__doc p,
+.r-me-policy__doc li {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+.r-me-policy__doc ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+}
+.r-me-policy__doc li::marker {
+  color: var(--color-primary);
+}
+
+/* 신고가 쌓여 가려졌을 때 나 화면 맨 위 안내 */
+.r-me-hidden-notice {
+  /* 나 화면 본문(.r-me-body)과 같은 좌우 20px */
+  margin: 0 20px 12px;
+  word-break: keep-all;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  padding: 12px 14px;
+  color: var(--color-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.r-me-hidden-notice b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--color-primary-strong);
+  font-size: 14px;
+}

@@ -1,63 +1,52 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
-import Icon from "../../components/Icon";
-import MapCanvas, { type MapMe } from "../../components/MapCanvas";
+import Icon, { type IconName } from "../../components/Icon";
+import MapCanvas from "../../components/MapCanvas";
 import RecordMenuButton from "../../components/RecordMenuButton";
 import { EmptyState } from "../../components/ui";
+import type { FitRequest, MapMe } from "../../models/map";
 import type { Place } from "../../models/place";
 import type { Coordinates } from "../../utils/geo";
-import DiscoverSheet from "../discover/DiscoverSheet";
-import MarkerGuideSheet from "../discover/MarkerGuideSheet";
-import PlaceCarousel from "../discover/PlaceCarousel";
-import {
-  CAROUSEL_LIMIT,
-  isInBounds,
-  sortPlaces,
-  type SheetState,
-  type SortOrder,
-  type VisibleBounds,
-} from "../discover/discoverModel";
+import { clearMapReturn, prepareMapReturn, readMapReturn } from "../../utils/mapCamera";
+import MarkerGuideScreen from "../discover/MarkerGuideScreen";
+import { isInBounds, type VisibleBounds } from "../discover/discoverModel";
 import { usePlaceContext } from "../discover/usePlaceContext";
-import { useSheetHeights } from "../discover/useSheetHeights";
-import { visibleMapArea } from "../discover/visibleMapArea";
+import { mapBoundsOf, markerVisibleBounds } from "../discover/mapBounds";
 import { openKakaoPlace } from "../place/kakaoPlaceDetail";
-import MyMapSearch from "./MyMapSearch";
-import MyMapSheetList from "./MyMapSheetList";
+import MyMapPlaceList from "./MyMapPlaceList";
+import MyPlacesScreen from "./MyPlacesScreen";
 import {
-  MY_MAP_KIND_LABELS,
   MY_MAP_SCOPES,
+  MY_PLACE_CATEGORY_LABELS,
+  categoryOf,
   isInScope,
-  knownPlaceOf,
-  myLeadTaster,
   myMapPlaces,
   type MyMapKind,
   type MyMapScope,
+  type MyPlaceCategory,
 } from "./myMapModel";
 
 /**
- * 내 지도 탭(#mymap): 나와 관련된 맛집만 보는 지도입니다. 내 기록, 다녀온 곳, 가볼 곳을 마커로 나눠 보여 주고,
- * 카카오맵처럼 지역과 상관없이 가게를 검색합니다(검색 결과를 누르면 바로 맛집 상세).
- * 발견과 같은 틀입니다: 지도 아래에 지금 보는 지역의 마커를 넘기는 카드, 그 아래 끌어 올리는 목록 시트를 둡니다.
- * 마커를 누르면 그 카드로 넘어가고, 같은 마커를 한 번 더 누르거나 카드·목록을 누르면 맛집 상세로 갑니다.
- * 지도는 내 위치를 가운데로 열고, 카드·목록은 처음부터 그 범위(내 주변) 기준입니다.
+ * 내 지도 탭(#mymap, 보드 06-03): 나와 관련된 맛집만 보는 지도입니다. 내 기록, 다녀온 곳, 가볼 곳을 마커로 나눠 보여 줍니다.
+ * 큰 제목과 기록하기 버튼 · 범위 칩 아래 둥근 지도 카드, 그 아래 가볼 곳·가본 곳·공유 중 수(누르면 내 맛집 모음의 그 칩)와
+ * "전체 장소 보기 N곳"(장소 검색 화면, 보드 06-04: 내 장소 전부와 카카오맵처럼 지역과 상관없는 가게 검색)이 이어집니다.
+ * 마커를 누르면 그 맛집을 지도 바로 아래 한 줄로 보여 주고, 같은 마커를 한 번 더 누르거나 그 줄을 누르면 맛집 상세로 갑니다.
  */
 export default function MyMapScreen() {
   const app = useAppData();
+  const [mapReturn] = useState(() => readMapReturn("mymap"));
+  useEffect(() => clearMapReturn("mymap"), []);
   const [scope, setScope] = useState<MyMapScope>("all");
-  const [sheet, setSheet] = useState<SheetState>("peek");
-  const [sort, setSort] = useState<SortOrder>("priority");
   const [device, setDevice] = useState<Coordinates | null>(null);
-  // 목록 시트는 지금 지도에 보이는 범위, 카드는 사용자가 지도를 직접 옮겼을 때만 바뀌는 범위를 씁니다
-  // (카드를 넘겨 지도가 따라갈 때 카드가 뒤섞이지 않게). 둘 다 지도가 범위를 알려 주기 전에는 비워 둡니다.
+  // 아래 목록은 지금 지도에 보이는 범위의 내 장소입니다.
   const [bounds, setBounds] = useState<VisibleBounds | null>(null);
-  const [regionBounds, setRegionBounds] = useState<VisibleBounds | null>(null);
-  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [focusedId, setFocusedId] = useState<string | null>(mapReturn?.placeId ?? null);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const root = useRef<HTMLElement>(null);
-  const top = useRef<HTMLDivElement>(null);
-  const float = useRef<HTMLDivElement>(null);
-  const { heights, style } = useSheetHeights(root, top, float);
+  const [isPlacesOpen, setIsPlacesOpen] = useState(false);
+  const mapCard = useRef<HTMLDivElement>(null);
+  // 지금 보는 지역에 내 장소가 없을 때 "내 장소 모두 보기"로 지도를 내 장소 전체에 맞춥니다(발견의 검색 맞추기와 같은 방식).
+  const [fitMine, setFitMine] = useState<FitRequest | null>(null);
 
   const knownPlaces = useMemo(
     () => [...app.places, ...app.recentPlaces, ...app.myRecords],
@@ -75,154 +64,182 @@ export default function MyMapScreen() {
     [app.myRecords, knownPlaces, app.likedPlaceIds, app.visitedPlaceIds, app.dislikedPlaceIds],
   );
   // 지도 마커는 장소 배열이 바뀔 때마다 다시 그려지므로, 칩이 바뀔 때만 새 배열을 만듭니다.
-  const { visiblePlaces, kinds } = useMemo(() => {
+  // kinds는 마커 모양(내 기록 얼굴 핀 · 다녀온 곳 체크 · 가볼 곳 하트), categories는 화면에서 부르는 세 갈래입니다.
+  const { visiblePlaces, kinds, categories } = useMemo(() => {
     const visible = entries.filter((entry) => isInScope(entry, scope));
     return {
       visiblePlaces: visible.map((entry) => entry.place),
       kinds: new Map<string, MyMapKind>(visible.map((entry) => [entry.place.id, entry.kind])),
+      categories: new Map<string, MyPlaceCategory>(visible.map((entry) => [entry.place.id, categoryOf(entry)])),
     };
   }, [entries, scope]);
   const ctx = usePlaceContext(device);
-  const inArea = (area: VisibleBounds | null) => (area ? visiblePlaces.filter((place) => isInBounds(place, area)) : []);
-  // 카드·목록의 기본 순서는 내 기록 → 다녀온 곳 → 가볼 곳(entries 순서)이고, 가까운 순을 고르면 거리순입니다.
-  const carousel = inArea(regionBounds).slice(0, CAROUSEL_LIMIT);
   const focusedPlace = focusedId ? visiblePlaces.find((place) => place.id === focusedId) : undefined;
-  if (focusedPlace && !carousel.includes(focusedPlace)) carousel.push(focusedPlace);
-  const rows = sort === "distance" ? sortPlaces(inArea(bounds), "distance", ctx) : inArea(bounds);
+  const areaCount = bounds ? visiblePlaces.filter((place) => isInBounds(place, bounds)).length : 0;
 
   const me: MapMe | undefined = app.myProfile
     ? { name: app.myProfile.nickname, variant: app.myProfile.avatarVariant }
     : undefined;
-  const counts = {
-    all: entries.length,
-    wish: entries.filter((entry) => isInScope(entry, "wish")).length,
-    visited: entries.filter((entry) => isInScope(entry, "visited")).length,
-  };
+  // 가볼 곳 · 가본 곳 · 공유 중 수(지도 범위와 상관없이 전체). 누르면 내 맛집 모음의 같은 칩(#saved/wish|visited|shared)으로 갑니다.
+  const STAT_ICONS: Record<MyPlaceCategory, IconName> = { wish: "heart", visited: "paw", shared: "shared" };
+  const stats = (["wish", "visited", "shared"] as const).map((category) => ({
+    category,
+    label: MY_PLACE_CATEGORY_LABELS[category],
+    count: entries.filter((entry) => isInScope(entry, category)).length,
+    icon: STAT_ICONS[category],
+  }));
 
   function selectFromMap(place: Place) {
-    // 이미 고른 마커를 다시 누르면 상세로, 처음 누르면 그 카드로 넘깁니다.
+    // 이미 고른 마커를 다시 누르면 상세로, 처음 누르면 목록 맨 위에 표시합니다.
     if (focusedId === place.id) {
+      prepareMapReturn("mymap", place.id);
       go("place", place.id);
       return;
     }
     setFocusedId(place.id);
-    setSheet("peek");
   }
-  function changeBounds(next: MapBounds, isFocusMove: boolean) {
-    // 검색창·카드·시트에 가려진 곳은 빼고, 눈에 보이는 지도 범위의 맛집만 카드·목록에 둡니다.
-    const visible = visibleMapArea(next, root.current, top.current);
+  function openPlace(place: Place) {
+    prepareMapReturn("mymap", place.id);
+    go("place", place.id);
+  }
+  function changeBounds(next: MapBounds, isFocusMove: boolean, isUserMove: boolean) {
+    // 고른 마커로 지도가 따라간 경우는 선택을 유지합니다. 지도 범위 안 수는 마커가 2/3 이상 보이는 곳만 셉니다.
+    const card = mapCard.current;
+    const visible = markerVisibleBounds(
+      mapBoundsOf(next),
+      card ? { width: card.clientWidth, height: card.clientHeight } : null,
+    );
     setBounds(visible);
     if (isFocusMove) return;
-    setRegionBounds(visible);
-    if (focusedPlace && !isInBounds(focusedPlace, visible)) setFocusedId(null);
+    if (isUserMove || (focusedPlace && !isInBounds(focusedPlace, visible))) setFocusedId(null);
   }
   function changeScope(next: MyMapScope) {
     setScope(next);
     setFocusedId(null);
   }
-  /** 맛다공에 있는 가게(맛객 기록이 있거나 내가 저장한 곳)는 그 상세로, 아직 없는 가게는 카카오 가게 정보로 상세를 엽니다. */
-  function selectSearched(result: KakaoPlaceResult) {
-    const known = knownPlaceOf(result, knownPlaces);
-    if (known) go("place", known.id);
-    else openKakaoPlace(result);
+  function fitAllMine() {
+    setFitMine((current) => ({ places: visiblePlaces, requestId: (current?.requestId ?? 0) + 1 }));
   }
 
   const isEmpty = !entries.length && !app.isLoading;
 
   return (
-    <main ref={root} className="r-screen r-discover r-mymap" data-sheet={sheet} style={style}>
-      <div className="r-discover__map">
+    <main className="r-screen r-discover r-mymap">
+      <header className="r-mymap__head">
+        <div>
+          <h1>내 지도</h1>
+          <p>
+            내가 가보고 싶은 곳과 다녀온 곳을
+            <br />
+            지도에서 관리해요.
+          </p>
+        </div>
+        <RecordMenuButton />
+      </header>
+
+      <div className="r-chips r-mymap__scopes" role="toolbar" aria-label="내 지도 범위">
+        {MY_MAP_SCOPES.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className={`r-chip ${scope === option.value ? "is-on" : ""}`}
+            aria-pressed={scope === option.value}
+            onClick={() => changeScope(option.value)}
+          >
+            {option.value === "wish" && <Icon name="heart" />}
+            {option.value === "visited" && <Icon name="paw" />}
+            {option.value === "shared" && <Icon name="shared" />}
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="r-map-card" ref={mapCard}>
         <MapCanvas
+          cameraKey="mymap"
+          restoreCamera={!!mapReturn}
           places={visiblePlaces}
           subscriptions={[]}
           markerKindOf={(place) => kinds.get(place.id) ?? "liked"}
           focusedPlaceId={focusedId}
+          fitRequest={fitMine}
           me={me}
           onPositionChange={setDevice}
+          onManualLocate={() => setFocusedId(null)}
           onBoundsChange={changeBounds}
           onSelect={selectFromMap}
         />
       </div>
 
-      <div ref={top} className="r-discover__top">
-        <MyMapSearch onSelect={selectSearched} />
-        <div className="r-chips r-discover-chips" role="toolbar" aria-label="내 지도 범위">
-          {MY_MAP_SCOPES.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              className={`r-chip ${scope === option.value ? "is-on" : ""}`}
-              aria-pressed={scope === option.value}
-              onClick={() => changeScope(option.value)}
-            >
-              {option.label} {counts[option.value]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <button type="button" className="r-discover__guide-button" onClick={() => setIsGuideOpen(true)}>
-        <Icon name="pin" />
-        마커 안내
-      </button>
-
-      {/* 기록하기 버튼과 카드(또는 빈 지도 안내)를 한 덩어리로 띄웁니다. 높이를 재서 지도 버튼을 그 위에 둡니다. */}
-      <div ref={float} className="r-discover__float" inert={sheet !== "peek"}>
-        <div className="r-mymap__record">
-          <RecordMenuButton />
-        </div>
-        {isEmpty ? (
-          <div className="r-card r-discover__float-card">
-            <EmptyState
-              icon="pin"
-              title="아직 내 지도에 표시할 곳이 없어요"
-              message="위에서 가고 싶은 가게를 찾아 하트를 누르면 가볼 곳으로 저장돼요. 다녀온 곳은 기록해 보세요."
-              className="r-discover-empty"
-            />
-          </div>
-        ) : carousel.length > 0 ? (
-          // 지역이나 칩이 바뀌면 처음 카드부터 다시 보여 줍니다.
-          <PlaceCarousel
-            key={`${scope}:${JSON.stringify(regionBounds)}`}
-            places={carousel}
+      {focusedPlace && (
+        <section className="r-discover__list" aria-label="지도에서 고른 곳">
+          <p className="r-discover__focus-hint">지도에서 고른 곳이에요. 마커나 이 줄을 한 번 더 누르면 상세로 가요.</p>
+          <MyMapPlaceList
+            places={[focusedPlace]}
+            categories={categories}
             ctx={ctx}
             focusedId={focusedId}
-            onFocus={setFocusedId}
-            leadOf={myLeadTaster}
-            badgeOf={(place) => {
-              const kind = kinds.get(place.id);
-              return kind && MY_MAP_KIND_LABELS[kind];
-            }}
+            onOpen={openPlace}
           />
-        ) : (
-          // 발견과 같이 이 지역에 카드가 없어도 안내 카드를 둡니다. 카드 자리가 비어 있으면 visibleMapArea가 곧 생길 카드 높이만큼
-          // 계속 가린 것으로 봐서, 지도 아래쪽 띠에 있는 내 장소가 카드·목록에 끝내 들어오지 못합니다.
-          <div className="r-card r-discover__float-card">
-            <EmptyState
-              icon="pin"
-              title="이 지역엔 표시할 내 장소가 없어요"
-              message="지도를 옮기거나 축소해서 주변을 둘러보세요."
-              className="r-discover-empty"
-            />
-          </div>
-        )}
-      </div>
+        </section>
+      )}
+      {isEmpty ? (
+        <EmptyState
+          icon="pin"
+          title="아직 내 지도에 표시할 곳이 없어요"
+          message="전체 장소 보기에서 가고 싶은 가게를 찾아 하트를 누르면 가볼 곳으로 저장돼요. 다녀온 곳은 기록해 보세요."
+        />
+      ) : (
+        bounds &&
+        !areaCount &&
+        !focusedPlace && (
+          // 지도 아래 수 줄이 밀려나지 않게 큰 빈 화면 대신 한 줄로 알립니다.
+          <p className="r-mymap__empty-area">
+            이 지역엔 표시할 내 장소가 없어요.
+            <button type="button" className="r-text-button" onClick={fitAllMine}>
+              내 장소 모두 보기
+            </button>
+          </p>
+        )
+      )}
 
-      <DiscoverSheet
-        state={sheet}
-        onStateChange={setSheet}
-        heights={heights}
-        title={`이 지역 ${rows.length}곳`}
-        sort={sort}
-        canSortByDistance={!!device}
-        onSortChange={setSort}
-        label="내 맛집 목록"
-        priorityLabel="내 기록 먼저"
-      >
-        <MyMapSheetList places={rows} kinds={kinds} ctx={ctx} />
-      </DiscoverSheet>
+      <ul className="r-mymap__stats">
+        {stats.map((stat) => (
+          <li key={stat.category}>
+            <button type="button" onClick={() => go("saved", stat.category)}>
+              <span className={`r-mymap__stat-icon is-${stat.category}`}>
+                <Icon name={stat.icon} filled={stat.icon === "heart"} />
+              </span>
+              <span>
+                <b>{stat.label}</b>
+                <small>{stat.count}곳</small>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
 
-      {isGuideOpen && <MarkerGuideSheet variant="mymap" me={me} onClose={() => setIsGuideOpen(false)} />}
+      <button type="button" className="r-mymap__all" onClick={() => setIsPlacesOpen(true)}>
+        <Icon name="list" />
+        <b>전체 장소 보기</b>
+        <span>{entries.length}곳</span>
+        <Icon name="chevron" />
+      </button>
+
+      {isPlacesOpen && (
+        <MyPlacesScreen
+          myPlaces={entries.map((entry) => entry.place)}
+          categories={new Map(entries.map((entry) => [entry.place.id, categoryOf(entry)]))}
+          knownPlaces={knownPlaces}
+          ctx={ctx}
+          device={device}
+          onOpenPlace={openPlace}
+          onOpenKakao={openKakaoPlace}
+          onMarkerGuide={() => setIsGuideOpen(true)}
+          onClose={() => setIsPlacesOpen(false)}
+        />
+      )}
+      {isGuideOpen && <MarkerGuideScreen variant="mymap" me={me} onClose={() => setIsGuideOpen(false)} />}
     </main>
   );
 }

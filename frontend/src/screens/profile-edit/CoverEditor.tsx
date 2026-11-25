@@ -1,14 +1,17 @@
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import Icon from "../../components/Icon";
 import { useNotificationDialog } from "../../components/NotificationDialog";
 import PaginationDots from "../../components/PaginationDots";
 import { useSwipe } from "../../hooks/useSwipe";
 import { wrapIndex } from "../../utils/pagination";
-import { IMAGE_ACCEPT, MAX_COVER_COUNT } from "./profileImages";
+import { IMAGE_ACCEPT, MAX_COVER_COUNT } from "../../utils/profileImages";
 import type { ProfileForm } from "./useProfileForm";
 
-/** 프로필 배경 사진 갤러리(넘겨 보기, 추가, 삭제)입니다. 실제 반영은 프로필 저장 때 합니다. */
-export default function CoverEditor({ form }: { form: ProfileForm }) {
+/**
+ * 프로필 배경 사진 갤러리(넘겨 보기, 추가, 삭제)입니다. 실제 반영은 프로필 저장 때 합니다.
+ * middle은 큰 미리보기와 작은 사진 줄 사이에 둘 내용(배경 사진 편집 화면의 장수·안내, 보드 15-02)입니다.
+ */
+export default function CoverEditor({ form, middle }: { form: ProfileForm; middle?: ReactNode }) {
   const { confirm } = useNotificationDialog();
   const { cover } = form;
   const { gallery, previewIndex, setPreviewIndex } = cover;
@@ -42,14 +45,19 @@ export default function CoverEditor({ form }: { form: ProfileForm }) {
             />
           ))}
         </div>
-        <button type="button" onClick={() => input.current?.click()}>
-          <Icon name="camera" /> 배경 사진 추가
-        </button>
-        {gallery.length > 0 && previewIndex === 0 && <span className="profile-primary-cover-badge">대표 사진</span>}
+        {/* 보드 15-02: 오른쪽 아래 흰 동그라미 +, 첫 장을 볼 때만 왼쪽 위 코랄 "대표" */}
+        {gallery.length < MAX_COVER_COUNT && (
+          <button type="button" aria-label="배경 사진 추가" onClick={() => input.current?.click()}>
+            <Icon name="plus" />
+          </button>
+        )}
+        {gallery.length > 0 && previewIndex === 0 && (
+          <span className="profile-primary-cover-badge">
+            <Icon name="crown" />
+            대표
+          </span>
+        )}
         {gallery.length === 0 && <span className="profile-default-cover-badge">기본 배경</span>}
-        <span className="profile-cover-count">
-          {gallery.length}/{MAX_COVER_COUNT}장
-        </span>
       </div>
       {gallery.length > 0 && (
         <PaginationDots
@@ -60,18 +68,25 @@ export default function CoverEditor({ form }: { form: ProfileForm }) {
           label="배경 사진 페이지"
         />
       )}
+      {middle}
       {gallery.length > 0 && (
         <div className="profile-edit-cover-thumbnails" aria-label="등록한 배경 사진">
           {gallery.map((url, index) => (
             <div className="profile-edit-cover-thumbnail" key={`${url}-${index}`}>
               <button
                 type="button"
-                className={`profile-edit-cover-thumbnail-preview${previewIndex === index ? " is-active" : ""}`}
+                className="profile-edit-cover-thumbnail-preview"
                 aria-label={`배경 사진 ${index + 1} 미리보기`}
                 aria-pressed={previewIndex === index}
                 onClick={() => setPreviewIndex(index)}
               >
                 <img src={url} alt="" loading="lazy" />
+                {index === 0 && (
+                  <span className="profile-edit-cover-thumbnail-badge">
+                    <Icon name="crown" />
+                    대표
+                  </span>
+                )}
               </button>
               <button
                 type="button"
@@ -84,6 +99,17 @@ export default function CoverEditor({ form }: { form: ProfileForm }) {
               </button>
             </div>
           ))}
+          {gallery.length < MAX_COVER_COUNT && (
+            <button
+              type="button"
+              className="profile-edit-cover-thumbnail-add"
+              onClick={() => input.current?.click()}
+              disabled={form.isSaving}
+            >
+              <Icon name="plus" />
+              사진 추가
+            </button>
+          )}
         </div>
       )}
       <input

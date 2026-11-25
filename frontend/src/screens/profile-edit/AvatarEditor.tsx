@@ -2,10 +2,10 @@ import { useRef } from "react";
 import { Avatar } from "../../components/BrandAssets";
 import Icon from "../../components/Icon";
 import { useNotificationDialog } from "../../components/NotificationDialog";
-import { IMAGE_ACCEPT, MAX_IMAGE_SIZE_LABEL } from "./profileImages";
+import { IMAGE_ACCEPT, MAX_IMAGE_SIZE_LABEL } from "../../utils/profileImages";
 import type { ProfileForm } from "./useProfileForm";
 
-/** 프로필 사진 고르기와 기본 캐릭터로 되돌리기입니다. 실제 반영은 프로필 저장 때 합니다. */
+/** 프로필 사진 고르기와 기본 캐릭터로 되돌리기입니다(보드 15-01: 가운데 큰 사진, 오른쪽 아래 카메라). 실제 반영은 저장 때 합니다. */
 export default function AvatarEditor({ form }: { form: ProfileForm }) {
   const { confirm } = useNotificationDialog();
   const { profile, avatar } = form;
@@ -25,7 +25,7 @@ export default function AvatarEditor({ form }: { form: ProfileForm }) {
   }
 
   return (
-    <section className="r-card profile-edit-avatar-section">
+    <section className="profile-edit-avatar-section">
       <button
         className="profile-edit-avatar-button"
         type="button"
@@ -48,16 +48,17 @@ export default function AvatarEditor({ form }: { form: ProfileForm }) {
         accept={IMAGE_ACCEPT}
         onChange={(event) => avatar.choose(event.target.files?.[0])}
       />
-      <div>
-        <b>나를 소개하는 사진</b>
-        <small>맛객 목록과 내 프로필에 보여요.</small>
-        <small>JPG, PNG, WEBP · 사진당 {MAX_IMAGE_SIZE_LABEL} 이하</small>
-      </div>
-      {hasAvatar && (
-        <button className="text-action" type="button" onClick={() => void resetToCharacter()}>
-          기본 캐릭터
-        </button>
-      )}
+      <small>
+        JPG, PNG, WEBP · {MAX_IMAGE_SIZE_LABEL} 이하
+        {hasAvatar && (
+          <>
+            {" · "}
+            <button className="text-action" type="button" onClick={() => void resetToCharacter()}>
+              기본 캐릭터로 바꾸기
+            </button>
+          </>
+        )}
+      </small>
     </section>
   );
 }

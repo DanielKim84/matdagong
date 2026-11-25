@@ -29,6 +29,12 @@ export type Place = {
   tasters: Taster[];
 };
 
+/** 주소에서 동네(읍·면·동·가) 이름만 꺼냅니다. "서울 마포구 연남동 223-1" → "연남동". 못 찾으면 시·군·구입니다. */
+export function placeNeighborhood(place: Pick<Place, "lotAddress" | "address">): string {
+  const parts = (place.lotAddress || place.address || "").split(/\s+/);
+  return parts.find((part) => /(동|읍|면|가)$/.test(part) && !/\d/.test(part)) ?? parts[1] ?? "";
+}
+
 /**
  * 맛객이 직접 다녀와 확인한 매장 이용 정보입니다. 커뮤니티 DB의 VISIT 태그 이름(V39)과 반드시 같아야 합니다.
  * app/enrichPlaces가 내 "피하고 싶은 조건"(VISIT 태그)과 기록의 매장 이용 정보를 이름으로 비교하기 때문입니다.
@@ -110,7 +116,8 @@ export type Taster = {
   profileCoverUrls?: string[];
   tasterFocus?: FoodFocus;
   activityScope?: ActivityScope;
-  activityRegion?: string | null;
+  /** 커뮤니티 프로필의 활동 지역(최대 3곳). 장소 응답의 기록에는 없습니다. */
+  activityRegions?: string[];
   intro?: string;
   subscriberCount?: number;
   /** 기록을 남긴 시각(ISO-8601). 커뮤니티 프로필로 만든 맛객에는 없습니다. */

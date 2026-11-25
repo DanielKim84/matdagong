@@ -1,0 +1,946 @@
+/* 현재 기본 가입·소개 화면 전용 규칙입니다. 공통 부품은 ui.css를 씁니다. */
+
+/* ── 공통 틀: 앱 틀(app-view) 밖에서도 앱 폭으로 가운데 정렬합니다 ── */
+.r-onboarding {
+  position: relative;
+  display: flex;
+  width: min(var(--app-width), 100%);
+  min-height: 100dvh;
+  flex-direction: column;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+/* 앱 안(설정의 앱 소개)에서도 화면 끝까지 채웁니다. 휴대폰 폭에서는 screen-content에 높이가 없어 100%가 내용 높이로
+   줄어들므로 화면 높이를 쓰고, 넓은 화면에서는 높이가 정해진 앱 틀(app.css)을 채웁니다. */
+.screen-content > .r-onboarding {
+  min-height: 100dvh;
+}
+/* 넓은 화면에서 앱 틀 밖에 그릴 때는 앱 틀(app.css .app-view)과 같은 테두리·반경을 둡니다. */
+@media (min-width: 700px) {
+  .screen-content > .r-onboarding {
+    min-height: 100%;
+  }
+  #root > .r-onboarding {
+    min-height: calc(100dvh - 32px);
+    border: 1px solid var(--neutral-300);
+    border-radius: var(--radius-card);
+  }
+}
+
+.r-onboarding-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+  background: linear-gradient(transparent, var(--color-canvas) 18px);
+  padding: 18px 24px calc(28px + env(safe-area-inset-bottom));
+}
+
+@keyframes r-onboarding-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── 서비스 소개(IntroScreen, H안 내용) ──
+   흰 바탕 위쪽에 로고(첫 쪽, 자기 줄) 또는 뒤로 버튼 → 왼쪽 정렬 큰 제목과 설명 → 위아래가 흰 바탕에 녹는 화면 폭 사진 →
+   사진 아래쪽에 걸친 앱 모양 카드(IntroCards) → 아래 점 다섯 개와 버튼 줄입니다. 적용안 그림: docs/ui/proposals/intro/H-applied.jpg */
+.r-intro {
+  overflow: hidden;
+  background: var(--color-surface);
+  touch-action: pan-y;
+}
+.r-intro__top {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  padding: max(6px, env(safe-area-inset-top)) 14px 0;
+}
+/* 첫 쪽 로고는 맨 위 자기 줄에 두고 제목과 띄워, 로고와 제목이 서로 다른 구역으로 보이게 합니다. */
+.r-intro__top.is-first {
+  min-height: 58px;
+  margin-bottom: 14px;
+  padding-left: 20px;
+}
+.r-intro__logo {
+  width: auto;
+  height: 42px;
+}
+.r-intro__viewport {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.r-intro__track {
+  display: flex;
+  width: 100%;
+  transition: transform 0.35s cubic-bezier(0.22, 0.7, 0.25, 1);
+}
+.r-intro__slide {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 100%;
+  flex-direction: column;
+}
+.r-intro__copy {
+  position: relative;
+  z-index: 1;
+  padding: 8px 24px 0;
+}
+.r-intro__copy h1 {
+  display: flex;
+  margin: 0;
+  flex-direction: column;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.18;
+}
+.r-intro__copy mark {
+  background: none;
+  color: var(--color-primary);
+}
+.r-intro__copy p {
+  display: flex;
+  margin: 10px 0 0;
+  flex-direction: column;
+  color: var(--neutral-700);
+  font-size: 15px;
+  line-height: 1.55;
+}
+/* H안 구도 그대로의 사진: 파일 비율대로 화면 폭에 맞추고(확대하지 않음) 위는 제목 쪽으로, 아래는 카드 자리에서 녹입니다. */
+.r-intro__photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: -4px 0 -26px;
+  -webkit-mask-image: linear-gradient(transparent, #000 26%, #000 86%, transparent);
+  mask-image: linear-gradient(transparent, #000 26%, #000 86%, transparent);
+}
+/* 카드가 큰 쪽(1·3·5쪽)은 카드가 사진 아래쪽에 조금 더 걸쳐 점과 겹치지 않게 합니다. */
+.r-intro__slide:is(.r-intro__slide--review, .r-intro__slide--trust, .r-intro__slide--record) .r-intro__photo {
+  margin-bottom: -46px;
+}
+.r-intro__cards {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 0 20px;
+}
+.r-intro__footer {
+  background: var(--color-surface);
+  padding-top: 0;
+}
+.r-intro__dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+.r-intro__dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-200);
+  transition: width 0.2s ease;
+}
+.r-intro__dots span.is-on {
+  width: 20px;
+  background: var(--color-primary);
+}
+.r-intro__actions {
+  display: flex;
+  gap: 10px;
+}
+.r-intro__actions > .r-button--secondary {
+  flex: 0 0 36%;
+}
+
+/* ── 소개 카드 공통(IntroCards): 흰 카드 · 가는 선 · 둥근 18px · 옅은 그림자 ── */
+.r-intro-card {
+  border: 1px solid var(--color-line);
+  border-radius: 18px;
+  background: var(--color-surface);
+  padding: 12px 14px;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--shadow-color) 7%, transparent);
+}
+.r-intro-card img {
+  display: block;
+  flex: none;
+  object-fit: cover;
+}
+.r-intro-card b {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+.r-intro-card small {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.r-intro-card .icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+/* 코랄 동그라미 안 흰 체크(실제 방문 · 확인된 맛객) */
+.r-intro-ok {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-intro-card .r-intro-ok .icon {
+  width: 12px;
+  height: 12px;
+  stroke-width: 3;
+}
+/* 카드 안 가는 선 아래 한 줄(아이콘 · 글 · 오른쪽 ›) */
+.r-intro-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  border-top: 1px solid var(--color-line);
+  padding-top: 10px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+.r-intro-line > .icon:first-child {
+  color: var(--color-primary);
+}
+.r-intro-line > span {
+  display: flex;
+  flex-direction: column;
+}
+.r-intro-line > span small {
+  margin-top: 2px;
+  font-weight: 400;
+}
+.r-intro-line > .icon:last-child {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: var(--color-muted);
+}
+
+/* 1쪽 리뷰 비교: 사진 · 제목과 글 · (의심 글은 회색 "광고?" 알약) */
+.r-intro-review {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.r-intro-review img {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+}
+.r-intro-review > span {
+  min-width: 0;
+  flex: 1;
+}
+.r-intro-review small {
+  color: var(--neutral-700);
+  font-size: 13px;
+}
+.r-intro-review b {
+  color: var(--color-primary);
+}
+.r-intro-review.is-doubt {
+  opacity: 0.85;
+}
+.r-intro-review.is-doubt img {
+  filter: grayscale(1) blur(1px);
+}
+.r-intro-review.is-doubt b {
+  color: var(--color-muted);
+}
+.r-intro-who {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--neutral-100);
+  color: var(--color-muted);
+}
+.r-intro-card .r-intro-who .icon {
+  width: 12px;
+  height: 12px;
+}
+.r-intro-review em {
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-100);
+  padding: 4px 10px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* 2쪽 맛객: 얼굴 · 이름 · 수, 취향 칩, 고른 곳 세 장 */
+.r-intro-taster__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.r-intro-taster__head img {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+}
+.r-intro-taster__head b {
+  font-size: 17px;
+}
+.r-intro-taster__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.r-intro-taster__chips span {
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  padding: 5px 10px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.r-intro-taster__picks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+.r-intro-taster__picks img {
+  width: 100%;
+  height: 62px;
+  border-radius: 12px;
+}
+
+/* 3쪽 방문 줄과 신뢰 상자: 왼쪽 세로선 위 동그라미(앞 두 번 빈 동그라미, 마지막 코랄 체크), 마지막 줄만 연한 코랄 */
+.r-intro-visits {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 8px 8px 12px;
+}
+.r-intro-visits::before {
+  position: absolute;
+  top: 34px;
+  bottom: 34px;
+  left: 20px;
+  width: 1.5px;
+  background: var(--neutral-200);
+  content: "";
+}
+.r-intro-visits__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 6px 30px;
+}
+.r-intro-visits__row > * {
+  position: relative;
+}
+.r-intro-visits__row.is-on::before {
+  position: absolute;
+  inset: 0 0 0 24px;
+  border-radius: 14px;
+  background: var(--brand-50);
+  content: "";
+}
+.r-intro-visits__dot {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  display: grid;
+  width: 13px;
+  height: 13px;
+  place-items: center;
+  border: 2px solid var(--neutral-300);
+  border-radius: 50%;
+  background: var(--color-surface);
+  transform: translateY(-50%);
+}
+.r-intro-visits__row.is-on .r-intro-visits__dot {
+  left: -1px;
+  width: 19px;
+  height: 19px;
+  border: 0;
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+.r-intro-card .r-intro-visits__dot .icon {
+  width: 11px;
+  height: 11px;
+  stroke-width: 3;
+}
+.r-intro-visits__row img {
+  width: 64px;
+  height: 44px;
+  border-radius: 10px;
+}
+.r-intro-visits__row > .icon {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: var(--color-muted);
+}
+.r-intro-visits__row.is-on {
+  background: var(--brand-50);
+}
+.r-intro-visits__row.is-on b {
+  color: var(--color-primary);
+}
+.r-intro-trust {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--brand-100);
+  border-radius: 16px;
+  background: var(--brand-50);
+  padding: 12px 14px;
+}
+.r-intro-shield {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  fill: var(--color-primary);
+}
+.r-intro-shield__check {
+  fill: none;
+  stroke: var(--on-strong);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+.r-intro-trust b {
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+/* 4쪽 지도에서 고른 가게 */
+.r-intro-place__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.r-intro-place__head img {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+}
+.r-intro-place__head b {
+  font-size: 17px;
+}
+.r-intro-place__head > .icon {
+  align-self: flex-start;
+  margin-left: auto;
+  color: var(--color-muted);
+}
+
+/* 5쪽 공개 범위(라디오 모양)와 기록 → 구독자 → 구독 수익 흐름 */
+.r-intro-visibility {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-color: transparent;
+  background: var(--neutral-50);
+  padding: 8px;
+}
+.r-intro-visibility > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  padding: 10px 12px;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--shadow-color) 6%, transparent);
+}
+.r-intro-visibility b {
+  font-size: 15px;
+}
+.r-intro-visibility i {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  margin-left: auto;
+  border: 2px solid var(--neutral-300);
+  border-radius: 50%;
+}
+.r-intro-visibility i.is-on {
+  border: 6px solid var(--color-primary);
+}
+.r-intro-flow > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+}
+.r-intro-flow > div > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-intro-flow > div > span > i {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--color-primary);
+}
+.r-intro-flow > div > .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-muted);
+}
+.r-intro-bars {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+/* 흐름 카드 아래 작은 회색 안내(유료 구독·정산 준비 중) */
+.r-intro-soon {
+  margin-top: -4px;
+  color: var(--color-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* 낮은 화면: 제목·글을 줄여 버튼까지 한 화면에 */
+@media (max-height: 720px) {
+  .r-intro__copy h1 {
+    font-size: 28px;
+  }
+  .r-intro__copy p {
+    margin-top: 6px;
+    font-size: 14px;
+  }
+  .r-intro-card {
+    padding: 10px 12px;
+  }
+}
+
+/* ── 가입 단계 공통 ── */
+.r-onboarding-signup__form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.r-onboarding-signup__content {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: calc(40px + env(safe-area-inset-top)) 24px 8px;
+}
+.r-onboarding-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-onboarding-heading h1 {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.3;
+}
+.r-onboarding-heading p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+/* 번호 단계(StepProgress): 가입 화면은 이전 버튼을 왼쪽 여백 쪽으로 붙이고, 버튼이 없을 때 빈 자리도 그만큼 줄입니다. */
+.r-onboarding-progress .r-step-progress__back {
+  margin-left: -12px;
+}
+.r-onboarding-progress .r-step-progress__spacer {
+  width: 32px;
+}
+
+/* 가입 단계의 작은 제목과 그 선택지를 한 묶음으로 둡니다(2단계 취향·더 고르기, 3단계 추천 맛객). */
+.r-onboarding-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.r-onboarding-section > .r-label {
+  margin: 0;
+}
+/* ── 가입 1~3단계(보드 04-02~04-04): 흰 화면 위쪽에 번호 단계(StepProgress), 아래 고정 버튼 줄 ── */
+.r-onboarding-signup {
+  background: var(--color-surface);
+}
+
+.r-onboarding-signup .r-onboarding-footer {
+  background: linear-gradient(transparent, var(--color-surface) 18px);
+}
+
+/* 1단계 프로필 사진 고르기(SignupPhotoField, 보드 04-02): 가운데 큰 사진과 코랄 카메라 배지, 그 아래 소셜 사진 고르기 카드 */
+.r-signup-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.r-signup-photo__button {
+  position: relative;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  padding: 0;
+}
+.r-signup-photo__button > .avatar {
+  width: 160px;
+  height: 160px;
+  border: 4px solid var(--neutral-0);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--shadow-color) 16%, transparent);
+}
+.r-signup-photo__badge {
+  position: absolute;
+  right: 6px;
+  bottom: 8px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 3px solid var(--neutral-0);
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--neutral-0);
+}
+.r-signup-photo__badge svg {
+  width: 20px;
+  height: 20px;
+}
+.r-signup-photo__hint {
+  color: var(--neutral-700);
+  font-size: 12px;
+  font-weight: 700;
+}
+.r-signup-photo__reset {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-primary);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.r-signup-photo__choices {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+.r-signup-photo__choices-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.r-signup-photo__choices-head > .icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--neutral-700);
+}
+.r-signup-photo__choices-head > span {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+}
+.r-signup-photo__choices-head > .r-me-switch {
+  flex: none;
+}
+.r-signup-photo__choices-head b {
+  color: var(--color-ink);
+  font-size: 15px;
+}
+.r-signup-photo__choices-head small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+/* 카드 안 고르기 줄은 테두리·바탕 없이 라디오와 글만 둡니다(보드 04-02). */
+.r-signup-photo__choices .r-options {
+  gap: 0;
+}
+.r-signup-photo__choices .r-option,
+.r-signup-photo__choices .r-option.is-on {
+  min-height: 46px;
+  border: 0;
+  background: none;
+  padding: 4px 0 4px 2px;
+}
+/* "기본 사진으로 변경하기" 줄 오른쪽 작은 기본 캐릭터 미리보기 */
+.r-signup-photo__choices .r-option > .avatar {
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+}
+
+/* 가입 2단계 "찾는 분야" 제목(FoodFocusPicker, 보드 04-03) */
+.r-onboarding .food-focus-picker legend {
+  margin-bottom: 12px;
+  padding: 0;
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* 닉네임 입력 */
+.r-onboarding-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.r-onboarding-field label {
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.r-onboarding-field label span {
+  margin-left: 4px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.r-onboarding-field input {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0 16px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+}
+.r-onboarding-field input:focus-visible {
+  border-color: var(--color-primary);
+  outline: 2px solid var(--brand-200);
+  outline-offset: 0;
+}
+.r-onboarding-field input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+.r-onboarding-field small {
+  align-self: flex-end;
+  font-size: 12px;
+}
+
+/* EmptyState는 그림(children)을 문구 아래에 두므로 순서만 위로 올립니다. */
+.r-onboarding-empty-art {
+  width: 120px;
+  height: 120px;
+  order: -1;
+}
+
+/* 가입 1~3단계(보드 04-02~04-04): 머리 그림 없이 흰 화면 위쪽에 번호 단계를 두고 내용이 바로 이어집니다. */
+.r-signup-step .r-onboarding-progress {
+  padding: 8px 12px 0;
+}
+.r-signup-step .r-onboarding-signup__content {
+  padding-top: 12px;
+}
+/* 닉네임 칸 안 오른쪽에 글자 수(프로필 편집 15-01과 같은 모양) */
+.r-onboarding-field__input {
+  position: relative;
+  display: block;
+}
+.r-onboarding-field__input > input {
+  width: 100%;
+  padding-right: 56px;
+}
+.r-onboarding-field__input > small {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+}
+
+/* 가입 단계 소제목("더 고르기 · 선택", "추천 맛객 5명 · 한 명 무료 구독") */
+.r-onboarding-subhead {
+  margin: 4px 0 0;
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 800;
+}
+.r-onboarding-subhead small {
+  margin-left: 6px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 3단계 추천 맛객 목록(보드 04-04): 얼굴 · 이름 · 취향 %(또는 인기) · 기록·구독자 수 · 태그 · 오른쪽 고르기 동그라미. 한 명만 고릅니다. */
+.r-signup-match__list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+.r-signup-match__row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-bottom: 1px solid var(--color-line);
+  background: none;
+  padding: 14px 4px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-signup-match__row > .avatar {
+  width: 56px;
+  height: 56px;
+  flex: none;
+}
+.r-signup-match__body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+.r-signup-match__name {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.r-signup-match__name b {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.r-signup-match__name em {
+  flex: none;
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+.r-signup-match__name em.is-taste {
+  background: var(--green-50);
+  color: var(--green-700);
+}
+.r-signup-match__name em.is-popular {
+  background: var(--amber-50);
+  color: var(--amber-700);
+}
+.r-signup-match__body > small {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+/* 오른쪽 체크 상자: 고르면 코랄로 채운 네모와 흰 체크(보드 04-04) */
+.r-signup-match__check,
+.r-signup-match__box {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  place-items: center;
+  border: 2px solid var(--neutral-300);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: transparent;
+}
+.r-signup-match__check .icon,
+.r-signup-match__box .icon {
+  width: 16px;
+  height: 16px;
+}
+.r-signup-match__row.is-on .r-signup-match__check,
+.r-signup-match__confirm input:checked + .r-signup-match__box {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--on-strong);
+}
+
+/* "추천 맛객 N명"과 오른쪽 정렬 고르기 알약(SelectChip) */
+.r-signup-match__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+/* 줄 안 회색 글자 태그(# 없이) */
+.r-signup-match__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.r-signup-match__tags span {
+  border-radius: 6px;
+  background: var(--neutral-100);
+  padding: 3px 8px;
+  color: var(--neutral-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 아래 "선택한 맛객 구독하기 (N명)" 체크 줄 */
+.r-signup-match__confirm {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.r-signup-match__confirm input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.r-signup-match__confirm input:focus-visible + .r-signup-match__box {
+  outline: 2px solid var(--brand-400);
+  outline-offset: 2px;
+}

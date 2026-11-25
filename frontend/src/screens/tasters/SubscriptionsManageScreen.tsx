@@ -1,66 +1,68 @@
+import { useState } from "react";
 import { useAppData } from "../../app/AppData";
 import { go } from "../../app/navigation";
-import { Segmented, Skeleton, TopBar } from "../../components/ui";
-import { formatMonthDay } from "../../utils/format";
+import Icon from "../../components/Icon";
+import { PageIntro, Skeleton, TopBar } from "../../components/ui";
 import IncomingList from "./IncomingList";
 import SubscribedList from "./SubscribedList";
 
 type Tab = "subscribed" | "incoming";
+/** 내가 구독한 맛객 목록의 칩(전체 · 무료 · 유료). 값은 구독 종류(subscriptionType)와 같습니다. */
+export type SubscriptionFilter = "all" | "FREE" | "PAID";
 
-/** 구독 관리(#subscriptions, 나를 구독 탭은 #subscriptions/incoming): 내가 구독한 맛객과 나를 구독한 사람. */
+const FILTERS: { value: SubscriptionFilter; label: string }[] = [
+  { value: "all", label: "전체" },
+  { value: "FREE", label: "무료" },
+  { value: "PAID", label: "유료" },
+];
+
+const INTRO: Record<Tab, { title: string; message: string }> = {
+  subscribed: { title: "내가 구독한 맛객", message: "관심 있는 맛객의 소식을 구독해 보세요." },
+  incoming: { title: "나를 구독한 사람", message: "내 소식을 구독하는 맛객들이에요." },
+};
+
+/**
+ * 구독 관리(보드 16-01 #subscriptions, 16-02 #subscriptions/incoming): 두 화면은 따로 된 화면이고 큰 제목과 설명 아래
+ * 내가 구독한 맛객은 전체 · 무료 · 유료 칩과 맛객 줄, 나를 구독한 사람은 유료·무료 구독자 수 상자와 줄입니다.
+ * 내가 구독한 맛객 화면 위쪽 작은 줄로 나를 구독한 사람 화면을 엽니다. 보드의 "만료됨" 칩은 서버가 끝난 구독을 주지 않아 아직 두지 않습니다.
+ */
 export default function SubscriptionsManageScreen({ routeId }: { routeId: string }) {
   const app = useAppData();
   const tab: Tab = routeId === "incoming" ? "incoming" : "subscribed";
-  const setTab = (next: Tab) => go("subscriptions", next === "incoming" ? "incoming" : "", true);
-  const freeCount = app.subscriptions.filter((item) => item.subscriptionType === "FREE").length;
-  const paidCount = app.subscriptions.length - freeCount;
-  // 가장 먼저 끝나는 유료 구독을 요약 카드에 보여 줍니다.
-  const nextEnd = app.subscriptions
-    .flatMap((item) => (item.subscriptionType === "PAID" && item.endAt ? [item.endAt] : []))
-    .sort()[0];
+  const [filter, setFilter] = useState<SubscriptionFilter>("all");
 
   return (
     <main className="r-screen r-tasters-manage">
-      <TopBar title="구독 관리" fallback="my" />
+      <TopBar title={INTRO[tab].title} fallback={tab === "incoming" ? "subscriptions" : "my"} />
       <div className="r-tasters-body">
-        <Segmented
-          label="구독 목록"
-          value={tab}
-          onChange={setTab}
-          options={[
-            { value: "subscribed", label: `구독 중 ${app.subscriptions.length}` },
-            { value: "incoming", label: `나를 구독 ${app.incomingSubscriptions.length}` },
-          ]}
-        />
+        <PageIntro title={INTRO[tab].title} message={INTRO[tab].message} />
 
         {app.isLoading && !app.subscriptions.length && !app.incomingSubscriptions.length ? (
           <Skeleton shape="row" count={3} label="구독 정보를 불러오고 있어요." />
         ) : tab === "subscribed" ? (
           <>
+            <button type="button" className="r-tasters-incoming-link" onClick={() => go("subscriptions", "incoming")}>
+              <Icon name="people" />
+              <span>나를 구독한 사람</span>
+              <b>{app.incomingSubscriptions.length}명</b>
+              <Icon name="chevron" />
+            </button>
             {app.subscriptions.length > 0 && (
-              <section className="r-card r-tasters-summary">
-                <span className="r-tasters-summary__copy">
-                  <small>
-                    무료 구독 {freeCount}명 · 유료 {paidCount}명
-                  </small>
-                  <b>{nextEnd ? `가장 먼저 끝나는 구독 ${formatMonthDay(nextEnd)}` : "기간 제한 없이 구독 중이에요"}</b>
-                </span>
-                <button
-                  type="button"
-                  className="r-tasters-summary__link"
-                  onClick={() =>
-                    app.actions.notify({
-                      kind: "info",
-                      title: "결제 내역은 준비 중이에요",
-                      message: "지금은 별도 결제 없이 구독할 수 있어요.",
-                    })
-                  }
-                >
-                  결제 내역
-                </button>
-              </section>
+              <div className="r-chips" role="group" aria-label="구독 종류">
+                {FILTERS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`r-chip ${filter === option.value ? "is-on" : ""}`}
+                    aria-pressed={filter === option.value}
+                    onClick={() => setFilter(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             )}
-            <SubscribedList />
+            <SubscribedList filter={filter} />
           </>
         ) : (
           <IncomingList />

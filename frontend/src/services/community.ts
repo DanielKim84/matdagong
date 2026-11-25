@@ -1,15 +1,13 @@
-/** 커뮤니티 서비스(맛객·취향 태그·프로필·구독·포인트·알림) API 요청입니다. */
+/** 맛객·취향 태그·구독·포인트·알림 API입니다. 프로필·사진 저장은 profile.ts에서 관리합니다. */
 import type {
   ActiveSubscription,
   ActivityScope,
   FoodFocus,
   IncomingSubscription,
-  MyProfile,
   NotificationFeed,
   NotificationSettings,
   PlanCatalog,
   PointAccount,
-  ProfileChanges,
   SubscribeResult,
   TagRequest,
   TagRequestInput,
@@ -19,7 +17,7 @@ import type {
 } from "../models/community";
 import type { Taster } from "../models/place";
 import type { TrustLevel } from "../models/trust";
-import { API_BASE_URL, apiRequest, type ApiRequestOptions } from "./http";
+import { communityRequest as request } from "./communityRequest";
 
 type TasterResponse = {
   tasterId: string;
@@ -29,7 +27,7 @@ type TasterResponse = {
   profileCoverUrls: string[];
   tasterFocus: FoodFocus;
   activityScope: ActivityScope;
-  activityRegion: string | null;
+  activityRegions: string[];
   intro: string | null;
   subscriberCount: number;
   profileTags: string[];
@@ -38,11 +36,6 @@ type TasterResponse = {
   trustScore: number | null;
   trustLevel: TrustLevel | null;
 };
-
-/** 커뮤니티 API도 공통 요청 도구를 거쳐 로그인 만료, 204 응답, 오류 메시지를 같게 처리합니다. */
-function request<T>(path: string, accessToken: string, init: ApiRequestOptions = {}): Promise<T> {
-  return apiRequest<T>(`${API_BASE_URL}/v1${path}`, accessToken, init);
-}
 
 export async function getTasters(accessToken: string): Promise<Taster[]> {
   const response = await request<TasterResponse[]>("/tasters", accessToken);
@@ -54,7 +47,7 @@ export async function getTasters(accessToken: string): Promise<Taster[]> {
     profileCoverUrls: taster.profileCoverUrls,
     tasterFocus: taster.tasterFocus,
     activityScope: taster.activityScope,
-    activityRegion: taster.activityRegion,
+    activityRegions: taster.activityRegions,
     // note는 장소 기록의 한마디 자리라 커뮤니티 프로필에서는 비워 둡니다.
     note: "",
     // 소개를 비운 맛객은 화면이 tasterData.introOf의 기본 문구를 보여 줍니다.
@@ -86,95 +79,6 @@ export function createTagRequest(accessToken: string, input: TagRequestInput): P
 /** 맛다공 탈퇴: 커뮤니티 서비스의 내 프로필·취향·구독·알림·포인트 내역·태그 제안·내가 한 신고를 모두 지웁니다. */
 export function deleteMyCommunityData(accessToken: string): Promise<void> {
   return request("/users/me", accessToken, { method: "DELETE", errorMessage: "내 프로필 정보를 지우지 못했어요." });
-}
-
-/** 닉네임을 쓸 수 있는지 미리 묻습니다(지금 내 닉네임은 쓸 수 있음). 응답은 커뮤니티 서버 ProfileModels.NicknameAvailability입니다. */
-export async function checkNicknameAvailable(
-  accessToken: string,
-  nickname: string,
-  signal?: AbortSignal,
-): Promise<boolean> {
-  const response = await request<{ available: boolean }>(
-    `/users/me/profile/nickname-availability?nickname=${encodeURIComponent(nickname)}`,
-    accessToken,
-    { signal },
-  );
-  return response.available;
-}
-
-export function ensureMyProfile(accessToken: string, nickname: string): Promise<MyProfile> {
-  return request("/users/me/profile", accessToken, {
-    method: "POST",
-    body: JSON.stringify({ nickname }),
-  });
-}
-
-export function updateMyProfile(
-  accessToken: string,
-  profile: {
-    nickname: string;
-    intro: string;
-    profileTags: string[];
-    preferenceTags: string[];
-    excludedTags: string[];
-    tasterFocus: FoodFocus;
-    preferenceFocus: FoodFocus;
-    activityScope: ActivityScope;
-    activityRegion: string;
-  },
-): Promise<MyProfile> {
-  return request("/users/me/profile", accessToken, {
-    method: "PUT",
-    body: JSON.stringify(profile),
-  });
-}
-
-/** 프로필 사진 한 장을 교체합니다. */
-async function uploadProfileImage(accessToken: string, file: File): Promise<void> {
-  const form = new FormData();
-  form.append("file", file);
-  await request<void>("/users/me/profile/avatar", accessToken, {
-    method: "PUT",
-    body: form,
-    errorMessage: "프로필 이미지를 저장하지 못했어요.",
-  });
-}
-
-/** 배경 사진 여러 장을 기존 갤러리에 추가하고, 저장된 배경 사진 주소 목록을 돌려줍니다. */
-async function uploadProfileCovers(accessToken: string, files: File[]): Promise<string[]> {
-  const form = new FormData();
-  files.forEach((file) => form.append("files", file));
-  return request<string[]>("/users/me/profile/covers", accessToken, {
-    method: "POST",
-    body: form,
-    errorMessage: "배경 사진을 저장하지 못했어요.",
-  });
-}
-
-/**
- * 가입할 때 카카오·네이버 프로필 사진을 맛객 프로필 사진으로 가져옵니다. 커뮤니티 서버가 그 주소에서 내려받아 저장하고,
- * 이미 프로필 사진이 있으면 그대로 둡니다(UserProfileController.importSocialAvatar).
- */
-export async function importSocialAvatar(accessToken: string, imageUrl: string): Promise<void> {
-  await request<void>("/users/me/profile/avatar/social", accessToken, {
-    method: "PUT",
-    body: JSON.stringify({ imageUrl }),
-    errorMessage: "프로필 사진을 가져오지 못했어요.",
-  });
-}
-
-async function removeProfileAvatar(accessToken: string): Promise<void> {
-  await request<void>("/users/me/profile/avatar", accessToken, {
-    method: "DELETE",
-    errorMessage: "프로필 이미지를 삭제하지 못했어요.",
-  });
-}
-
-async function removeProfileCoverPhoto(accessToken: string, photoId: string): Promise<void> {
-  await request<void>(`/users/me/profile/covers/${encodeURIComponent(photoId)}`, accessToken, {
-    method: "DELETE",
-    errorMessage: "배경 사진을 삭제하지 못했어요.",
-  });
 }
 
 export function getPlanCatalog(accessToken: string): Promise<PlanCatalog> {
@@ -263,46 +167,6 @@ export function deleteNotification(accessToken: string, id: string): Promise<voi
 
 export function deleteAllNotifications(accessToken: string): Promise<void> {
   return updateNotification(accessToken, "/notifications/all", "DELETE");
-}
-
-/**
- * 프로필 설정 화면의 변경 내용을 순서대로 저장하고, 화면 상태에 바로 쓸 프로필을 돌려줍니다.
- * 사진 업로드 응답에는 프로필 전체가 없으므로 바뀐 사진 주소만 직접 맞춥니다. 주소 형식(/media/profiles/<계정>/avatar,
- * …/covers/<사진 ID>)은 커뮤니티 서비스 ProfileMediaUrls와 같게 둡니다.
- */
-export async function saveMyProfile(accessToken: string, changes: ProfileChanges): Promise<MyProfile> {
-  const savedProfile = await updateMyProfile(accessToken, {
-    nickname: changes.nickname,
-    intro: changes.intro,
-    profileTags: changes.profileTags,
-    preferenceTags: changes.preferenceTags,
-    excludedTags: changes.excludedTags,
-    tasterFocus: changes.tasterFocus,
-    preferenceFocus: changes.preferenceFocus,
-    activityScope: changes.activityScope,
-    activityRegion: changes.activityRegion,
-  });
-  if (changes.avatarFile) await uploadProfileImage(accessToken, changes.avatarFile);
-  else if (changes.shouldRemoveAvatar) await removeProfileAvatar(accessToken);
-  for (const photoId of changes.removedCoverPhotoIds) {
-    await removeProfileCoverPhoto(accessToken, photoId);
-  }
-  const savedCoverUrls = changes.coverFiles?.length
-    ? await uploadProfileCovers(accessToken, changes.coverFiles)
-    : undefined;
-  const remainingCoverUrls = savedProfile.profileCoverUrls.filter(
-    (url) => !changes.removedCoverPhotoIds.some((photoId) => url.includes(`/covers/${photoId}`)),
-  );
-  const updatedCoverUrls = savedCoverUrls ?? remainingCoverUrls;
-  return {
-    ...savedProfile,
-    profileImgUrl: changes.shouldRemoveAvatar
-      ? null
-      : changes.avatarFile
-        ? `/media/profiles/${savedProfile.accountId}/avatar`
-        : savedProfile.profileImgUrl,
-    profileCoverUrls: updatedCoverUrls,
-  };
 }
 
 /**

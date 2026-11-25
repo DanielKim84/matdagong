@@ -7,6 +7,7 @@ Claude Code, Codex 등 AI 도구는 이 저장소에서 작업하기 전에 이 
 - 코딩 스타일: [docs/coding-style.md](docs/coding-style.md) — 서식은 도구가 정하고, 이름·구조·주석 규칙은 이 문서를 따릅니다.
 - 개발 환경(다른 PC 세팅 포함): [docs/home-development-setup.md](docs/home-development-setup.md)
 - 화면 구조: [docs/frontend-structure.md](docs/frontend-structure.md), UI 기준: [docs/ui/current-design.md](docs/ui/current-design.md)
+- 현재 브랜드 A의 파일·사용 기준: [브랜드 가이드](frontend/public/assets/brand/README.md). 새 UI 시안도 이 기준을 따릅니다.
 - 공통 로그인은 같은 상위 폴더의 `dagong-auth` 저장소입니다.
 
 ## 꼭 지킬 것

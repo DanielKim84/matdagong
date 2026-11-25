@@ -22,7 +22,8 @@ type PolicyDocument = {
 
 const OPERATOR = "[운영자 상호]";
 const CONTACT_EMAIL = "[문의 이메일]";
-const EFFECTIVE_DATE = "[시행일: 정식 출시일]";
+/** 개정일(보드 17-03 "개정일: … (초안)"). 정식 출시 전에 실제 날짜로 바꿉니다. */
+export const EFFECTIVE_DATE = "[시행일: 정식 출시일]";
 
 const TERMS: PolicyDocument = {
   title: "이용약관",

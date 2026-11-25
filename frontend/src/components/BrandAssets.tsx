@@ -17,7 +17,7 @@ export function FoodPhoto({ place }: { place: Pick<Place, "id"> }) {
       aria-label="맛집 음식 예시 사진"
     >
       <image
-        href="/assets/food-photos.png"
+        href="/assets/content/sample-food/food-photos.png"
         width="1024"
         height="1024"
         x={-(cell % 2) * 512}
@@ -68,13 +68,13 @@ export function ProfileCover({ src }: { src: string }) {
   const defaultCover = src.match(/^default-cover:(\d)$/);
   const cell = defaultCover ? Number(defaultCover[1]) - 1 : -1;
   if (cell === 4) {
-    return <img src="/assets/default-cover-5.png" alt="" />;
+    return <img src="/assets/content/covers/default-cover-5.png" alt="" />;
   }
   if (cell >= 0) {
     return (
       <svg viewBox="0 0 768 512" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <image
-          href="/assets/default-covers.png"
+          href="/assets/content/covers/default-covers.png"
           width="1536"
           height="1024"
           x={-(cell % 2) * 768}
@@ -118,7 +118,10 @@ export function TasterMapMarker({
 }) {
   const variant = kind === "subscribed" ? 4 : 1;
   return (
-    <span className={`taster-map-marker-preview taster-map-marker--${kind}`} aria-label={name}>
+    <span
+      className={`taster-map-marker-preview taster-map-marker--${kind}${kind === "own" && isPrivate ? " is-private" : ""}`}
+      aria-label={name}
+    >
       <svg className="taster-map-marker-shell" viewBox="0 0 43 53" aria-hidden="true">
         <path d={MARKER_SHELL_PATH} />
       </svg>
@@ -132,9 +135,9 @@ export function TasterMapMarker({
           dangerouslySetInnerHTML={{ __html: isPrivate ? LOCK_BADGE_SVG : TRUST_BADGE_SVG }}
         />
       ) : (
-        kind !== "other" && (
+        kind === "subscribed" && (
           <i className={`taster-map-marker-badge taster-map-marker-badge--${kind}`} aria-hidden="true">
-            {kind === "subscribed" ? "♥" : "✓"}
+            ♥
           </i>
         )
       )}

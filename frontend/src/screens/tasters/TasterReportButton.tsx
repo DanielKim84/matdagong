@@ -10,13 +10,13 @@ export default function TasterReportButton({
   tasterId,
   tasterName,
   placeId,
-  className,
+  className = "",
 }: {
   tasterId: string;
   tasterName: string;
   /** 맛집 기록에서 신고할 때 그 장소 ID */
   placeId?: string;
-  className: string;
+  className?: string;
 }) {
   const app = useAppData();
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +26,7 @@ export default function TasterReportButton({
     <>
       <button
         type="button"
-        className={`r-text-button r-report-button ${className}`}
+        className={`r-text-button r-report-button ${className}`.trim()}
         disabled={isReported}
         onClick={() => setIsOpen(true)}
         aria-label={isReported ? `${tasterName} 신고함, 운영팀 확인 중` : `${tasterName} 신고하기`}

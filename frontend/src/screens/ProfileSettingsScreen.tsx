@@ -1,74 +1,70 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useAppData } from "../app/AppData";
-import Icon from "../components/Icon";
-import { Segmented, TopBar } from "../components/ui";
+import { back } from "../app/navigation";
+import { TopBar } from "../components/ui";
 import type { MyProfile } from "../models/community";
+import CoverEditView from "./profile-edit/CoverEditView";
 import PublicProfileTab from "./profile-edit/PublicProfileTab";
+import PublicStyleSettings from "./profile-edit/PublicStyleSettings";
 import TastePreferenceTab from "./profile-edit/TastePreferenceTab";
-import { useProfileForm, type ProfileTab } from "./profile-edit/useProfileForm";
-import TasteTagRequestSheet from "./TasteTagRequestSheet";
+import { useProfileForm, type ProfileView } from "./profile-edit/useProfileForm";
+import TasteTagRequestScreen from "./TasteTagRequestScreen";
 
-const TAB_OPTIONS: { value: ProfileTab; label: string }[] = [
-  { value: "profile", label: "공개 프로필" },
-  { value: "taste", label: "추천 취향" },
-];
+const TITLES: Record<ProfileView, string> = {
+  profile: "공개 프로필 편집",
+  cover: "배경 사진 편집",
+  style: "공개 스타일 태그",
+  taste: "추천 취향·제외 조건",
+};
 
-/** 프로필 편집 화면입니다. 공개 프로필과 비공개 추천 취향을 탭으로 나누고 한 번에 저장합니다. */
-export default function ProfileSettingsScreen({
-  profile,
-  initialTab,
-}: {
-  /** 불러온 내 프로필(ProfileEditRoute가 불러온 뒤에만 이 화면을 그립니다) */
-  profile: MyProfile;
-  initialTab: ProfileTab;
-}) {
+/**
+ * 프로필 편집(보드 15)입니다. 공개 프로필(15-01)에서 배경 사진(15-02) · 공개 스타일 태그(15-03) · 추천 취향(15-04)으로 들어가며,
+ * 네 화면이 한 폼을 함께 써서 어디서 저장해도 전부 저장합니다. 하위 화면은 저장하면 공개 프로필 화면으로 돌아갑니다.
+ */
+export default function ProfileSettingsScreen({ profile, view }: { profile: MyProfile; view: ProfileView }) {
   const { accessToken, tasteTags, actions } = useAppData();
   const form = useProfileForm({
     accessToken,
     profile,
     options: tasteTags,
-    initialTab,
     onSave: actions.saveProfile,
     onError: (message) => actions.notify({ kind: "error", title: "프로필을 저장하지 못했어요", message }),
   });
   const [isRequestOpen, setIsRequestOpen] = useState(false);
+  const isSub = view !== "profile";
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    if ((await form.submit(event)) && isSub) back("profile-edit");
+  }
+  /** 배경 사진 취소: 이번에 고른 사진·삭제를 되돌리고 공개 프로필 화면으로 돌아갑니다. */
+  function cancelCover() {
+    form.cover.reset();
+    back("profile-edit");
+  }
 
   return (
     <>
       <main className="r-screen r-me-edit profile-settings">
-        <TopBar title="프로필 편집" fallback="my" />
-        <div className="r-me-edit__tabs">
-          <Segmented<ProfileTab>
-            label="설정 구분"
-            value={form.activeTab}
-            onChange={form.setActiveTab}
-            options={TAB_OPTIONS}
-          />
-        </div>
-        <form onSubmit={(event) => void form.submit(event)}>
-          <PublicProfileTab form={form} />
-          <TastePreferenceTab form={form} />
-          {form.activeTab === "taste" && (
-            <button className="r-card tag-request-entry" type="button" onClick={() => setIsRequestOpen(true)}>
-              <span className="tag-request-entry-icon">
-                <Icon name="message" />
-              </span>
-              <span>
-                <b>찾는 태그가 없나요?</b>
-                <small>원하는 태그를 제안해 주세요</small>
-              </span>
-              <Icon name="chevron" />
-            </button>
-          )}
-          <footer className="settings-save-bar r-me-edit__save">
+        <TopBar title={TITLES[view]} fallback={isSub ? "profile-edit" : "my"} />
+        <form onSubmit={(event) => void submit(event)}>
+          {view === "profile" && <PublicProfileTab form={form} />}
+          {view === "cover" && <CoverEditView form={form} />}
+          {view === "style" && <PublicStyleSettings form={form} />}
+          {view === "taste" && <TastePreferenceTab form={form} onRequestTag={() => setIsRequestOpen(true)} />}
+          <footer className={`settings-save-bar r-me-edit__save ${view === "cover" ? "has-cancel" : ""}`}>
+            {view === "cover" && (
+              <button className="r-button r-button--secondary" type="button" onClick={cancelCover}>
+                취소
+              </button>
+            )}
             <button className="r-button r-button--primary r-button--block" type="submit" disabled={form.isSaving}>
-              {form.isSaving ? "저장하는 중…" : form.activeTab === "profile" ? "프로필 저장" : "취향 저장"}
+              {form.isSaving ? "저장하는 중…" : "저장"}
             </button>
           </footer>
         </form>
       </main>
       {isRequestOpen && (
-        <TasteTagRequestSheet
+        <TasteTagRequestScreen
           onClose={() => setIsRequestOpen(false)}
           onRequest={actions.requestTag}
           onLoad={actions.loadTagRequests}

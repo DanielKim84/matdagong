@@ -9,7 +9,7 @@ const LOCATING_MESSAGE = "현재 위치를 확인하고 있어요.";
  */
 export function useCurrentLocation(readyMessage: string, isEnabled = true) {
   const [location, setLocation] = useState<Coordinates | null>(null);
-  const [locationMessage, setLocationMessage] = useState(LOCATING_MESSAGE);
+  const [locationMessage, setLocationMessage] = useState(isEnabled ? LOCATING_MESSAGE : "");
 
   function refreshLocation() {
     if (!navigator.geolocation) {

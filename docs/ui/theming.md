@@ -1,73 +1,30 @@
-# 테마(시즌 분위기) 관리
+# 테마 구조
 
-맛다공 화면의 색과 제목 글꼴은 `frontend/src/theme`에 모아 둔 테마 패키지에서 정합니다. 화면 CSS는 색을 직접 쓰지 않고 테마 변수만 쓰므로, 테마 하나를 바꾸면 앱 전체 분위기가 함께 바뀝니다. 할로윈·크리스마스처럼 기간을 정해 분위기를 바꿨다가 기간이 끝나면 기본 디자인으로 자동 복원할 수 있습니다.
+현재 앱은 밝은 브랜드 A 기본 테마 하나만 사용합니다. 실제 화면 색을 바꿀 필요가 생길 때를 위해 토큰 구조만 유지하며, 시즌 테마·기간 예약·미리보기 테마는 두지 않습니다.
 
-## 구성
+## 파일 역할
 
 ```text
 frontend/src/theme/
-├─ index.css          테마 패키지 진입점(main.tsx에서 가장 먼저 불러옴)
-├─ base.css           테마와 무관한 의미 토큰(--color-ink, --color-primary …)과 기본 글꼴
+├─ index.css          테마 CSS 진입점
+├─ fonts.css          앱 글꼴 가족 Matdagong(보통=티머니 둥근바람, 굵게=주아)
+├─ base.css           화면에서 쓰는 의미 토큰과 기본 글꼴
 ├─ themes/
-│  ├─ default.css     기본 테마(밝은 웜 톤)와 반경 토큰
-│  └─ halloween.css   할로윈 예시 테마
-├─ themes.ts          테마 목록(이름, 상단 색, 제목 글꼴)과 기간 예약
-└─ applyTheme.ts      적용할 테마를 고르고 <html data-theme>에 반영
+│  └─ default.css     기본 팔레트·글꼴·반경 토큰
+├─ themes.ts          사용 가능한 테마와 브라우저 상단 색
+└─ applyTheme.ts      빌드 설정을 읽어 data-theme 적용
 ```
 
-화면 모양은 테마 토큰만 쓰는 아래 파일에 있습니다. 시즌 테마는 이 파일들을 고치지 않고 토큰 값만 바꿉니다.
+- `themes/default.css`는 색 계열과 반경 값을 관리합니다.
+- `base.css`는 `--color-primary`, `--color-surface`, `--color-ink`처럼 화면 역할을 나타내는 토큰을 팔레트에 연결합니다.
+- 화면 CSS는 직접 색을 지정하기보다 의미 토큰을 사용합니다. 현재 기본 화면 배치 규칙은 `styles/screens/`에 둡니다.
+- `applyTheme.ts`는 `VITE_APP_THEME`가 등록된 테마 ID일 때 적용하고, 그 외에는 기본 테마를 씁니다. 현재는 기본 테마만 등록되어 있습니다.
 
-- `frontend/src/styles/renewal/ui.css`: 공통 부품(상단 바, 버튼, 칩, 카드, 빈 화면, 스켈레톤, 사진 페이지 점, 시트, 확인·안내창, 하단 탭)
-- `frontend/src/styles/renewal/<영역>.css`: 발견·내 지도·맛집 상세·피드·기록·맛객·나·시작 화면
-- `frontend/src/styles/app.css`, `design-system.css`: 리뉴얼 전부터 쓰는 앱 틀·아바타·지도 마커 등 공통 규칙
-- `frontend/src/styles/profile-settings.css`, `a/forms.css`: 프로필 편집, 취향 태그 선택, 태그 제안
-- `frontend/src/styles/auth-start.css`: 로그인 시작·오류 화면
+## 나중에 테마를 추가할 때
 
-반경은 `--radius-xs`(4) · `--radius-sm`(12) · `--radius-md`(14) · `--radius-control`(16) · `--radius-card`(22) · `--radius-sheet`(28) · `--radius-pill` 토큰을 씁니다.
+1. `themes/<id>.css`를 만들고 `[data-theme="<id>"]` 범위에서 바뀌는 색 계열·글꼴·반경 토큰만 정의합니다. 정의하지 않은 토큰은 기본값을 이어 씁니다.
+2. `index.css`에서 새 테마 파일을 `base.css`보다 먼저 불러옵니다.
+3. `themes.ts`의 `THEMES`에 ID와 브라우저 상단 색을 등록합니다.
+4. 필요하면 개발 환경의 `VITE_APP_THEME=<id>`로 확인합니다. 등록하지 않은 ID는 기본 테마로 처리됩니다.
 
-## 색 체계
-
-색은 계열별로 0(가장 밝음)~900(가장 어두움) 단계 변수로 정의합니다.
-
-| 계열 | 쓰임 |
-| --- | --- |
-| `--neutral-*` | 바탕, 선, 본문 글자 |
-| `--brand-*` | 주요 버튼, 선택 상태, 강조(기본 테마는 코랄) |
-| `--clay-*` | 채도가 낮은 갈색·살구 장식 |
-| `--amber-*` | 포인트 배지(기본 테마는 허니 앰버) |
-| `--green-*`, `--slate-*`, `--blue-*`, `--berry-*`, `--teal-*` | 지도, 알림, 카테고리·취향 태그 묶음 구분 |
-| `--shadow-color` | 그림자와 사진 위 어두운 막 |
-| `--on-strong` | 진한 색이나 사진 위 글자색 |
-
-화면 CSS는 가능하면 `base.css`의 의미 토큰(`--color-primary`, `--color-ink` 등)을 쓰고, 세밀한 단계가 필요할 때만 계열 단계 변수를 직접 씁니다. 반투명 색은 `color-mix(in srgb, var(--brand-600) 30%, transparent)`처럼 만듭니다. 새 CSS에 `#ffffff` 같은 색 값을 직접 쓰지 않습니다.
-
-## 시즌 테마 추가
-
-1. `themes/<id>.css`를 만들고 `[data-theme="<id>"] { … }` 안에서 바꿀 계열 단계 변수만 다시 정의합니다. 단계별 밝기 순서(0 밝음 → 900 어두움)를 지켜야 글자와 바탕 대비가 유지됩니다. `--brand-600` 위 흰 글자는 4.5:1 대비 이상이어야 합니다.
-2. 제목 글꼴을 바꾸려면 같은 블록에서 `--font-display`를 바꿉니다.
-3. 장식이 필요하면 같은 파일에 `[data-theme="<id>"] .클래스` 규칙으로 배경 무늬나 작은 그림을 더합니다. 이미지는 CSS `data:` SVG나 `public/assets` 파일을 씁니다.
-4. 테마 패키지 진입점 `index.css`(`frontend/src/theme/index.css`)에 `@import "./themes/<id>.css";`를 추가합니다(`base.css`보다 위).
-5. `themes.ts`의 `THEMES`에 `{ id, label, themeColor, fontStylesheet }`를 등록합니다. `fontStylesheet`는 Google Fonts css2 주소입니다(CSP가 Google Fonts를 허용합니다).
-
-## 적용과 복원
-
-적용 순서는 다음과 같습니다.
-
-1. **미리 보기**: 주소에 `?theme=<id>`를 붙이면 그 탭에서만 해당 테마로 봅니다. `?theme=auto`로 미리 보기를 끕니다.
-2. **배포 강제 지정**: 프런트 빌드 환경 변수 `VITE_APP_THEME=<id>`. 기간과 관계없이 그 테마를 씁니다. 비우면 다음 단계로 넘어갑니다.
-3. **기간 예약**: `themes.ts`의 `THEME_SCHEDULE`에 한국 시간 기준 시작일(포함)·종료일(미포함)을 넣습니다.
-
-   ```ts
-   export const THEME_SCHEDULE: readonly ThemeSchedule[] = [
-     { theme: "halloween", start: "2027-10-01", end: "2027-11-01" },
-   ];
-   ```
-
-   기간 안에 앱을 열면 할로윈 테마가 적용되고, 종료일 0시 이후에는 다시 배포하지 않아도 기본 테마로 돌아갑니다.
-4. 위 조건이 없으면 기본 테마(`default`)를 씁니다.
-
-## 지금 상태
-
-- 기본 테마: 밝은 웜 톤(리뉴얼 기준). 크림 바탕, 접근성 대비를 맞춘 코랄(`#cf3f25`), 허니 앰버, 제목 글꼴 Jua, 본문 글꼴 Pretendard.
-- 할로윈 테마: 예시로만 등록되어 있고 기간 예약은 비어 있습니다. `http://localhost:4845/?theme=halloween`으로 미리 볼 수 있습니다.
-- 음식 일러스트(`BrandAssets.tsx`의 SVG)와 사진은 테마와 관계없이 원래 색을 유지합니다.
+대비와 색의 역할은 [현재 UI 기준](current-design.md#색-역할)을 따릅니다. 테마를 추가할 때 화면별 CSS를 복사하거나 기존 화면 스타일을 고치지 않고 토큰만 조정합니다.

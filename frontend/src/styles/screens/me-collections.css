@@ -1,0 +1,53 @@
+/* 나 홈(보드 13-01): 가볼 곳 · 가본 곳 · 공유 중 흰 숫자 카드 세 칸. 아이콘은 내 지도 마커·수와 같은 색입니다
+   (가볼 곳 코랄, 가본 곳 --visited-*, 공유 중 --shared-*). */
+.r-me-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.r-me-stats button {
+  display: flex;
+  width: 100%;
+  min-height: 104px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 12px;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+}
+.r-me-stats button > .icon {
+  width: 28px;
+  height: 28px;
+  color: var(--color-primary);
+}
+.r-me-stats .is-visited > .icon {
+  color: var(--visited-500);
+}
+.r-me-stats .is-shared > .icon {
+  color: var(--shared-500);
+}
+.r-me-stats b {
+  font-size: 17px;
+  font-weight: 800;
+}
+.r-me-stats span {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--neutral-700);
+  font-size: 14px;
+  font-weight: 600;
+}
+.r-me-stats span .icon {
+  width: 16px;
+  height: 16px;
+}

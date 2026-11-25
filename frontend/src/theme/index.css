@@ -1,4 +1,4 @@
-/* 테마 패키지 진입점. 기본 테마 → 시즌 테마 → 의미 토큰 순서로 불러옵니다. */
+/* 테마 진입점. 기본 색상 원본과 화면용 의미 토큰을 불러옵니다. */
+@import "./fonts.css";
 @import "./themes/default.css";
-@import "./themes/halloween.css";
 @import "./base.css";

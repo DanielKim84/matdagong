@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Icon from "../../components/Icon";
+import PaginationDots from "../../components/PaginationDots";
 import TasterAvatar from "../../components/TasterAvatar";
 import { useModalLock } from "../../hooks/useModalLock";
 import { useSwipe } from "../../hooks/useSwipe";
@@ -11,7 +12,10 @@ import type { PlacePhoto } from "./placeRecords";
 /** 사진을 넘기는 스와이프 거리(px). 전체 화면이라 기본값보다 조금 짧게 둡니다. */
 const SWIPE_THRESHOLD_PX = 45;
 
-/** 전체 화면 사진 보기. 좌우로 넘기고, 누가 찍은 어떤 메뉴인지 아래에 보여 줍니다. */
+/**
+ * 전체 화면 사진 보기(보드 10-01): 흰 바탕에 큰 사진, 사진 위 오른쪽 닫기와 양옆 넘기기, 사진 아래 점(몇 번째인지)과
+ * 누가 찍은 어떤 메뉴인지를 보여 줍니다. 좌우로 밀거나 키보드 화살표로도 넘깁니다.
+ */
 export default function PhotoViewer({
   photos,
   startIndex,
@@ -25,7 +29,6 @@ export default function PhotoViewer({
 }) {
   const [index, setIndex] = useState(() => Math.min(Math.max(0, startIndex), photos.length - 1));
   const closeButton = useRef<HTMLButtonElement>(null);
-  const thumbs = useRef<HTMLDivElement>(null);
   const total = photos.length;
   const step = (direction: number) => setIndex((current) => wrapIndex(current, direction, total));
   const swipe = useSwipe({
@@ -44,16 +47,16 @@ export default function PhotoViewer({
     },
   });
 
-  useEffect(() => {
-    thumbs.current?.children[index]?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
-  }, [index]);
-
   const photo = photos[index];
   if (!photo) return null;
 
   return createPortal(
     <div className="r-place-viewer" role="dialog" aria-modal="true" aria-label={`${placeName} 사진 보기`}>
       <header className="r-place-viewer__top">
+        <span className="r-place-viewer__spacer" aria-hidden="true" />
+        <span className="visually-hidden" aria-live="polite">
+          {index + 1} / {total}
+        </span>
         <button
           type="button"
           ref={closeButton}
@@ -63,10 +66,6 @@ export default function PhotoViewer({
         >
           <Icon name="close" />
         </button>
-        <span aria-live="polite">
-          {index + 1} / {total}
-        </span>
-        <span className="r-place-viewer__spacer" aria-hidden="true" />
       </header>
       <div className="r-place-viewer__stage" {...swipe}>
         <div className="r-place-viewer__track" style={{ transform: `translateX(-${index * 100}%)` }}>
@@ -103,6 +102,7 @@ export default function PhotoViewer({
         )}
       </div>
       <footer className="r-place-viewer__bottom">
+        {total > 1 && <PaginationDots activeIndex={index} total={total} onSelect={setIndex} label="사진" />}
         {photo.isMenu && photo.menuName && (
           <div className="r-place-viewer__menu">
             <span className="r-place-viewer__menu-kind">추천 메뉴</span>
@@ -117,22 +117,6 @@ export default function PhotoViewer({
             <span>{photo.isMenu ? "메뉴 사진" : "방문 사진"}</span>
           </div>
         </div>
-        {total > 1 && (
-          <div className="r-place-viewer__thumbs" ref={thumbs}>
-            {photos.map((item, itemIndex) => (
-              <button
-                type="button"
-                key={item.src}
-                className={itemIndex === index ? "is-on" : ""}
-                onClick={() => setIndex(itemIndex)}
-                aria-label={`${itemIndex + 1}번째 사진 보기`}
-                aria-current={itemIndex === index}
-              >
-                <img src={item.src} alt="" loading="lazy" decoding="async" />
-              </button>
-            ))}
-          </div>
-        )}
       </footer>
     </div>,
     document.body,

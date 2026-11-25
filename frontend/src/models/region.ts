@@ -27,8 +27,41 @@ const SIDO_SHORT_NAMES: Record<string, string> = {
 };
 const SIDO_SHORT_SET = new Set(Object.values(SIDO_SHORT_NAMES));
 
+/** 시·도를 늘어놓을 순서(서울 → 광역시 → 도 → 제주, 위 표 순서)에서의 자리입니다. 표에 없으면 맨 뒤입니다. */
+export function sidoOrder(name: string): number {
+  const index = Object.keys(SIDO_SHORT_NAMES).indexOf(name);
+  return index < 0 ? Number.MAX_SAFE_INTEGER : index;
+}
+
 /** 주소·활동 지역 문자열의 첫 단어를 짧은 시·도 이름(서울, 경기, 제주 …)으로 바꿉니다. 시·도가 아니면 null입니다. */
 export function shortSidoName(text: string | null | undefined): string | null {
   const first = text?.trim().split(/\s+/)[0] ?? "";
   return SIDO_SHORT_NAMES[first] ?? (SIDO_SHORT_SET.has(first) ? first : null);
+}
+
+/**
+ * 활동 지역 한 곳의 짧은 이름표입니다(프로필 편집 칩, 맛객 목록). 시·도만 고른 곳은 "서울", 그 아래까지 고른 곳은
+ * 맨 끝 이름("마포구", "연남동")입니다. 저장 값은 법정동 공식 이름을 공백으로 이은 한 줄("서울특별시 마포구 연남동")입니다.
+ */
+export function regionLabel(region: string): string {
+  const parts = region.trim().split(/\s+/);
+  if (parts.length === 1) return shortSidoName(parts[0]) ?? parts[0];
+  return parts[parts.length - 1];
+}
+
+/**
+ * 주소(카카오 "서울 마포구 연남동 …" 또는 공식 이름)가 활동 지역 안인지 봅니다. 시·도는 짧은 이름으로 맞추고,
+ * 그 아래(시·군·구, 읍·면·동)는 지역에 적힌 이름이 주소에 모두 있어야 합니다. 시·도만 고른 지역이면 같은 시·도면 됩니다.
+ */
+export function regionContains(region: string, address: string | null | undefined): boolean {
+  const regionParts = region.trim().split(/\s+/);
+  const addressParts = address?.trim().split(/\s+/) ?? [];
+  const sido = shortSidoName(regionParts[0]);
+  if (!sido || sido !== shortSidoName(addressParts[0])) return false;
+  return regionParts.slice(1).every((part) => addressParts.includes(part));
+}
+
+/** 두 활동 지역이 겹치는지(한쪽이 다른 쪽 안에 있으면 겹침). 맛객 탭 "내 지역"에서 맛객 활동 지역과 내 지역을 견줄 때 씁니다. */
+export function regionsOverlap(a: string, b: string): boolean {
+  return regionContains(a, b) || regionContains(b, a);
 }

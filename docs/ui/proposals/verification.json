@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-18",
+  "boards": 18,
+  "screen_states": 72,
+  "registered_routes": [
+    "home",
+    "map",
+    "mymap",
+    "feed",
+    "register",
+    "place",
+    "profile",
+    "tasters",
+    "taster-recommendations",
+    "subscriptions",
+    "my",
+    "diary",
+    "wallet",
+    "drafts",
+    "disliked",
+    "notifications",
+    "settings",
+    "policy",
+    "intro",
+    "profile-edit",
+    "saved",
+    "recent"
+  ],
+  "route_aliases": {
+    "taster-recommendations": "tasters",
+    "map": "map"
+  },
+  "missing_sources": [],
+  "uncovered_routes": [],
+  "brand": "현재 입체 A·한글/영문 로고·배너",
+  "status": "검토용 제안; 실제 앱 미적용",
+  "image_notes": "이미지 속 예시보다 화면별 동작 설명을 우선한다. 생성 이미지의 작은 글자·태그 예시·수치는 정밀 구현 명세가 아니다.",
+  "pdf_pages": 43,
+  "all_72_ids_in_pdf": true,
+  "all_18_images_present": true,
+  "all_43_pages_rendered": true,
+  "format_type_backend_checks": "통과; 백엔드 테스트는 변경 없음으로 UP-TO-DATE"
+}
