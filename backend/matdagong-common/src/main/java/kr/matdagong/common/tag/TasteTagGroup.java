@@ -2,7 +2,7 @@ package kr.matdagong.common.tag;
 
 /**
  * 취향 태그의 분류입니다. DB의 tag_group 값과 API JSON 값이 이 이름 그대로입니다.
- * 커뮤니티의 태그 사전과 장소 서비스의 기록 태그가 같은 분류 이름을 씁니다.
+ * 커뮤니티의 태그 사전과 장소 모듈의 기록 태그가 같은 분류 이름을 씁니다.
  * 화면 이름(label)과 고를 수 있는 수(maxSelections)는 화면의 models/tasteTags.ts와 같게 맞춥니다.
  */
 public enum TasteTagGroup {

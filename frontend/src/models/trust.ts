@@ -1,7 +1,7 @@
 import type { Taster } from "./place";
 
 /**
- * 같은 맛집 경험으로 쌓인 맛객 신뢰 등급입니다(커뮤니티 서비스 TasteTrust가 계산). 등급은 잘게 나누지 않습니다.
+ * 같은 맛집 경험으로 쌓인 맛객 신뢰 등급입니다(커뮤니티 모듈 TasteTrust가 계산). 등급은 잘게 나누지 않습니다.
  * 함께 다녀온 맛집이 10곳 미만이면 LEARNING, 80% 이상이면 믿고 가는 맛객(TRUSTED), 10% 미만이면 입맛이 다른 편입니다.
  */
 export type TrustLevel = "LEARNING" | "NORMAL" | "TRUSTED" | "DIFFERENT";

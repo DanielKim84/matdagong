@@ -1,4 +1,4 @@
-/** 장소 서비스(맛집 목록·내 기록·빠른 저장·하트·다녀온 곳·별로였던 곳) API 요청입니다. */
+/** 장소 모듈(맛집 목록·내 기록·빠른 저장·하트·다녀온 곳·별로였던 곳) API 요청입니다. */
 import { KAKAO_PROVIDER_CODE, type NewPlace, type Place, type Taster } from "../models/place";
 import { kakaoPlaceAddress, kakaoPlaceCoordinates, type Coordinates } from "../utils/geo";
 import { API_BASE_URL, apiRequest, type ApiRequestOptions } from "./http";
@@ -135,7 +135,7 @@ function kakaoPlaceBody(place: KakaoPlaceResult) {
   };
 }
 
-/** 가게에서 빠른 저장을 합니다. deviceLocation은 지금 기기 위치로, 장소 서비스가 가게와 VISIT_RADIUS_METERS 안인지 다시 확인합니다. */
+/** 가게에서 빠른 저장을 합니다. deviceLocation은 지금 기기 위치로, 장소 모듈이 가게와 VISIT_RADIUS_METERS 안인지 다시 확인합니다. */
 export function saveQuickPlaceDraft(
   accessToken: string,
   place: KakaoPlaceResult,
@@ -173,7 +173,7 @@ export function deleteQuickPlaceDraft(
 }
 
 /**
- * 새 기록·수정을 장소 서비스 CreatePlaceRecordRequest 본문으로 바꿉니다. 하트한 곳을 기록해도 같은 본문이고, 서버가
+ * 새 기록·수정을 장소 모듈 CreatePlaceRecordRequest 본문으로 바꿉니다. 하트한 곳을 기록해도 같은 본문이고, 서버가
  * 그 장소의 하트·별로였던 곳 표시를 지웁니다.
  */
 function placeRecordBody(place: NewPlace) {
@@ -227,7 +227,7 @@ export function deleteMyPlaceRecord(accessToken: string, placeId: string): Promi
   });
 }
 
-/** 맛집 정보 제보 이유입니다. 장소 서비스 PlaceReportReason과 같습니다. */
+/** 맛집 정보 제보 이유입니다. 장소 모듈 PlaceReportReason과 같습니다. */
 export type PlaceReportReason = "CLOSED" | "WRONG_NAME" | "WRONG_ADDRESS" | "WRONG_PHONE" | "WRONG_LOCATION" | "OTHER";
 
 /** 맛집 기본 정보 오류·폐업을 알립니다. duplicate는 확인 전인 같은 제보가 이미 있었다는 뜻입니다. */
@@ -244,11 +244,7 @@ export function reportPlace(
   });
 }
 
-/** 맛다공 탈퇴: 장소 서비스에 남은 내 기록·하트·다녀온 곳·별로였던 곳·최근 본 장소·빠른 기록·제보를 모두 지웁니다. */
-export function deleteMyPlaceData(accessToken: string): Promise<void> {
-  return request("/me", accessToken, { method: "DELETE", errorMessage: "내 맛집 기록을 지우지 못했어요." });
-}
-
+/** 하트(가볼 곳)한 장소 ID 목록입니다. */
 export function getLikedPlaceIds(accessToken: string): Promise<string[]> {
   return request("/likes", accessToken);
 }

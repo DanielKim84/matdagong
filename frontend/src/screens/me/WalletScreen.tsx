@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useAppData } from "../../app/AppData";
 import Icon, { type IconName } from "../../components/Icon";
 import { EmptyState, PageIntro, SectionHead, TopBar } from "../../components/ui";
-import { formatMonthDay, formatNumber } from "../../utils/format";
 
 // 포인트는 충전하지 않고 활동(유료 구독 수익 등)으로만 쌓입니다. 쌓인 포인트를 쓰는 방법들입니다(보드 16-04 세 칸).
 const PENDING_ACTIONS: { label: string; icon: IconName }[] = [
@@ -20,13 +19,13 @@ const HISTORY_FILTERS: { value: HistoryFilter; label: string }[] = [
 
 /**
  * 포인트 지갑(#wallet, 보드 16-04): 큰 제목과 설명, 연한 코랄 잔액 상자(동전 · 내 포인트 · 큰 숫자), 회색 "준비 중" 세 칸
- * (교환하기 · 후원하기 · 구독료 사용), "포인트 내역"과 전체 · 적립 · 사용 칩, 내역 줄(+·- 동그라미 · 제목 · 설명 · 금액)입니다.
+ * (교환하기 · 후원하기 · 구독료 사용), "포인트 내역"과 전체 · 적립 · 사용 칩입니다.
+ * 포인트는 아직 없어(다공 공통 포인트 서버 dagong-point를 붙일 때 연결, docs/point-security.md) 서버를 부르지 않고
+ * 잔액 0P와 "준비 중" 빈 내역만 보여 줍니다. 보드의 내역 줄(+·− 동그라미 · 제목 · 날짜 · 금액)은 서버를 붙일 때 그립니다.
  */
 export default function WalletScreen() {
   const app = useAppData();
-  const { balance, history } = app.points;
   const [filter, setFilter] = useState<HistoryFilter>("all");
-  const shown = history.filter((entry) => filter === "all" || (filter === "plus") === entry.amount > 0);
 
   function notifyPending(label: string) {
     app.actions.notify({
@@ -48,8 +47,7 @@ export default function WalletScreen() {
           <span className="r-me-balance__copy">
             <span>내 포인트</span>
             <b>
-              {formatNumber(balance)}
-              <small>P</small>
+              0<small>P</small>
             </b>
           </span>
         </section>
@@ -80,35 +78,12 @@ export default function WalletScreen() {
               ))}
             </div>
           </SectionHead>
-          {shown.length ? (
-            <div className="r-me-list">
-              {shown.map((entry) => (
-                <div className="r-row" key={entry.historyId}>
-                  <span className={`r-me-amount__icon ${entry.amount > 0 ? "is-plus" : "is-minus"}`} aria-hidden="true">
-                    {entry.amount > 0 ? "+" : "−"}
-                  </span>
-                  <span className="r-row__copy">
-                    <b>{entry.title}</b>
-                    <small>
-                      {formatMonthDay(entry.createdAt)}
-                      {entry.memo ? ` · ${entry.memo}` : ""}
-                    </small>
-                  </span>
-                  <b className={`r-me-amount ${entry.amount > 0 ? "is-plus" : "is-minus"}`}>
-                    {entry.amount > 0 ? "+ " : ""}
-                    {formatNumber(entry.amount)}P
-                  </b>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon="clock"
-              title="아직 포인트 내역이 없어요"
-              message="포인트가 쌓이거나 쓰이면 이곳에 기록돼요."
-              className="r-me-empty"
-            />
-          )}
+          <EmptyState
+            icon="clock"
+            title="포인트는 준비 중이에요"
+            message="적립이 시작되면 이곳에 포인트 내역이 쌓여요."
+            className="r-me-empty"
+          />
         </section>
       </div>
     </main>

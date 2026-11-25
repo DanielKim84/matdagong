@@ -17,7 +17,7 @@ const STAT_CARDS: { category: MyPlaceCategory; icon: IconName }[] = [
   { category: "shared", icon: "shared" },
 ];
 
-/** 바로 가기 다섯 줄(보드 13-01). 나를 구독한 사람은 내가 구독한 맛객 화면, 공유 범위는 내 맛집 모음에서 엽니다. */
+/** 바로 가기 다섯 줄(보드 13-01). 포인트 지갑은 포인트 서버를 붙이기 전까지 "준비 중" 화면입니다. 나를 구독한 사람은 내가 구독한 맛객 화면, 공유 범위는 내 맛집 모음에서 엽니다. */
 const LINKS: MeLink[] = [
   { icon: "people", label: "내가 구독한 맛객", onClick: () => go("subscriptions") },
   { icon: "clock", label: "최근 본 곳", onClick: () => go("recent") },

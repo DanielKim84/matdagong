@@ -23,7 +23,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 /**
  * 가입 3단계 · 맛객 추천(보드 04-04): "추천 맛객 N명"과 정렬 고르기, 맛객 줄(얼굴 · 이름과 취향 % · 가본 곳·구독자 수 · 회색 태그 ·
  * 오른쪽 체크 상자), 아래 "선택한 맛객 구독하기 (N명)" 체크와 "맛다공 시작하기"입니다.
- * 무료 구독은 한 번에 한 명이라(커뮤니티 서비스 SubscriptionService) 보드와 달리 한 명만 고릅니다(다른 맛객을 고르면 바뀜).
+ * 무료 구독은 한 번에 한 명이라(커뮤니티 모듈 SubscriptionService) 보드와 달리 한 명만 고릅니다(다른 맛객을 고르면 바뀜).
  * 취향을 골랐으면 취향 % 순, 아니면 많이 찾는 맛객으로 채웁니다(loadRecommendations). 구독 체크를 끄면 구독 없이 시작합니다.
  */
 export default function SignupMatchStep({

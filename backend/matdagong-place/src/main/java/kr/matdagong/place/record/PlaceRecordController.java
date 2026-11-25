@@ -1,0 +1,76 @@
+package kr.matdagong.place.record;
+
+import static kr.matdagong.place.catalog.PlaceModels.*;
+import static kr.matdagong.place.record.PlaceRecordModels.*;
+
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
+import kr.matdagong.common.security.AuthenticatedAccount;
+import kr.matdagong.place.kakao.KakaoPlaceVerifier;
+import kr.matdagong.place.kakao.KakaoPlaceVerifier.PlaceInfo;
+import kr.matdagong.place.profile.AuthorProfiles;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+/**
+ * 로그인 사용자의 맛집 기록 저장·조회·삭제 API를 제공합니다. 하트한 곳을 기록할 때도 같은 저장 API를 씁니다.
+ * 작성자 프로필 확인(커뮤니티 모듈)과 카카오 장소 확인(외부 호출)은 장소 DB 트랜잭션(Service)에 들어가기 전에 여기서 먼저 끝냅니다.
+ */
+@RestController
+@RequestMapping("/api/v1/places/records")
+public class PlaceRecordController {
+    private final PlaceRecordService records;
+    private final AuthorProfiles profiles;
+    private final KakaoPlaceVerifier kakaoPlaces;
+
+    public PlaceRecordController(PlaceRecordService records, AuthorProfiles profiles, KakaoPlaceVerifier kakaoPlaces) {
+        this.records = records;
+        this.profiles = profiles;
+        this.kakaoPlaces = kakaoPlaces;
+    }
+
+    @GetMapping("/mine")
+    public List<PlaceView> mine(@AuthenticationPrincipal Jwt jwt) {
+        return records.findMine(AuthenticatedAccount.id(jwt));
+    }
+
+    /** 같은 장소에 내 기록이 이미 있으면 새로 만들지 않고 그 기록을 요청 내용으로 수정합니다. */
+    @PostMapping
+    public PlaceView create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreatePlaceRecordRequest request) {
+        UUID accountId = AuthenticatedAccount.id(jwt);
+        return records.createRecord(accountId, profiles.findMine(accountId), verifiedPlace(request), request);
+    }
+
+    /** 내 기록 여러 곳을 한 번에 공개하거나 나만 보기로 바꿉니다. */
+    @PutMapping("/visibility")
+    public ChangeVisibilityResponse changeVisibility(
+            @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody ChangeVisibilityRequest request) {
+        return new ChangeVisibilityResponse(
+                records.changeVisibility(AuthenticatedAccount.id(jwt), request.placeIds(), request.visibility()));
+    }
+
+    /** 이 장소의 내 기록을 지웁니다. 이미 없으면 404입니다. */
+    @DeleteMapping("/{placeId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@AuthenticationPrincipal Jwt jwt, @PathVariable String placeId) {
+        if (!records.deleteRecord(AuthenticatedAccount.id(jwt), placeId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "지울 내 기록이 없어요.");
+        }
+    }
+
+    private PlaceInfo verifiedPlace(CreatePlaceRecordRequest request) {
+        return kakaoPlaces.verify(request.providerCode(), request.providerPlaceId(), request.submittedPlace());
+    }
+}

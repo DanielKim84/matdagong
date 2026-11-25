@@ -27,7 +27,7 @@ export function recordMenus(record: PlaceRecord): RecommendedMenu[] {
 
 /**
  * 한 맛객의 취향 태그와 매장 이용 정보를 사전의 분류 순서대로 묶습니다(매장 이용은 취향 태그 뒤).
- * 분류는 기록에 태그마다 저장된 값(tagGroups)을 씁니다. 장소 서비스가 분류 없는 태그를 받지 않으므로(DB도 막음)
+ * 분류는 기록에 태그마다 저장된 값(tagGroups)을 씁니다. 장소 모듈이 분류 없는 태그를 받지 않으므로(DB도 막음)
  * 태그 사전을 다시 찾지 않습니다.
  */
 export function recordTagGroups(record: PlaceRecord): TagGroupSection[] {

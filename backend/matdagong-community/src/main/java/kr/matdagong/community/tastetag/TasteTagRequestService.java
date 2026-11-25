@@ -1,0 +1,89 @@
+package kr.matdagong.community.tastetag;
+
+import static kr.matdagong.community.tastetag.TasteTagModels.*;
+
+import java.util.List;
+import java.util.UUID;
+import kr.matdagong.common.jdbc.JdbcTimes;
+import kr.matdagong.common.tag.TasteTagGroup;
+import kr.matdagong.common.web.ApiErrors;
+import kr.matdagong.community.CommunityDatabase;
+import kr.matdagong.community.profile.ProfileQueries;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+/** 태그와 매장 이용 정보 제안을 DB 검토 대기열에 저장하고 사용자별 처리 이력을 제공합니다. */
+@Service
+public class TasteTagRequestService {
+    private static final int RECENT_REQUEST_LIMIT = 20;
+    private static final RowMapper<TagRequestView> REQUEST_MAPPER = (rs, row) -> new TagRequestView(
+            rs.getObject("request_id", UUID.class),
+            TagRequestType.valueOf(rs.getString("request_type")),
+            rs.getString("tag_name"),
+            TasteTagGroup.valueOf(rs.getString("tag_group")),
+            TagRequestStatus.valueOf(rs.getString("request_st")),
+            rs.getString("review_note"),
+            JdbcTimes.instant(rs, "reg_dt"));
+
+    private final JdbcTemplate jdbc;
+
+    public TasteTagRequestService(@CommunityDatabase JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    /** 태그 제안은 이미 사전에 있는 이름(대소문자 무시)이면 409로 답합니다. 매장 이용 정보 제안은 그 확인을 하지 않습니다. */
+    @Transactional(transactionManager = CommunityDatabase.TRANSACTIONS)
+    public TagRequestView create(UUID accountId, TagRequest request) {
+        TagRequestType requestType = request.requestType();
+        // 매장 이용 정보 제안은 화면이 보낸 분류와 관계없이 매장 이용(VISIT) 검토 대상으로 분류합니다.
+        TasteTagGroup tagGroup = requestType == TagRequestType.PLACE_INFO ? TasteTagGroup.VISIT : request.tagGroup();
+        String name = request.name();
+        if (!ProfileQueries.exists(jdbc, accountId)) throw ApiErrors.profileRequired();
+        if (requestType == TagRequestType.TAG && isExistingTag(name)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 선택 목록에 있는 태그예요.");
+        }
+
+        try {
+            return jdbc.queryForObject(
+                    """
+                    INSERT INTO taste_tag_requests (request_id, account_id, request_type, tag_name, tag_group, request_rsn)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    RETURNING request_id, request_type, tag_name, tag_group, request_st, review_note, reg_dt
+                    """,
+                    REQUEST_MAPPER,
+                    UUID.randomUUID(),
+                    accountId,
+                    requestType.name(),
+                    name,
+                    tagGroup.name(),
+                    request.reason());
+        } catch (DuplicateKeyException exception) {
+            // 동시 제출도 DB의 대기 요청 유일 키로 막아 중복 접수를 방지합니다.
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "같은 내용의 제안을 이미 보냈어요. 처리 내역을 확인해 주세요.");
+        }
+    }
+
+    /** 본인의 최근 제안 20건을 최신순으로 돌려줍니다. */
+    @Transactional(transactionManager = CommunityDatabase.TRANSACTIONS, readOnly = true)
+    public List<TagRequestView> mine(UUID accountId) {
+        return jdbc.query(
+                """
+                SELECT request_id, request_type, tag_name, tag_group, request_st, review_note, reg_dt
+                FROM taste_tag_requests WHERE account_id = ?
+                ORDER BY reg_dt DESC LIMIT ?
+                """,
+                REQUEST_MAPPER,
+                accountId,
+                RECENT_REQUEST_LIMIT);
+    }
+
+    private boolean isExistingTag(String name) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM taste_tags WHERE lower(tag_name) = lower(?))", Boolean.class, name));
+    }
+}

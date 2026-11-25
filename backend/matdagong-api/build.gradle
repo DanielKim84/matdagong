@@ -1,0 +1,13 @@
+// 맛다공 API 서버(실행 jar)입니다. 장소·커뮤니티 모듈을 한 서버로 묶고, 보안·오류 응답·로그인 확인·탈퇴처럼 두 모듈에 걸친 것만 둡니다.
+dependencies {
+    implementation project(':matdagong-common')
+    implementation project(':matdagong-place')
+    implementation project(':matdagong-community')
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'org.postgresql:postgresql'
+}

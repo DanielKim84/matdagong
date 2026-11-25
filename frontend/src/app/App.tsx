@@ -212,7 +212,6 @@ function AppContent({ accessToken, displayName, loginProviders, onLogout }: Prop
     subscriptionIds: views.subscriptionIds,
     currentFreeSubscription: community.subscriptions.find((subscription) => subscription.subscriptionType === "FREE"),
     incomingSubscriptions: community.incomingSubscriptions,
-    points: community.points,
     reportedTasterIds: community.reportedTasterIds,
     tasters: views.tasters,
     tasterById: views.tasterById,

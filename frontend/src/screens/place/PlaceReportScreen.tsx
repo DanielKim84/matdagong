@@ -6,7 +6,7 @@ import type { Place } from "../../models/place";
 import { errorMessage } from "../../utils/errorMessage";
 
 /**
- * 제보 설명 최대 글자 수(보드 10-04 "0/300"). 장소 서비스 PlaceReportModels.PlaceReportRequest와
+ * 제보 설명 최대 글자 수(보드 10-04 "0/300"). 장소 모듈 PlaceReportModels.PlaceReportRequest와
  * DB place_reports.memo(VARCHAR(500))는 500자까지 받으므로 화면이 더 짧게 받는 것은 괜찮습니다.
  */
 const MEMO_MAX = 300;

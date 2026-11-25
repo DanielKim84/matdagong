@@ -2,10 +2,10 @@
 import type { ActivityScope, FoodFocus } from "./community";
 import type { TrustLevel } from "./trust";
 
-/** 장소 정보 제공처 코드입니다. 지금은 카카오 장소만 고릅니다. 장소 서비스 PlaceIdentifiers.KAKAO와 같은 값입니다. */
+/** 장소 정보 제공처 코드입니다. 지금은 카카오 장소만 고릅니다. 장소 모듈 PlaceIdentifiers.KAKAO와 같은 값입니다. */
 export const KAKAO_PROVIDER_CODE = "KAKAO";
 
-/** 장소 서비스 PlaceView와 같은 모양입니다(기록 작성자 사진·캐릭터만 app/enrichPlaces가 채움). */
+/** 장소 모듈 PlaceView와 같은 모양입니다(기록 작성자 사진·캐릭터만 app/enrichPlaces가 채움). */
 export type Place = {
   id: string;
   /** 장소 정보 제공처입니다(KAKAO_PROVIDER_CODE). */
@@ -38,7 +38,7 @@ export function placeNeighborhood(place: Pick<Place, "lotAddress" | "address">):
 /**
  * 맛객이 직접 다녀와 확인한 매장 이용 정보입니다. 커뮤니티 DB의 VISIT 태그 이름(V39)과 반드시 같아야 합니다.
  * app/enrichPlaces가 내 "피하고 싶은 조건"(VISIT 태그)과 기록의 매장 이용 정보를 이름으로 비교하기 때문입니다.
- * 기록하기에서 하나만 고르는 묶음을 나누려고 화면에도 이름을 둡니다. 장소 서비스 PlaceRecordModels.VISIT_CONDITIONS와
+ * 기록하기에서 하나만 고르는 묶음을 나누려고 화면에도 이름을 둡니다. 장소 모듈 PlaceRecordModels.VISIT_CONDITIONS와
  * 함께 고칩니다.
  */
 const VISIT_CONDITIONS = [
@@ -138,7 +138,7 @@ export type Taster = {
 export const MY_TASTER_ID = "me";
 
 /**
- * 직접 다녀온 곳만 기록·빠른 저장하도록 허용하는 현재 위치와 가게 사이 거리(m)입니다. 장소 서비스
+ * 직접 다녀온 곳만 기록·빠른 저장하도록 허용하는 현재 위치와 가게 사이 거리(m)입니다. 장소 모듈
  * NearbyPlaceGuard.MAX_VISIT_DISTANCE_METERS와 같은 값으로 함께 바꿉니다.
  * 안내 문구(약관 포함)는 VISIT_RADIUS_LABEL을 써서 숫자를 바꿀 때 문구가 따로 남지 않게 합니다.
  */
@@ -189,7 +189,7 @@ export type NewPlace = {
   visitConditions: VisitCondition[];
   photos: string[];
   visibility: "private" | "public";
-  /** 저장할 때의 기기 위치. 새 기록이면 장소 서비스가 가게와 VISIT_RADIUS_METERS 안인지 다시 확인합니다(브라우저에 보관하지 않음). */
+  /** 저장할 때의 기기 위치. 새 기록이면 장소 모듈이 가게와 VISIT_RADIUS_METERS 안인지 다시 확인합니다(브라우저에 보관하지 않음). */
   deviceLocation?: { latitude: number; longitude: number } | null;
 };
 

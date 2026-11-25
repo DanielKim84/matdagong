@@ -5,7 +5,7 @@ import type { TagRequest, TagRequestInput } from "../models/community";
 import { TASTE_TAG_GROUP_LABELS, TASTE_TAG_GROUPS, type TasteTagGroup } from "../models/tasteTags";
 import { errorMessage } from "../utils/errorMessage";
 
-// 이름 30자는 커뮤니티 서비스 TasteTagModels.TagRequest의 검증과 같은 값입니다(DB tag_name VARCHAR(30)).
+// 이름 30자는 커뮤니티 모듈 TasteTagModels.TagRequest의 검증과 같은 값입니다(DB tag_name VARCHAR(30)).
 // 설명은 서버가 300자까지 받지만 보드 17-04처럼 화면에서는 100자까지 받습니다.
 const MAX_NAME_LENGTH = 30;
 const MAX_REASON_LENGTH = 100;

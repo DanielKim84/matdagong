@@ -4,7 +4,7 @@ import { formatNumber, shortCategory } from "../../utils/format";
 
 /** 기록하기(RecordFlow) 단계·입력 한도와 입력 값 변환입니다. 단계 컴포넌트와 입력 훅이 함께 씁니다. */
 
-// 사진·메뉴 수, 메뉴 이름·추천 이유 길이는 장소 서비스 PlaceRecordModels(CreatePlaceRecordRequest·MenuInput)의 검증과
+// 사진·메뉴 수, 메뉴 이름·추천 이유 길이는 장소 모듈 PlaceRecordModels(CreatePlaceRecordRequest·MenuInput)의 검증과
 // 같은 값입니다. 사진·메뉴 수는 입력 보관(services/registerDraft.ts)도 맞춥니다. 함께 바꿉니다.
 export const MAX_PHOTOS = 10;
 export const MAX_MENUS = 5;

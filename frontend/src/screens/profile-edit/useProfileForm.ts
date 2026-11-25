@@ -24,7 +24,7 @@ import { useRegionCatalog } from "../../hooks/useRegionCatalog";
  */
 export type ProfileView = "profile" | "cover" | "style" | "taste";
 
-/** 소개 최대 글자 수. 커뮤니티 서비스 ProfileModels.UpdateProfileRequest의 intro 검증과 같습니다. */
+/** 소개 최대 글자 수. 커뮤니티 모듈 ProfileModels.UpdateProfileRequest의 intro 검증과 같습니다. */
 export const MAX_INTRO_LENGTH = 300;
 
 /** 프로필 편집 화면의 입력 상태와 저장 동작입니다. 네 화면(ProfileView)이 한 폼을 함께 저장합니다. */

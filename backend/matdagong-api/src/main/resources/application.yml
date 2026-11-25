@@ -1,0 +1,59 @@
+server:
+  # 화면(Vite 개발 서버 5845)의 /api·/media 요청을 받는 맛다공 API 서버 포트입니다(frontend/vite.config.ts proxy).
+  port: ${SERVER_PORT:4845}
+
+spring:
+  application:
+    name: matdagong-api
+  config:
+    # 루트에서 실행하거나 모듈 폴더에서 실행해도 저장소 루트의 비밀 설정을 읽습니다.
+    import:
+      - optional:file:./.env[.properties]
+      - optional:file:../../.env[.properties]
+  servlet:
+    # 프로필 사진 한 장 5MB(ProfileImageService·화면 profileImages.ts와 같은 값). 요청 전체는 배경 사진 10장을 한 번에 올려도
+    # 서버까지 들어오게 넉넉히 두고, 실제 배경 사진 합계 30MB 한도는 ProfileCoverService가 한국어 안내와 함께 막습니다.
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 55MB
+  # 장소·커뮤니티 DB를 모듈마다 따로 연결하므로(아래 dagong.place·dagong.community) 단일 DB 자동 설정과 Flyway 자동 실행을 끕니다.
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration
+      - org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration
+
+dagong:
+  auth:
+    # 토큰 서명을 확인하고(SecurityConfig), 그 토큰이 아직 로그인 중인지 묻는(ActiveLoginFilter) 공통 인증 서버입니다.
+    issuer: ${AUTH_ISSUER:http://localhost:4840}
+    client-id: ${AUTH_CLIENT_ID:matdagong-web-dev}
+    # 로그인 확인 결과를 토큰별로 기억하는 시간. 길수록 인증 서버에 덜 묻지만, 다른 기기 로그인 뒤 그만큼 늦게 막습니다.
+    session-check-cache: PT30S
+  place:
+    # 기본값은 로컬 PostgreSQL입니다. 공유 개발 DB는 .env의 PLACE_DB_*로 지정합니다(docs/home-development-setup.md).
+    datasource:
+      url: ${PLACE_DB_URL:jdbc:postgresql://localhost:54329/matdagong_places}
+      username: ${PLACE_DB_USERNAME:mdg}
+      password: ${PLACE_DB_PASSWORD:mdg_local}
+    # 사진 전체 20MB(PlaceRecordContentWriter)를 base64로 보내도 들어가도록 여유를 둔 장소 API 요청 본문 최대 크기입니다
+    # (RequestSizeLimitFilter).
+    max-request-size: 30MB
+    # 비공개 기록 사진 서명 주소용 HMAC 키입니다. 비워 두면 시작할 때마다 새로 만들어 재시작 전 주소는 열리지 않습니다.
+    media-signing-key: ${PLACE_MEDIA_SIGNING_KEY:}
+    media-url-ttl: PT6H
+  community:
+    # 사용자 프로필과 커뮤니티 데이터는 공통 인증 DB·장소 DB와 분리해 보관합니다. 공유 개발 DB는 .env의 COMMUNITY_DB_*로 지정합니다.
+    datasource:
+      url: ${COMMUNITY_DB_URL:jdbc:postgresql://localhost:54329/matdagong_community}
+      username: ${COMMUNITY_DB_USERNAME:mdg}
+      password: ${COMMUNITY_DB_PASSWORD:mdg_local}
+  # 가게 기본정보를 서버에서 카카오 Local API로 확인할 때 쓰는 REST API 키입니다. 비어 있으면 검증하지 않습니다.
+  kakao:
+    rest-api-key: ${KAKAO_REST_API_KEY:}
+    # 카카오 확인이 늦으면 확인 없이 저장하므로 응답 대기는 짧게 둡니다.
+    connect-timeout: PT2S
+    read-timeout: PT3S
+
+management:
+  endpoints.web.exposure.include: health,info

@@ -7,7 +7,7 @@ import { clearRegisterDraft } from "../services/registerDraft";
 import { STORAGE_KEYS, readStorage, removeStorage, writeStorage } from "../utils/storage";
 import { resetRouteHistory } from "./navigation";
 
-const AUTHORIZATION_SERVER = import.meta.env.VITE_AUTH_SERVER_URL ?? "http://localhost:5840";
+const AUTHORIZATION_SERVER = import.meta.env.VITE_AUTH_SERVER_URL ?? "http://localhost:4840";
 const CLIENT_ID = import.meta.env.VITE_AUTH_CLIENT_ID ?? "matdagong-web-dev";
 const REDIRECT_URI = import.meta.env.VITE_AUTH_REDIRECT_URI ?? `${window.location.origin}/auth/callback`;
 // 로그인 뒤 돌아갈 주소는 앱 내부 해시 경로(#화면 또는 #화면/ID)만 허용해 외부 주소로 이동하지 않게 합니다.

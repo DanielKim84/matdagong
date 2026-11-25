@@ -94,7 +94,7 @@ async function removeProfileCoverPhoto(accessToken: string, photoId: string): Pr
 /**
  * 프로필 설정 화면의 변경 내용을 순서대로 저장하고, 화면 상태에 바로 쓸 프로필을 돌려줍니다.
  * 사진 업로드 응답에는 프로필 전체가 없으므로 바뀐 사진 주소만 직접 맞춥니다. 주소 형식(/media/profiles/<계정>/avatar,
- * …/covers/<사진 ID>)은 커뮤니티 서비스 ProfileMediaUrls와 같게 둡니다.
+ * …/covers/<사진 ID>)은 커뮤니티 모듈 ProfileMediaUrls와 같게 둡니다.
  */
 export async function saveMyProfile(accessToken: string, changes: ProfileChanges): Promise<MyProfile> {
   const savedProfile = await updateMyProfile(accessToken, {

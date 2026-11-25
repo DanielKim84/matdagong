@@ -605,10 +605,6 @@
   margin-left: 2px;
   font-size: 22px;
 }
-.r-me-balance__copy > small {
-  color: var(--color-muted);
-  font-size: 12px;
-}
 /* 지갑의 준비 중 칸: 회색 바탕 세 칸에 아이콘 · 이름 · "준비 중"(보드 16-04) */
 .r-me-tiles {
   display: grid;
@@ -641,37 +637,6 @@
   color: var(--color-muted);
   font-size: 12px;
 }
-/* 포인트 내역 줄: 왼쪽 연한 초록 + (적립) · 회색 −(사용) 동그라미, 오른쪽 코랄 금액 */
-.r-me-amount__icon {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  place-items: center;
-  border-radius: 50%;
-  font-size: 20px;
-  font-weight: 700;
-}
-.r-me-amount__icon.is-plus {
-  background: var(--green-50);
-  color: var(--green-700);
-}
-.r-me-amount__icon.is-minus {
-  background: var(--neutral-100);
-  color: var(--neutral-700);
-}
-.r-me-amount {
-  flex: none;
-  font-size: 16px;
-  font-weight: 800;
-}
-.r-me-amount.is-plus {
-  color: var(--color-primary);
-}
-.r-me-amount.is-minus {
-  color: var(--color-ink);
-}
-
 /* ── 설정 ── */
 .r-me-group {
   display: flex;

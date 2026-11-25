@@ -5,7 +5,7 @@
  * 같은 값입니다.
  */
 export const MAX_NICKNAME_LENGTH = 12;
-/** 활동 지역은 최대 3곳(프로필 편집 보드 15-01). 커뮤니티 서비스 ProfileModels.MAX_ACTIVITY_REGIONS·DB 제약(V45)과 같습니다. */
+/** 활동 지역은 최대 3곳(프로필 편집 보드 15-01). 커뮤니티 모듈 ProfileModels.MAX_ACTIVITY_REGIONS·DB 제약(V45)과 같습니다. */
 export const MAX_ACTIVITY_REGIONS = 3;
 
 type PaidPlan = { termMonths: number; priceAmount: number };
@@ -38,23 +38,14 @@ export type IncomingSubscription = {
   startAt: string;
   endAt: string | null;
 };
-/** 포인트 원장 한 줄입니다. 적립·사용은 amount 부호로 구분합니다. */
-type PointEntry = {
-  historyId: string;
-  title: string;
-  memo: string | null;
-  amount: number;
-  createdAt: string;
-};
-export type PointAccount = { balance: number; history: PointEntry[] };
 export type UserNotification = {
-  /** 알림 종류입니다. 커뮤니티 서비스 NotificationType, DB ck_user_notifications_type과 같은 값입니다. */
+  /** 알림 종류입니다. 커뮤니티 모듈 NotificationType, DB ck_user_notifications_type과 같은 값입니다. */
   notificationType: "PLACE_RECORD_CREATED" | "TASTER_NEW_PLACE" | "NEW_SUBSCRIBER" | "SYSTEM_NOTICE";
   notificationId: string;
   title: string;
   message: string;
   /**
-   * 눌렀을 때 이동할 곳(PLACE: 장소 상세, MY_SUBSCRIBERS: 내 구독자). 커뮤니티 서비스 NotificationService의 대상 상수,
+   * 눌렀을 때 이동할 곳(PLACE: 장소 상세, MY_SUBSCRIBERS: 내 구독자). 커뮤니티 모듈 NotificationService의 대상 상수,
    * DB ck_user_notifications_target_type과 같은 값입니다. 대상 종류와 ID는 늘 함께 있거나 함께 비어 있습니다.
    */
   targetType: "PLACE" | "MY_SUBSCRIBERS" | null;
@@ -92,7 +83,7 @@ export type MyProfile = {
   hiddenByReports: boolean;
 };
 
-/** 맛객 신고 이유입니다. 커뮤니티 서비스 ReportReason과 같습니다. */
+/** 맛객 신고 이유입니다. 커뮤니티 모듈 ReportReason과 같습니다. */
 export type TasterReportReason =
   | "ILLEGAL_PHOTO"
   | "ADVERTISING"
@@ -106,18 +97,18 @@ export type FoodFocus = "RESTAURANT" | "CAFE_DESSERT" | "BOTH";
 export type ActivityScope = "LOCAL" | "TRAVEL" | "BOTH";
 export type TasteTag = {
   name: string;
-  /** 태그 분류. 커뮤니티 서비스 TasteTagGroup과 같은 값이며, 순서·이름·한도는 models/tasteTags.ts에 둡니다. */
+  /** 태그 분류. 커뮤니티 모듈 TasteTagGroup과 같은 값이며, 순서·이름·한도는 models/tasteTags.ts에 둡니다. */
   tagGroup: "CUISINE" | "TASTE" | "CAFE" | "DESSERT" | "TRAVEL" | "MOOD" | "OCCASION" | "VISIT";
 };
 
-/** 태그·매장 이용 정보 제안입니다. 길이 한도는 TasteTagRequestScreen과 커뮤니티 서비스 TasteTagModels.TagRequest가 같습니다. */
+/** 태그·매장 이용 정보 제안입니다. 길이 한도는 TasteTagRequestScreen과 커뮤니티 모듈 TasteTagModels.TagRequest가 같습니다. */
 export type TagRequestInput = {
   requestType: "TAG" | "PLACE_INFO";
   name: string;
   tagGroup: TasteTag["tagGroup"];
   reason: string;
 };
-/** 내 제안 한 줄입니다. status는 커뮤니티 서비스 TagRequestStatus, DB taste_tag_requests.request_st와 같은 값입니다. */
+/** 내 제안 한 줄입니다. status는 커뮤니티 모듈 TagRequestStatus, DB taste_tag_requests.request_st와 같은 값입니다. */
 export type TagRequest = {
   requestType: "TAG" | "PLACE_INFO";
   requestId: string;

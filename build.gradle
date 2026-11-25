@@ -4,10 +4,6 @@ plugins {
     id 'com.diffplug.spotless' version '7.0.2' apply false
 }
 
-ext {
-    springCloudVersion = '2025.1.4'
-}
-
 allprojects {
     group = 'kr.matdagong'
     version = '0.1.0-SNAPSHOT'
@@ -18,11 +14,11 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'com.diffplug.spotless'
-    // 공통 모듈은 서비스들이 가져다 쓰는 라이브러리라 실행 jar(bootJar)를 만들지 않습니다.
-    if (name == 'matdagong-common') {
-        apply plugin: 'java-library'
-    } else {
+    // 실행 jar(bootJar)는 matdagong-api만 만듭니다. common·place·community는 서버가 가져다 쓰는 라이브러리입니다.
+    if (name == 'matdagong-api') {
         apply plugin: 'org.springframework.boot'
+    } else {
+        apply plugin: 'java-library'
     }
 
     java {
@@ -32,7 +28,6 @@ subprojects {
     dependencyManagement {
         imports {
             mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
-            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${rootProject.ext.springCloudVersion}"
         }
     }
 
@@ -50,6 +45,12 @@ subprojects {
             trimTrailingWhitespace()
             endWithNewline()
         }
+    }
+
+    // 컨트롤러의 @RequestParam·@PathVariable 등은 이름을 따로 적지 않고 매개변수 이름을 그대로 씁니다.
+    // Boot 플러그인은 자기 모듈에만 -parameters를 켜므로, 라이브러리 모듈(place·community·common)에도 직접 켭니다.
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs << '-parameters'
     }
 
     tasks.withType(Test).configureEach {

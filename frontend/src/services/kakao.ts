@@ -23,7 +23,7 @@ export function loadMapSdk() {
     script.onerror = () => {
       sdkPromise = undefined;
       script.remove();
-      reject(new Error("등록한 지도 도메인으로 접속해 주세요. 현재 개발 주소는 localhost:4845입니다."));
+      reject(new Error("등록한 지도 도메인으로 접속해 주세요. 현재 개발 주소는 localhost:5845입니다."));
     };
     document.head.appendChild(script);
   });

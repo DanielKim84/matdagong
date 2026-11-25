@@ -1,0 +1,15 @@
+// 맛다공 서버(matdagong-api)가 묶어 실행하는 기능 모듈입니다(실행 jar 아님). 다른 기능 모듈은 직접 부르지 않고
+// matdagong-common의 module 인터페이스로만 주고받습니다.
+dependencies {
+    implementation project(':matdagong-common')
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    // 모듈마다 자기 DB에 Flyway를 직접 적용합니다(PlaceDatabaseConfig·CommunityDatabaseConfig).
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    // Docker 없이 embedded PostgreSQL에 실제 Flyway 스키마를 적용해 SQL을 검증합니다(EmbeddedPostgresTestSupport).
+    testImplementation testFixtures(project(':matdagong-common'))
+    testRuntimeOnly 'org.postgresql:postgresql'
+}

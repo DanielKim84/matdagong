@@ -38,7 +38,7 @@ export function useMyPlaces({ accessToken, screen, notify, setPlaces, refreshCom
   const [visitedPlaceIds, setVisitedPlaceIds] = useState<string[]>([]);
   const [dislikedPlaceIds, setDislikedPlaceIds] = useState<string[]>([]);
   // 가게에 들른 근거: 다녀온 곳(빠른 저장·기록이 늘 함께 남김)과 별로였던 곳입니다.
-  // 장소 서비스 PlaceLikeService.requireVisitProof가 같은 두 목록으로 다시 확인합니다.
+  // 장소 모듈 PlaceLikeService.requireVisitProof가 같은 두 목록으로 다시 확인합니다.
   const visitProofPlaceIds = useMemo(
     () => [...new Set([...visitedPlaceIds, ...dislikedPlaceIds])],
     [visitedPlaceIds, dislikedPlaceIds],

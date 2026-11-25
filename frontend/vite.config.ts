@@ -2,13 +2,13 @@ import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
 // main.tsx와 같은 기본값을 써서 환경 변수가 없을 때도 인증 서버 주소가 어긋나지 않게 합니다.
-const DEFAULT_AUTH_SERVER_URL = "http://localhost:5840";
+const DEFAULT_AUTH_SERVER_URL = "http://localhost:4840";
 
 /**
  * 배포 빌드의 index.html에만 Content-Security-Policy meta를 넣습니다.
  * 개발 서버는 Vite가 React Refresh용 인라인 스크립트를 넣으므로 적용하지 않습니다(apply: "build").
  *
- * frame-ancestors(클릭재킹 방지)는 meta 태그에서 무시되므로, 배포 시 웹 서버/게이트웨이에서
+ * frame-ancestors(클릭재킹 방지)는 meta 태그에서 무시되므로, 배포 시 웹 서버에서
  * `Content-Security-Policy: frame-ancestors 'none'` 응답 헤더(또는 X-Frame-Options: DENY)로 설정해야 합니다.
  */
 function contentSecurityPolicy(authServerUrl: string): Plugin {
@@ -52,18 +52,18 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), contentSecurityPolicy(authServerUrl)],
     server: {
-      // 맛다공 화면은 4845에서 제공하며 각 API 경로를 해당 백엔드 포트로 전달합니다.
-      port: 4845,
+      // 맛다공 화면은 5845에서 제공하며 API 경로를 맛다공 서버(4845)·인증 서버(4840)로 전달합니다.
+      port: 5845,
       strictPort: true,
       proxy: {
-        // 화면 API는 Gateway 한 곳으로 보내고, Gateway가 각 기능 서비스로 전달합니다.
-        "/api": "http://localhost:5843",
-        "/media": "http://localhost:5843",
+        // 화면 API와 사진은 맛다공 서버 하나가 받습니다(운영에서는 같은 주소에서 제공).
+        "/api": "http://localhost:4845",
+        "/media": "http://localhost:4845",
         // Authorization Code 교환은 브라우저와 같은 origin으로 요청해 개발 환경의 CORS를 피합니다.
-        "/oauth2": "http://localhost:5840",
+        "/oauth2": "http://localhost:4840",
         // 맛다공 가입 상태 조회와 서비스 가입은 인증 서버가 access token을 검증합니다.
         "/auth-api": {
-          target: "http://localhost:5840",
+          target: "http://localhost:4840",
           rewrite: (path) => path.replace(/^\/auth-api/, ""),
         },
       },

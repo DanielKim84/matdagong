@@ -5,7 +5,6 @@ import {
   getIncomingSubscriptions,
   getMyReportedTasters,
   getMyTagRequests,
-  getPoints,
   getSubscriptions,
   getTasteTags,
   getTasters,
@@ -17,7 +16,6 @@ import type {
   ActiveSubscription,
   IncomingSubscription,
   MyProfile,
-  PointAccount,
   ProfileChanges,
   TagRequestInput,
   TasteTag,
@@ -26,8 +24,6 @@ import type {
 import type { Taster } from "../models/place";
 import { errorMessage } from "../utils/errorMessage";
 import { RETRY_LATER_MESSAGE, type AppNotice } from "./AppData";
-
-const EMPTY_POINTS: PointAccount = { balance: 0, history: [] };
 
 /**
  * 커뮤니티 상태(내 프로필, 맛객, 취향 태그, 구독, 포인트, 내가 신고한 맛객)와 그 동작입니다.
@@ -39,28 +35,25 @@ export function useCommunity(accessToken: string, displayName: string, notify: (
   const [tasteTags, setTasteTags] = useState<TasteTag[]>([]);
   const [subscriptions, setSubscriptions] = useState<ActiveSubscription[]>([]);
   const [incomingSubscriptions, setIncomingSubscriptions] = useState<IncomingSubscription[]>([]);
-  const [points, setPoints] = useState<PointAccount>(EMPTY_POINTS);
   const [reportedTasterIds, setReportedTasterIds] = useState<string[]>([]);
 
   const refreshCommunity = useCallback(async () => {
     const profile = await ensureMyProfile(accessToken, displayName);
     setMyProfile(profile);
-    // 맛객 목록만 꼭 있어야 하고, 나머지(구독·태그·포인트·신고 내역)는 하나가 실패해도 받은 것은 반영합니다.
+    // 맛객 목록만 꼭 있어야 하고, 나머지(구독·태그·신고 내역)는 하나가 실패해도 받은 것은 반영합니다.
     const results = await Promise.allSettled([
       getTasters(accessToken),
       getSubscriptions(accessToken),
       getTasteTags(accessToken),
       getIncomingSubscriptions(accessToken),
-      getPoints(accessToken),
       getMyReportedTasters(accessToken),
     ]);
-    const [tastersResult, subscriptionsResult, tasteTagsResult, incomingResult, pointsResult, reportedResult] = results;
+    const [tastersResult, subscriptionsResult, tasteTagsResult, incomingResult, reportedResult] = results;
     if (tastersResult.status === "rejected") throw tastersResult.reason;
     setCommunityTasters(tastersResult.value);
     setSubscriptions(subscriptionsResult.status === "fulfilled" ? subscriptionsResult.value : []);
     setTasteTags(tasteTagsResult.status === "fulfilled" ? tasteTagsResult.value : []);
     setIncomingSubscriptions(incomingResult.status === "fulfilled" ? incomingResult.value : []);
-    setPoints(pointsResult.status === "fulfilled" ? pointsResult.value : EMPTY_POINTS);
     setReportedTasterIds(reportedResult.status === "fulfilled" ? reportedResult.value : []);
     const unavailable = results.find((result) => result.status === "rejected");
     if (unavailable?.status === "rejected") {
@@ -147,7 +140,6 @@ export function useCommunity(accessToken: string, displayName: string, notify: (
     tasteTags,
     subscriptions,
     incomingSubscriptions,
-    points,
     reportedTasterIds,
     refreshCommunity,
     reloadTasters,

@@ -1,8 +1,9 @@
 rootProject.name = 'dagong-matdagong'
 
-include 'matdagong-common', 'matdagong-api-gateway', 'matdagong-place-service', 'matdagong-community-service'
+// 맛다공 API 서버는 matdagong-api 하나입니다. 장소·커뮤니티는 그 안에서 도는 기능 모듈이고, common은 둘이 함께 쓰는 코드입니다.
+include 'matdagong-common', 'matdagong-place', 'matdagong-community', 'matdagong-api'
 
 project(':matdagong-common').projectDir = file('backend/matdagong-common')
-project(':matdagong-api-gateway').projectDir = file('backend/matdagong-api-gateway')
-project(':matdagong-place-service').projectDir = file('backend/matdagong-place-service')
-project(':matdagong-community-service').projectDir = file('backend/matdagong-community-service')
+project(':matdagong-place').projectDir = file('backend/matdagong-place')
+project(':matdagong-community').projectDir = file('backend/matdagong-community')
+project(':matdagong-api').projectDir = file('backend/matdagong-api')

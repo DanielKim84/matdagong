@@ -7,7 +7,6 @@ import type {
   NotificationFeed,
   NotificationSettings,
   PlanCatalog,
-  PointAccount,
   SubscribeResult,
   TagRequest,
   TagRequestInput,
@@ -76,9 +75,9 @@ export function createTagRequest(accessToken: string, input: TagRequestInput): P
   });
 }
 
-/** 맛다공 탈퇴: 커뮤니티 서비스의 내 프로필·취향·구독·알림·포인트 내역·태그 제안·내가 한 신고를 모두 지웁니다. */
-export function deleteMyCommunityData(accessToken: string): Promise<void> {
-  return request("/users/me", accessToken, { method: "DELETE", errorMessage: "내 프로필 정보를 지우지 못했어요." });
+/** 맛다공 탈퇴: 서버가 장소 기록과 프로필·구독·알림 등 맛다공 데이터를 모두 지웁니다(다시 불러도 괜찮음). */
+export function deleteMyMatdagongData(accessToken: string): Promise<void> {
+  return request("/users/me", accessToken, { method: "DELETE", errorMessage: "맛다공 데이터를 지우지 못했어요." });
 }
 
 export function getPlanCatalog(accessToken: string): Promise<PlanCatalog> {
@@ -98,10 +97,6 @@ export async function cancelSubscription(accessToken: string, subscriptionId: st
 
 export function getIncomingSubscriptions(accessToken: string): Promise<IncomingSubscription[]> {
   return request("/subscriptions/subscribers", accessToken);
-}
-
-export function getPoints(accessToken: string): Promise<PointAccount> {
-  return request("/points", accessToken);
 }
 
 export function createSubscription(

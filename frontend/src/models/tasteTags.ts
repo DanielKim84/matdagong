@@ -18,7 +18,7 @@ export type TasteTagGroupInfo = { id: TasteTagGroup; label: string; hint: string
 
 /**
  * 분류의 표시 순서·이름·안내·한 분류에서 고를 수 있는 수입니다. 한도는 서버 공통 모듈(matdagong-common)의
- * TasteTagGroup.maxSelections와 같게 둡니다(커뮤니티 서비스가 프로필 저장 때 같은 값으로 다시 검사하고, 장소 서비스는 기록
+ * TasteTagGroup.maxSelections와 같게 둡니다(커뮤니티 모듈이 프로필 저장 때 같은 값으로 다시 검사하고, 장소 모듈은 기록
  * 태그의 전체 수만 봄). 겹쳐 골라도 되는 큰 분류는 10개, 요점만 고르면 되는 분류는 5개입니다.
  * 가입 취향 단계·프로필 편집·기록하기가 모두 이 값을 써서 가입 때 고른 태그가 설정 화면에서도 그대로 이어집니다.
  */

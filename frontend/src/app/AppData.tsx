@@ -5,7 +5,6 @@ import type {
   IncomingSubscription,
   MyProfile,
   NotificationFeed,
-  PointAccount,
   ProfileChanges,
   TagRequest,
   TagRequestInput,
@@ -49,7 +48,7 @@ export type AppData = {
   dislikedPlaceIds: string[];
   /**
    * 그 가게에 들른 근거(다녀온 곳, 별로였던 곳)가 있는 장소. 이곳은 위치 확인 없이 별로였어요를 고를 수 있습니다.
-   * 기록은 다녀온 곳만 위치 확인 없이 남길 수 있습니다(장소 서비스 PlaceRecordService).
+   * 기록은 다녀온 곳만 위치 확인 없이 남길 수 있습니다(장소 모듈 PlaceRecordService).
    */
   visitProofPlaceIds: string[];
   /** 지금 보고 있는 맛집 상세(#place/<id>)의 장소. 없으면 불러오는 중이거나 찾을 수 없음 */
@@ -61,7 +60,6 @@ export type AppData = {
   subscriptionIds: string[];
   currentFreeSubscription?: ActiveSubscription;
   incomingSubscriptions: IncomingSubscription[];
-  points: PointAccount;
   /** 내가 신고했고 아직 확인 전인 맛객. 이 맛객의 신고 버튼은 "신고했어요"로 막습니다. */
   reportedTasterIds: string[];
 

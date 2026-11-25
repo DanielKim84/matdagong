@@ -5,7 +5,7 @@ import { ApiError } from "../../services/http";
 import type { TasterReportReason } from "../../models/community";
 import { errorMessage } from "../../utils/errorMessage";
 
-/** 신고 설명 최대 글자 수. 커뮤니티 서비스 ReportModels.ReportRequest, DB taster_reports.memo(VARCHAR(500))와 같습니다. */
+/** 신고 설명 최대 글자 수. 커뮤니티 모듈 ReportModels.ReportRequest, DB taster_reports.memo(VARCHAR(500))와 같습니다. */
 const MEMO_MAX = 500;
 
 const REASONS: { value: TasterReportReason; label: string }[] = [

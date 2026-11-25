@@ -7,8 +7,7 @@ import { useNotificationDialog } from "../../components/NotificationDialog";
 import SubScreen from "../../components/SubScreen";
 import { Skeleton, TopBar } from "../../components/ui";
 import { cancelMembership } from "../../services/auth";
-import { deleteMyCommunityData } from "../../services/community";
-import { deleteMyPlaceData } from "../../services/places";
+import { deleteMyMatdagongData } from "../../services/community";
 import type { NotificationSettings } from "../../models/community";
 import { LOGIN_PROVIDERS } from "../../models/loginProviders";
 import { errorMessage } from "../../utils/errorMessage";
@@ -63,16 +62,15 @@ export default function AccountSettingsScreen() {
   }
 
   /**
-   * 맛다공 탈퇴: 장소 서비스 → 커뮤니티 서비스 → 공통 로그인의 맛다공 가입 정보 순서로 지운 뒤 로그아웃합니다.
-   * 세 곳 모두 이미 지운 것을 다시 지워도 괜찮게 만들어, 중간에 실패하면 같은 버튼으로 다시 시도하면 됩니다.
+   * 맛다공 탈퇴: 맛다공 서버의 데이터(장소 기록 → 커뮤니티 순서로 서버가 지움) → 공통 로그인의 맛다공 가입 정보 순서로 지운 뒤
+   * 로그아웃합니다. 두 곳 모두 이미 지운 것을 다시 지워도 괜찮게 만들어, 중간에 실패하면 같은 버튼으로 다시 시도하면 됩니다.
    * 공통 계정(소셜 연결)은 다른 다공 서비스가 함께 쓰므로 남깁니다. 무엇이 지워지는지는 탈퇴 확인 화면(18-04)이 먼저 보여 줍니다.
    */
   async function withdraw() {
     if (isWithdrawing) return;
     setIsWithdrawing(true);
     try {
-      await deleteMyPlaceData(app.accessToken);
-      await deleteMyCommunityData(app.accessToken);
+      await deleteMyMatdagongData(app.accessToken);
       await cancelMembership(app.accessToken);
     } catch (cause) {
       setIsWithdrawing(false);
